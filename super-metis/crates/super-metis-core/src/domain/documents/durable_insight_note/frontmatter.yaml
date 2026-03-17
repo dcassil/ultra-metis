@@ -1,0 +1,36 @@
+id: {{ slug }}
+level: durable_insight_note
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+category: "{{ category }}"
+status: "{{ status }}"
+review_reason: "{{ review_reason }}"
+
+scope:
+  repo: "{{ scope_repo }}"
+  package: "{{ scope_package }}"
+  subsystem: "{{ scope_subsystem }}"
+  paths:
+{% for p in scope_paths %}    - "{{ p }}"
+{% endfor %}
+  symbols:
+{% for s in scope_symbols %}    - "{{ s }}"
+{% endfor %}
+
+fetch_count: {{ fetch_count }}
+last_fetched_at: "{{ last_fetched_at }}"
+thumbs_up_count: {{ thumbs_up_count }}
+meh_count: {{ meh_count }}
+thumbs_down_count: {{ thumbs_down_count }}
+last_feedback_at: "{{ last_feedback_at }}"
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

@@ -1,0 +1,5 @@
+- [ ] Objective is clearly defined and aligned with parent Epic
+- [ ] Scope boundaries are documented
+- [ ] Approach is technically sound and reviewed
+- [ ] Design references are linked where applicable
+- [ ] Validation expectations are measurable and achievable

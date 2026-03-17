@@ -1,0 +1,6 @@
+- [ ] Record date is set
+- [ ] All metrics have measured values
+- [ ] Comparison against baseline is documented
+- [ ] Regressions are explicitly called out (or noted as none)
+- [ ] Improvements are explicitly called out (or noted as none)
+- [ ] Overall status (Pass/Warn/Fail) reflects the measurement results

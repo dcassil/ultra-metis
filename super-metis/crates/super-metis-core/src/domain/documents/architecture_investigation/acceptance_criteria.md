@@ -1,0 +1,6 @@
+- [ ] Trigger references are documented (at least one short code or description)
+- [ ] Scope is clearly bounded
+- [ ] Findings section is populated before concluding
+- [ ] Recommendations are actionable and specific
+- [ ] Investigation status reflects current state
+- [ ] Any resulting ADRs or DesignChangeProposals are linked by short code

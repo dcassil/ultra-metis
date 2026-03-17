@@ -1,0 +1,24 @@
+id: {{ slug }}
+level: gate_override_audit
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+overrider: "{{ overrider }}"
+override_reason: "{{ override_reason }}"
+override_type: "{{ override_type }}"
+linked_quality_record: "{{ linked_quality_record }}"
+linked_gate_config: "{{ linked_gate_config }}"
+
+gates_bypassed:
+{% for g in gates_bypassed %}  - "{{ g }}"
+{% endfor %}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

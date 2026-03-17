@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_metis_metis__*",
+      "WebSearch",
+      "WebFetch(domain:claude.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:www.claudemcp.com)",
+      "Read(//Users/danielcassil/.claude/plugins/**)",
+      "Read(//Users/danielcassil/.claude/**)",
+      "Read(//Users/danielcassil/projects/ultra-metis/**)",
+      "Bash(*)",
+      "Skill(metis:*)"
+    ]
+  }
+}

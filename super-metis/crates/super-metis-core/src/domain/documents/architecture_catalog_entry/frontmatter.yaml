@@ -1,0 +1,42 @@
+id: {{ slug }}
+level: architecture_catalog_entry
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1
+epic_id: {{ epic_id }}
+
+language: "{{ language }}"
+project_type: "{{ project_type }}"
+folder_layout:
+{% for item in folder_layout %}  - "{{ item }}"
+{% endfor %}
+layers:
+{% for item in layers %}  - "{{ item }}"
+{% endfor %}
+module_boundaries:
+{% for item in module_boundaries %}  - "{{ item }}"
+{% endfor %}
+dependency_rules:
+{% for item in dependency_rules %}  - "{{ item }}"
+{% endfor %}
+naming_conventions:
+{% for item in naming_conventions %}  - "{{ item }}"
+{% endfor %}
+anti_patterns:
+{% for item in anti_patterns %}  - "{{ item }}"
+{% endfor %}
+rules_seed_hints:
+{% for item in rules_seed_hints %}  - "{{ item }}"
+{% endfor %}
+analysis_expectations:
+{% for item in analysis_expectations %}  - "{{ item }}"
+{% endfor %}

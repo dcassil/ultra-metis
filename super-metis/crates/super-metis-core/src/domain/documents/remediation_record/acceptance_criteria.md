@@ -1,0 +1,6 @@
+- [ ] Problem type is identified
+- [ ] Affected scope is clearly defined
+- [ ] Is-systemic flag is set correctly
+- [ ] Required fixes are actionable and specific
+- [ ] Validation after fix describes how resolution will be confirmed
+- [ ] Resolution status accurately reflects current state

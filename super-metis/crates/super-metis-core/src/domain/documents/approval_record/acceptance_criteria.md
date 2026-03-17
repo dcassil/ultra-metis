@@ -1,0 +1,6 @@
+- [ ] Approved artifact is identified by its short code
+- [ ] Approver name or body is recorded
+- [ ] Approval date is set (ISO format)
+- [ ] Approval type is specified (e.g. rule-change, phase-transition, design-change)
+- [ ] Decision section clearly states the outcome
+- [ ] Rationale is documented

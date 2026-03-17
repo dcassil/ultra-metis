@@ -1,0 +1,32 @@
+id: {{ slug }}
+level: decision_record
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+decision: "{{ decision }}"
+decision_context: "{{ decision_context }}"
+rationale: "{{ rationale }}"
+approved_by: "{{ approved_by }}"
+timestamp: "{{ timestamp }}"
+
+alternatives:
+{% for a in alternatives %}  - title: "{{ a.title }}"
+    description: "{{ a.description }}"
+    rejected_reason: "{{ a.rejected_reason }}"
+{% endfor %}
+evidence:
+{% for e in evidence %}  - "{{ e }}"
+{% endfor %}
+related_artifacts:
+{% for r in related_artifacts %}  - "{{ r }}"
+{% endfor %}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

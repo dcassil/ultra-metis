@@ -1,0 +1,4 @@
+- [ ] Description clearly explains what needs to be done
+- [ ] Approach is defined
+- [ ] Task is assigned to a parent document
+- [ ] Completion can be verified

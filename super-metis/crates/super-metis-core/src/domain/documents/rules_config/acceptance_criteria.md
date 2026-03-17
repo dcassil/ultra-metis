@@ -1,0 +1,5 @@
+- [ ] All rules are clearly defined and unambiguous
+- [ ] Scope is explicitly bounded and documented
+- [ ] Protection level is set appropriately for the sensitivity of the rules
+- [ ] Change history is initialized with the creation entry
+- [ ] Source architecture reference is provided where applicable

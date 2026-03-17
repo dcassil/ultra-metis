@@ -1,0 +1,60 @@
+id: {{ slug }}
+level: execution_record
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+initiating_artifact: "{{ initiating_artifact }}"
+execution_mode: "{{ execution_mode }}"
+started_at: "{{ started_at }}"
+completed_at: "{{ completed_at }}"
+final_disposition: "{{ final_disposition }}"
+
+context_sources:
+{% for s in context_sources %}  - "{{ s }}"
+{% endfor %}
+architecture_consulted: "{{ architecture_consulted }}"
+rules_consulted:
+{% for r in rules_consulted %}  - "{{ r }}"
+{% endfor %}
+notes_fetched:
+{% for n in notes_fetched %}  - "{{ n }}"
+{% endfor %}
+tools_run:
+{% for t in tools_run %}  - name: "{{ t.name }}"
+    arguments: "{{ t.arguments }}"
+    result_summary: "{{ t.result_summary }}"
+{% endfor %}
+files_touched:
+{% for f in files_touched %}  - "{{ f }}"
+{% endfor %}
+validations_run:
+{% for v in validations_run %}  - name: "{{ v.name }}"
+    passed: {{ v.passed }}
+    details: "{{ v.details }}"
+{% endfor %}
+artifacts_updated:
+{% for a in artifacts_updated %}  - "{{ a }}"
+{% endfor %}
+decisions_made:
+{% for d in decisions_made %}  - "{{ d }}"
+{% endfor %}
+escalations:
+{% for e in escalations %}  - reason: "{{ e.reason }}"
+    escalated_to: "{{ e.escalated_to }}"
+    resolution: "{{ e.resolution }}"
+{% endfor %}
+overrides:
+{% for o in overrides %}  - rule: "{{ o.rule }}"
+    reason: "{{ o.reason }}"
+    approved_by: "{{ o.approved_by }}"
+{% endfor %}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

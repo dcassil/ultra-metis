@@ -1,0 +1,19 @@
+[package]
+name = "ultra-metis-mcp"
+version.workspace = true
+edition.workspace = true
+description = "MCP server for Ultra-Metis document management"
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "ultra-metis-mcp"
+path = "src/main.rs"
+
+[dependencies]
+ultra-metis-store = { path = "../ultra-metis-store" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

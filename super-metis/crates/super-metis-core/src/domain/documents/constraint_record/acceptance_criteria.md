@@ -1,0 +1,6 @@
+- [ ] Constraint type is specified (e.g. technical, business, regulatory)
+- [ ] Scope is clearly defined
+- [ ] Constraint description leaves no ambiguity about what is restricted
+- [ ] Enforcement mechanism is documented
+- [ ] Exceptions (if any) are explicitly listed
+- [ ] Enforced flag reflects current status

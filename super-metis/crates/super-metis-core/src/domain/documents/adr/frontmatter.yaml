@@ -1,0 +1,17 @@
+id: {{ slug }}
+level: adr
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+parent_id: {{ parent_id }}
+archived: {{ archived }}
+number: {{ number }}
+decision_maker: "{{ decision_maker }}"
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

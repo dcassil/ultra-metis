@@ -1,0 +1,6 @@
+- [ ] Validation type is specified
+- [ ] Result (Passed/Failed/Skipped) is recorded
+- [ ] Inputs are documented
+- [ ] Results section explains the outcome
+- [ ] Evidence links are provided where applicable
+- [ ] Required flag correctly reflects whether this validation is mandatory

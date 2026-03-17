@@ -1,0 +1,178 @@
+{
+  "benchmark_date": "2026-03-17",
+  "environment": {
+    "platform": "darwin",
+    "os_version": "Darwin 24.4.0",
+    "ultra_metis_binary": "super-metis/target/release/ultra-metis",
+    "original_metis": "MCP plugin (mcp__plugin_metis_metis__*)"
+  },
+  "scenarios": {
+    "scenario_1_init": {
+      "name": "Project Bootstrap",
+      "ultra_metis": {
+        "time_ms": 38,
+        "output_bytes": 75,
+        "pass": true,
+        "notes": "Fast local init, clean output"
+      },
+      "original_metis": {
+        "time_ms": 7739,
+        "output_bytes": 393,
+        "pass": true,
+        "notes": "MCP overhead dominates; creates DB, vision, config"
+      }
+    },
+    "scenario_2_planning_workflow": {
+      "name": "Vision + Initiative + 3 Tasks",
+      "ultra_metis": {
+        "create_vision_ms": 44,
+        "create_initiative_ms": 33,
+        "create_task_1_ms": 37,
+        "create_task_2_ms": 30,
+        "create_task_3_ms": 37,
+        "total_ms": 181,
+        "total_output_bytes": 322,
+        "pass": true,
+        "notes": "All 5 creates under 200ms total"
+      },
+      "original_metis": {
+        "create_vision_ms": null,
+        "create_vision_notes": "Only 1 vision allowed, skipped (auto-created at init)",
+        "create_initiative_ms": 8621,
+        "create_task_1_ms": 8015,
+        "create_task_2_ms": 8763,
+        "create_task_3_ms": 8169,
+        "total_ms": 33568,
+        "total_output_bytes": 1520,
+        "pass": true,
+        "notes": "MCP round-trip adds ~8s per operation"
+      }
+    },
+    "scenario_3_phase_transitions": {
+      "name": "Initiative through all 5 phase transitions",
+      "ultra_metis": {
+        "transition_1_ms": 42,
+        "transition_2_ms": 35,
+        "transition_3_ms": 40,
+        "transition_4_ms": 36,
+        "transition_5_ms": 42,
+        "total_ms": 195,
+        "avg_ms": 39,
+        "pass": true,
+        "notes": "All transitions ~35-42ms, consistent"
+      },
+      "original_metis": {
+        "transition_1_ms": 11787,
+        "transition_2_ms": 13337,
+        "transition_3_ms": 7293,
+        "transition_4_ms": 7906,
+        "transition_5_ms": 8790,
+        "total_ms": 49113,
+        "avg_ms": 9823,
+        "pass": true,
+        "notes": "MCP overhead ~8-13s per transition"
+      }
+    },
+    "scenario_4_search_query": {
+      "name": "Search and List with 12 documents",
+      "ultra_metis": {
+        "search_database_ms": 43,
+        "search_database_results": 2,
+        "search_api_ms": 36,
+        "search_api_results": 2,
+        "list_all_ms": 35,
+        "list_all_results": 12,
+        "total_output_bytes": 1836,
+        "pass": true,
+        "notes": "Title-only search, precise results"
+      },
+      "original_metis": {
+        "search_database_ms": 7831,
+        "search_database_results": 2,
+        "search_api_ms": 10901,
+        "search_api_results": 9,
+        "list_all_ms": 11472,
+        "list_all_results": 12,
+        "total_output_bytes": 2100,
+        "pass": true,
+        "notes": "Full-text search (body + title), API search returned 9 results (false positives from body content)"
+      }
+    },
+    "scenario_5_error_handling": {
+      "name": "Invalid operations",
+      "ultra_metis": {
+        "read_nonexistent": {
+          "time_ms": 43,
+          "error_returned": true,
+          "message": "Error: Document not found: BENCH-X-9999",
+          "quality_score": 3
+        },
+        "create_bad_parent": {
+          "time_ms": 44,
+          "error_returned": false,
+          "message": "Created BENCH-T-0013 (task: Orphan task)",
+          "quality_score": 1,
+          "notes": "BUG: Allowed creating task with non-existent parent"
+        },
+        "transition_past_completed": {
+          "time_ms": 39,
+          "error_returned": false,
+          "message": "BENCH-I-0002: completed -> completed",
+          "quality_score": 2,
+          "notes": "BUG: Should error, instead silently no-ops"
+        },
+        "invalid_short_code": {
+          "time_ms": 36,
+          "error_returned": true,
+          "message": "Error: Document not found: NOT-A-CODE",
+          "quality_score": 3
+        },
+        "avg_quality_score": 2.25
+      },
+      "original_metis": {
+        "read_nonexistent": {
+          "time_ms": 10572,
+          "error_returned": true,
+          "message": "Resolution error: Not found: Document with short code 'BNCH-X-9999' not found",
+          "quality_score": 4
+        },
+        "create_bad_parent": {
+          "time_ms": 8718,
+          "error_returned": true,
+          "message": "Not found: Parent initiative 'BNCH-I-9999' not found",
+          "quality_score": 5,
+          "notes": "Correctly rejects orphan task creation"
+        },
+        "transition_past_completed": {
+          "time_ms": 9341,
+          "error_returned": true,
+          "message": "Invalid phase transition from completed to none for document type initiative",
+          "quality_score": 4,
+          "notes": "Correctly rejects transition past terminal phase"
+        },
+        "invalid_short_code": {
+          "time_ms": 8517,
+          "error_returned": true,
+          "message": "Resolution error: Not found: Document with short code 'NOT-A-CODE' not found",
+          "quality_score": 4
+        },
+        "avg_quality_score": 4.25
+      }
+    },
+    "scenario_6_read_document": {
+      "name": "Read document content and quality",
+      "ultra_metis": {
+        "time_ms": 39,
+        "output_bytes": 927,
+        "template_quality_score": 3,
+        "notes": "Clean template with standard sections (Context, Goals, Design, Alternatives, Plan). Placeholder text uses {braces}."
+      },
+      "original_metis": {
+        "time_ms": 10218,
+        "output_bytes": 3200,
+        "template_quality_score": 5,
+        "notes": "Comprehensive template with conditional sections (Requirements, Use Cases, Architecture, UI/UX, Testing). Includes guidance markers like [REQUIRED] and [CONDITIONAL]. Much richer template."
+      }
+    }
+  }
+}

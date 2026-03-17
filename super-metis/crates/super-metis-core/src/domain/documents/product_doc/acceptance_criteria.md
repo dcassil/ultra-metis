@@ -1,0 +1,5 @@
+- [ ] Purpose is clearly defined
+- [ ] Target audience is identified
+- [ ] Success criteria are measurable
+- [ ] Principles guide decision-making
+- [ ] Constraints are documented

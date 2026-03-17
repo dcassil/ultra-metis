@@ -1,0 +1,4 @@
+- [ ] At least one default threshold is defined
+- [ ] Each threshold specifies metric name, type, value, and severity
+- [ ] Transition overrides (if any) specify valid from/to phase pairs
+- [ ] Gate severity default is set (blocking or advisory)

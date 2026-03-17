@@ -1,0 +1,33 @@
+id: {{ slug }}
+level: quality_gate_config
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+gate_severity_default: "{{ gate_severity_default }}"
+
+default_thresholds:
+{% for t in default_thresholds %}  - metric: "{{ t.metric }}"
+    threshold_type: "{{ t.threshold_type }}"
+    threshold_value: {{ t.threshold_value }}
+    severity: "{{ t.severity }}"
+{% endfor %}
+
+transition_overrides:
+{% for o in transition_overrides %}  - from_phase: "{{ o.from_phase }}"
+    to_phase: "{{ o.to_phase }}"
+    thresholds:
+{% for t in o.thresholds %}      - metric: "{{ t.metric }}"
+        threshold_type: "{{ t.threshold_type }}"
+        threshold_value: {{ t.threshold_value }}
+        severity: "{{ t.severity }}"
+{% endfor %}{% endfor %}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

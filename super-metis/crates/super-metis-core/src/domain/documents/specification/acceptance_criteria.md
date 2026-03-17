@@ -1,0 +1,6 @@
+- [ ] Overview clearly defines scope
+- [ ] Functional requirements are specific and testable
+- [ ] Non-functional requirements are defined with measurable targets
+- [ ] Design covers key technical decisions
+- [ ] References are up to date and relevant
+- [ ] Specification is linked to a parent document

@@ -1,0 +1,19 @@
+id: {{ slug }}
+level: approval_record
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+parent_id: {{ parent_id }}
+archived: {{ archived }}
+approved_artifact: "{{ approved_artifact }}"
+approver: "{{ approver }}"
+approval_date: "{{ approval_date }}"
+approval_type: "{{ approval_type }}"
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

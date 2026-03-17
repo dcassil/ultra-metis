@@ -1,0 +1,5 @@
+- [ ] Context and goals are clearly defined
+- [ ] Technical approach is designed at sufficient detail
+- [ ] Alternatives have been considered and documented
+- [ ] Implementation plan shows clear phases
+- [ ] Dependencies are identified and resolved

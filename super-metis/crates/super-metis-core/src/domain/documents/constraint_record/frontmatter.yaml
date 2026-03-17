@@ -1,0 +1,18 @@
+id: {{ slug }}
+level: constraint_record
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+parent_id: {{ parent_id }}
+archived: {{ archived }}
+constraint_type: "{{ constraint_type }}"
+scope: "{{ scope }}"
+enforced: {{ enforced }}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

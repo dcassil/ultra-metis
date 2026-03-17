@@ -1,0 +1,5 @@
+- [ ] Design decisions are clearly articulated with rationale
+- [ ] Visual standards are documented and actionable
+- [ ] Constraints are identified and acknowledged
+- [ ] External references and design specs are linked
+- [ ] Design context has been reviewed and approved

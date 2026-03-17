@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ultra-metis": {
+      "command": "cargo",
+      "args": ["run", "--manifest-path", "super-metis/Cargo.toml", "-p", "ultra-metis-mcp", "--release", "--"],
+      "env": {}
+    }
+  }
+}

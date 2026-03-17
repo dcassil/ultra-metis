@@ -1,0 +1,19 @@
+id: {{ slug }}
+level: remediation_record
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1
+epic_id: {{ epic_id }}
+problem_type: "{{ problem_type }}"
+affected_scope: "{{ affected_scope }}"
+is_systemic: {{ is_systemic }}
+resolution_status: "{{ resolution_status }}"

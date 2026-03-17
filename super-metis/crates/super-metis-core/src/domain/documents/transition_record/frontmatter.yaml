@@ -1,0 +1,28 @@
+id: {{ slug }}
+level: transition_record
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+document_ref: "{{ document_ref }}"
+from_phase: "{{ from_phase }}"
+to_phase: "{{ to_phase }}"
+actor: "{{ actor }}"
+timestamp: "{{ timestamp }}"
+forced: {{ forced }}
+reason: "{{ reason }}"
+
+checks_run:
+{% for c in checks_run %}  - name: "{{ c.name }}"
+    passed: {{ c.passed }}
+    details: "{{ c.details }}"
+{% endfor %}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

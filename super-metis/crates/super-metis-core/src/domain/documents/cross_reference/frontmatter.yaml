@@ -1,0 +1,20 @@
+id: {{ slug }}
+level: cross_reference
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+source_ref: "{{ source_ref }}"
+target_ref: "{{ target_ref }}"
+relationship_type: "{{ relationship_type }}"
+description: "{{ description }}"
+bidirectional: {{ bidirectional }}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

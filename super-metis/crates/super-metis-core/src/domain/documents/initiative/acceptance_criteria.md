@@ -1,0 +1,7 @@
+- [ ] Context and motivation are clearly stated
+- [ ] Goals are specific and measurable
+- [ ] Non-goals are explicitly documented
+- [ ] Design approach is described at appropriate level
+- [ ] Alternatives have been considered
+- [ ] Implementation plan has clear milestones
+- [ ] Estimated complexity is assigned

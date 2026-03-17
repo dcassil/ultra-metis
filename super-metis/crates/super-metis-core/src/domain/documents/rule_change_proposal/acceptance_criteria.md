@@ -1,0 +1,5 @@
+- [ ] Target rule identified and referenced
+- [ ] Proposed change clearly described
+- [ ] Impact assessment completed
+- [ ] Review completed by designated reviewer
+- [ ] Change applied to target RulesConfig

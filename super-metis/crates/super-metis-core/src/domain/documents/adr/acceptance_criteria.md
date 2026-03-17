@@ -1,0 +1,5 @@
+- [ ] Context clearly explains the problem or opportunity
+- [ ] Decision is stated unambiguously
+- [ ] Consequences (positive and negative) are documented
+- [ ] Decision maker is identified
+- [ ] Status reflects current state of the decision

@@ -1,0 +1,33 @@
+id: {{ slug }}
+level: reference_architecture
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1
+epic_id: {{ epic_id }}
+
+source_catalog_ref: {{ source_catalog_ref }}
+is_derived: {{ is_derived }}
+status: "{{ status }}"
+layer_overrides:
+{% for item in layer_overrides %}  - "{{ item }}"
+{% endfor %}
+additional_boundaries:
+{% for item in additional_boundaries %}  - "{{ item }}"
+{% endfor %}
+extra_dependency_rules:
+{% for item in extra_dependency_rules %}  - "{{ item }}"
+{% endfor %}
+rules_config_ref: {{ rules_config_ref }}
+analysis_baseline_ref: {{ analysis_baseline_ref }}
+tolerated_exceptions:
+{% for item in tolerated_exceptions %}  - "{{ item }}"
+{% endfor %}

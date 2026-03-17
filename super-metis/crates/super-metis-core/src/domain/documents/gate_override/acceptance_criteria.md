@@ -1,0 +1,5 @@
+- [ ] Overrider identity is specified
+- [ ] Override reason explains why bypass was necessary
+- [ ] At least one bypassed gate is listed
+- [ ] Failed gate details include metric values and thresholds
+- [ ] Override type (emergency/approved) is specified

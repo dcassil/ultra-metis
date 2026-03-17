@@ -1,0 +1,6 @@
+- [ ] applies_to pattern is specified and unambiguous
+- [ ] At least one required validation is listed (or an explicit note that none are required)
+- [ ] Each required validation is named and described
+- [ ] Optional validations are documented separately from required ones
+- [ ] Exception process is described if exceptions are possible
+- [ ] Policy scope section explains coverage clearly

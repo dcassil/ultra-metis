@@ -1,0 +1,19 @@
+id: {{ slug }}
+level: rule_change_proposal
+title: "{{ title }}"
+short_code: "{{ short_code }}"
+created_at: {{ created_at }}
+updated_at: {{ updated_at }}
+archived: {{ archived }}
+target_rule: "{{ target_rule }}"
+change_type: "{{ change_type }}"
+proposal_status: "{{ proposal_status }}"
+reviewer: {{ reviewer }}
+applied_at: {{ applied_at }}
+
+tags:
+{% for tag in tags %}  - "{{ tag }}"
+{% endfor %}
+
+exit_criteria_met: {{ exit_criteria_met }}
+schema_version: 1

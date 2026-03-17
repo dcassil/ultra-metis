@@ -1,0 +1,6 @@
+- [ ] Scope type is specified (e.g. repo, package, component)
+- [ ] Scope boundaries are clearly defined
+- [ ] Owner is identified unambiguously (name, team, or role)
+- [ ] Responsibilities are enumerated
+- [ ] Delegation rules are documented (or explicitly noted as "no delegation")
+- [ ] Ownership record is kept up to date when ownership changes

@@ -1,0 +1,7 @@
+- [ ] Target artifact is identified by short code
+- [ ] Current state is accurately described
+- [ ] Proposed change is specific and unambiguous
+- [ ] Justification explains the motivation clearly
+- [ ] Impact assessment covers affected systems and stakeholders
+- [ ] Proposal status reflects current review state
+- [ ] Reviewer is assigned (if required by governance)

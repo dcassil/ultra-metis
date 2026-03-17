@@ -1,0 +1,5 @@
+- [ ] Baseline date is recorded
+- [ ] All tracked metrics are listed
+- [ ] Thresholds are defined with clear pass/warn/fail boundaries
+- [ ] Configuration reference is included
+- [ ] Notes capture any context or exceptions

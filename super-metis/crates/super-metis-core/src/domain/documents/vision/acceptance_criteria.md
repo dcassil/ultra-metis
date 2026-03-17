@@ -1,0 +1,6 @@
+- [ ] Purpose is clearly defined
+- [ ] Current state is accurately described
+- [ ] Future state is specific and achievable
+- [ ] Success criteria are measurable
+- [ ] Principles guide decision-making
+- [ ] Constraints are documented
