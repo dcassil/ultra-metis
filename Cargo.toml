@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crates/super-metis-core",
+    "crates/ultra-metis-core",
     "crates/ultra-metis-store",
     "crates/ultra-metis-cli",
     "crates/ultra-metis-mcp",

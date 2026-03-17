@@ -2,5 +2,5 @@
 prefix = "SMET"
 
 [flight_levels]
-strategies_enabled = false
+strategies_enabled = true
 initiatives_enabled = true

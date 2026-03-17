@@ -5,7 +5,7 @@ title: "Build Repo-Aware Setup and Bootstrap Flows for Monorepo Projects"
 short_code: "SMET-I-0008"
 created_at: 2026-03-11T19:59:45.102876+00:00
 updated_at: 2026-03-17T02:25:03.521566+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: build-repo-aware-setup-and
 ---
 

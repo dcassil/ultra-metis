@@ -5,7 +5,7 @@ title: "Extend CLI Support for the Stronger Engineering Model"
 short_code: "SMET-I-0010"
 created_at: 2026-03-11T19:59:55.460665+00:00
 updated_at: 2026-03-11T19:59:55.460665+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: extend-cli-support-for-the
 ---
 

@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-ultra-metis-core = { path = "../super-metis-core" }
+ultra-metis-core = { path = "../ultra-metis-core" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }

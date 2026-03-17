@@ -5,7 +5,7 @@ title: "Future: Monorepo-Root Orchestration and Multi-Architecture Support"
 short_code: "SMET-I-0017"
 created_at: 2026-03-11T20:45:54.158770+00:00
 updated_at: 2026-03-11T20:45:54.158770+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: XL
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: future-monorepo-root-orchestration
 ---
 

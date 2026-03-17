@@ -5,7 +5,7 @@ title: "Add Migration and Versioning Path from Metis to Super-Metis"
 short_code: "SMET-I-0015"
 created_at: 2026-03-11T20:00:15.612457+00:00
 updated_at: 2026-03-11T20:00:15.612457+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: add-migration-and-versioning-path
 ---
 

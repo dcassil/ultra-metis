@@ -5,7 +5,7 @@ title: "Governance & Quality Domain Types"
 short_code: "SMET-I-0019"
 created_at: 2026-03-11T21:39:40.254555+00:00
 updated_at: 2026-03-16T21:07:39.111099+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: governance-quality-domain-types
 ---
 

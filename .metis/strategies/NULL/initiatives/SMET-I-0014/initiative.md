@@ -5,7 +5,7 @@ title: "Improve Templates and Generated Planning Artifacts"
 short_code: "SMET-I-0014"
 created_at: 2026-03-11T20:00:11.420530+00:00
 updated_at: 2026-03-17T02:14:07.801216+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: improve-templates-and-generated
 ---
 

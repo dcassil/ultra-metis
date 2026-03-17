@@ -5,7 +5,7 @@ title: "Git Worktree Isolation for Leased Work"
 short_code: "SMET-I-0024"
 created_at: 2026-03-11T21:52:28.960038+00:00
 updated_at: 2026-03-11T21:52:28.960038+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: S
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: git-worktree-isolation-for-leased
 ---
 

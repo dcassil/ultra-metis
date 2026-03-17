@@ -5,7 +5,7 @@ title: "Gates, Escalation, and Autonomy Model"
 short_code: "SMET-I-0032"
 created_at: 2026-03-16T20:06:14.326527+00:00
 updated_at: 2026-03-17T01:20:51.570391+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: gates-escalation-and-autonomy-model
 ---
 

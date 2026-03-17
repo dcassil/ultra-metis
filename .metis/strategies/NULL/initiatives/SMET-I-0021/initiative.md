@@ -5,7 +5,7 @@ title: "Baseline Capture, Comparison, and Quality Records"
 short_code: "SMET-I-0021"
 created_at: 2026-03-11T21:52:25.384187+00:00
 updated_at: 2026-03-16T21:28:17.274362+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: baseline-capture-comparison-and
 ---
 

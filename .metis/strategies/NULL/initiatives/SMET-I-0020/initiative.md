@@ -5,7 +5,7 @@ title: "Architecture Catalog Domain Types"
 short_code: "SMET-I-0020"
 created_at: 2026-03-11T21:39:40.959763+00:00
 updated_at: 2026-03-16T21:19:01.673383+00:00
-parent: SMET-V-0001
+parent: SMET-S-0001
 blocked_by: []
 archived: false
 
@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: NULL
+strategy_id: ultra-metis-core-engine-repo
 initiative_id: architecture-catalog-domain-types
 ---
 

@@ -64,13 +64,13 @@ While working on any active task or initiative:
 - **Vision**: SMET-V-0001 — Super-Metis: Repo-Native AI Engineering Orchestration
 - **Metis path**: `/Users/danielcassil/projects/ultra-metis/.metis`
 - **Preset**: Streamlined (Vision → Initiative → Task)
-- **Source reference**: `metis/` (read-only reference implementation)
-- **Build target**: `super-metis/` (all new code goes here)
+- **Crates location**: `crates/` at repo root (ultra-metis-core, ultra-metis-cli, ultra-metis-mcp, ultra-metis-store)
+- **Workspace root**: `Cargo.toml` at repo root
 - **Language**: Rust
 
 ## Code Standards
 
-- Follow existing patterns in `metis/` codebase
+- Follow existing patterns in `crates/ultra-metis-core/` codebase
 - Strong Rust typing — prefer compile-time guarantees
 - All durable state is repo-native (file-based, no external services)
 - Markdown + YAML frontmatter for document serialization

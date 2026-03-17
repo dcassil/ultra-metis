@@ -10,7 +10,7 @@ PROJ="/tmp/bench-ultra-metis-$(date +%s)"
 
 if [ ! -x "$ULTRA" ]; then
     echo "Error: ultra-metis binary not found at $ULTRA"
-    echo "Build with: cd super-metis && cargo build --release"
+    echo "Build with: cargo build --release (from repo root)"
     exit 1
 fi
 
