@@ -1,8 +1,12 @@
 pub mod types;
 pub mod runner;
 pub mod gated_runner;
+pub mod gate_scorer;
 pub mod metrics_collector;
 pub mod analysis;
+pub mod api_client;
+pub mod prompt_builder;
+pub mod reports;
 pub use types::*;
 
 #[derive(Debug)]

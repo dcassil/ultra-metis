@@ -1,10 +1,21 @@
 use chrono::Utc;
 use practical_benchmark::*;
 
-/// Runners return an empty scaffold by design — a live AI session populates
-/// initiative results during execution. Tests verify structural correctness only.
+/// Skip a test if ANTHROPIC_API_KEY is not set (requires live API).
+macro_rules! require_api_key {
+    () => {
+        if std::env::var("ANTHROPIC_API_KEY").is_err() {
+            eprintln!("Skipping: ANTHROPIC_API_KEY not set");
+            return;
+        }
+    };
+}
+
+/// Live integration test — runs only when ANTHROPIC_API_KEY is available.
 #[tokio::test]
 async fn test_autonomous_runner_returns_valid_scaffold() {
+    require_api_key!();
+
     let scenario_path = std::path::PathBuf::from("scenario");
     let results_dir = std::path::PathBuf::from("target/test-results");
 
@@ -12,12 +23,23 @@ async fn test_autonomous_runner_returns_valid_scaffold() {
     let run = harness.run_autonomous().await.unwrap();
 
     assert_eq!(run.execution_mode, ExecutionMode::Autonomous);
-    assert!(run.total_metrics.gate_effectiveness.is_none(), "autonomous run should not have gate metrics");
+    assert!(
+        run.total_metrics.gate_effectiveness.is_none(),
+        "autonomous run should not have gate metrics"
+    );
     assert!(!run.run_id.is_empty());
+    assert!(
+        !run.initiatives.is_empty(),
+        "autonomous run must populate initiatives from AI response"
+    );
+    assert!(run.total_metrics.total_tokens > 0, "must capture real token counts");
 }
 
+/// Live integration test — runs only when ANTHROPIC_API_KEY is available.
 #[tokio::test]
 async fn test_validated_runner_returns_valid_scaffold() {
+    require_api_key!();
+
     let scenario_path = std::path::PathBuf::from("scenario");
     let results_dir = std::path::PathBuf::from("target/test-results");
 
@@ -25,7 +47,11 @@ async fn test_validated_runner_returns_valid_scaffold() {
     let run = harness.run_validated().await.unwrap();
 
     assert_eq!(run.execution_mode, ExecutionMode::Validated);
-    assert!(run.total_metrics.gate_effectiveness.is_some(), "validated run must expose gate effectiveness");
+    assert!(
+        run.total_metrics.gate_effectiveness.is_some(),
+        "validated run must expose gate effectiveness"
+    );
+    assert!(!run.run_id.is_empty());
 }
 
 #[test]
