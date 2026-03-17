@@ -1,44 +1,45 @@
 #!/usr/bin/env bash
 # Practical Benchmark Runner
-# Runs both autonomous and validated execution paths, generates comparison report
+# Runs both autonomous and validated execution paths against the File Processing
+# Toolkit scenario, then generates a side-by-side comparison report.
+#
+# Usage:
+#   ./benchmarks/run-practical-bench.sh [--mode autonomous|validated|both]
+#
+# Environment:
+#   ANTHROPIC_API_KEY     (required)
+#   ULTRA_METIS_BINARY    path to ultra-metis binary (default: target/release/ultra-metis)
 
 set -euo pipefail
 
-BENCHMARK_DIR="$(cd "$(dirname "$0")/practical" && pwd)"
-RESULTS_DIR="${BENCHMARK_DIR}/results"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-RESULTS_FILE="${RESULTS_DIR}/run_${TIMESTAMP}.json"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+RESULTS_DIR="${REPO_ROOT}/benchmarks/practical/results"
+SCENARIO_DIR="${REPO_ROOT}/benchmarks/practical/scenario"
+MODE="${1:-both}"
 
-mkdir -p "${RESULTS_DIR}"
+if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+    echo "Error: ANTHROPIC_API_KEY environment variable not set"
+    exit 1
+fi
+
+# Resolve binary path
+ULTRA="${ULTRA_METIS_BINARY:-${REPO_ROOT}/target/release/ultra-metis}"
+if [ ! -x "${ULTRA}" ]; then
+    echo "Building ultra-metis binary..."
+    cargo build --release -p ultra-metis-cli 2>&1
+fi
 
 echo "=== Practical Benchmark Suite ==="
-echo "Scenario: File Processing Toolkit"
-echo "Results: ${RESULTS_FILE}"
+echo "Binary   : ${ULTRA}"
+echo "Scenario : ${SCENARIO_DIR}"
+echo "Results  : ${RESULTS_DIR}"
+echo "Mode     : ${MODE}"
 echo ""
 
-# Build harness
-echo "Building benchmark harness..."
-cargo build --package practical-benchmark --release
-
-echo ""
-echo "=== Phase 1: Autonomous Execution (Baseline) ==="
-echo "Time: $(date)"
-# TODO: Run autonomous benchmark and capture results
-echo "(Placeholder: would feed scenario to AI and capture metrics)"
-
-echo ""
-echo "=== Phase 2: Validated Execution (With Gates) ==="
-echo "Time: $(date)"
-# TODO: Run validated benchmark and capture results
-echo "(Placeholder: would execute with validation gates)"
-
-echo ""
-echo "=== Comparison Report ==="
-# TODO: Generate analysis and print report
-echo "Token overhead: ~10%"
-echo "Quality improvement: +5-10 points"
-echo "Gate effectiveness: 75% of issues caught"
-echo ""
-
-echo "Results saved to: ${RESULTS_FILE}"
-echo "=== Benchmark Complete ==="
+# Run benchmark via the Rust binary
+cd "${REPO_ROOT}"
+ULTRA_METIS_BINARY="${ULTRA}" \
+    cargo run -q -p practical-benchmark --bin run_benchmark -- \
+        --results-dir "${RESULTS_DIR}" \
+        --scenario "${SCENARIO_DIR}" \
+        --mode "${MODE}"
