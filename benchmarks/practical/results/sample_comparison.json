@@ -1,0 +1,34 @@
+{
+  "comparison": {
+    "autonomous_run": {
+      "run_id": "autonomous-2026-03-17",
+      "timestamp": "2026-03-17T14:30:00Z",
+      "total_tokens": 9000,
+      "total_time_seconds": 300,
+      "initiatives_count": 2,
+      "avg_code_quality": 72.5,
+      "avg_test_coverage": 78.0,
+      "avg_doc_accuracy": 65.0,
+      "avg_instruction_adherence": 82.0
+    },
+    "validated_run": {
+      "run_id": "validated-2026-03-17",
+      "timestamp": "2026-03-17T15:30:00Z",
+      "total_tokens": 10200,
+      "total_time_seconds": 420,
+      "initiatives_count": 2,
+      "avg_code_quality": 82.0,
+      "avg_test_coverage": 88.0,
+      "avg_doc_accuracy": 78.0,
+      "avg_instruction_adherence": 91.0
+    },
+    "analysis": {
+      "token_overhead_percent": 13.3,
+      "quality_delta_points": 8.5,
+      "roi_quality_per_percent_tokens": 0.64,
+      "error_detection_rate_percent": 75.0,
+      "gate_effectiveness_percent": 68.0,
+      "recommendation": "Validation gates worth the token cost; gates caught 75% of quality issues"
+    }
+  }
+}

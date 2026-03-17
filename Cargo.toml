@@ -4,6 +4,7 @@ members = [
     "crates/ultra-metis-store",
     "crates/ultra-metis-cli",
     "crates/ultra-metis-mcp",
+    "benchmarks/practical",
 ]
 resolver = "2"
 
