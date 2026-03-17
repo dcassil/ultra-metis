@@ -898,4 +898,193 @@ mod tests {
             .unwrap();
         assert!(ac.contains("Custom ADR criterion"));
     }
+
+    // -------------------------------------------------------------------------
+    // Template Quality Tests
+    // Verify structural completeness of the four core document templates.
+    // -------------------------------------------------------------------------
+
+    fn render_core_template(doc_type: DocumentType) -> String {
+        let registry = TemplateRegistry::new();
+        let ctx = TemplateContext::new().with_project_name("TEST");
+        registry
+            .render_with_context(doc_type, "Test Document", &ctx)
+            .unwrap_or_else(|e| panic!("Template render failed for {:?}: {}", doc_type, e))
+    }
+
+    #[test]
+    fn quality_task_template_has_acceptance_criteria() {
+        let rendered = render_core_template(DocumentType::Task);
+        assert!(
+            rendered.contains("## Acceptance Criteria"),
+            "Task template must have an Acceptance Criteria section"
+        );
+    }
+
+    #[test]
+    fn quality_task_template_has_status_updates() {
+        let rendered = render_core_template(DocumentType::Task);
+        assert!(
+            rendered.contains("## Status Updates"),
+            "Task template must have a Status Updates section for working memory"
+        );
+    }
+
+    #[test]
+    fn quality_task_template_has_objective() {
+        let rendered = render_core_template(DocumentType::Task);
+        assert!(
+            rendered.contains("## Objective"),
+            "Task template must have an Objective section"
+        );
+    }
+
+    #[test]
+    fn quality_task_template_acceptance_criteria_uses_checkboxes() {
+        let raw = TemplateRegistry::new()
+            .get_template(DocumentType::Task, TemplateCategory::Content)
+            .unwrap()
+            .to_string();
+        assert!(
+            raw.contains("- [ ]"),
+            "Task template Acceptance Criteria must use checkbox list format (- [ ])"
+        );
+    }
+
+    #[test]
+    fn quality_initiative_template_has_detailed_design() {
+        let rendered = render_core_template(DocumentType::Initiative);
+        assert!(
+            rendered.contains("## Detailed Design"),
+            "Initiative template must have a Detailed Design section"
+        );
+    }
+
+    #[test]
+    fn quality_initiative_template_has_status_updates() {
+        let rendered = render_core_template(DocumentType::Initiative);
+        assert!(
+            rendered.contains("## Status Updates"),
+            "Initiative template must have a Status Updates section"
+        );
+    }
+
+    #[test]
+    fn quality_adr_template_has_rationale() {
+        let rendered = render_core_template(DocumentType::Adr);
+        assert!(
+            rendered.contains("## Rationale"),
+            "ADR template must have a Rationale section explaining why the decision was made"
+        );
+    }
+
+    #[test]
+    fn quality_adr_template_has_structured_consequences() {
+        let rendered = render_core_template(DocumentType::Adr);
+        assert!(
+            rendered.contains("### Positive") && rendered.contains("### Negative"),
+            "ADR template Consequences must have Positive and Negative sub-sections"
+        );
+    }
+
+    #[test]
+    fn quality_vision_template_has_success_criteria() {
+        let rendered = render_core_template(DocumentType::Vision);
+        assert!(
+            rendered.contains("## Success Criteria"),
+            "Vision template must have a Success Criteria section"
+        );
+    }
+
+    #[test]
+    fn quality_all_core_templates_have_conditional_guidance() {
+        let core_types = [
+            DocumentType::Vision,
+            DocumentType::Initiative,
+            DocumentType::Task,
+            DocumentType::Adr,
+        ];
+        let registry = TemplateRegistry::new();
+        for doc_type in core_types {
+            let raw = registry
+                .get_template(doc_type, TemplateCategory::Content)
+                .unwrap_or_else(|| panic!("Missing content template for {:?}", doc_type));
+            let has_guidance = raw.contains("DELETE")
+                || raw.contains("CONDITIONAL")
+                || raw.contains("if not applicable")
+                || raw.contains("REQUIRED");
+            assert!(
+                has_guidance,
+                "{:?} template has no required/conditional section guidance",
+                doc_type
+            );
+        }
+    }
+
+    #[test]
+    fn quality_core_templates_have_html_comment_guidance() {
+        // Templates should have inline HTML comments providing guidance to writers,
+        // not just bare {placeholder} lines with no context.
+        let core_types = [
+            DocumentType::Vision,
+            DocumentType::Initiative,
+            DocumentType::Task,
+            DocumentType::Adr,
+        ];
+        let registry = TemplateRegistry::new();
+        for doc_type in core_types {
+            let raw = registry
+                .get_template(doc_type, TemplateCategory::Content)
+                .unwrap_or_else(|| panic!("Missing content template for {:?}", doc_type));
+            assert!(
+                raw.contains("<!--"),
+                "{:?} template has no HTML comment guidance — add <!-- ... --> comments to guide writers",
+                doc_type
+            );
+        }
+    }
+
+    #[test]
+    fn quality_all_core_templates_render_without_parent() {
+        let core_types = [
+            DocumentType::Vision,
+            DocumentType::Initiative,
+            DocumentType::Task,
+            DocumentType::Adr,
+        ];
+        let registry = TemplateRegistry::new();
+        let ctx = TemplateContext::new();
+        for doc_type in core_types {
+            let result = registry.render_with_context(doc_type, "Orphan Document", &ctx);
+            assert!(
+                result.is_ok(),
+                "{:?} template must render without errors when no parent is provided: {:?}",
+                doc_type,
+                result.err()
+            );
+        }
+    }
+
+    #[test]
+    fn quality_all_core_templates_render_with_parent() {
+        let core_types = [
+            DocumentType::Vision,
+            DocumentType::Initiative,
+            DocumentType::Task,
+            DocumentType::Adr,
+        ];
+        let registry = TemplateRegistry::new();
+        let ctx = TemplateContext::new()
+            .with_parent("Parent Vision", "PROJ-V-0001", "vision")
+            .with_project_name("test-project");
+        for doc_type in core_types {
+            let result = registry.render_with_context(doc_type, "Child Document", &ctx);
+            assert!(
+                result.is_ok(),
+                "{:?} template must render without errors when parent context is provided: {:?}",
+                doc_type,
+                result.err()
+            );
+        }
+    }
 }
