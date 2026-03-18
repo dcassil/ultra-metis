@@ -2,7 +2,12 @@ use anyhow::{anyhow, Context, Result};
 use serde_json::{json, Value};
 use std::collections::BTreeSet;
 use std::io::{BufRead, BufReader, Write};
+use std::os::fd::AsRawFd;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
+use std::time::Duration;
+
+const MCP_RESPONSE_TIMEOUT: Duration = Duration::from_secs(15);
+const MCP_NOTIFICATION_TIMEOUT: Duration = Duration::from_millis(250);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SystemUnderTest {
@@ -196,17 +201,33 @@ impl McpSession {
     }
 
     fn try_read_response(&mut self) -> Option<Value> {
-        self.read_next_json_line().ok().flatten()
+        self.read_next_json_line(MCP_NOTIFICATION_TIMEOUT, true)
+            .ok()
+            .flatten()
     }
 
     fn read_response(&mut self) -> Result<Value> {
-        self.read_next_json_line()?
+        self.read_next_json_line(MCP_RESPONSE_TIMEOUT, false)?
             .ok_or_else(|| anyhow!("MCP server exited before returning a JSON-RPC response"))
     }
 
-    fn read_next_json_line(&mut self) -> Result<Option<Value>> {
+    fn read_next_json_line(
+        &mut self,
+        timeout: Duration,
+        return_none_on_timeout: bool,
+    ) -> Result<Option<Value>> {
         let mut line = String::new();
         for _ in 0..100 {
+            if !wait_for_stdout(&self.stdout, timeout)? {
+                if return_none_on_timeout {
+                    return Ok(None);
+                }
+                return Err(anyhow!(
+                    "Timed out after {:.1}s waiting for MCP response from {}",
+                    timeout.as_secs_f64(),
+                    system_name(&self.system)
+                ));
+            }
             line.clear();
             let bytes = self.stdout.read_line(&mut line)?;
             if bytes == 0 {
@@ -221,6 +242,42 @@ impl McpSession {
             }
         }
         Err(anyhow!("Too many non-JSON lines from MCP server"))
+    }
+}
+
+fn wait_for_stdout(stdout: &BufReader<ChildStdout>, timeout: Duration) -> Result<bool> {
+    let fd = stdout.get_ref().as_raw_fd();
+    let mut poll_fd = libc::pollfd {
+        fd,
+        events: libc::POLLIN,
+        revents: 0,
+    };
+
+    let timeout_ms = timeout.as_millis().min(i32::MAX as u128) as i32;
+    let result = unsafe { libc::poll(&mut poll_fd, 1, timeout_ms) };
+
+    if result < 0 {
+        return Err(anyhow!(
+            "poll() failed while waiting for MCP server output: {}",
+            std::io::Error::last_os_error()
+        ));
+    }
+
+    if result == 0 {
+        return Ok(false);
+    }
+
+    if (poll_fd.revents & (libc::POLLERR | libc::POLLHUP | libc::POLLNVAL)) != 0 {
+        return Ok(false);
+    }
+
+    Ok((poll_fd.revents & libc::POLLIN) != 0)
+}
+
+fn system_name(system: &SystemUnderTest) -> &'static str {
+    match system {
+        SystemUnderTest::OriginalMetis => "original-metis",
+        SystemUnderTest::UltraMetisMcp => "ultra-metis-mcp",
     }
 }
 

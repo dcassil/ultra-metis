@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T18:33:56.037713Z",
+  "timestamp": "2026-03-18T18:33:08.096245Z",
   "scenario_id": "file-processing-toolkit",
   "scenario_title": "File Processing Toolkit",
   "generated_initiatives": [
@@ -18,7 +18,7 @@
     "system": "original-metis",
     "initiative_count": 1,
     "total_tokens": 0,
-    "total_time_ms": 40138.28,
+    "total_time_ms": 65700.276707,
     "avg_completeness_percent": 100.0,
     "avg_placeholder_count": 0.0,
     "avg_task_count": 3.0,
@@ -35,7 +35,7 @@
           "empty_sections": 0
         },
         "tokens_used": 0,
-        "fill_time_ms": 20064.131875000003
+        "fill_time_ms": 30887.446791
       }
     ]
   },
@@ -43,7 +43,7 @@
     "system": "ultra-metis-mcp",
     "initiative_count": 1,
     "total_tokens": 0,
-    "total_time_ms": 40112.308625000005,
+    "total_time_ms": 65352.22508199999,
     "avg_completeness_percent": 100.0,
     "avg_placeholder_count": 0.0,
     "avg_task_count": 3.0,
@@ -60,7 +60,7 @@
           "empty_sections": 0
         },
         "tokens_used": 0,
-        "fill_time_ms": 20038.1605
+        "fill_time_ms": 30539.395166
       }
     ]
   }

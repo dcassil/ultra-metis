@@ -1,9 +1,13 @@
 use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
+use std::process::Stdio;
+use std::thread;
+use std::time::{Duration, Instant};
 
 const CLAUDE_API_URL: &str = "https://api.anthropic.com/v1/messages";
 const DEFAULT_MODEL: &str = "claude-haiku-4-5-20251001";
 const MAX_TOKENS: u32 = 8192;
+const CLAUDE_CLI_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// A single Claude API call result.
 #[derive(Debug, Clone)]
@@ -114,7 +118,7 @@ async fn ask_via_http(system: &str, user_prompt: &str) -> anyhow::Result<ApiResp
 
 /// Call Claude via the `claude` CLI subprocess (no API key needed — uses existing login).
 fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
-    let output = std::process::Command::new("claude")
+    let mut child = std::process::Command::new("claude")
         .args([
             "-p",
             user_prompt,
@@ -126,8 +130,36 @@ fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
             "haiku",
             "--no-session-persistence",
         ])
-        .output()
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .context("Failed to invoke `claude` CLI — is it installed and logged in?")?;
+
+    let start = Instant::now();
+    loop {
+        if child
+            .try_wait()
+            .context("Failed while waiting for `claude` CLI")?
+            .is_some()
+        {
+            break;
+        }
+
+        if start.elapsed() >= CLAUDE_CLI_TIMEOUT {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(anyhow!(
+                "claude CLI timed out after {:.0}s. Verify Claude Code is logged in and prompt execution is allowed in this environment.",
+                CLAUDE_CLI_TIMEOUT.as_secs_f64()
+            ));
+        }
+
+        thread::sleep(Duration::from_millis(100));
+    }
+
+    let output = child
+        .wait_with_output()
+        .context("Failed to capture `claude` CLI output")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
