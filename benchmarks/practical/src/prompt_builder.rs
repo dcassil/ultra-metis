@@ -1,6 +1,6 @@
-use std::path::Path;
-use anyhow::Context;
 use crate::scenario_pack::LoadedScenarioPack;
+use anyhow::Context;
+use std::path::Path;
 
 pub struct ScenarioPrompt {
     pub system: String,
@@ -9,8 +9,12 @@ pub struct ScenarioPrompt {
 
 /// Build the scenario assessment prompt: given vision + 2 initiatives, what else is needed?
 pub fn build_scenario_assessment_prompt(scenario_path: &Path) -> anyhow::Result<ScenarioPrompt> {
-    let scenario = LoadedScenarioPack::load(scenario_path)
-        .with_context(|| format!("Failed to load scenario pack from {}", scenario_path.display()))?;
+    let scenario = LoadedScenarioPack::load(scenario_path).with_context(|| {
+        format!(
+            "Failed to load scenario pack from {}",
+            scenario_path.display()
+        )
+    })?;
     let seed_initiatives = scenario
         .seed_initiatives
         .iter()
@@ -47,7 +51,8 @@ pub fn build_gate_check_prompt(initiative_title: &str, initiative_content: &str)
     let system = r#"You are a quality gate reviewer for software development plans.
 Evaluate whether the given initiative plan is complete and well-structured.
 Return ONLY valid JSON: {"approved":true,"score":0.9,"issues":["issue description"]}
-Score is 0.0 to 1.0. Approve (true) if score >= 0.7. No text outside JSON."#.to_string();
+Score is 0.0 to 1.0. Approve (true) if score >= 0.7. No text outside JSON."#
+        .to_string();
 
     let user = format!(
         "Review this initiative plan for '{}':\n\n{}\n\nCheck for: clear objective, specific actionable tasks, identified risks, defined acceptance criteria. Score 0.0-1.0.",

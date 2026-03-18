@@ -184,10 +184,7 @@ impl TransitionAuditLog {
 
     /// Get all entries by a specific actor.
     pub fn by_actor(&self, actor: &str) -> Vec<&AuditEntry> {
-        self.entries
-            .iter()
-            .filter(|e| e.actor == actor)
-            .collect()
+        self.entries.iter().filter(|e| e.actor == actor).collect()
     }
 
     /// Get all entries with a specific outcome.
@@ -207,11 +204,7 @@ impl TransitionAuditLog {
     }
 
     /// Get all entries within a time range (inclusive).
-    pub fn by_time_range(
-        &self,
-        from: DateTime<Utc>,
-        to: DateTime<Utc>,
-    ) -> Vec<&AuditEntry> {
+    pub fn by_time_range(&self, from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<&AuditEntry> {
         self.entries
             .iter()
             .filter(|e| e.timestamp >= from && e.timestamp <= to)
@@ -404,11 +397,7 @@ impl BlockedReasonTracker {
     }
 
     /// Resolve blocks of a specific category for a document.
-    pub fn resolve_by_category(
-        &mut self,
-        document_id: &DocumentId,
-        category: BlockCategory,
-    ) {
+    pub fn resolve_by_category(&mut self, document_id: &DocumentId, category: BlockCategory) {
         for reason in &mut self.reasons {
             if &reason.document_id == document_id
                 && reason.category == category
@@ -477,11 +466,8 @@ mod tests {
     #[test]
     fn test_record_and_retrieve() {
         let mut log = TransitionAuditLog::new();
-        let result = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Allowed,
-        );
+        let result =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Allowed);
 
         let id = log.record(&result);
         assert_eq!(id, 1);
@@ -498,11 +484,8 @@ mod tests {
     fn test_sequential_ids() {
         let mut log = TransitionAuditLog::new();
         let r1 = make_enforcement_result(Phase::Todo, Phase::Active, EnforcementOutcome::Allowed);
-        let r2 = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Allowed,
-        );
+        let r2 =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Allowed);
 
         assert_eq!(log.record(&r1), 1);
         assert_eq!(log.record(&r2), 2);
@@ -555,11 +538,8 @@ mod tests {
     #[test]
     fn test_query_by_actor() {
         let mut log = TransitionAuditLog::new();
-        let result = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Allowed,
-        );
+        let result =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Allowed);
         log.record(&result);
 
         assert_eq!(log.by_actor("test-actor").len(), 1);
@@ -569,16 +549,10 @@ mod tests {
     #[test]
     fn test_query_by_outcome() {
         let mut log = TransitionAuditLog::new();
-        let allowed = make_enforcement_result(
-            Phase::Todo,
-            Phase::Active,
-            EnforcementOutcome::Allowed,
-        );
-        let blocked = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Blocked,
-        );
+        let allowed =
+            make_enforcement_result(Phase::Todo, Phase::Active, EnforcementOutcome::Allowed);
+        let blocked =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Blocked);
 
         log.record(&allowed);
         log.record(&blocked);
@@ -591,11 +565,8 @@ mod tests {
     #[test]
     fn test_query_by_to_phase() {
         let mut log = TransitionAuditLog::new();
-        let result = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Allowed,
-        );
+        let result =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Allowed);
         log.record(&result);
 
         assert_eq!(log.by_to_phase(Phase::Completed).len(), 1);
@@ -605,16 +576,9 @@ mod tests {
     #[test]
     fn test_latest_for_document() {
         let mut log = TransitionAuditLog::new();
-        let r1 = make_enforcement_result(
-            Phase::Todo,
-            Phase::Active,
-            EnforcementOutcome::Allowed,
-        );
-        let r2 = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Allowed,
-        );
+        let r1 = make_enforcement_result(Phase::Todo, Phase::Active, EnforcementOutcome::Allowed);
+        let r2 =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Allowed);
         log.record(&r1);
         log.record(&r2);
 
@@ -646,11 +610,8 @@ mod tests {
 
     #[test]
     fn test_audit_entry_display() {
-        let result = make_enforcement_result(
-            Phase::Active,
-            Phase::Completed,
-            EnforcementOutcome::Allowed,
-        );
+        let result =
+            make_enforcement_result(Phase::Active, Phase::Completed, EnforcementOutcome::Allowed);
         let mut log = TransitionAuditLog::new();
         log.record(&result);
 

@@ -4,7 +4,9 @@
 //! scope, protection level, and other attributes. Supports scope inheritance
 //! so that higher-scope rules apply to lower scopes unless overridden.
 
-use crate::domain::documents::rules_config::{ProtectionLevel, RuleCategory, RuleScope, RulesConfig};
+use crate::domain::documents::rules_config::{
+    ProtectionLevel, RuleCategory, RuleScope, RulesConfig,
+};
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
@@ -133,9 +135,7 @@ impl<'a> RuleQueryEngine<'a> {
     pub fn applicable_at_scope(&self, target_scope: RuleScope) -> Vec<&'a RulesConfig> {
         self.rules
             .iter()
-            .filter(|rule| {
-                !rule.archived() && scope_applies(rule.scope, target_scope)
-            })
+            .filter(|rule| !rule.archived() && scope_applies(rule.scope, target_scope))
             .copied()
             .collect()
     }
@@ -165,9 +165,7 @@ impl<'a> RuleQueryEngine<'a> {
     pub fn protected_rules(&self) -> Vec<&'a RulesConfig> {
         self.rules
             .iter()
-            .filter(|rule| {
-                !rule.archived() && rule.protection_level == ProtectionLevel::Protected
-            })
+            .filter(|rule| !rule.archived() && rule.protection_level == ProtectionLevel::Protected)
             .copied()
             .collect()
     }
@@ -282,7 +280,10 @@ mod tests {
         // Repository applies to repo, package, component, task
         assert!(scope_applies(RuleScope::Repository, RuleScope::Repository));
         assert!(scope_applies(RuleScope::Repository, RuleScope::Package));
-        assert!(!scope_applies(RuleScope::Repository, RuleScope::Organization));
+        assert!(!scope_applies(
+            RuleScope::Repository,
+            RuleScope::Organization
+        ));
     }
 
     #[test]
@@ -460,8 +461,7 @@ mod tests {
         let rules: Vec<&RulesConfig> = vec![&r1, &r2];
         let engine = RuleQueryEngine::new(&rules);
 
-        let results =
-            engine.query(&RuleQuery::new().with_category(RuleCategory::Architectural));
+        let results = engine.query(&RuleQuery::new().with_category(RuleCategory::Architectural));
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title(), "Arch Rules");
     }
@@ -544,9 +544,7 @@ mod tests {
         assert_eq!(results[0].title(), "Protected Platform Arch");
 
         // From ARCH-0001
-        let results = engine.query(
-            &RuleQuery::new().with_source_architecture_ref("ARCH-0001"),
-        );
+        let results = engine.query(&RuleQuery::new().with_source_architecture_ref("ARCH-0001"));
         assert_eq!(results.len(), 2);
     }
 }

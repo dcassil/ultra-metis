@@ -278,8 +278,8 @@ impl PatternMatcher {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::catalog::builtin_entries;
     use crate::domain::catalog::brownfield_evaluator::structure_analyzer::StructureAnalyzer;
+    use crate::domain::catalog::builtin_entries;
 
     fn server_paths() -> Vec<String> {
         vec![

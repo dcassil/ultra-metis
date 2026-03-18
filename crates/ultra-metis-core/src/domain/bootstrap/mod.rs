@@ -10,7 +10,7 @@
 //! - [`tool_detector`]: Detects linters, formatters, and test runners
 //! - [`init_flow`]: Orchestrates the full bootstrap flow
 
-pub mod repo_scanner;
-pub mod monorepo_detector;
-pub mod tool_detector;
 pub mod init_flow;
+pub mod monorepo_detector;
+pub mod repo_scanner;
+pub mod tool_detector;

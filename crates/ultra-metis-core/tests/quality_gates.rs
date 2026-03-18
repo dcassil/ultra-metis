@@ -4,12 +4,12 @@
 //! QualityGateConfig → GateCheckEngine → GateCheckResult → GateOverride → GateOverrideAuditEntry
 
 use std::collections::HashMap;
+use ultra_metis_core::Phase;
+use ultra_metis_core::Tag;
 use ultra_metis_core::{
     GateCheckEngine, GateOverride, GateOverrideAuditEntry, GateSeverity, MetricGateRule,
     OverrideType, QualityGateConfig, ThresholdType, TransitionGateConfig, TrendRequirement,
 };
-use ultra_metis_core::Phase;
-use ultra_metis_core::Tag;
 
 fn metrics(pairs: &[(&str, f64)]) -> HashMap<String, f64> {
     pairs.iter().map(|(k, v)| (k.to_string(), *v)).collect()
@@ -132,15 +132,15 @@ fn test_transition_specific_gates() {
         "QGC-0003".to_string(),
         GateSeverity::Blocking,
         vec![
-            MetricGateRule::blocking_absolute("lint_errors", 10.0),  // lenient default
+            MetricGateRule::blocking_absolute("lint_errors", 10.0), // lenient default
             MetricGateRule::advisory_absolute("warnings", 50.0),
         ],
         vec![TransitionGateConfig::new(
             "active",
             "completed",
             vec![
-                MetricGateRule::blocking_absolute("lint_errors", 0.0),   // strict for completion
-                MetricGateRule::blocking_absolute("warnings", 0.0),       // promoted to blocking
+                MetricGateRule::blocking_absolute("lint_errors", 0.0), // strict for completion
+                MetricGateRule::blocking_absolute("warnings", 0.0),    // promoted to blocking
             ],
         )],
     )
@@ -149,14 +149,8 @@ fn test_transition_specific_gates() {
     let current = metrics(&[("lint_errors", 5.0), ("warnings", 10.0)]);
 
     // ready→active: uses defaults, 5 lint errors < 10 threshold — passes
-    let ready_active = GateCheckEngine::check(
-        &current,
-        &config,
-        Some("ready"),
-        Some("active"),
-        None,
-        None,
-    );
+    let ready_active =
+        GateCheckEngine::check(&current, &config, Some("ready"), Some("active"), None, None);
     assert!(ready_active.passed);
 
     // active→completed: uses overrides, 5 lint errors > 0 threshold — fails

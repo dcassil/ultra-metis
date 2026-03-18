@@ -45,11 +45,9 @@ impl Vision {
         let mut context = Context::new();
         context.insert("title", &title);
 
-        let rendered_content = tera
-            .render("vision_content", &context)
-            .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
-            })?;
+        let rendered_content = tera.render("vision_content", &context).map_err(|e| {
+            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+        })?;
 
         let content = DocumentContent::new(&rendered_content);
 
@@ -130,8 +128,12 @@ impl Vision {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(title, metadata, content, tags, archived))

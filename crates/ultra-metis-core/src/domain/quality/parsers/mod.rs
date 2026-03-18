@@ -1,4 +1,4 @@
-pub mod eslint;
 pub mod clippy;
-pub mod typescript;
 pub mod coverage;
+pub mod eslint;
+pub mod typescript;

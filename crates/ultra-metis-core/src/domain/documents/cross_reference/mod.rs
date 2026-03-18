@@ -268,13 +268,17 @@ impl CrossReference {
             FrontmatterParser::extract_string(&fm_map, "relationship_type")?;
         let relationship_type = RelationshipType::from_str(&relationship_type_str)
             .map_err(|e| DocumentValidationError::InvalidContent(e))?;
-        let description = FrontmatterParser::extract_string(&fm_map, "description")
-            .unwrap_or_default();
+        let description =
+            FrontmatterParser::extract_string(&fm_map, "description").unwrap_or_default();
         let bidirectional =
             FrontmatterParser::extract_bool(&fm_map, "bidirectional").unwrap_or(false);
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -501,8 +505,7 @@ impl TraceabilityIndex {
         self.entries
             .iter()
             .filter(|e| {
-                e.source_ref == short_code
-                    || (e.bidirectional && e.target_ref == short_code)
+                e.source_ref == short_code || (e.bidirectional && e.target_ref == short_code)
             })
             .collect()
     }
@@ -512,8 +515,7 @@ impl TraceabilityIndex {
         self.entries
             .iter()
             .filter(|e| {
-                e.target_ref == short_code
-                    || (e.bidirectional && e.source_ref == short_code)
+                e.target_ref == short_code || (e.bidirectional && e.source_ref == short_code)
             })
             .collect()
     }
@@ -569,8 +571,7 @@ impl TraceabilityIndex {
                 break; // cycle detection
             }
             let parent = self.entries.iter().find(|e| {
-                e.relationship_type == RelationshipType::ParentChild
-                    && e.target_ref == current
+                e.relationship_type == RelationshipType::ParentChild && e.target_ref == current
             });
             match parent {
                 Some(entry) => {
@@ -597,8 +598,7 @@ impl TraceabilityIndex {
                 .entries
                 .iter()
                 .filter(|e| {
-                    e.relationship_type == RelationshipType::ParentChild
-                        && e.source_ref == current
+                    e.relationship_type == RelationshipType::ParentChild && e.source_ref == current
                 })
                 .map(|e| e.target_ref.clone())
                 .collect();
@@ -617,8 +617,7 @@ impl TraceabilityIndex {
     pub fn siblings(&self, short_code: &str) -> Vec<String> {
         // Find the parent first
         let parent = self.entries.iter().find(|e| {
-            e.relationship_type == RelationshipType::ParentChild
-                && e.target_ref == short_code
+            e.relationship_type == RelationshipType::ParentChild && e.target_ref == short_code
         });
 
         match parent {

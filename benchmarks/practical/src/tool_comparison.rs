@@ -3,7 +3,7 @@
 /// Measures how well AI fills in initiative documents created by each tool's
 /// template. Better templates guide AI toward more complete content.
 use crate::doc_quality::{score_content, DocQualityScore};
-use crate::runner::{resolve_binary_path, run_cli, extract_short_code};
+use crate::runner::{extract_short_code, resolve_binary_path, run_cli};
 use anyhow::Context;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -69,9 +69,17 @@ fn get_ultra_metis_template() -> anyhow::Result<String> {
     run_cli(&binary, &["init", "--path", proj, "--prefix", "TC"])?;
 
     // Create + publish vision
-    let v = run_cli(&binary, &[
-        "create", "--type", "vision", "--path", proj, "File Processing Toolkit",
-    ])?;
+    let v = run_cli(
+        &binary,
+        &[
+            "create",
+            "--type",
+            "vision",
+            "--path",
+            proj,
+            "File Processing Toolkit",
+        ],
+    )?;
     let vision_code = extract_short_code(&v.stdout, "TC-V-");
     if vision_code.is_empty() {
         anyhow::bail!("ultra-metis: could not extract vision short code");
@@ -82,17 +90,27 @@ fn get_ultra_metis_template() -> anyhow::Result<String> {
     run_cli(&binary, &["transition", "--path", proj, &vision_code])?;
 
     // Create initiative (generates the template)
-    let init = run_cli(&binary, &[
-        "create", "--type", "initiative", "--path", proj,
-        "--parent", &vision_code, "CSV Parser Module",
-    ])?;
+    let init = run_cli(
+        &binary,
+        &[
+            "create",
+            "--type",
+            "initiative",
+            "--path",
+            proj,
+            "--parent",
+            &vision_code,
+            "CSV Parser Module",
+        ],
+    )?;
     let init_code = extract_short_code(&init.stdout, "TC-I-");
     if init_code.is_empty() {
         anyhow::bail!("ultra-metis: could not extract initiative short code");
     }
 
     // ultra-metis stores docs as .ultra-metis/docs/<SHORT_CODE>.md (flat structure)
-    let doc_path = temp_dir.path()
+    let doc_path = temp_dir
+        .path()
         .join(".ultra-metis")
         .join("docs")
         .join(format!("{init_code}.md"));
@@ -155,7 +173,13 @@ fn get_original_metis_template() -> anyhow::Result<String> {
     // Create initiative under the strategy
     let init_result = std::process::Command::new(&metis)
         .current_dir(proj)
-        .args(["create", "initiative", "-s", &strat_code, "CSV Parser Module"])
+        .args([
+            "create",
+            "initiative",
+            "-s",
+            &strat_code,
+            "CSV Parser Module",
+        ])
         .output()
         .context("metis create initiative failed")?;
     if !init_result.status.success() {
@@ -232,10 +256,14 @@ fn fill_template_with_claude(
 
     let output = std::process::Command::new("claude")
         .args([
-            "-p", &user,
-            "--system-prompt", system,
-            "--output-format", "json",
-            "--model", "haiku",
+            "-p",
+            &user,
+            "--system-prompt",
+            system,
+            "--output-format",
+            "json",
+            "--model",
+            "haiku",
             "--no-session-persistence",
         ])
         .output()
@@ -265,10 +293,7 @@ fn fill_template_with_claude(
 }
 
 /// Score a template filled for all 3 modules.
-fn score_template_runs(
-    tool_name: &str,
-    template: &str,
-) -> anyhow::Result<ToolRunResult> {
+fn score_template_runs(tool_name: &str, template: &str) -> anyhow::Result<ToolRunResult> {
     let start = Instant::now();
     let mut scores: Vec<DocQualityScore> = Vec::new();
     let mut total_tokens = 0u64;
@@ -279,7 +304,10 @@ fn score_template_runs(
                 let score = score_content(&filled);
                 tracing::info!(
                     "{} / {}: completeness={:.1}%, placeholders={}",
-                    tool_name, module_name, score.completeness_percent, score.placeholder_count
+                    tool_name,
+                    module_name,
+                    score.completeness_percent,
+                    score.placeholder_count
                 );
                 scores.push(score);
                 total_tokens += tokens;
@@ -294,7 +322,11 @@ fn score_template_runs(
 
     let n = scores.len().max(1) as f32;
     let avg_completeness = scores.iter().map(|s| s.completeness_percent).sum::<f32>() / n;
-    let avg_placeholders = scores.iter().map(|s| s.placeholder_count as f32).sum::<f32>() / n;
+    let avg_placeholders = scores
+        .iter()
+        .map(|s| s.placeholder_count as f32)
+        .sum::<f32>()
+        / n;
     let total_filled: u32 = scores.iter().map(|s| s.filled_sections.len() as u32).sum();
     let total_empty: u32 = scores.iter().map(|s| s.empty_sections.len() as u32).sum();
 
@@ -316,14 +348,14 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
 
     // Get ultra-metis template
     tracing::info!("Extracting ultra-metis initiative template...");
-    let ultra_template = get_ultra_metis_template()
-        .context("Failed to get ultra-metis template")?;
+    let ultra_template =
+        get_ultra_metis_template().context("Failed to get ultra-metis template")?;
     tracing::info!("ultra-metis template: {} chars", ultra_template.len());
 
     // Get original-metis template
     tracing::info!("Extracting original-metis initiative template...");
-    let orig_template = get_original_metis_template()
-        .context("Failed to get original-metis template")?;
+    let orig_template =
+        get_original_metis_template().context("Failed to get original-metis template")?;
     tracing::info!("original-metis template: {} chars", orig_template.len());
 
     // Fill and score each template
@@ -333,7 +365,8 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
     tracing::info!("Filling original-metis templates with Claude...");
     let orig_result = score_template_runs("original-metis", &orig_template)?;
 
-    let completeness_delta = ultra_result.avg_completeness_percent - orig_result.avg_completeness_percent;
+    let completeness_delta =
+        ultra_result.avg_completeness_percent - orig_result.avg_completeness_percent;
     let placeholder_delta = orig_result.avg_placeholder_count - ultra_result.avg_placeholder_count;
 
     Ok(ToolComparisonResult {
@@ -394,17 +427,25 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
          | Total empty sections | {} | {} | {:+} |\n\
          | Tokens used | {} | {} | {:+} |\n\
          | Time (s) | {:.1} | {:.1} | — |\n\n",
-        u.templates_tested, o.templates_tested,
-        u.avg_completeness_percent, o.avg_completeness_percent, result.completeness_delta,
-        u.avg_placeholder_count, o.avg_placeholder_count,
+        u.templates_tested,
+        o.templates_tested,
+        u.avg_completeness_percent,
+        o.avg_completeness_percent,
+        result.completeness_delta,
+        u.avg_placeholder_count,
+        o.avg_placeholder_count,
         u.avg_placeholder_count - o.avg_placeholder_count,
-        u.total_filled_sections, o.total_filled_sections,
+        u.total_filled_sections,
+        o.total_filled_sections,
         u.total_filled_sections as i32 - o.total_filled_sections as i32,
-        u.total_empty_sections, o.total_empty_sections,
+        u.total_empty_sections,
+        o.total_empty_sections,
         u.total_empty_sections as i32 - o.total_empty_sections as i32,
-        u.tokens_used, o.tokens_used,
+        u.tokens_used,
+        o.tokens_used,
         u.tokens_used as i64 - o.tokens_used as i64,
-        u.time_elapsed.as_secs_f32(), o.time_elapsed.as_secs_f32(),
+        u.time_elapsed.as_secs_f32(),
+        o.time_elapsed.as_secs_f32(),
     ));
 
     // Interpretation
@@ -416,14 +457,20 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
         out.push_str("- ultra-metis simpler templates reduce AI confusion about what to fill\n");
         out.push_str("- Fewer structural elements → more direct guidance toward content\n");
     } else {
-        out.push_str("- original-metis structured [CONDITIONAL] sections guide AI toward completeness\n");
+        out.push_str(
+            "- original-metis structured [CONDITIONAL] sections guide AI toward completeness\n",
+        );
         out.push_str("- Richer template scaffolding helps AI understand expected scope\n");
     }
 
     if result.placeholder_delta > 1.0 {
         out.push_str(&format!(
             "- original-metis templates leave {:.1}x more unfilled placeholders on average\n",
-            if result.placeholder_delta > 0.0 { result.placeholder_delta } else { 0.0 },
+            if result.placeholder_delta > 0.0 {
+                result.placeholder_delta
+            } else {
+                0.0
+            },
         ));
     } else if result.placeholder_delta < -1.0 {
         out.push_str(&format!(
@@ -453,7 +500,11 @@ fn find_initiative_recursive(dir: &Path, depth: usize) -> Option<PathBuf> {
             if let Some(found) = find_initiative_recursive(&path, depth + 1) {
                 return Some(found);
             }
-        } else if path.file_name().map(|n| n == "initiative.md").unwrap_or(false) {
+        } else if path
+            .file_name()
+            .map(|n| n == "initiative.md")
+            .unwrap_or(false)
+        {
             return Some(path);
         }
     }

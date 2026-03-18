@@ -14,17 +14,16 @@ fn extract_string_array_or_empty(
     key: &str,
 ) -> Vec<String> {
     match map.get(key) {
-        Some(gray_matter::Pod::Array(arr)) => {
-            arr.iter()
-                .filter_map(|item| {
-                    if let gray_matter::Pod::String(s) = item {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        }
+        Some(gray_matter::Pod::Array(arr)) => arr
+            .iter()
+            .filter_map(|item| {
+                if let gray_matter::Pod::String(s) = item {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
+            .collect(),
         _ => Vec::new(),
     }
 }
@@ -208,8 +207,12 @@ impl ArchitectureCatalogEntry {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         let language = FrontmatterParser::extract_string(&fm_map, "language")?;
@@ -519,7 +522,9 @@ mod tests {
         let file_path = temp_dir.path().join("test-catalog-entry.md");
 
         entry.to_file(&file_path).await.unwrap();
-        let loaded = ArchitectureCatalogEntry::from_file(&file_path).await.unwrap();
+        let loaded = ArchitectureCatalogEntry::from_file(&file_path)
+            .await
+            .unwrap();
 
         assert_eq!(loaded.title(), entry.title());
         assert_eq!(loaded.language, entry.language);

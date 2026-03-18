@@ -55,13 +55,23 @@ fn main() -> anyhow::Result<()> {
     let u = &result.ultra_metis;
     let o = &result.original_metis;
 
-    println!("  ultra-metis    : {:.1}% completeness | {:.1} placeholders/doc | {} tokens",
-        u.avg_completeness_percent, u.avg_placeholder_count, u.tokens_used);
-    println!("  original-metis : {:.1}% completeness | {:.1} placeholders/doc | {} tokens",
-        o.avg_completeness_percent, o.avg_placeholder_count, o.tokens_used);
+    println!(
+        "  ultra-metis    : {:.1}% completeness | {:.1} placeholders/doc | {} tokens",
+        u.avg_completeness_percent, u.avg_placeholder_count, u.tokens_used
+    );
+    println!(
+        "  original-metis : {:.1}% completeness | {:.1} placeholders/doc | {} tokens",
+        o.avg_completeness_percent, o.avg_placeholder_count, o.tokens_used
+    );
     println!();
-    println!("  Completeness delta : {:+.1}% (ultra-metis - original-metis)", result.completeness_delta);
-    println!("  Placeholder delta  : {:+.1}  (original - ultra, positive = original has more)", result.placeholder_delta);
+    println!(
+        "  Completeness delta : {:+.1}% (ultra-metis - original-metis)",
+        result.completeness_delta
+    );
+    println!(
+        "  Placeholder delta  : {:+.1}  (original - ultra, positive = original has more)",
+        result.placeholder_delta
+    );
     println!();
 
     let ts = result.timestamp.format("%Y%m%dT%H%M%SZ");

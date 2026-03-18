@@ -8,8 +8,8 @@
 //! 5. Returns a complete `EnforcementResult` with all details
 
 use super::hooks::{
-    PostActionResult, PostTransitionAction, PreCheckResult, PreTransitionCheck,
-    TransitionEvent, HookPriority,
+    HookPriority, PostActionResult, PostTransitionAction, PreCheckResult, PreTransitionCheck,
+    TransitionEvent,
 };
 use super::registry::HookRegistry;
 use crate::domain::documents::types::{DocumentType, Phase};
@@ -121,7 +121,10 @@ impl EnforcementResult {
 
         let post_failures = self.post_action_failures();
         if !post_failures.is_empty() {
-            lines.push(format!("  Post-action failures ({}): ", post_failures.len()));
+            lines.push(format!(
+                "  Post-action failures ({}): ",
+                post_failures.len()
+            ));
             for f in &post_failures {
                 lines.push(format!("    - {}", f));
             }
@@ -176,9 +179,7 @@ impl<'a> TransitionEnforcer<'a> {
         let pre_check_results = self.registry.run_pre_checks(event);
 
         // Step 3: Determine outcome
-        let has_blocking_failures = pre_check_results
-            .iter()
-            .any(|r| !r.passed && r.blocking);
+        let has_blocking_failures = pre_check_results.iter().any(|r| !r.passed && r.blocking);
 
         let outcome = if has_blocking_failures && !event.forced {
             EnforcementOutcome::Blocked
@@ -189,13 +190,12 @@ impl<'a> TransitionEnforcer<'a> {
         };
 
         // Step 4: Run post-transition actions only if transition proceeds
-        let post_action_results = if outcome == EnforcementOutcome::Allowed
-            || outcome == EnforcementOutcome::Forced
-        {
-            self.registry.run_post_actions(event)
-        } else {
-            Vec::new()
-        };
+        let post_action_results =
+            if outcome == EnforcementOutcome::Allowed || outcome == EnforcementOutcome::Forced {
+                self.registry.run_post_actions(event)
+            } else {
+                Vec::new()
+            };
 
         EnforcementResult {
             event: event.clone(),

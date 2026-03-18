@@ -240,13 +240,19 @@ fn main() {
 fn cmd_init(path: &PathBuf, prefix: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
     store.initialize(prefix).map_err(|e| e.user_message())?;
-    println!("Initialized Ultra-Metis project at {} with prefix {}", path.display(), prefix);
+    println!(
+        "Initialized Ultra-Metis project at {} with prefix {}",
+        path.display(),
+        prefix
+    );
     Ok(())
 }
 
 fn cmd_list(path: &PathBuf, include_archived: bool) -> Result<(), String> {
     let store = DocumentStore::new(path);
-    let docs = store.list_documents(include_archived).map_err(|e| e.user_message())?;
+    let docs = store
+        .list_documents(include_archived)
+        .map_err(|e| e.user_message())?;
 
     if docs.is_empty() {
         println!("No documents found.");
@@ -270,7 +276,9 @@ fn cmd_list(path: &PathBuf, include_archived: bool) -> Result<(), String> {
 
 fn cmd_read(path: &PathBuf, short_code: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
-    let raw = store.read_document_raw(short_code).map_err(|e| e.user_message())?;
+    let raw = store
+        .read_document_raw(short_code)
+        .map_err(|e| e.user_message())?;
     println!("{}", raw);
     Ok(())
 }
@@ -300,7 +308,11 @@ fn cmd_edit(
     store
         .edit_document_with_options(short_code, search, replace, replace_all)
         .map_err(|e| e.user_message())?;
-    let mode = if replace_all { " (all occurrences)" } else { "" };
+    let mode = if replace_all {
+        " (all occurrences)"
+    } else {
+        ""
+    };
     println!("Updated {}{}", short_code, mode);
     Ok(())
 }
@@ -417,9 +429,20 @@ fn cmd_status(path: &PathBuf) -> Result<(), String> {
         );
         println!("{}", "-".repeat(85));
         for init in &initiatives {
-            let todo = task_docs.iter().filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "todo").count();
-            let active = task_docs.iter().filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "active").count();
-            let done = task_docs.iter().filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "completed").count();
+            let todo = task_docs
+                .iter()
+                .filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "todo")
+                .count();
+            let active = task_docs
+                .iter()
+                .filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "active")
+                .count();
+            let done = task_docs
+                .iter()
+                .filter(|t| {
+                    t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "completed"
+                })
+                .count();
             let title_trunc = if init.title.len() > 35 {
                 format!("{}...", &init.title[..32])
             } else {
@@ -477,11 +500,7 @@ fn cmd_status(path: &PathBuf) -> Result<(), String> {
     Ok(())
 }
 
-fn cmd_validate(
-    path: &PathBuf,
-    short_code: Option<&str>,
-    all: bool,
-) -> Result<(), String> {
+fn cmd_validate(path: &PathBuf, short_code: Option<&str>, all: bool) -> Result<(), String> {
     if short_code.is_none() && !all {
         return Err("Specify a short code or use --all to validate all documents".to_string());
     }

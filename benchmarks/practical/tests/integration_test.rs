@@ -32,7 +32,10 @@ async fn test_autonomous_runner_returns_valid_scaffold() {
         !run.initiatives.is_empty(),
         "autonomous run must populate initiatives from AI response"
     );
-    assert!(run.total_metrics.total_tokens > 0, "must capture real token counts");
+    assert!(
+        run.total_metrics.total_tokens > 0,
+        "must capture real token counts"
+    );
 }
 
 /// Live integration test — runs only when ANTHROPIC_API_KEY is available.
@@ -105,8 +108,14 @@ fn test_comparison_analysis_produces_positive_roi() {
     let analysis = analysis::BenchmarkAnalysis::new(autonomous, validated);
     let report = analysis.compare();
 
-    assert!(report.token_overhead > 0.0, "validated run should use more tokens");
-    assert!(report.quality_delta > 0.0, "validated run should have better quality");
+    assert!(
+        report.token_overhead > 0.0,
+        "validated run should use more tokens"
+    );
+    assert!(
+        report.quality_delta > 0.0,
+        "validated run should have better quality"
+    );
     assert!(report.roi > 0.0, "ROI should be positive");
     assert_eq!(report.gate_effectiveness, 68.0);
 }

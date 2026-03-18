@@ -313,8 +313,8 @@ impl RuleChangeProposal {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let target_rule = FrontmatterParser::extract_optional_string(&fm_map, "target_rule")
-            .unwrap_or_default();
+        let target_rule =
+            FrontmatterParser::extract_optional_string(&fm_map, "target_rule").unwrap_or_default();
 
         let change_type_str = FrontmatterParser::extract_optional_string(&fm_map, "change_type")
             .unwrap_or_else(|| "modify".to_string());
@@ -331,8 +331,12 @@ impl RuleChangeProposal {
             .and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
             .map(|dt| dt.with_timezone(&chrono::Utc));
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -586,11 +590,26 @@ mod tests {
 
     #[test]
     fn test_rule_change_type_parsing() {
-        assert_eq!("add".parse::<RuleChangeType>().unwrap(), RuleChangeType::Add);
-        assert_eq!("modify".parse::<RuleChangeType>().unwrap(), RuleChangeType::Modify);
-        assert_eq!("update".parse::<RuleChangeType>().unwrap(), RuleChangeType::Modify);
-        assert_eq!("remove".parse::<RuleChangeType>().unwrap(), RuleChangeType::Remove);
-        assert_eq!("delete".parse::<RuleChangeType>().unwrap(), RuleChangeType::Remove);
+        assert_eq!(
+            "add".parse::<RuleChangeType>().unwrap(),
+            RuleChangeType::Add
+        );
+        assert_eq!(
+            "modify".parse::<RuleChangeType>().unwrap(),
+            RuleChangeType::Modify
+        );
+        assert_eq!(
+            "update".parse::<RuleChangeType>().unwrap(),
+            RuleChangeType::Modify
+        );
+        assert_eq!(
+            "remove".parse::<RuleChangeType>().unwrap(),
+            RuleChangeType::Remove
+        );
+        assert_eq!(
+            "delete".parse::<RuleChangeType>().unwrap(),
+            RuleChangeType::Remove
+        );
         assert_eq!(
             "reclassify".parse::<RuleChangeType>().unwrap(),
             RuleChangeType::Reclassify
@@ -654,7 +673,9 @@ mod tests {
         assert_eq!(s, RuleChangeStatus::UnderReview);
 
         // UnderReview -> Approved (explicit)
-        let s = rcp.advance_status(Some(RuleChangeStatus::Approved)).unwrap();
+        let s = rcp
+            .advance_status(Some(RuleChangeStatus::Approved))
+            .unwrap();
         assert_eq!(s, RuleChangeStatus::Approved);
 
         // Approved -> Applied (explicit)

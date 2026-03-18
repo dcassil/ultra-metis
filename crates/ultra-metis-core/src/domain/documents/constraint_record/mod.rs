@@ -167,8 +167,8 @@ impl ConstraintRecord {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let parent_id = FrontmatterParser::extract_optional_string(&fm_map, "parent_id")
-            .map(DocumentId::from);
+        let parent_id =
+            FrontmatterParser::extract_optional_string(&fm_map, "parent_id").map(DocumentId::from);
 
         let constraint_type =
             FrontmatterParser::extract_optional_string(&fm_map, "constraint_type")
@@ -177,8 +177,12 @@ impl ConstraintRecord {
             FrontmatterParser::extract_optional_string(&fm_map, "scope").unwrap_or_default();
         let enforced = FrontmatterParser::extract_bool(&fm_map, "enforced").unwrap_or(false);
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(

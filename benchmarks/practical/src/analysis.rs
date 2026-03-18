@@ -32,7 +32,11 @@ impl BenchmarkAnalysis {
             quality_delta,
             roi,
             error_detection_rate: self.calculate_error_detection_rate(),
-            gate_effectiveness: self.validated_run.total_metrics.gate_effectiveness.unwrap_or(0.0),
+            gate_effectiveness: self
+                .validated_run
+                .total_metrics
+                .gate_effectiveness
+                .unwrap_or(0.0),
         }
     }
 
@@ -71,8 +75,16 @@ fn calculate_token_overhead(autonomous: &RunMetrics, validated: &RunMetrics) -> 
 }
 
 fn calculate_quality_delta(autonomous: &RunMetrics, validated: &RunMetrics) -> f32 {
-    let autonomous_avg = (autonomous.avg_code_quality + autonomous.avg_test_coverage + autonomous.avg_doc_accuracy + autonomous.avg_instruction_adherence) / 4.0;
-    let validated_avg = (validated.avg_code_quality + validated.avg_test_coverage + validated.avg_doc_accuracy + validated.avg_instruction_adherence) / 4.0;
+    let autonomous_avg = (autonomous.avg_code_quality
+        + autonomous.avg_test_coverage
+        + autonomous.avg_doc_accuracy
+        + autonomous.avg_instruction_adherence)
+        / 4.0;
+    let validated_avg = (validated.avg_code_quality
+        + validated.avg_test_coverage
+        + validated.avg_doc_accuracy
+        + validated.avg_instruction_adherence)
+        / 4.0;
 
     validated_avg - autonomous_avg
 }
@@ -87,11 +99,11 @@ fn calculate_roi(token_overhead: f32, quality_delta: f32) -> f32 {
 
 #[derive(Debug, Clone)]
 pub struct ComparisonReport {
-    pub token_overhead: f32,           // % increase in tokens for validated run
-    pub quality_delta: f32,             // Quality score improvement (0-100)
-    pub roi: f32,                       // Quality improvement per 1% token overhead
-    pub error_detection_rate: f32,      // % of tasks where gates caught issues
-    pub gate_effectiveness: f32,        // % of gates that found issues
+    pub token_overhead: f32,       // % increase in tokens for validated run
+    pub quality_delta: f32,        // Quality score improvement (0-100)
+    pub roi: f32,                  // Quality improvement per 1% token overhead
+    pub error_detection_rate: f32, // % of tasks where gates caught issues
+    pub gate_effectiveness: f32,   // % of gates that found issues
 }
 
 #[cfg(test)]

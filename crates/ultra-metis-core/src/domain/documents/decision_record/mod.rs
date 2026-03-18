@@ -198,11 +198,9 @@ impl DecisionRecord {
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
         let decision = FrontmatterParser::extract_string(&fm_map, "decision")?;
-        let decision_context =
-            FrontmatterParser::extract_string(&fm_map, "decision_context")?;
+        let decision_context = FrontmatterParser::extract_string(&fm_map, "decision_context")?;
         let rationale = FrontmatterParser::extract_string(&fm_map, "rationale")?;
-        let approved_by =
-            FrontmatterParser::extract_optional_string(&fm_map, "approved_by");
+        let approved_by = FrontmatterParser::extract_optional_string(&fm_map, "approved_by");
 
         let timestamp_str = FrontmatterParser::extract_string(&fm_map, "timestamp")?;
         let timestamp = DateTime::parse_from_rfc3339(&timestamp_str)
@@ -220,8 +218,12 @@ impl DecisionRecord {
                 .unwrap_or_default();
         let alternatives = Self::parse_alternatives(&fm_map)?;
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -522,6 +524,9 @@ mod tests {
             record.alternatives[0].rejected_reason
         );
         assert_eq!(loaded.evidence.len(), record.evidence.len());
-        assert_eq!(loaded.related_artifacts.len(), record.related_artifacts.len());
+        assert_eq!(
+            loaded.related_artifacts.len(),
+            record.related_artifacts.len()
+        );
     }
 }

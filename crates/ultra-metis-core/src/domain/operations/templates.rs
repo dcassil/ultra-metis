@@ -190,7 +190,7 @@ pub fn investigation_template() -> WorkflowTemplate {
                 .with_produced_artifacts(vec!["findings_document".into()]),
         )
         .with_completion_rule(CompletionRule::ArtifactsExist(vec![
-            "findings_document".into(),
+            "findings_document".into()
         ]))
 }
 
@@ -329,9 +329,10 @@ mod tests {
         let t = refactor_template();
         assert_eq!(t.work_type, WorkType::Refactor);
         // Should have a custom completion rule about behavior preservation
-        let has_behavior_rule = t.completion_rules.iter().any(|r| {
-            matches!(r, CompletionRule::Custom(s) if s.contains("Behavior"))
-        });
+        let has_behavior_rule = t
+            .completion_rules
+            .iter()
+            .any(|r| matches!(r, CompletionRule::Custom(s) if s.contains("Behavior")));
         assert!(has_behavior_rule);
     }
 
@@ -355,8 +356,13 @@ mod tests {
 
     #[test]
     fn test_template_for_work_type_found() {
-        for wt in &[WorkType::Bugfix, WorkType::Feature, WorkType::Refactor,
-                     WorkType::Investigation, WorkType::Migration] {
+        for wt in &[
+            WorkType::Bugfix,
+            WorkType::Feature,
+            WorkType::Refactor,
+            WorkType::Investigation,
+            WorkType::Migration,
+        ] {
             let t = template_for_work_type(*wt);
             assert!(t.is_some(), "no template for {:?}", wt);
             assert_eq!(t.unwrap().work_type, *wt);

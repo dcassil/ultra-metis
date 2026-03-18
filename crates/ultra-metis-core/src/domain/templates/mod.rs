@@ -90,22 +90,13 @@ impl TemplateContext {
 
     /// Convert to a Tera Context, merging with an existing base context.
     pub fn to_tera_context(&self, base: &mut Context) {
-        base.insert(
-            "parent_title",
-            &self.parent_title.as_deref().unwrap_or(""),
-        );
+        base.insert("parent_title", &self.parent_title.as_deref().unwrap_or(""));
         base.insert(
             "parent_short_code",
             &self.parent_short_code.as_deref().unwrap_or(""),
         );
-        base.insert(
-            "parent_type",
-            &self.parent_type.as_deref().unwrap_or(""),
-        );
-        base.insert(
-            "project_name",
-            &self.project_name.as_deref().unwrap_or(""),
-        );
+        base.insert("parent_type", &self.parent_type.as_deref().unwrap_or(""));
+        base.insert("project_name", &self.project_name.as_deref().unwrap_or(""));
         base.insert("detected_languages", &self.detected_languages);
         for (key, value) in &self.extra {
             base.insert(key, value);
@@ -238,10 +229,8 @@ impl TemplateRegistry {
             TemplateSet {
                 frontmatter: include_str!("../documents/initiative/frontmatter.yaml").to_string(),
                 content: include_str!("../documents/initiative/content.md").to_string(),
-                acceptance_criteria: include_str!(
-                    "../documents/initiative/acceptance_criteria.md"
-                )
-                .to_string(),
+                acceptance_criteria: include_str!("../documents/initiative/acceptance_criteria.md")
+                    .to_string(),
             },
         );
 
@@ -285,21 +274,22 @@ impl TemplateRegistry {
                 continue;
             }
 
-            let builtin = self.builtin.get(doc_type).cloned().unwrap_or_else(|| {
-                TemplateSet {
+            let builtin = self
+                .builtin
+                .get(doc_type)
+                .cloned()
+                .unwrap_or_else(|| TemplateSet {
                     frontmatter: String::new(),
                     content: String::new(),
                     acceptance_criteria: String::new(),
-                }
-            });
+                });
 
             let frontmatter = Self::read_custom_file(&type_dir, "frontmatter.yaml")
                 .unwrap_or(builtin.frontmatter);
             let content =
                 Self::read_custom_file(&type_dir, "content.md").unwrap_or(builtin.content);
-            let acceptance_criteria =
-                Self::read_custom_file(&type_dir, "acceptance_criteria.md")
-                    .unwrap_or(builtin.acceptance_criteria);
+            let acceptance_criteria = Self::read_custom_file(&type_dir, "acceptance_criteria.md")
+                .unwrap_or(builtin.acceptance_criteria);
 
             self.custom_cache.insert(
                 *doc_type,
@@ -328,11 +318,7 @@ impl TemplateRegistry {
     }
 
     /// Get a specific template category for a document type.
-    pub fn get_template(
-        &self,
-        doc_type: DocumentType,
-        category: TemplateCategory,
-    ) -> Option<&str> {
+    pub fn get_template(&self, doc_type: DocumentType, category: TemplateCategory) -> Option<&str> {
         self.get(doc_type).map(|set| set.get(category))
     }
 
@@ -431,7 +417,10 @@ impl TemplateRegistry {
         let categories = [
             (TemplateCategory::Frontmatter, "frontmatter.yaml"),
             (TemplateCategory::Content, "content.md"),
-            (TemplateCategory::AcceptanceCriteria, "acceptance_criteria.md"),
+            (
+                TemplateCategory::AcceptanceCriteria,
+                "acceptance_criteria.md",
+            ),
         ];
 
         for doc_type_dir in &doc_type_dirs {
@@ -507,7 +496,11 @@ mod tests {
 
         for doc_type in registry.document_types() {
             let set = registry.get(doc_type).unwrap();
-            assert!(!set.frontmatter.is_empty(), "Empty frontmatter for {}", doc_type);
+            assert!(
+                !set.frontmatter.is_empty(),
+                "Empty frontmatter for {}",
+                doc_type
+            );
             assert!(!set.content.is_empty(), "Empty content for {}", doc_type);
             assert!(
                 !set.acceptance_criteria.is_empty(),
@@ -592,7 +585,10 @@ mod tests {
 
     #[test]
     fn test_template_category_display() {
-        assert_eq!(TemplateCategory::Frontmatter.to_string(), "frontmatter.yaml");
+        assert_eq!(
+            TemplateCategory::Frontmatter.to_string(),
+            "frontmatter.yaml"
+        );
         assert_eq!(TemplateCategory::Content.to_string(), "content.md");
         assert_eq!(
             TemplateCategory::AcceptanceCriteria.to_string(),
@@ -690,8 +686,8 @@ mod tests {
     fn test_task_context_aware_rendering_with_parent() {
         let registry = TemplateRegistry::new();
 
-        let ctx = TemplateContext::new()
-            .with_parent("Improve API Performance", "PROJ-E-0001", "epic");
+        let ctx =
+            TemplateContext::new().with_parent("Improve API Performance", "PROJ-E-0001", "epic");
 
         let rendered = registry
             .render_with_context(DocumentType::Task, "Optimize Database Queries", &ctx)
@@ -719,8 +715,7 @@ mod tests {
     fn test_story_context_aware_rendering_with_parent() {
         let registry = TemplateRegistry::new();
 
-        let ctx = TemplateContext::new()
-            .with_parent("User Auth Epic", "PROJ-E-0005", "epic");
+        let ctx = TemplateContext::new().with_parent("User Auth Epic", "PROJ-E-0005", "epic");
 
         let rendered = registry
             .render_with_context(DocumentType::Story, "Add OAuth Login", &ctx)
@@ -748,7 +743,8 @@ mod tests {
         let registry = TemplateRegistry::new();
 
         let mut ctx = TemplateContext::new();
-        ctx.extra.insert("custom_field".to_string(), "custom_value".to_string());
+        ctx.extra
+            .insert("custom_field".to_string(), "custom_value".to_string());
 
         // Should render without error even with extra fields not in template
         let rendered = registry
@@ -788,7 +784,11 @@ mod tests {
         .unwrap();
 
         let errors = TemplateRegistry::validate_custom_dir(temp_dir.path());
-        assert!(errors.is_empty(), "Expected no errors, got: {:?}", errors.len());
+        assert!(
+            errors.is_empty(),
+            "Expected no errors, got: {:?}",
+            errors.len()
+        );
     }
 
     #[test]

@@ -120,13 +120,14 @@ impl BootstrapFlow {
             p.contains("/routes/") || p.contains("/handlers/") || p.contains("/controllers/")
         });
         let has_components = file_paths.iter().any(|p| {
-            p.contains("/components/") && (p.ends_with(".tsx") || p.ends_with(".jsx") || p.ends_with(".vue"))
+            p.contains("/components/")
+                && (p.ends_with(".tsx") || p.ends_with(".jsx") || p.ends_with(".vue"))
         });
         let has_features = file_paths.iter().any(|p| p.contains("/features/"));
         let has_stories = file_paths.iter().any(|p| p.contains(".stories."));
-        let has_bin = file_paths.iter().any(|p| {
-            p.contains("/bin/") || p.contains("src/main.rs") || p.contains("/cmd/")
-        });
+        let has_bin = file_paths
+            .iter()
+            .any(|p| p.contains("/bin/") || p.contains("src/main.rs") || p.contains("/cmd/"));
         let has_storybook = file_paths.iter().any(|p| p.contains(".storybook/"));
 
         // Component library: has stories/storybook, mostly components
@@ -143,7 +144,9 @@ impl BootstrapFlow {
         }
 
         // CLI tool: has bin/main entry point, command structure
-        let has_commands = file_paths.iter().any(|p| p.contains("/commands/") || p.contains("/cmd/"));
+        let has_commands = file_paths
+            .iter()
+            .any(|p| p.contains("/commands/") || p.contains("/cmd/"));
         if has_commands && has_bin {
             return InferredProjectType::CliTool;
         }
@@ -183,8 +186,8 @@ impl BootstrapFlow {
     fn detect_brownfield(file_paths: &[String], tools: &ToolDetectionResult) -> bool {
         // Count source files (exclude configs, docs, etc.)
         let source_extensions: std::collections::HashSet<&str> = [
-            "rs", "js", "jsx", "ts", "tsx", "py", "go", "java", "kt",
-            "rb", "php", "cs", "fs", "scala", "swift", "c", "cpp", "h",
+            "rs", "js", "jsx", "ts", "tsx", "py", "go", "java", "kt", "rb", "php", "cs", "fs",
+            "scala", "swift", "c", "cpp", "h",
         ]
         .into_iter()
         .collect();
@@ -223,7 +226,12 @@ impl BootstrapFlow {
             facts.push(format!("Primary language: {}", primary.name));
         }
         if scan.languages.len() > 1 {
-            let others: Vec<&str> = scan.languages.iter().skip(1).map(|l| l.name.as_str()).collect();
+            let others: Vec<&str> = scan
+                .languages
+                .iter()
+                .skip(1)
+                .map(|l| l.name.as_str())
+                .collect();
             facts.push(format!("Additional languages: {}", others.join(", ")));
         }
 
@@ -232,7 +240,11 @@ impl BootstrapFlow {
             let tool_names: Vec<String> = monorepo.tools.iter().map(|t| t.to_string()).collect();
             facts.push(format!(
                 "Monorepo ({}) with {} packages",
-                if tool_names.is_empty() { "structural".to_string() } else { tool_names.join(", ") },
+                if tool_names.is_empty() {
+                    "structural".to_string()
+                } else {
+                    tool_names.join(", ")
+                },
                 monorepo.packages.len()
             ));
             let app_count = monorepo.apps().len();
@@ -302,7 +314,11 @@ impl BootstrapFlow {
             .primary_language()
             .map(|l| l.name.as_str())
             .unwrap_or("unknown language");
-        let mono_str = if monorepo.is_monorepo { "monorepo" } else { "project" };
+        let mono_str = if monorepo.is_monorepo {
+            "monorepo"
+        } else {
+            "project"
+        };
         let description = format!(
             "{} {} {} ({})",
             if is_brownfield { "Existing" } else { "New" },
@@ -394,10 +410,7 @@ mod tests {
     }
 
     fn greenfield_paths() -> Vec<String> {
-        vec![
-            "Cargo.toml".to_string(),
-            "src/lib.rs".to_string(),
-        ]
+        vec!["Cargo.toml".to_string(), "src/lib.rs".to_string()]
     }
 
     fn component_lib_paths() -> Vec<String> {
@@ -458,7 +471,11 @@ mod tests {
         let result = BootstrapFlow::analyze(&greenfield_paths());
 
         assert!(!result.is_brownfield);
-        assert!(result.summary.facts.iter().any(|f| f.contains("greenfield")));
+        assert!(result
+            .summary
+            .facts
+            .iter()
+            .any(|f| f.contains("greenfield")));
     }
 
     #[test]
@@ -481,7 +498,11 @@ mod tests {
         let result = BootstrapFlow::analyze(&js_server_paths());
 
         assert!(!result.summary.facts.is_empty());
-        assert!(result.summary.facts.iter().any(|f| f.contains("javascript")));
+        assert!(result
+            .summary
+            .facts
+            .iter()
+            .any(|f| f.contains("javascript")));
     }
 
     #[test]
@@ -551,7 +572,10 @@ mod tests {
         assert_eq!(InferredProjectType::CliTool.to_string(), "cli-tool");
         assert_eq!(InferredProjectType::Library.to_string(), "library");
         assert_eq!(InferredProjectType::FullStack.to_string(), "full-stack");
-        assert_eq!(InferredProjectType::ComponentLibrary.to_string(), "component-library");
+        assert_eq!(
+            InferredProjectType::ComponentLibrary.to_string(),
+            "component-library"
+        );
         assert_eq!(InferredProjectType::Unknown.to_string(), "unknown");
     }
 

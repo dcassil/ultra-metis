@@ -151,11 +151,7 @@ impl CatalogQueryEngine {
 
     /// List all distinct languages in the catalog.
     pub fn languages(&self) -> Vec<String> {
-        let mut langs: Vec<String> = self
-            .entries
-            .iter()
-            .map(|e| e.language.clone())
-            .collect();
+        let mut langs: Vec<String> = self.entries.iter().map(|e| e.language.clone()).collect();
         langs.sort();
         langs.dedup();
         langs

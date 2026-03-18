@@ -18,17 +18,16 @@ fn extract_string_array_or_empty(
     key: &str,
 ) -> Vec<String> {
     match map.get(key) {
-        Some(gray_matter::Pod::Array(arr)) => {
-            arr.iter()
-                .filter_map(|item| {
-                    if let gray_matter::Pod::String(s) = item {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        }
+        Some(gray_matter::Pod::Array(arr)) => arr
+            .iter()
+            .filter_map(|item| {
+                if let gray_matter::Pod::String(s) = item {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
+            .collect(),
         _ => Vec::new(),
     }
 }
@@ -249,8 +248,12 @@ impl ReferenceArchitecture {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         let source_catalog_ref =
@@ -260,16 +263,14 @@ impl ReferenceArchitecture {
         let status = status_str.parse::<ArchitectureStatus>()?;
 
         let layer_overrides = extract_string_array_or_empty(&fm_map, "layer_overrides");
-        let additional_boundaries =
-            extract_string_array_or_empty(&fm_map, "additional_boundaries");
+        let additional_boundaries = extract_string_array_or_empty(&fm_map, "additional_boundaries");
         let extra_dependency_rules =
             extract_string_array_or_empty(&fm_map, "extra_dependency_rules");
         let rules_config_ref =
             FrontmatterParser::extract_optional_string(&fm_map, "rules_config_ref");
         let analysis_baseline_ref =
             FrontmatterParser::extract_optional_string(&fm_map, "analysis_baseline_ref");
-        let tolerated_exceptions =
-            extract_string_array_or_empty(&fm_map, "tolerated_exceptions");
+        let tolerated_exceptions = extract_string_array_or_empty(&fm_map, "tolerated_exceptions");
 
         Ok(Self::from_parts(
             title,

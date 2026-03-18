@@ -5,9 +5,9 @@ use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
 use chrono::Utc;
 use gray_matter;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tera::{Context, Tera};
-use serde::{Deserialize, Serialize};
 
 /// Resolution status for a remediation record.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -200,14 +200,19 @@ impl RemediationRecord {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         let problem_type = FrontmatterParser::extract_string(&fm_map, "problem_type")?;
         let affected_scope = FrontmatterParser::extract_string(&fm_map, "affected_scope")?;
         let is_systemic = FrontmatterParser::extract_bool(&fm_map, "is_systemic").unwrap_or(false);
-        let resolution_status_str = FrontmatterParser::extract_string(&fm_map, "resolution_status")?;
+        let resolution_status_str =
+            FrontmatterParser::extract_string(&fm_map, "resolution_status")?;
         let resolution_status = resolution_status_str.parse::<ResolutionStatus>()?;
 
         Ok(Self::from_parts(
@@ -367,10 +372,22 @@ mod tests {
 
     #[test]
     fn test_resolution_status_parsing() {
-        assert_eq!("Open".parse::<ResolutionStatus>().unwrap(), ResolutionStatus::Open);
-        assert_eq!("InProgress".parse::<ResolutionStatus>().unwrap(), ResolutionStatus::InProgress);
-        assert_eq!("Resolved".parse::<ResolutionStatus>().unwrap(), ResolutionStatus::Resolved);
-        assert_eq!("WontFix".parse::<ResolutionStatus>().unwrap(), ResolutionStatus::WontFix);
+        assert_eq!(
+            "Open".parse::<ResolutionStatus>().unwrap(),
+            ResolutionStatus::Open
+        );
+        assert_eq!(
+            "InProgress".parse::<ResolutionStatus>().unwrap(),
+            ResolutionStatus::InProgress
+        );
+        assert_eq!(
+            "Resolved".parse::<ResolutionStatus>().unwrap(),
+            ResolutionStatus::Resolved
+        );
+        assert_eq!(
+            "WontFix".parse::<ResolutionStatus>().unwrap(),
+            ResolutionStatus::WontFix
+        );
         assert!("invalid".parse::<ResolutionStatus>().is_err());
     }
 }

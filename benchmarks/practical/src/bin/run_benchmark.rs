@@ -38,7 +38,11 @@ async fn main() -> anyhow::Result<()> {
     // Verify some form of Claude access is available
     if std::env::var("ANTHROPIC_API_KEY").is_err() {
         // Check claude CLI is available as fallback
-        if std::process::Command::new("claude").arg("--version").output().is_err() {
+        if std::process::Command::new("claude")
+            .arg("--version")
+            .output()
+            .is_err()
+        {
             eprintln!("Error: Neither ANTHROPIC_API_KEY nor `claude` CLI found. Set ANTHROPIC_API_KEY or install Claude Code.");
             std::process::exit(1);
         }
@@ -55,10 +59,8 @@ async fn main() -> anyhow::Result<()> {
     println!("Mode     : {:?}", mode);
     println!();
 
-    let harness = practical_benchmark::BenchmarkHarness::new(
-        scenario_path.clone(),
-        results_dir.clone(),
-    );
+    let harness =
+        practical_benchmark::BenchmarkHarness::new(scenario_path.clone(), results_dir.clone());
 
     let autonomous_run = if matches!(mode, RunMode::Autonomous | RunMode::Both) {
         println!("=== Phase 1: Autonomous Execution (Baseline) ===");
@@ -110,10 +112,7 @@ async fn main() -> anyhow::Result<()> {
         println!("  Token overhead  : {:+.1}%", report.token_overhead);
         println!("  Quality delta   : {:+.1} points", report.quality_delta);
         println!("  ROI             : {:.2}", report.roi);
-        println!(
-            "  Error detection : {:.1}%",
-            report.error_detection_rate
-        );
+        println!("  Error detection : {:.1}%", report.error_detection_rate);
     }
 
     println!();

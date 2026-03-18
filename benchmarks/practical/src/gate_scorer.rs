@@ -189,7 +189,11 @@ mod tests {
     #[test]
     fn test_all_pass_returns_approved() {
         let scorer = GateScorer::new();
-        let initiative = make_initiative("output", vec![make_good_task("t1"), make_good_task("t2")], 2000);
+        let initiative = make_initiative(
+            "output",
+            vec![make_good_task("t1"), make_good_task("t2")],
+            2000,
+        );
         let result = scorer.score_initiative(&initiative, None);
         assert!(matches!(result.gate_decision, GateDecision::Approved));
         assert!(result.issues_found.is_empty());
@@ -221,7 +225,10 @@ mod tests {
         let initiative = make_initiative("output", vec![task], 1500);
         let result = scorer.score_initiative(&initiative, None);
         assert!(matches!(result.gate_decision, GateDecision::RequiresRework));
-        assert!(result.issues_found.iter().any(|i| i.contains("doc accuracy")));
+        assert!(result
+            .issues_found
+            .iter()
+            .any(|i| i.contains("doc accuracy")));
     }
 
     #[test]
@@ -243,7 +250,10 @@ mod tests {
         let initiative = make_initiative("output", vec![task], 1500);
         let result = scorer.score_initiative(&initiative, None);
         assert!(matches!(result.gate_decision, GateDecision::RequiresRework));
-        assert!(result.issues_found.iter().any(|i| i.contains("placeholder")));
+        assert!(result
+            .issues_found
+            .iter()
+            .any(|i| i.contains("placeholder")));
     }
 
     #[test]
@@ -264,6 +274,9 @@ mod tests {
         let nonexistent = std::path::Path::new("/nonexistent/path/xyz");
         let result = scorer.score_initiative(&initiative, Some(nonexistent));
         assert!(matches!(result.gate_decision, GateDecision::Rejected));
-        assert!(result.issues_found.iter().any(|i| i.contains("Artifact directory")));
+        assert!(result
+            .issues_found
+            .iter()
+            .any(|i| i.contains("Artifact directory")));
     }
 }

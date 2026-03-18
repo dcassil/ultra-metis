@@ -6,7 +6,9 @@
 //! the originating catalog entry for traceability.
 
 use crate::domain::documents::architecture_catalog_entry::ArchitectureCatalogEntry;
-use crate::domain::documents::rules_config::{ProtectionLevel, RuleCategory, RuleScope, RulesConfig};
+use crate::domain::documents::rules_config::{
+    ProtectionLevel, RuleCategory, RuleScope, RulesConfig,
+};
 use crate::domain::documents::traits::DocumentValidationError;
 use crate::domain::documents::types::{Phase, Tag};
 
@@ -174,12 +176,7 @@ impl RuleSeeder {
 
     fn title_from_hint(hint: &str) -> String {
         // Take the first ~50 chars as a title, cleaning up
-        let clean: String = hint
-            .chars()
-            .take(50)
-            .collect::<String>()
-            .trim()
-            .to_string();
+        let clean: String = hint.chars().take(50).collect::<String>().trim().to_string();
         if clean.len() < hint.len() {
             format!("{}...", clean)
         } else {
@@ -191,13 +188,23 @@ impl RuleSeeder {
         let lower = hint.to_lowercase();
         if lower.contains("test") || lower.contains("quality") || lower.contains("validation") {
             RuleCategory::ValidationQuality
-        } else if lower.contains("dependency") || lower.contains("import") || lower.contains("boundary") {
+        } else if lower.contains("dependency")
+            || lower.contains("import")
+            || lower.contains("boundary")
+        {
             RuleCategory::Architectural
-        } else if lower.contains("naming") || lower.contains("convention") || lower.contains("style") {
+        } else if lower.contains("naming")
+            || lower.contains("convention")
+            || lower.contains("style")
+        {
             RuleCategory::Behavioral
-        } else if lower.contains("approval") || lower.contains("escalat") || lower.contains("review") {
+        } else if lower.contains("approval")
+            || lower.contains("escalat")
+            || lower.contains("review")
+        {
             RuleCategory::ApprovalEscalation
-        } else if lower.contains("safety") || lower.contains("security") || lower.contains("danger") {
+        } else if lower.contains("safety") || lower.contains("security") || lower.contains("danger")
+        {
             RuleCategory::ExecutionSafety
         } else if lower.contains("deploy") || lower.contains("ops") || lower.contains("ci") {
             RuleCategory::Operational
@@ -237,9 +244,8 @@ mod tests {
             "Modules use snake_case".to_string(),
             "Types use PascalCase".to_string(),
         ];
-        entry.module_boundaries = vec![
-            "Public API surface limited to mod.rs re-exports".to_string(),
-        ];
+        entry.module_boundaries =
+            vec!["Public API surface limited to mod.rs re-exports".to_string()];
         entry.rules_seed_hints = vec![
             "All public functions must have doc comments".to_string(),
             "Tests must be co-located in the same file".to_string(),
@@ -338,12 +344,10 @@ mod tests {
 
     #[test]
     fn test_title_from_hint() {
-        assert_eq!(
-            RuleSeeder::title_from_hint("Short hint"),
-            "Short hint"
-        );
+        assert_eq!(RuleSeeder::title_from_hint("Short hint"), "Short hint");
 
-        let long_hint = "This is a very long hint that exceeds fifty characters and should be truncated";
+        let long_hint =
+            "This is a very long hint that exceeds fifty characters and should be truncated";
         let title = RuleSeeder::title_from_hint(long_hint);
         assert!(title.ends_with("..."));
         assert!(title.len() <= 54); // 50 chars + "..."
@@ -358,7 +362,11 @@ mod tests {
         // Each config should have a category label tag
         for config in &configs {
             let has_label = config.tags().iter().any(|t| matches!(t, Tag::Label(_)));
-            assert!(has_label, "Config '{}' should have a category label tag", config.title());
+            assert!(
+                has_label,
+                "Config '{}' should have a category label tag",
+                config.title()
+            );
         }
     }
 }

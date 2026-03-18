@@ -26,7 +26,14 @@ impl DesignContext {
         design_references: Vec<String>,
     ) -> Result<Self, DocumentValidationError> {
         let template_content = include_str!("content.md");
-        Self::new_with_template(title, tags, archived, short_code, design_references, template_content)
+        Self::new_with_template(
+            title,
+            tags,
+            archived,
+            short_code,
+            design_references,
+            template_content,
+        )
     }
 
     pub fn new_with_template(
@@ -136,14 +143,26 @@ impl DesignContext {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         let design_references =
-            FrontmatterParser::extract_string_array(&fm_map, "design_references").unwrap_or_default();
+            FrontmatterParser::extract_string_array(&fm_map, "design_references")
+                .unwrap_or_default();
 
-        Ok(Self::from_parts(title, metadata, content, tags, archived, design_references))
+        Ok(Self::from_parts(
+            title,
+            metadata,
+            content,
+            tags,
+            archived,
+            design_references,
+        ))
     }
 
     fn next_phase_in_sequence(current: Phase) -> Option<Phase> {

@@ -36,6 +36,34 @@ Validated only:
 cargo run --package practical-benchmark --release -- --mode validated
 ```
 
+### MCP Comparison Suite
+
+Shared MCP comparison only:
+```bash
+cargo run -p practical-benchmark --bin run_mcp_comparison -- \
+  --results-dir benchmarks/practical/results \
+  --scenario benchmarks/practical/scenario
+```
+
+Planning-through-MCP comparison:
+```bash
+cargo run -p practical-benchmark --bin run_mcp_planning_comparison -- \
+  --results-dir benchmarks/practical/results \
+  --scenario benchmarks/practical/scenario
+```
+
+Combined suite:
+```bash
+cargo run -p practical-benchmark --bin run_mcp_suite -- \
+  --results-dir benchmarks/practical/results \
+  --scenario benchmarks/practical/scenario
+```
+
+The suite always runs the shared MCP workflow comparison and then attempts the
+planning comparison. If Claude-backed prompt execution is unavailable, the
+planning stage is recorded as failed/skipped in the suite report instead of
+aborting the whole run.
+
 ## Metrics Captured
 
 **Per Initiative:**

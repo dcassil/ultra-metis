@@ -117,7 +117,10 @@ fn test_full_flow_express_server_catalog_match() {
             let loaded =
                 ultra_metis_core::ReferenceArchitecture::from_content(&serialized).unwrap();
             assert_eq!(loaded.title(), reference_architecture.title());
-            assert_eq!(loaded.source_catalog_ref, reference_architecture.source_catalog_ref);
+            assert_eq!(
+                loaded.source_catalog_ref,
+                reference_architecture.source_catalog_ref
+            );
         }
         other => panic!(
             "Expected CatalogMatch, got {:?}",
@@ -187,11 +190,8 @@ fn test_full_flow_messy_repo_recommend_then_decline() {
             let match_result = matcher.match_against(analysis, &entries);
             let best = &match_result.scores[0];
 
-            let accepted_ra = evaluator.accept_recommendation(
-                analysis,
-                best,
-                "RA-INT-003-ACCEPTED".to_string(),
-            );
+            let accepted_ra =
+                evaluator.accept_recommendation(analysis, best, "RA-INT-003-ACCEPTED".to_string());
 
             assert!(!accepted_ra.is_derived);
             assert!(accepted_ra.is_catalog_linked());
@@ -220,7 +220,9 @@ fn test_structure_analysis_details() {
     assert!(analysis.detected_layers.contains(&"routes".to_string()));
     assert!(analysis.detected_layers.contains(&"handlers".to_string()));
     assert!(analysis.detected_layers.contains(&"services".to_string()));
-    assert!(analysis.detected_layers.contains(&"repositories".to_string()));
+    assert!(analysis
+        .detected_layers
+        .contains(&"repositories".to_string()));
     assert!(analysis.detected_layers.contains(&"middleware".to_string()));
 
     // Naming should be kebab-case (kebab file names like rate-limit.ts)

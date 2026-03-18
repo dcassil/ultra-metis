@@ -4,7 +4,7 @@
 //! response: triggering investigations, tracking remediation actions, verifying
 //! resolution, and detecting recurring issues.
 
-pub mod types;
-pub mod trigger;
-pub mod verification;
 pub mod recurrence;
+pub mod trigger;
+pub mod types;
+pub mod verification;

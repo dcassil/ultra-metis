@@ -160,16 +160,20 @@ impl OwnershipMap {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let parent_id = FrontmatterParser::extract_optional_string(&fm_map, "parent_id")
-            .map(DocumentId::from);
+        let parent_id =
+            FrontmatterParser::extract_optional_string(&fm_map, "parent_id").map(DocumentId::from);
 
         let scope_type =
             FrontmatterParser::extract_optional_string(&fm_map, "scope_type").unwrap_or_default();
         let owner =
             FrontmatterParser::extract_optional_string(&fm_map, "owner").unwrap_or_default();
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(

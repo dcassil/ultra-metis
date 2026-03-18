@@ -76,9 +76,7 @@ pub struct McpServer {
 
 impl McpServer {
     pub fn new() -> Self {
-        Self {
-            initialized: false,
-        }
+        Self { initialized: false }
     }
 
     /// Handle a single JSON-RPC message, returning an optional response
@@ -132,10 +130,7 @@ impl McpServer {
 
     fn handle_tools_list(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
         let tools = tools::get_tool_definitions();
-        JsonRpcResponse::success(
-            request.id.clone(),
-            serde_json::json!({ "tools": tools }),
-        )
+        JsonRpcResponse::success(request.id.clone(), serde_json::json!({ "tools": tools }))
     }
 
     fn handle_tools_call(&self, request: &JsonRpcRequest) -> JsonRpcResponse {

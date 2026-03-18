@@ -102,8 +102,7 @@ impl ToolOutputParser for ClippyParser {
                 None => ("unknown", None, None),
             };
 
-            let mut finding =
-                FindingEntry::new(rule_id, severity, &diagnostic.message, file_path);
+            let mut finding = FindingEntry::new(rule_id, severity, &diagnostic.message, file_path);
             if let (Some(l), Some(c)) = (line_num, col_num) {
                 finding = finding.with_location(l, c);
             }

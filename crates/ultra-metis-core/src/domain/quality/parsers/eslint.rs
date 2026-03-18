@@ -37,9 +37,7 @@ impl ToolOutputParser for EslintParser {
     fn parse(&self, input: &str) -> Result<ParsedToolOutput, ParserError> {
         let trimmed = input.trim();
         if trimmed.is_empty() {
-            return Err(ParserError::InvalidFormat(
-                "Empty input".to_string(),
-            ));
+            return Err(ParserError::InvalidFormat("Empty input".to_string()));
         }
 
         let file_results: Vec<EslintFileResult> = serde_json::from_str(trimmed)?;

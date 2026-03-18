@@ -97,8 +97,13 @@ impl std::fmt::Display for CustomLoadError {
 /// both built-in entries and any custom entries found in the given metis path.
 pub async fn build_engine_with_custom(
     metis_path: &Path,
-) -> Result<(super::query_engine::CatalogQueryEngine, Vec<CustomLoadError>), DocumentValidationError>
-{
+) -> Result<
+    (
+        super::query_engine::CatalogQueryEngine,
+        Vec<CustomLoadError>,
+    ),
+    DocumentValidationError,
+> {
     let custom_dir = catalog_dir(metis_path);
     let (custom_entries, errors) = load_custom_entries(&custom_dir).await;
     let engine = super::query_engine::CatalogQueryEngine::with_builtins_and_custom(custom_entries);

@@ -153,22 +153,70 @@ struct LanguageRule {
 }
 
 const LANGUAGE_RULES: &[LanguageRule] = &[
-    LanguageRule { manifest: "Cargo.toml", language: "rust" },
-    LanguageRule { manifest: "package.json", language: "javascript" },
-    LanguageRule { manifest: "go.mod", language: "go" },
-    LanguageRule { manifest: "pyproject.toml", language: "python" },
-    LanguageRule { manifest: "setup.py", language: "python" },
-    LanguageRule { manifest: "requirements.txt", language: "python" },
-    LanguageRule { manifest: "Pipfile", language: "python" },
-    LanguageRule { manifest: "pom.xml", language: "java" },
-    LanguageRule { manifest: "build.gradle", language: "java" },
-    LanguageRule { manifest: "build.gradle.kts", language: "kotlin" },
-    LanguageRule { manifest: "Gemfile", language: "ruby" },
-    LanguageRule { manifest: "composer.json", language: "php" },
-    LanguageRule { manifest: "mix.exs", language: "elixir" },
-    LanguageRule { manifest: "Package.swift", language: "swift" },
-    LanguageRule { manifest: "CMakeLists.txt", language: "c-cpp" },
-    LanguageRule { manifest: "Makefile.am", language: "c-cpp" },
+    LanguageRule {
+        manifest: "Cargo.toml",
+        language: "rust",
+    },
+    LanguageRule {
+        manifest: "package.json",
+        language: "javascript",
+    },
+    LanguageRule {
+        manifest: "go.mod",
+        language: "go",
+    },
+    LanguageRule {
+        manifest: "pyproject.toml",
+        language: "python",
+    },
+    LanguageRule {
+        manifest: "setup.py",
+        language: "python",
+    },
+    LanguageRule {
+        manifest: "requirements.txt",
+        language: "python",
+    },
+    LanguageRule {
+        manifest: "Pipfile",
+        language: "python",
+    },
+    LanguageRule {
+        manifest: "pom.xml",
+        language: "java",
+    },
+    LanguageRule {
+        manifest: "build.gradle",
+        language: "java",
+    },
+    LanguageRule {
+        manifest: "build.gradle.kts",
+        language: "kotlin",
+    },
+    LanguageRule {
+        manifest: "Gemfile",
+        language: "ruby",
+    },
+    LanguageRule {
+        manifest: "composer.json",
+        language: "php",
+    },
+    LanguageRule {
+        manifest: "mix.exs",
+        language: "elixir",
+    },
+    LanguageRule {
+        manifest: "Package.swift",
+        language: "swift",
+    },
+    LanguageRule {
+        manifest: "CMakeLists.txt",
+        language: "c-cpp",
+    },
+    LanguageRule {
+        manifest: "Makefile.am",
+        language: "c-cpp",
+    },
 ];
 
 /// Extension -> language mapping for file-count-based detection.
@@ -286,10 +334,7 @@ impl RepoScanner {
         let mut languages: Vec<DetectedLanguage> = all_langs
             .into_iter()
             .map(|name| {
-                let evidence = manifest_evidence
-                    .get(&name)
-                    .cloned()
-                    .unwrap_or_default();
+                let evidence = manifest_evidence.get(&name).cloned().unwrap_or_default();
                 let file_count = ext_counts.get(&name).copied().unwrap_or(0);
                 DetectedLanguage {
                     name: name.clone(),
@@ -299,8 +344,7 @@ impl RepoScanner {
             })
             .filter(|lang| {
                 // Only include languages with manifest evidence or significant file count
-                !lang.evidence.is_empty()
-                    || ext_counts.get(&lang.name).copied().unwrap_or(0) >= 3
+                !lang.evidence.is_empty() || ext_counts.get(&lang.name).copied().unwrap_or(0) >= 3
             })
             .collect();
 
@@ -359,7 +403,10 @@ impl RepoScanner {
             } else {
                 managers.push(PackageManager::Pip);
             }
-        } else if file_names.contains("requirements.txt") || file_names.contains("Pipfile") || file_names.contains("setup.py") {
+        } else if file_names.contains("requirements.txt")
+            || file_names.contains("Pipfile")
+            || file_names.contains("setup.py")
+        {
             managers.push(PackageManager::Pip);
         }
         if file_names.contains("pom.xml") {
@@ -368,7 +415,10 @@ impl RepoScanner {
         if file_names.contains("build.gradle") || file_names.contains("build.gradle.kts") {
             managers.push(PackageManager::Gradle);
         }
-        if file_names.iter().any(|f| f.ends_with(".csproj") || f.ends_with(".sln") || f.ends_with(".fsproj")) {
+        if file_names
+            .iter()
+            .any(|f| f.ends_with(".csproj") || f.ends_with(".sln") || f.ends_with(".fsproj"))
+        {
             managers.push(PackageManager::DotNet);
         }
 
@@ -391,7 +441,10 @@ impl RepoScanner {
         if file_names.contains("Cargo.toml") {
             tools.push(BuildTool::CargoBuild);
         }
-        if file_names.contains("Makefile") || file_names.contains("makefile") || file_names.contains("GNUmakefile") {
+        if file_names.contains("Makefile")
+            || file_names.contains("makefile")
+            || file_names.contains("GNUmakefile")
+        {
             tools.push(BuildTool::Make);
         }
         if file_names.contains("justfile") || file_names.contains("Justfile") {
@@ -406,10 +459,16 @@ impl RepoScanner {
         if file_names.contains("webpack.config.js") || file_names.contains("webpack.config.ts") {
             tools.push(BuildTool::Webpack);
         }
-        if file_names.contains("vite.config.js") || file_names.contains("vite.config.ts") || file_names.contains("vite.config.mjs") {
+        if file_names.contains("vite.config.js")
+            || file_names.contains("vite.config.ts")
+            || file_names.contains("vite.config.mjs")
+        {
             tools.push(BuildTool::Vite);
         }
-        if file_names.contains("rollup.config.js") || file_names.contains("rollup.config.ts") || file_names.contains("rollup.config.mjs") {
+        if file_names.contains("rollup.config.js")
+            || file_names.contains("rollup.config.ts")
+            || file_names.contains("rollup.config.mjs")
+        {
             tools.push(BuildTool::Rollup);
         }
         if file_names.contains("pom.xml") {
@@ -421,10 +480,16 @@ impl RepoScanner {
         if file_names.contains("CMakeLists.txt") {
             tools.push(BuildTool::CMake);
         }
-        if file_names.contains("BUILD") || file_names.contains("BUILD.bazel") || file_names.contains("WORKSPACE") {
+        if file_names.contains("BUILD")
+            || file_names.contains("BUILD.bazel")
+            || file_names.contains("WORKSPACE")
+        {
             tools.push(BuildTool::Bazel);
         }
-        if file_names.contains("Dockerfile") || file_names.contains("docker-compose.yml") || file_names.contains("docker-compose.yaml") {
+        if file_names.contains("Dockerfile")
+            || file_names.contains("docker-compose.yml")
+            || file_names.contains("docker-compose.yaml")
+        {
             tools.push(BuildTool::Docker);
         }
 
@@ -433,8 +498,7 @@ impl RepoScanner {
 
     /// Count file extensions for distribution analysis.
     fn count_extensions(file_paths: &[String]) -> Vec<(String, usize)> {
-        let mut counts: std::collections::HashMap<String, usize> =
-            std::collections::HashMap::new();
+        let mut counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
         for path in file_paths {
             if let Some(ext) = Path::new(path).extension() {
                 let ext_str = ext.to_string_lossy().to_lowercase();
@@ -568,10 +632,7 @@ mod tests {
 
     #[test]
     fn test_yarn_detection() {
-        let paths = vec![
-            "package.json".to_string(),
-            "yarn.lock".to_string(),
-        ];
+        let paths = vec!["package.json".to_string(), "yarn.lock".to_string()];
         let result = RepoScanner::scan(&paths);
         assert!(result.package_managers.contains(&PackageManager::Yarn));
         assert!(!result.package_managers.contains(&PackageManager::Npm));

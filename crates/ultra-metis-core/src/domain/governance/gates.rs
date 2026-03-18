@@ -228,14 +228,23 @@ impl GateDefinition {
 
     /// Returns the number of required evidence items.
     pub fn required_evidence_count(&self) -> usize {
-        self.evidence_requirements.iter().filter(|e| e.required).count()
+        self.evidence_requirements
+            .iter()
+            .filter(|e| e.required)
+            .count()
     }
 }
 
 /// Returns default (name, description, evidence, failure_behavior, skippable) for each gate type.
 fn default_gate(
     gate_type: GateType,
-) -> (String, String, Vec<EvidenceRequirement>, GateFailureBehavior, bool) {
+) -> (
+    String,
+    String,
+    Vec<EvidenceRequirement>,
+    GateFailureBehavior,
+    bool,
+) {
     match gate_type {
         GateType::Entry => (
             "Entry Gate".into(),
@@ -423,11 +432,26 @@ mod tests {
 
     #[test]
     fn test_gate_type_from_str_aliases() {
-        assert_eq!("context".parse::<GateType>().unwrap(), GateType::ContextSufficiency);
-        assert_eq!("ready".parse::<GateType>().unwrap(), GateType::ExecutionReadiness);
-        assert_eq!("validate".parse::<GateType>().unwrap(), GateType::Validation);
-        assert_eq!("complete".parse::<GateType>().unwrap(), GateType::Completion);
-        assert_eq!("escalate".parse::<GateType>().unwrap(), GateType::Escalation);
+        assert_eq!(
+            "context".parse::<GateType>().unwrap(),
+            GateType::ContextSufficiency
+        );
+        assert_eq!(
+            "ready".parse::<GateType>().unwrap(),
+            GateType::ExecutionReadiness
+        );
+        assert_eq!(
+            "validate".parse::<GateType>().unwrap(),
+            GateType::Validation
+        );
+        assert_eq!(
+            "complete".parse::<GateType>().unwrap(),
+            GateType::Completion
+        );
+        assert_eq!(
+            "escalate".parse::<GateType>().unwrap(),
+            GateType::Escalation
+        );
     }
 
     #[test]
@@ -566,6 +590,9 @@ mod tests {
     fn test_gate_failure_behavior_display() {
         assert_eq!(GateFailureBehavior::Block.to_string(), "block");
         assert_eq!(GateFailureBehavior::Warn.to_string(), "warn");
-        assert_eq!(GateFailureBehavior::EscalateToHuman.to_string(), "escalate_to_human");
+        assert_eq!(
+            GateFailureBehavior::EscalateToHuman.to_string(),
+            "escalate_to_human"
+        );
     }
 }

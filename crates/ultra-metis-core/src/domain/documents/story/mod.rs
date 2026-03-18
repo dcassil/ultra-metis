@@ -68,11 +68,9 @@ impl Story {
         let mut context = Context::new();
         context.insert("title", &title);
 
-        let rendered_content = tera
-            .render("story_content", &context)
-            .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
-            })?;
+        let rendered_content = tera.render("story_content", &context).map_err(|e| {
+            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+        })?;
 
         let content = DocumentContent::new(&rendered_content);
 
@@ -194,8 +192,12 @@ impl Story {
                 .map(|s| DocumentId::new(&s))
                 .collect();
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -486,7 +488,10 @@ mod tests {
         assert_eq!(loaded.story_type, story.story_type);
         assert_eq!(loaded.risk_level, story.risk_level);
         assert_eq!(loaded.tags().len(), story.tags().len());
-        assert_eq!(loaded.design_context_refs.len(), story.design_context_refs.len());
+        assert_eq!(
+            loaded.design_context_refs.len(),
+            story.design_context_refs.len()
+        );
         assert_eq!(loaded.blocked_by().len(), story.blocked_by().len());
         assert_eq!(
             loaded.parent_id().map(|id| id.to_string()),
@@ -562,8 +567,14 @@ mod tests {
         assert_eq!("feature".parse::<StoryType>().unwrap(), StoryType::Feature);
         assert_eq!("bugfix".parse::<StoryType>().unwrap(), StoryType::Bugfix);
         assert_eq!("bug-fix".parse::<StoryType>().unwrap(), StoryType::Bugfix);
-        assert_eq!("refactor".parse::<StoryType>().unwrap(), StoryType::Refactor);
-        assert_eq!("migration".parse::<StoryType>().unwrap(), StoryType::Migration);
+        assert_eq!(
+            "refactor".parse::<StoryType>().unwrap(),
+            StoryType::Refactor
+        );
+        assert_eq!(
+            "migration".parse::<StoryType>().unwrap(),
+            StoryType::Migration
+        );
         assert_eq!(
             "architecture-change".parse::<StoryType>().unwrap(),
             StoryType::ArchitectureChange

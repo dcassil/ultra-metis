@@ -293,10 +293,7 @@ impl TraceabilityGraph {
     ///
     /// Does not include the document itself.
     pub fn siblings(&self, id: &DocumentId) -> Vec<&DocumentNode> {
-        let parent_id = self
-            .nodes
-            .get(id)
-            .and_then(|n| n.parent_id.as_ref());
+        let parent_id = self.nodes.get(id).and_then(|n| n.parent_id.as_ref());
 
         match parent_id {
             Some(parent_id) => self
@@ -734,7 +731,9 @@ mod tests {
     #[test]
     fn test_remove_nonexistent() {
         let mut graph = build_sample_graph();
-        assert!(graph.remove_node(&DocumentId::from("nonexistent")).is_none());
+        assert!(graph
+            .remove_node(&DocumentId::from("nonexistent"))
+            .is_none());
     }
 
     #[test]

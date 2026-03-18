@@ -5,9 +5,9 @@ use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
 use chrono::Utc;
 use gray_matter;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tera::{Context, Tera};
-use serde::{Deserialize, Serialize};
 
 /// Overall quality status for a quality record.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -190,11 +190,16 @@ impl QualityRecord {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
-        let linked_baseline = FrontmatterParser::extract_optional_string(&fm_map, "linked_baseline");
+        let linked_baseline =
+            FrontmatterParser::extract_optional_string(&fm_map, "linked_baseline");
         let record_date = FrontmatterParser::extract_string(&fm_map, "record_date")?;
         let overall_status_str = FrontmatterParser::extract_string(&fm_map, "overall_status")?;
         let overall_status = overall_status_str.parse::<QualityStatus>()?;
@@ -350,9 +355,18 @@ mod tests {
 
     #[test]
     fn test_quality_status_parsing() {
-        assert_eq!("Pass".parse::<QualityStatus>().unwrap(), QualityStatus::Pass);
-        assert_eq!("Warn".parse::<QualityStatus>().unwrap(), QualityStatus::Warn);
-        assert_eq!("Fail".parse::<QualityStatus>().unwrap(), QualityStatus::Fail);
+        assert_eq!(
+            "Pass".parse::<QualityStatus>().unwrap(),
+            QualityStatus::Pass
+        );
+        assert_eq!(
+            "Warn".parse::<QualityStatus>().unwrap(),
+            QualityStatus::Warn
+        );
+        assert_eq!(
+            "Fail".parse::<QualityStatus>().unwrap(),
+            QualityStatus::Fail
+        );
         assert!("Unknown".parse::<QualityStatus>().is_err());
     }
 }

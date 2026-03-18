@@ -59,10 +59,8 @@ impl RecurrenceDetector {
     ) -> RecurrenceReport {
         let cutoff = Utc::now() - Duration::days(window_days as i64);
 
-        let in_window: Vec<&RemediationLoop> = loops
-            .iter()
-            .filter(|l| l.created_at >= cutoff)
-            .collect();
+        let in_window: Vec<&RemediationLoop> =
+            loops.iter().filter(|l| l.created_at >= cutoff).collect();
 
         let resolved_count = in_window
             .iter()
@@ -72,10 +70,7 @@ impl RecurrenceDetector {
             .iter()
             .filter(|l| l.phase == RemediationLoopPhase::Closed)
             .count();
-        let active_count = in_window
-            .iter()
-            .filter(|l| !l.phase.is_terminal())
-            .count();
+        let active_count = in_window.iter().filter(|l| !l.phase.is_terminal()).count();
 
         // Collect all failed metrics from gate failure triggers
         let mut metric_occurrences: HashMap<String, Vec<MetricOccurrence>> = HashMap::new();
@@ -101,8 +96,7 @@ impl RecurrenceDetector {
         for (metric_name, occurrences) in &metric_occurrences {
             let count = occurrences.len() as u32;
             if count >= recurrence_threshold {
-                let avg_delta =
-                    occurrences.iter().map(|o| o.delta).sum::<f64>() / count as f64;
+                let avg_delta = occurrences.iter().map(|o| o.delta).sum::<f64>() / count as f64;
 
                 let time_span_days = if occurrences.len() >= 2 {
                     let min_ts = occurrences.iter().map(|o| o.timestamp).min().unwrap();
@@ -164,7 +158,11 @@ mod tests {
     use super::*;
     use crate::domain::remediation::types::FailedMetric;
 
-    fn make_gate_loop(id: &str, metrics: Vec<FailedMetric>, phase: RemediationLoopPhase) -> RemediationLoop {
+    fn make_gate_loop(
+        id: &str,
+        metrics: Vec<FailedMetric>,
+        phase: RemediationLoopPhase,
+    ) -> RemediationLoop {
         let trigger = RemediationTrigger::GateFailure {
             gate_config_ref: "QGC-0001".to_string(),
             failed_metrics: metrics,

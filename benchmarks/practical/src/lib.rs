@@ -1,17 +1,19 @@
-pub mod types;
-pub mod runner;
-pub mod gated_runner;
-pub mod gate_scorer;
-pub mod metrics_collector;
 pub mod analysis;
 pub mod api_client;
-pub mod prompt_builder;
-pub mod reports;
 pub mod doc_quality;
-pub mod tool_comparison;
-pub mod scenario_pack;
+pub mod gate_scorer;
+pub mod gated_runner;
 pub mod mcp_adapter;
 pub mod mcp_comparison;
+pub mod mcp_planning_comparison;
+pub mod mcp_suite;
+pub mod metrics_collector;
+pub mod prompt_builder;
+pub mod reports;
+pub mod runner;
+pub mod scenario_pack;
+pub mod tool_comparison;
+pub mod types;
 pub use types::*;
 
 #[derive(Debug)]
@@ -24,7 +26,13 @@ pub struct BenchmarkHarness {
 impl BenchmarkHarness {
     pub fn new(scenario_path: std::path::PathBuf, results_dir: std::path::PathBuf) -> Self {
         let scenario = crate::scenario_pack::LoadedScenarioPack::load(&scenario_path)
-            .unwrap_or_else(|err| panic!("Failed to load scenario pack {}: {}", scenario_path.display(), err));
+            .unwrap_or_else(|err| {
+                panic!(
+                    "Failed to load scenario pack {}: {}",
+                    scenario_path.display(),
+                    err
+                )
+            });
         Self {
             scenario,
             results_dir,

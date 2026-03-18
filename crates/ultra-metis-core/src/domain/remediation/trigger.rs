@@ -3,11 +3,9 @@
 //! Converts quality gate failures into remediation loops with appropriate
 //! actions (create investigation, create remediation record, etc.).
 
-use super::types::{
-    FailedMetric, RemediationAction, RemediationLoop, RemediationTrigger,
-};
-use crate::domain::quality::gate_engine::{GateCheckResult, MetricCheckResult};
+use super::types::{FailedMetric, RemediationAction, RemediationLoop, RemediationTrigger};
 use crate::domain::documents::quality_gate_config::GateSeverity;
+use crate::domain::quality::gate_engine::{GateCheckResult, MetricCheckResult};
 
 /// Engine that creates remediation loops from quality gate failures.
 pub struct InvestigationTriggerEngine;
@@ -107,11 +105,7 @@ impl InvestigationTriggerEngine {
     }
 
     /// Create a remediation loop from a manual trigger.
-    pub fn manual_trigger(
-        loop_id: &str,
-        triggered_by: &str,
-        reason: &str,
-    ) -> RemediationLoop {
+    pub fn manual_trigger(loop_id: &str, triggered_by: &str, reason: &str) -> RemediationLoop {
         let trigger = RemediationTrigger::Manual {
             triggered_by: triggered_by.to_string(),
             reason: reason.to_string(),
@@ -153,7 +147,9 @@ fn metric_check_to_failed_metric(m: &MetricCheckResult) -> FailedMetric {
         metric_name: m.metric.clone(),
         threshold: match &m.threshold {
             crate::domain::documents::quality_gate_config::ThresholdType::Absolute(v) => *v,
-            crate::domain::documents::quality_gate_config::ThresholdType::RelativeRegression(v) => *v,
+            crate::domain::documents::quality_gate_config::ThresholdType::RelativeRegression(v) => {
+                *v
+            }
             crate::domain::documents::quality_gate_config::ThresholdType::Trend(_) => 0.0,
         },
         actual_value: m.actual_value,
@@ -221,8 +217,14 @@ mod tests {
         assert_eq!(rl.id, "RL-001");
         // Should have both CreateInvestigation and CreateRemediationRecord
         assert!(rl.actions.len() >= 2);
-        assert!(rl.actions.iter().any(|a| matches!(a, RemediationAction::CreateInvestigation { .. })));
-        assert!(rl.actions.iter().any(|a| matches!(a, RemediationAction::CreateRemediationRecord { .. })));
+        assert!(rl
+            .actions
+            .iter()
+            .any(|a| matches!(a, RemediationAction::CreateInvestigation { .. })));
+        assert!(rl
+            .actions
+            .iter()
+            .any(|a| matches!(a, RemediationAction::CreateRemediationRecord { .. })));
     }
 
     #[test]
@@ -239,14 +241,14 @@ mod tests {
 
     #[test]
     fn test_manual_trigger() {
-        let rl = InvestigationTriggerEngine::manual_trigger(
-            "RL-002",
-            "engineer",
-            "Code smell detected",
-        );
+        let rl =
+            InvestigationTriggerEngine::manual_trigger("RL-002", "engineer", "Code smell detected");
         assert_eq!(rl.id, "RL-002");
         match &rl.trigger {
-            RemediationTrigger::Manual { triggered_by, reason } => {
+            RemediationTrigger::Manual {
+                triggered_by,
+                reason,
+            } => {
                 assert_eq!(triggered_by, "engineer");
                 assert_eq!(reason, "Code smell detected");
             }
@@ -271,11 +273,7 @@ mod tests {
 
     #[test]
     fn test_trend_trigger_few_regressions_no_action() {
-        let rl = InvestigationTriggerEngine::trend_trigger(
-            "RL-004",
-            vec!["errors".to_string()],
-            2,
-        );
+        let rl = InvestigationTriggerEngine::trend_trigger("RL-004", vec!["errors".to_string()], 2);
         // < 3 consecutive regressions: no automatic investigation
         assert!(rl.actions.is_empty());
     }
@@ -303,12 +301,16 @@ mod tests {
         let rl = rl.unwrap();
 
         // Check that remediation record has is_systemic = true
-        let rr_action = rl.actions.iter().find(|a| {
-            matches!(a, RemediationAction::CreateRemediationRecord { .. })
-        });
+        let rr_action = rl
+            .actions
+            .iter()
+            .find(|a| matches!(a, RemediationAction::CreateRemediationRecord { .. }));
         match rr_action.unwrap() {
             RemediationAction::CreateRemediationRecord { is_systemic, .. } => {
-                assert!(is_systemic, "Multiple blocking failures should be flagged as systemic");
+                assert!(
+                    is_systemic,
+                    "Multiple blocking failures should be flagged as systemic"
+                );
             }
             _ => unreachable!(),
         }

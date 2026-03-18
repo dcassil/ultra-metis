@@ -88,7 +88,10 @@ impl McpSession {
             })?;
 
         let stdin = child.stdin.take().context("Failed to capture MCP stdin")?;
-        let stdout = child.stdout.take().context("Failed to capture MCP stdout")?;
+        let stdout = child
+            .stdout
+            .take()
+            .context("Failed to capture MCP stdout")?;
 
         let mut session = Self {
             system,
@@ -271,7 +274,11 @@ mod tests {
             let mut session = match adapter.start() {
                 Ok(session) => session,
                 Err(err) => {
-                    eprintln!("Skipping MCP smoke test for {:?}: {}", adapter.system_under_test(), err);
+                    eprintln!(
+                        "Skipping MCP smoke test for {:?}: {}",
+                        adapter.system_under_test(),
+                        err
+                    );
                     continue;
                 }
             };

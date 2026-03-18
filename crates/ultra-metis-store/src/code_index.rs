@@ -137,12 +137,7 @@ impl CodeIndexer {
             .to_string();
 
         let mut symbols = Vec::new();
-        self.walk_tree(
-            tree.root_node(),
-            &source,
-            &relative_path,
-            &mut symbols,
-        );
+        self.walk_tree(tree.root_node(), &source, &relative_path, &mut symbols);
 
         Ok(symbols)
     }
@@ -214,9 +209,7 @@ impl CodeIndexer {
                 // For most items, the name is in the first "name" or identifier child
                 let mut cursor = node.walk();
                 for child in node.children(&mut cursor) {
-                    if child.kind() == "identifier"
-                        || child.kind() == "type_identifier"
-                    {
+                    if child.kind() == "identifier" || child.kind() == "type_identifier" {
                         return Some(child.utf8_text(source.as_bytes()).ok()?.to_string());
                     }
                 }
@@ -335,12 +328,22 @@ pub mod submodule {
         let index = indexer.index(&["src/**/*.rs".to_string()]).unwrap();
 
         assert_eq!(index.indexed_files, 1);
-        assert!(index.symbols.len() >= 8, "Expected at least 8 symbols, got {}", index.symbols.len());
+        assert!(
+            index.symbols.len() >= 8,
+            "Expected at least 8 symbols, got {}",
+            index.symbols.len()
+        );
 
         // Check for specific symbols
         let names: Vec<&str> = index.symbols.iter().map(|s| s.name.as_str()).collect();
-        assert!(names.contains(&"hello_world"), "Missing hello_world function");
-        assert!(names.contains(&"private_helper"), "Missing private_helper function");
+        assert!(
+            names.contains(&"hello_world"),
+            "Missing hello_world function"
+        );
+        assert!(
+            names.contains(&"private_helper"),
+            "Missing private_helper function"
+        );
         assert!(names.contains(&"MyStruct"), "Missing MyStruct");
         assert!(names.contains(&"MyTrait"), "Missing MyTrait");
         assert!(names.contains(&"Color"), "Missing Color enum");
@@ -353,7 +356,11 @@ pub mod submodule {
 
         let index = indexer.index(&["src/**/*.rs".to_string()]).unwrap();
 
-        let hello = index.symbols.iter().find(|s| s.name == "hello_world").unwrap();
+        let hello = index
+            .symbols
+            .iter()
+            .find(|s| s.name == "hello_world")
+            .unwrap();
         assert_eq!(hello.kind, SymbolKind::Function);
         assert_eq!(hello.file_path, "src/lib.rs");
         assert!(hello.line_number > 0);

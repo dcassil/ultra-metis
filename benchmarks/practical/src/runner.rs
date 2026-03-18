@@ -1,7 +1,7 @@
-use crate::{types::*, api_client, prompt_builder, scenario_pack::LoadedScenarioPack};
+use crate::{api_client, prompt_builder, scenario_pack::LoadedScenarioPack, types::*};
+use chrono::Utc;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use chrono::Utc;
 
 /// Invoke the ultra-metis CLI binary, returning stdout and elapsed ms.
 /// Mirrors the approach in benchmarks/run-ultra-metis-bench.sh.
@@ -37,7 +37,11 @@ impl CliResult {
         ((self.stdout.len() + self.stderr.len()) / 4).max(1) as u64
     }
 
-    pub fn as_trace_event(&self, label: impl Into<String>, command: impl Into<String>) -> CliTraceEvent {
+    pub fn as_trace_event(
+        &self,
+        label: impl Into<String>,
+        command: impl Into<String>,
+    ) -> CliTraceEvent {
         CliTraceEvent {
             label: label.into(),
             command: command.into(),
@@ -99,7 +103,11 @@ pub fn parse_initiative_response(response: &str) -> Vec<AiInitiative> {
     let mut result = vec![];
     if let Some(initiatives) = parsed.get("initiatives").and_then(|v| v.as_array()) {
         for init in initiatives {
-            let id = init.get("id").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
+            let id = init
+                .get("id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string();
             let title = init
                 .get("title")
                 .and_then(|v| v.as_str())
@@ -119,7 +127,12 @@ pub fn parse_initiative_response(response: &str) -> Vec<AiInitiative> {
                         .collect()
                 })
                 .unwrap_or_default();
-            result.push(AiInitiative { id, title, objective, tasks });
+            result.push(AiInitiative {
+                id,
+                title,
+                objective,
+                tasks,
+            });
         }
     }
     result
@@ -158,7 +171,11 @@ pub fn score_ai_initiative(init: &AiInitiative, response_was_valid_json: bool) -
     }
 }
 
-fn fallback_initiative(api_tokens: u64, api_time: std::time::Duration, valid_json: bool) -> InitiativeResult {
+fn fallback_initiative(
+    api_tokens: u64,
+    api_time: std::time::Duration,
+    valid_json: bool,
+) -> InitiativeResult {
     let metrics = CodeMetrics {
         lines_of_code: 1,
         test_coverage_percent: 0.0,
@@ -204,16 +221,32 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     if let Ok(result) = run_cli(&binary, &["init", "--path", proj_str, "--prefix", "BENCH"]) {
         trace.cli_events.push(result.as_trace_event(
             "workspace_init",
-            format!("{} init --path {} --prefix BENCH", binary.display(), proj_str),
+            format!(
+                "{} init --path {} --prefix BENCH",
+                binary.display(),
+                proj_str
+            ),
         ));
     }
-    let vision_result = run_cli(&binary, &[
-        "create", "--type", "vision", "--path", proj_str, "File Processing Toolkit",
-    ]);
+    let vision_result = run_cli(
+        &binary,
+        &[
+            "create",
+            "--type",
+            "vision",
+            "--path",
+            proj_str,
+            "File Processing Toolkit",
+        ],
+    );
     if let Ok(result) = &vision_result {
         trace.cli_events.push(result.as_trace_event(
             "seed_vision",
-            format!("{} create --type vision --path {} File Processing Toolkit", binary.display(), proj_str),
+            format!(
+                "{} create --type vision --path {} File Processing Toolkit",
+                binary.display(),
+                proj_str
+            ),
         ));
     }
     let vision_code = vision_result
@@ -222,22 +255,50 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         .unwrap_or_default();
 
     if !vision_code.is_empty() {
-        if let Ok(result) = run_cli(&binary, &[
-            "create", "--type", "initiative", "--path", proj_str,
-            "--parent", &vision_code, "Parse Module",
-        ]) {
+        if let Ok(result) = run_cli(
+            &binary,
+            &[
+                "create",
+                "--type",
+                "initiative",
+                "--path",
+                proj_str,
+                "--parent",
+                &vision_code,
+                "Parse Module",
+            ],
+        ) {
             trace.cli_events.push(result.as_trace_event(
                 "seed_initiative_parse",
-                format!("{} create --type initiative --path {} --parent {} Parse Module", binary.display(), proj_str, vision_code),
+                format!(
+                    "{} create --type initiative --path {} --parent {} Parse Module",
+                    binary.display(),
+                    proj_str,
+                    vision_code
+                ),
             ));
         }
-        if let Ok(result) = run_cli(&binary, &[
-            "create", "--type", "initiative", "--path", proj_str,
-            "--parent", &vision_code, "Transform Module",
-        ]) {
+        if let Ok(result) = run_cli(
+            &binary,
+            &[
+                "create",
+                "--type",
+                "initiative",
+                "--path",
+                proj_str,
+                "--parent",
+                &vision_code,
+                "Transform Module",
+            ],
+        ) {
             trace.cli_events.push(result.as_trace_event(
                 "seed_initiative_transform",
-                format!("{} create --type initiative --path {} --parent {} Transform Module", binary.display(), proj_str, vision_code),
+                format!(
+                    "{} create --type initiative --path {} --parent {} Transform Module",
+                    binary.display(),
+                    proj_str,
+                    vision_code
+                ),
             ));
         }
     }
@@ -246,7 +307,10 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         status: PhaseStatus::Completed,
         tokens_used: trace.cli_events.iter().map(|e| e.approx_tokens).sum(),
         time_elapsed: trace.cli_events.iter().map(|e| e.duration).sum(),
-        notes: vec![format!("Scenario materialized in {}", temp_dir.path().display())],
+        notes: vec![format!(
+            "Scenario materialized in {}",
+            temp_dir.path().display()
+        )],
     });
 
     // Ask Claude to assess what additional initiatives are needed
@@ -273,8 +337,8 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     });
 
     let ai_initiatives = parse_initiative_response(&api_resp.content);
-    let response_was_valid_json = !ai_initiatives.is_empty()
-        || api_resp.content.contains("additional_initiatives_needed");
+    let response_was_valid_json =
+        !ai_initiatives.is_empty() || api_resp.content.contains("additional_initiatives_needed");
 
     // Build initiative results from AI response
     let mut initiatives = vec![];
@@ -283,14 +347,30 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     for (idx, ai_init) in ai_initiatives.iter().enumerate() {
         // Create the initiative in CLI for artifact tracking
         let cli_result = if !vision_code.is_empty() {
-            let result = run_cli(&binary, &[
-                "create", "--type", "initiative", "--path", proj_str,
-                "--parent", &vision_code, &ai_init.title,
-            ]).ok();
+            let result = run_cli(
+                &binary,
+                &[
+                    "create",
+                    "--type",
+                    "initiative",
+                    "--path",
+                    proj_str,
+                    "--parent",
+                    &vision_code,
+                    &ai_init.title,
+                ],
+            )
+            .ok();
             if let Some(ref cli) = result {
                 trace.cli_events.push(cli.as_trace_event(
                     format!("materialize_{}", ai_init.id),
-                    format!("{} create --type initiative --path {} --parent {} {}", binary.display(), proj_str, vision_code, ai_init.title),
+                    format!(
+                        "{} create --type initiative --path {} --parent {} {}",
+                        binary.display(),
+                        proj_str,
+                        vision_code,
+                        ai_init.title
+                    ),
                 ));
             }
             result
@@ -305,7 +385,10 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
 
         tracing::info!(
             "AI initiative {}/{}: '{}' (tokens: {})",
-            idx + 1, n, ai_init.title, task_tokens
+            idx + 1,
+            n,
+            ai_init.title,
+            task_tokens
         );
 
         initiatives.push(InitiativeResult {
@@ -341,9 +424,16 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         status: PhaseStatus::Completed,
         tokens_used: total_tokens,
         time_elapsed: total_time,
-        notes: vec![format!("Produced {} initiative assessments", initiatives.len())],
+        notes: vec![format!(
+            "Produced {} initiative assessments",
+            initiatives.len()
+        )],
     });
-    let task_count = initiatives.iter().map(|i| i.tasks.len()).sum::<usize>().max(1) as f32;
+    let task_count = initiatives
+        .iter()
+        .map(|i| i.tasks.len())
+        .sum::<usize>()
+        .max(1) as f32;
     let avg_doc_accuracy = initiatives
         .iter()
         .flat_map(|i| i.tasks.iter().map(|t| t.code_metrics.doc_accuracy_percent))
@@ -351,7 +441,11 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         / task_count;
     let avg_instruction_adherence = initiatives
         .iter()
-        .flat_map(|i| i.tasks.iter().map(|t| t.code_metrics.instruction_adherence_percent))
+        .flat_map(|i| {
+            i.tasks
+                .iter()
+                .map(|t| t.code_metrics.instruction_adherence_percent)
+        })
         .sum::<f32>()
         / task_count;
 
@@ -402,7 +496,10 @@ mod tests {
             exit_code: 0,
             elapsed: std::time::Duration::default(),
         };
-        let fail = CliResult { exit_code: 1, ..ok.clone() };
+        let fail = CliResult {
+            exit_code: 1,
+            ..ok.clone()
+        };
         assert!(ok.success());
         assert!(!fail.success());
     }
@@ -441,7 +538,11 @@ mod tests {
             id: "test-init".to_string(),
             title: "Test Initiative".to_string(),
             objective: "Build something important".to_string(),
-            tasks: vec!["Design API".to_string(), "Write unit tests".to_string(), "Deploy".to_string()],
+            tasks: vec![
+                "Design API".to_string(),
+                "Write unit tests".to_string(),
+                "Deploy".to_string(),
+            ],
         };
         let metrics = score_ai_initiative(&init, true);
         assert_eq!(metrics.instruction_adherence_percent, 100.0);

@@ -1,5 +1,5 @@
-use crate::domain::documents::reference_architecture::ReferenceArchitecture;
 use super::types::{FindingEntry, MetricEntry, ParsedToolOutput, Severity};
+use crate::domain::documents::reference_architecture::ReferenceArchitecture;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -13,10 +13,7 @@ impl ArchitectureConformanceChecker {
     /// Check actual file paths against a reference architecture.
     ///
     /// `actual_paths` should be relative paths from the repo root.
-    pub fn check(
-        reference: &ReferenceArchitecture,
-        actual_paths: &[String],
-    ) -> ParsedToolOutput {
+    pub fn check(reference: &ReferenceArchitecture, actual_paths: &[String]) -> ParsedToolOutput {
         let mut output = ParsedToolOutput::new("architecture_conformance");
 
         // Collect all expected layout entries (from layer_overrides as a proxy
@@ -84,7 +81,9 @@ impl ArchitectureConformanceChecker {
             .iter()
             .filter_map(|p| {
                 let path = Path::new(p);
-                path.components().next().map(|c| c.as_os_str().to_string_lossy().to_string())
+                path.components()
+                    .next()
+                    .map(|c| c.as_os_str().to_string_lossy().to_string())
             })
             .collect();
 
@@ -100,7 +99,10 @@ impl ArchitectureConformanceChecker {
                 output.findings.push(FindingEntry::new(
                     "missing_expected_dir",
                     Severity::Warning,
-                    &format!("Expected directory '{}' not found in actual paths", expected),
+                    &format!(
+                        "Expected directory '{}' not found in actual paths",
+                        expected
+                    ),
                     expected,
                 ));
             }
@@ -172,9 +174,11 @@ fn parse_no_dep_constraint(rule: &str) -> Option<NoDepConstraint> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::documents::reference_architecture::{ArchitectureStatus, ReferenceArchitecture};
-    use crate::domain::documents::metadata::DocumentMetadata;
     use crate::domain::documents::content::DocumentContent;
+    use crate::domain::documents::metadata::DocumentMetadata;
+    use crate::domain::documents::reference_architecture::{
+        ArchitectureStatus, ReferenceArchitecture,
+    };
     use crate::domain::documents::types::{Phase, Tag};
 
     fn make_reference_arch() -> ReferenceArchitecture {

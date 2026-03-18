@@ -36,7 +36,10 @@ pub struct McpComparisonResult {
     pub ultra_metis_mcp: McpToolRun,
 }
 
-pub fn run_shared_tool_comparison(scenario_id: &str, scenario_title: &str) -> Result<McpComparisonResult> {
+pub fn run_shared_tool_comparison(
+    scenario_id: &str,
+    scenario_title: &str,
+) -> Result<McpComparisonResult> {
     let ultra_dir = tempfile::tempdir().context("Failed to create ultra tempdir")?;
     let orig_dir = tempfile::tempdir().context("Failed to create original tempdir")?;
 
@@ -81,7 +84,11 @@ fn run_tool_workflow<A: ExecutionAdapter>(
     let tool_names = tools.iter().map(|t| t.name.clone()).collect::<Vec<_>>();
     for expected in expected_shared_tool_names() {
         if !tool_names.iter().any(|name| name == expected) {
-            anyhow::bail!("Adapter {:?} missing expected tool '{}'", adapter.system_under_test(), expected);
+            anyhow::bail!(
+                "Adapter {:?} missing expected tool '{}'",
+                adapter.system_under_test(),
+                expected
+            );
         }
     }
 

@@ -44,7 +44,11 @@ pub enum AutonomyMode {
 impl AutonomyMode {
     /// Returns all 3 modes in order of increasing autonomy.
     pub fn all() -> &'static [AutonomyMode] {
-        &[AutonomyMode::Tight, AutonomyMode::Mixed, AutonomyMode::Autonomous]
+        &[
+            AutonomyMode::Tight,
+            AutonomyMode::Mixed,
+            AutonomyMode::Autonomous,
+        ]
     }
 
     /// Human-readable description of the mode.
@@ -52,7 +56,9 @@ impl AutonomyMode {
         match self {
             Self::Tight => "Human approval required at most gates",
             Self::Mixed => "AI proceeds within bounds, escalates on risk or ambiguity",
-            Self::Autonomous => "AI proceeds without routine approval, respects gates and thresholds",
+            Self::Autonomous => {
+                "AI proceeds without routine approval, respects gates and thresholds"
+            }
         }
     }
 
@@ -377,12 +383,30 @@ mod tests {
 
     #[test]
     fn test_mode_from_str_aliases() {
-        assert_eq!("collaborative".parse::<AutonomyMode>().unwrap(), AutonomyMode::Tight);
-        assert_eq!("strict".parse::<AutonomyMode>().unwrap(), AutonomyMode::Tight);
-        assert_eq!("default".parse::<AutonomyMode>().unwrap(), AutonomyMode::Mixed);
-        assert_eq!("balanced".parse::<AutonomyMode>().unwrap(), AutonomyMode::Mixed);
-        assert_eq!("auto".parse::<AutonomyMode>().unwrap(), AutonomyMode::Autonomous);
-        assert_eq!("full".parse::<AutonomyMode>().unwrap(), AutonomyMode::Autonomous);
+        assert_eq!(
+            "collaborative".parse::<AutonomyMode>().unwrap(),
+            AutonomyMode::Tight
+        );
+        assert_eq!(
+            "strict".parse::<AutonomyMode>().unwrap(),
+            AutonomyMode::Tight
+        );
+        assert_eq!(
+            "default".parse::<AutonomyMode>().unwrap(),
+            AutonomyMode::Mixed
+        );
+        assert_eq!(
+            "balanced".parse::<AutonomyMode>().unwrap(),
+            AutonomyMode::Mixed
+        );
+        assert_eq!(
+            "auto".parse::<AutonomyMode>().unwrap(),
+            AutonomyMode::Autonomous
+        );
+        assert_eq!(
+            "full".parse::<AutonomyMode>().unwrap(),
+            AutonomyMode::Autonomous
+        );
     }
 
     #[test]
@@ -477,7 +501,8 @@ mod tests {
             GateFailureBehavior::Block,
         );
         assert_eq!(
-            config.effective_gate_behavior(GateType::ContextSufficiency, GateFailureBehavior::Block),
+            config
+                .effective_gate_behavior(GateType::ContextSufficiency, GateFailureBehavior::Block),
             GateFailureBehavior::Warn,
         );
         assert_eq!(
@@ -488,8 +513,8 @@ mod tests {
 
     #[test]
     fn test_gate_override_takes_priority() {
-        let config = AutonomyConfig::tight()
-            .with_gate_override(GateType::Entry, GateFailureBehavior::Warn);
+        let config =
+            AutonomyConfig::tight().with_gate_override(GateType::Entry, GateFailureBehavior::Warn);
 
         // Override should take priority over tight mode's escalate_to_human
         assert_eq!(

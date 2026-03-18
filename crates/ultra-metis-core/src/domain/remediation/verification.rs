@@ -102,7 +102,7 @@ mod tests {
     };
     use crate::domain::documents::types::{Phase, Tag};
     use crate::domain::quality::gate_engine::GateCheckEngine;
-    use crate::domain::remediation::types::{RemediationTrigger, FailedMetric};
+    use crate::domain::remediation::types::{FailedMetric, RemediationTrigger};
     use std::collections::HashMap;
 
     fn metrics(pairs: &[(&str, f64)]) -> HashMap<String, f64> {
@@ -177,10 +177,16 @@ mod tests {
         rl.max_verification_attempts = 1; // exhaust after 1 attempt
 
         let outcome = VerificationEngine::verify(&mut rl, &result);
-        assert!(matches!(outcome, VerificationOutcome::BudgetExhausted { attempts: 1 }));
+        assert!(matches!(
+            outcome,
+            VerificationOutcome::BudgetExhausted { attempts: 1 }
+        ));
         assert_eq!(rl.phase, RemediationLoopPhase::Closed);
         // Should have escalation action
-        assert!(rl.actions.iter().any(|a| matches!(a, RemediationAction::EscalateToHuman { .. })));
+        assert!(rl
+            .actions
+            .iter()
+            .any(|a| matches!(a, RemediationAction::EscalateToHuman { .. })));
     }
 
     #[test]

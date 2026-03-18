@@ -200,8 +200,8 @@ impl ArchitectureInvestigation {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let parent_id = FrontmatterParser::extract_optional_string(&fm_map, "parent_id")
-            .map(DocumentId::from);
+        let parent_id =
+            FrontmatterParser::extract_optional_string(&fm_map, "parent_id").map(DocumentId::from);
 
         let trigger_refs =
             FrontmatterParser::extract_string_array(&fm_map, "trigger_refs").unwrap_or_default();
@@ -211,8 +211,12 @@ impl ArchitectureInvestigation {
                 .and_then(|s| s.parse::<InvestigationStatus>().ok())
                 .unwrap_or(InvestigationStatus::Open);
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -400,7 +404,9 @@ mod tests {
         let file_path = temp_dir.path().join("test-ai.md");
 
         ai.to_file(&file_path).await.unwrap();
-        let loaded = ArchitectureInvestigation::from_file(&file_path).await.unwrap();
+        let loaded = ArchitectureInvestigation::from_file(&file_path)
+            .await
+            .unwrap();
 
         assert_eq!(loaded.title(), ai.title());
         assert_eq!(loaded.phase().unwrap(), ai.phase().unwrap());

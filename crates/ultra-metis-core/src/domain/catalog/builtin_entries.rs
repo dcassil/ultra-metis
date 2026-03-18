@@ -267,14 +267,8 @@ pub fn javascript_component_lib() -> ArchitectureCatalogEntry {
             "src/utils/".to_string(),
             "src/index.ts".to_string(),
         ],
-        vec![
-            "components".to_string(),
-            "utils".to_string(),
-        ],
-        vec![
-            "components/{Name}".to_string(),
-            "utils".to_string(),
-        ],
+        vec!["components".to_string(), "utils".to_string()],
+        vec!["components/{Name}".to_string(), "utils".to_string()],
         vec![
             "components may import from utils only".to_string(),
             "components should not import other components".to_string(),
@@ -440,14 +434,8 @@ pub fn javascript_node_util() -> ArchitectureCatalogEntry {
             "tests/".to_string(),
             "tests/{module}.test.ts".to_string(),
         ],
-        vec![
-            "public".to_string(),
-            "internal".to_string(),
-        ],
-        vec![
-            "public modules".to_string(),
-            "internal helpers".to_string(),
-        ],
+        vec!["public".to_string(), "internal".to_string()],
+        vec!["public modules".to_string(), "internal helpers".to_string()],
         vec![
             "public modules -> internal helpers".to_string(),
             "internal helpers should not import public modules".to_string(),
@@ -523,13 +511,37 @@ mod tests {
     fn test_all_entries_have_content() {
         let entries = builtin_entries();
         for entry in &entries {
-            assert!(!entry.folder_layout.is_empty(), "{} missing folder_layout", entry.title());
+            assert!(
+                !entry.folder_layout.is_empty(),
+                "{} missing folder_layout",
+                entry.title()
+            );
             assert!(!entry.layers.is_empty(), "{} missing layers", entry.title());
-            assert!(!entry.dependency_rules.is_empty(), "{} missing dependency_rules", entry.title());
-            assert!(!entry.naming_conventions.is_empty(), "{} missing naming_conventions", entry.title());
-            assert!(!entry.anti_patterns.is_empty(), "{} missing anti_patterns", entry.title());
-            assert!(!entry.rules_seed_hints.is_empty(), "{} missing rules_seed_hints", entry.title());
-            assert!(!entry.analysis_expectations.is_empty(), "{} missing analysis_expectations", entry.title());
+            assert!(
+                !entry.dependency_rules.is_empty(),
+                "{} missing dependency_rules",
+                entry.title()
+            );
+            assert!(
+                !entry.naming_conventions.is_empty(),
+                "{} missing naming_conventions",
+                entry.title()
+            );
+            assert!(
+                !entry.anti_patterns.is_empty(),
+                "{} missing anti_patterns",
+                entry.title()
+            );
+            assert!(
+                !entry.rules_seed_hints.is_empty(),
+                "{} missing rules_seed_hints",
+                entry.title()
+            );
+            assert!(
+                !entry.analysis_expectations.is_empty(),
+                "{} missing analysis_expectations",
+                entry.title()
+            );
         }
     }
 

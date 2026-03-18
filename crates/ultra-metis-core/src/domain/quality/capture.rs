@@ -1,9 +1,9 @@
+use super::types::ParsedToolOutput;
 use crate::domain::documents::analysis_baseline::AnalysisBaseline;
-use crate::domain::documents::metadata::DocumentMetadata;
 use crate::domain::documents::content::DocumentContent;
+use crate::domain::documents::metadata::DocumentMetadata;
 use crate::domain::documents::traits::DocumentValidationError;
 use crate::domain::documents::types::{Phase, Tag};
-use super::types::ParsedToolOutput;
 
 /// Service for capturing tool output into durable AnalysisBaseline documents.
 pub struct BaselineCaptureService;
@@ -40,13 +40,22 @@ impl BaselineCaptureService {
     fn build_body(parsed: &ParsedToolOutput) -> String {
         let mut body = String::new();
 
-        body.push_str(&format!("# {} Baseline\n\n", capitalize_tool_name(&parsed.tool_name)));
+        body.push_str(&format!(
+            "# {} Baseline\n\n",
+            capitalize_tool_name(&parsed.tool_name)
+        ));
 
         // Summary section
         body.push_str("## Summary\n\n");
         body.push_str(&format!("- **Tool**: {}\n", parsed.tool_name));
-        body.push_str(&format!("- **Timestamp**: {}\n", parsed.timestamp.to_rfc3339()));
-        body.push_str(&format!("- **Total findings**: {}\n", parsed.total_findings()));
+        body.push_str(&format!(
+            "- **Timestamp**: {}\n",
+            parsed.timestamp.to_rfc3339()
+        ));
+        body.push_str(&format!(
+            "- **Total findings**: {}\n",
+            parsed.total_findings()
+        ));
         body.push_str(&format!("- **Errors**: {}\n", parsed.error_count()));
         body.push_str(&format!("- **Warnings**: {}\n", parsed.warning_count()));
         body.push_str(&format!("- **Info**: {}\n\n", parsed.info_count()));
@@ -120,11 +129,20 @@ mod tests {
 
     fn make_parsed_output() -> ParsedToolOutput {
         let mut output = ParsedToolOutput::new("eslint");
-        output.metrics.push(MetricEntry::new("total_errors", 2.0, "count"));
-        output.metrics.push(MetricEntry::new("total_warnings", 1.0, "count"));
+        output
+            .metrics
+            .push(MetricEntry::new("total_errors", 2.0, "count"));
+        output
+            .metrics
+            .push(MetricEntry::new("total_warnings", 1.0, "count"));
         output.findings.push(
-            FindingEntry::new("no-unused-vars", Severity::Error, "unused var", "src/app.js")
-                .with_location(10, 5),
+            FindingEntry::new(
+                "no-unused-vars",
+                Severity::Error,
+                "unused var",
+                "src/app.js",
+            )
+            .with_location(10, 5),
         );
         output.findings.push(
             FindingEntry::new("semi", Severity::Warning, "missing semicolon", "src/app.js")
@@ -151,12 +169,9 @@ mod tests {
     #[test]
     fn test_capture_with_rules_config_ref() {
         let parsed = make_parsed_output();
-        let baseline = BaselineCaptureService::capture(
-            &parsed,
-            "AB-0002",
-            Some("RC-0001".to_string()),
-        )
-        .unwrap();
+        let baseline =
+            BaselineCaptureService::capture(&parsed, "AB-0002", Some("RC-0001".to_string()))
+                .unwrap();
 
         assert_eq!(baseline.linked_rules_config.as_deref(), Some("RC-0001"));
     }

@@ -1,4 +1,7 @@
-use crate::{types::*, api_client, gate_scorer::GateScorer, prompt_builder, runner, scenario_pack::LoadedScenarioPack};
+use crate::{
+    api_client, gate_scorer::GateScorer, prompt_builder, runner, scenario_pack::LoadedScenarioPack,
+    types::*,
+};
 use chrono::Utc;
 
 /// Execute validated benchmark run with quality gates after each initiative.
@@ -19,19 +22,36 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
     let proj_str = temp_dir.path().to_str().unwrap_or("/tmp/bench-validated");
 
     // Initialize project and known scenario documents
-    if let Ok(result) = runner::run_cli(&binary, &["init", "--path", proj_str, "--prefix", "BENCH"]) {
+    if let Ok(result) = runner::run_cli(&binary, &["init", "--path", proj_str, "--prefix", "BENCH"])
+    {
         trace.cli_events.push(result.as_trace_event(
             "workspace_init",
-            format!("{} init --path {} --prefix BENCH", binary.display(), proj_str),
+            format!(
+                "{} init --path {} --prefix BENCH",
+                binary.display(),
+                proj_str
+            ),
         ));
     }
-    let vision_result = runner::run_cli(&binary, &[
-        "create", "--type", "vision", "--path", proj_str, "File Processing Toolkit",
-    ]);
+    let vision_result = runner::run_cli(
+        &binary,
+        &[
+            "create",
+            "--type",
+            "vision",
+            "--path",
+            proj_str,
+            "File Processing Toolkit",
+        ],
+    );
     if let Ok(result) = &vision_result {
         trace.cli_events.push(result.as_trace_event(
             "seed_vision",
-            format!("{} create --type vision --path {} File Processing Toolkit", binary.display(), proj_str),
+            format!(
+                "{} create --type vision --path {} File Processing Toolkit",
+                binary.display(),
+                proj_str
+            ),
         ));
     }
     let vision_code = vision_result
@@ -40,22 +60,50 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         .unwrap_or_default();
 
     if !vision_code.is_empty() {
-        if let Ok(result) = runner::run_cli(&binary, &[
-            "create", "--type", "initiative", "--path", proj_str,
-            "--parent", &vision_code, "Parse Module",
-        ]) {
+        if let Ok(result) = runner::run_cli(
+            &binary,
+            &[
+                "create",
+                "--type",
+                "initiative",
+                "--path",
+                proj_str,
+                "--parent",
+                &vision_code,
+                "Parse Module",
+            ],
+        ) {
             trace.cli_events.push(result.as_trace_event(
                 "seed_initiative_parse",
-                format!("{} create --type initiative --path {} --parent {} Parse Module", binary.display(), proj_str, vision_code),
+                format!(
+                    "{} create --type initiative --path {} --parent {} Parse Module",
+                    binary.display(),
+                    proj_str,
+                    vision_code
+                ),
             ));
         }
-        if let Ok(result) = runner::run_cli(&binary, &[
-            "create", "--type", "initiative", "--path", proj_str,
-            "--parent", &vision_code, "Transform Module",
-        ]) {
+        if let Ok(result) = runner::run_cli(
+            &binary,
+            &[
+                "create",
+                "--type",
+                "initiative",
+                "--path",
+                proj_str,
+                "--parent",
+                &vision_code,
+                "Transform Module",
+            ],
+        ) {
             trace.cli_events.push(result.as_trace_event(
                 "seed_initiative_transform",
-                format!("{} create --type initiative --path {} --parent {} Transform Module", binary.display(), proj_str, vision_code),
+                format!(
+                    "{} create --type initiative --path {} --parent {} Transform Module",
+                    binary.display(),
+                    proj_str,
+                    vision_code
+                ),
             ));
         }
     }
@@ -64,7 +112,10 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         status: PhaseStatus::Completed,
         tokens_used: trace.cli_events.iter().map(|e| e.approx_tokens).sum(),
         time_elapsed: trace.cli_events.iter().map(|e| e.duration).sum(),
-        notes: vec![format!("Scenario materialized in {}", temp_dir.path().display())],
+        notes: vec![format!(
+            "Scenario materialized in {}",
+            temp_dir.path().display()
+        )],
     });
 
     // Ask Claude to assess what additional initiatives are needed
@@ -91,8 +142,8 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
     });
 
     let ai_initiatives = runner::parse_initiative_response(&api_resp.content);
-    let response_was_valid_json = !ai_initiatives.is_empty()
-        || api_resp.content.contains("additional_initiatives_needed");
+    let response_was_valid_json =
+        !ai_initiatives.is_empty() || api_resp.content.contains("additional_initiatives_needed");
 
     let scorer = GateScorer::new();
     let mut initiatives = vec![];
@@ -102,14 +153,30 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
     for (idx, ai_init) in ai_initiatives.iter().enumerate() {
         // Create the initiative in CLI
         let cli_result = if !vision_code.is_empty() {
-            let result = runner::run_cli(&binary, &[
-                "create", "--type", "initiative", "--path", proj_str,
-                "--parent", &vision_code, &ai_init.title,
-            ]).ok();
+            let result = runner::run_cli(
+                &binary,
+                &[
+                    "create",
+                    "--type",
+                    "initiative",
+                    "--path",
+                    proj_str,
+                    "--parent",
+                    &vision_code,
+                    &ai_init.title,
+                ],
+            )
+            .ok();
             if let Some(ref cli) = result {
                 trace.cli_events.push(cli.as_trace_event(
                     format!("materialize_{}", ai_init.id),
-                    format!("{} create --type initiative --path {} --parent {} {}", binary.display(), proj_str, vision_code, ai_init.title),
+                    format!(
+                        "{} create --type initiative --path {} --parent {} {}",
+                        binary.display(),
+                        proj_str,
+                        vision_code,
+                        ai_init.title
+                    ),
                 ));
             }
             result
@@ -148,7 +215,10 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         let validation_gate = if structural_rejected {
             tracing::info!(
                 "Structural gate rejected initiative {}/{}: '{}' (issues: {})",
-                idx + 1, n, ai_init.title, structural.issues_found.len()
+                idx + 1,
+                n,
+                ai_init.title,
+                structural.issues_found.len()
             );
             total_rework_tokens += structural.rework_tokens;
             Some(structural)
@@ -168,7 +238,11 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
                     total_rework_tokens += merged_rework;
                     tracing::info!(
                         "Gate check {}/{}: '{}' → {:?} (rework tokens: {})",
-                        idx + 1, n, ai_init.title, merged_decision, merged_rework
+                        idx + 1,
+                        n,
+                        ai_init.title,
+                        merged_decision,
+                        merged_rework
                     );
                     Some(ValidationGateResult {
                         gate_decision: merged_decision,
@@ -179,7 +253,11 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
                 }
                 Err(e) => {
                     // API unavailable — fall back to structural gate
-                    tracing::warn!("API gate failed for '{}', using structural gate: {}", ai_init.title, e);
+                    tracing::warn!(
+                        "API gate failed for '{}', using structural gate: {}",
+                        ai_init.title,
+                        e
+                    );
                     total_rework_tokens += structural.rework_tokens;
                     Some(structural)
                 }
@@ -252,11 +330,18 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         status: PhaseStatus::Completed,
         tokens_used: total_tokens,
         time_elapsed: total_time,
-        notes: vec![format!("Produced {} gated initiative assessments", initiatives.len())],
+        notes: vec![format!(
+            "Produced {} gated initiative assessments",
+            initiatives.len()
+        )],
     });
     let gate_effectiveness = calculate_gate_effectiveness(&initiatives);
 
-    let task_count = initiatives.iter().map(|i| i.tasks.len()).sum::<usize>().max(1) as f32;
+    let task_count = initiatives
+        .iter()
+        .map(|i| i.tasks.len())
+        .sum::<usize>()
+        .max(1) as f32;
     let avg_doc_accuracy = initiatives
         .iter()
         .flat_map(|i| i.tasks.iter().map(|t| t.code_metrics.doc_accuracy_percent))
@@ -264,7 +349,11 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         / task_count;
     let avg_instruction_adherence = initiatives
         .iter()
-        .flat_map(|i| i.tasks.iter().map(|t| t.code_metrics.instruction_adherence_percent))
+        .flat_map(|i| {
+            i.tasks
+                .iter()
+                .map(|t| t.code_metrics.instruction_adherence_percent)
+        })
         .sum::<f32>()
         / task_count;
 
@@ -309,8 +398,7 @@ async fn run_gate_check(
     initiative_title: &str,
     initiative_content: &str,
 ) -> anyhow::Result<(GateDecision, Vec<String>, u64, std::time::Duration)> {
-    let gate_prompt =
-        prompt_builder::build_gate_check_prompt(initiative_title, initiative_content);
+    let gate_prompt = prompt_builder::build_gate_check_prompt(initiative_title, initiative_content);
     let gate_start = std::time::Instant::now();
     let gate_resp = api_client::ask(&gate_prompt.system, &gate_prompt.user).await?;
     let gate_time = gate_start.elapsed();
@@ -334,7 +422,10 @@ fn parse_gate_response(response: &str) -> (GateDecision, Vec<String>) {
         Err(_) => return (GateDecision::Approved, vec![]),
     };
 
-    let approved = parsed.get("approved").and_then(|v| v.as_bool()).unwrap_or(true);
+    let approved = parsed
+        .get("approved")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
     let score = parsed.get("score").and_then(|v| v.as_f64()).unwrap_or(0.8);
     let issues: Vec<String> = parsed
         .get("issues")

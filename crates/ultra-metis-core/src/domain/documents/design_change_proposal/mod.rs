@@ -210,21 +210,26 @@ impl DesignChangeProposal {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let parent_id = FrontmatterParser::extract_optional_string(&fm_map, "parent_id")
-            .map(DocumentId::from);
+        let parent_id =
+            FrontmatterParser::extract_optional_string(&fm_map, "parent_id").map(DocumentId::from);
 
         let target_artifact =
             FrontmatterParser::extract_optional_string(&fm_map, "target_artifact")
                 .unwrap_or_default();
 
-        let proposal_status = FrontmatterParser::extract_optional_string(&fm_map, "proposal_status")
-            .and_then(|s| s.parse::<ProposalStatus>().ok())
-            .unwrap_or(ProposalStatus::Proposed);
+        let proposal_status =
+            FrontmatterParser::extract_optional_string(&fm_map, "proposal_status")
+                .and_then(|s| s.parse::<ProposalStatus>().ok())
+                .unwrap_or(ProposalStatus::Proposed);
 
         let reviewer = FrontmatterParser::extract_optional_string(&fm_map, "reviewer");
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -277,10 +282,7 @@ impl DesignChangeProposal {
         context.insert("target_artifact", &self.target_artifact);
         context.insert("proposal_status", self.proposal_status.as_str());
 
-        let reviewer_str = self
-            .reviewer
-            .as_deref()
-            .unwrap_or("NULL");
+        let reviewer_str = self.reviewer.as_deref().unwrap_or("NULL");
         context.insert("reviewer", reviewer_str);
 
         let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();

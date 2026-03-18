@@ -196,7 +196,9 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
         },
         ToolDefinition {
             name: "index_code".to_string(),
-            description: "Index source code symbols using tree-sitter for cross-referencing with documents".to_string(),
+            description:
+                "Index source code symbols using tree-sitter for cross-referencing with documents"
+                    .to_string(),
             input_schema: serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -223,7 +225,8 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
         },
         ToolDefinition {
             name: "reassign_parent".to_string(),
-            description: "Reassign a task to a different parent initiative or to/from the backlog".to_string(),
+            description: "Reassign a task to a different parent initiative or to/from the backlog"
+                .to_string(),
             input_schema: serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -282,9 +285,7 @@ fn tool_initialize_project(args: &Value) -> Result<String, String> {
     let prefix = get_str(args, "prefix")?;
 
     let store = DocumentStore::new(Path::new(project_path));
-    store
-        .initialize(prefix)
-        .map_err(|e| e.user_message())?;
+    store.initialize(prefix).map_err(|e| e.user_message())?;
 
     Ok(format!(
         "## Project Initialized\n\n| Field | Value |\n| ----- | ----- |\n| Path | {} |\n| Prefix | {} |\n| Docs Dir | {}/.ultra-metis/docs/ |",
@@ -374,7 +375,11 @@ fn tool_edit_document(args: &Value) -> Result<String, String> {
         .map_err(|e| e.user_message())?;
 
     // Build diff visualization
-    let mode = if replace_all { "all occurrences" } else { "first occurrence" };
+    let mode = if replace_all {
+        "all occurrences"
+    } else {
+        "first occurrence"
+    };
     let search_preview = if search.len() > 80 {
         format!("{}...", &search[..77])
     } else {
@@ -396,10 +401,7 @@ fn tool_transition_phase(args: &Value) -> Result<String, String> {
     let project_path = get_str(args, "project_path")?;
     let short_code = get_str(args, "short_code")?;
     let phase = get_optional_str(args, "phase");
-    let force = args
-        .get("force")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
 
     let store = DocumentStore::new(Path::new(project_path));
     let result = store
@@ -407,7 +409,9 @@ fn tool_transition_phase(args: &Value) -> Result<String, String> {
         .map_err(|e| e.user_message())?;
 
     // Build progress visualization
-    let doc = store.read_document(short_code).map_err(|e| e.user_message())?;
+    let doc = store
+        .read_document(short_code)
+        .map_err(|e| e.user_message())?;
     let doc_type = doc.document_type();
     let current_phase = doc.phase().map_err(|e| e.to_string())?;
     let sequence = doc_type.phase_sequence();
@@ -503,8 +507,10 @@ fn tool_index_code(args: &Value) -> Result<String, String> {
 
     // If query is provided, search existing index
     if let Some(q) = query {
-        let index_content = std::fs::read_to_string(&index_path)
-            .map_err(|_| "No code index found. Run index_code without a query first to build the index.".to_string())?;
+        let index_content = std::fs::read_to_string(&index_path).map_err(|_| {
+            "No code index found. Run index_code without a query first to build the index."
+                .to_string()
+        })?;
         let index: ultra_metis_store::CodeIndex = serde_json::from_str(&index_content)
             .map_err(|e| format!("Failed to parse code index: {}", e))?;
 
@@ -551,8 +557,7 @@ fn tool_index_code(args: &Value) -> Result<String, String> {
         std::fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create index directory: {}", e))?;
     }
-    std::fs::write(&index_path, json)
-        .map_err(|e| format!("Failed to write index: {}", e))?;
+    std::fs::write(&index_path, json).map_err(|e| format!("Failed to write index: {}", e))?;
 
     Ok(format!(
         "## Code Index Built\n\nIndexed {} symbols across {} files.\nIndex saved to: {}",

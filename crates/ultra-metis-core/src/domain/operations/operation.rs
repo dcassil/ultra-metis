@@ -310,7 +310,12 @@ impl OperationSpec {
 /// Returns default (inputs, output, tools, escalations) for each operation.
 fn default_spec(
     op: CognitiveOperation,
-) -> (Vec<String>, OutputKind, Vec<ToolCategory>, Vec<EscalationCondition>) {
+) -> (
+    Vec<String>,
+    OutputKind,
+    Vec<ToolCategory>,
+    Vec<EscalationCondition>,
+) {
     match op {
         CognitiveOperation::FrameObjective => (
             vec!["work item or request".into(), "existing context".into()],
@@ -321,14 +326,21 @@ fn default_spec(
         CognitiveOperation::AcquireContext => (
             vec!["objective".into(), "repository access".into()],
             OutputKind::ContextSet,
-            vec![ToolCategory::Search, ToolCategory::VersionControl, ToolCategory::Documentation],
+            vec![
+                ToolCategory::Search,
+                ToolCategory::VersionControl,
+                ToolCategory::Documentation,
+            ],
             vec![EscalationCondition::InsufficientContext],
         ),
         CognitiveOperation::BuildModel => (
             vec!["context set".into(), "codebase access".into()],
             OutputKind::Model,
             vec![ToolCategory::Search, ToolCategory::Analysis],
-            vec![EscalationCondition::InsufficientContext, EscalationCondition::AmbiguityDetected],
+            vec![
+                EscalationCondition::InsufficientContext,
+                EscalationCondition::AmbiguityDetected,
+            ],
         ),
         CognitiveOperation::LocateFocus => (
             vec!["model".into(), "objective".into()],
@@ -345,20 +357,38 @@ fn default_spec(
         CognitiveOperation::TraceFlow => (
             vec!["focus area".into(), "codebase access".into()],
             OutputKind::FlowTrace,
-            vec![ToolCategory::Search, ToolCategory::Analysis, ToolCategory::VersionControl],
+            vec![
+                ToolCategory::Search,
+                ToolCategory::Analysis,
+                ToolCategory::VersionControl,
+            ],
             vec![EscalationCondition::InsufficientContext],
         ),
         CognitiveOperation::AssessImpact => (
-            vec!["structural analysis or flow trace".into(), "change description".into()],
+            vec![
+                "structural analysis or flow trace".into(),
+                "change description".into(),
+            ],
             OutputKind::ImpactAssessment,
-            vec![ToolCategory::Analysis, ToolCategory::VersionControl, ToolCategory::Metrics],
+            vec![
+                ToolCategory::Analysis,
+                ToolCategory::VersionControl,
+                ToolCategory::Metrics,
+            ],
             vec![EscalationCondition::RiskThresholdExceeded],
         ),
         CognitiveOperation::ShapeSolution => (
-            vec!["objective".into(), "model".into(), "impact assessment".into()],
+            vec![
+                "objective".into(),
+                "model".into(),
+                "impact assessment".into(),
+            ],
             OutputKind::SolutionDesign,
             vec![ToolCategory::Documentation],
-            vec![EscalationCondition::DesignConflict, EscalationCondition::AmbiguityDetected],
+            vec![
+                EscalationCondition::DesignConflict,
+                EscalationCondition::AmbiguityDetected,
+            ],
         ),
         CognitiveOperation::DecomposeWork => (
             vec!["solution design".into(), "codebase model".into()],
@@ -375,11 +405,18 @@ fn default_spec(
         CognitiveOperation::ValidateReality => (
             vec!["artifact".into(), "test infrastructure".into()],
             OutputKind::ValidationResult,
-            vec![ToolCategory::Testing, ToolCategory::Build, ToolCategory::Analysis],
+            vec![
+                ToolCategory::Testing,
+                ToolCategory::Build,
+                ToolCategory::Analysis,
+            ],
             vec![EscalationCondition::ValidationFailed],
         ),
         CognitiveOperation::ReassessAdapt => (
-            vec!["validation results or new information".into(), "current plan".into()],
+            vec![
+                "validation results or new information".into(),
+                "current plan".into(),
+            ],
             OutputKind::AdaptedPlan,
             vec![ToolCategory::Documentation],
             vec![EscalationCondition::IterationBudgetExhausted],
@@ -429,10 +466,22 @@ mod tests {
 
     #[test]
     fn test_operation_from_str_aliases() {
-        assert_eq!("frame".parse::<CognitiveOperation>().unwrap(), CognitiveOperation::FrameObjective);
-        assert_eq!("acquire".parse::<CognitiveOperation>().unwrap(), CognitiveOperation::AcquireContext);
-        assert_eq!("model".parse::<CognitiveOperation>().unwrap(), CognitiveOperation::BuildModel);
-        assert_eq!("validate".parse::<CognitiveOperation>().unwrap(), CognitiveOperation::ValidateReality);
+        assert_eq!(
+            "frame".parse::<CognitiveOperation>().unwrap(),
+            CognitiveOperation::FrameObjective
+        );
+        assert_eq!(
+            "acquire".parse::<CognitiveOperation>().unwrap(),
+            CognitiveOperation::AcquireContext
+        );
+        assert_eq!(
+            "model".parse::<CognitiveOperation>().unwrap(),
+            CognitiveOperation::BuildModel
+        );
+        assert_eq!(
+            "validate".parse::<CognitiveOperation>().unwrap(),
+            CognitiveOperation::ValidateReality
+        );
     }
 
     #[test]
@@ -445,9 +494,17 @@ mod tests {
         for op in CognitiveOperation::all() {
             let spec = OperationSpec::new(*op);
             assert_eq!(spec.operation, *op);
-            assert!(!spec.input_requirements.is_empty(), "op {:?} has no inputs", op);
+            assert!(
+                !spec.input_requirements.is_empty(),
+                "op {:?} has no inputs",
+                op
+            );
             assert!(!spec.tool_hints.is_empty(), "op {:?} has no tool hints", op);
-            assert!(!spec.escalation_conditions.is_empty(), "op {:?} has no escalations", op);
+            assert!(
+                !spec.escalation_conditions.is_empty(),
+                "op {:?} has no escalations",
+                op
+            );
             assert!(!spec.description.is_empty());
         }
     }
@@ -461,7 +518,9 @@ mod tests {
             .with_escalation(EscalationCondition::Custom("custom reason".into()));
 
         assert_eq!(spec.description, "Custom framing");
-        assert!(spec.input_requirements.contains(&"additional requirement".to_string()));
+        assert!(spec
+            .input_requirements
+            .contains(&"additional requirement".to_string()));
         assert!(spec.tool_hints.contains(&ToolCategory::Search));
         assert!(spec.escalation_conditions.len() >= 2);
     }
@@ -470,7 +529,11 @@ mod tests {
     fn test_operation_spec_with_tool_hint_deduplicates() {
         let spec = OperationSpec::new(CognitiveOperation::AcquireContext)
             .with_tool_hint(ToolCategory::Search); // already in defaults
-        let search_count = spec.tool_hints.iter().filter(|t| **t == ToolCategory::Search).count();
+        let search_count = spec
+            .tool_hints
+            .iter()
+            .filter(|t| **t == ToolCategory::Search)
+            .count();
         assert_eq!(search_count, 1);
     }
 
@@ -484,7 +547,10 @@ mod tests {
 
     #[test]
     fn test_escalation_condition_display() {
-        assert_eq!(EscalationCondition::InsufficientContext.to_string(), "insufficient_context");
+        assert_eq!(
+            EscalationCondition::InsufficientContext.to_string(),
+            "insufficient_context"
+        );
         assert_eq!(
             EscalationCondition::Custom("test".into()).to_string(),
             "custom: test"

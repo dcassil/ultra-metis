@@ -95,12 +95,16 @@ fn format_report(
 
     // Header
     out.push_str(&format!(
-         "# Practical Benchmark Comparison Report\n\n\
+        "# Practical Benchmark Comparison Report\n\n\
          **Date**: {}\n\
          **Scenario**: {} ({})\n\
          **Autonomous run ID**: {}\n\
          **Validated run ID**: {}\n\n",
-        date, autonomous.scenario.title, autonomous.scenario.id, autonomous.run_id, validated.run_id,
+        date,
+        autonomous.scenario.title,
+        autonomous.scenario.id,
+        autonomous.run_id,
+        validated.run_id,
     ));
 
     // Executive Summary
@@ -127,7 +131,9 @@ fn format_report(
 
     // Per-Initiative Results
     out.push_str("## Per-Initiative Results\n\n");
-    out.push_str("| Initiative | Autonomous Tokens | Validated Tokens | Token Δ | Gate Decision |\n");
+    out.push_str(
+        "| Initiative | Autonomous Tokens | Validated Tokens | Token Δ | Gate Decision |\n",
+    );
     out.push_str("|-----------|-------------------|-----------------|---------|---------------|\n");
 
     let auto_by_id: std::collections::HashMap<_, _> = autonomous
@@ -165,11 +171,7 @@ fn format_report(
         };
         out.push_str(&format!(
             "| {} | {} | {} | {} | {} |\n",
-            v_init.initiative_title,
-            auto_str,
-            v_init.total_tokens,
-            delta_str,
-            gate_str,
+            v_init.initiative_title, auto_str, v_init.total_tokens, delta_str, gate_str,
         ));
     }
     out.push('\n');

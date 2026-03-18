@@ -23,10 +23,8 @@ impl ToolOutputParser for TypeScriptParser {
         let mut total_errors: u32 = 0;
 
         // Match: file(line,col): error TSxxxx: message
-        let diagnostic_re = Regex::new(
-            r"^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+(TS\d+):\s+(.+)$",
-        )
-        .unwrap();
+        let diagnostic_re =
+            Regex::new(r"^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+(TS\d+):\s+(.+)$").unwrap();
 
         // Match summary line: Found N errors.
         let summary_re = Regex::new(r"Found (\d+) errors?").unwrap();

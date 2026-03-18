@@ -191,8 +191,8 @@ impl Epic {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
 
         // Extract epic-specific fields
-        let parent_id = FrontmatterParser::extract_optional_string(&fm_map, "parent_id")
-            .map(DocumentId::from);
+        let parent_id =
+            FrontmatterParser::extract_optional_string(&fm_map, "parent_id").map(DocumentId::from);
 
         let blocked_by = FrontmatterParser::extract_string_array(&fm_map, "blocked_by")
             .unwrap_or_default()
@@ -465,10 +465,7 @@ This is a test epic for our system.
         assert_eq!(epic.phase().unwrap(), Phase::Discovery);
         assert_eq!(epic.estimated_complexity(), Complexity::L);
         assert!(epic.content().has_acceptance_criteria());
-        assert_eq!(
-            epic.parent_id().unwrap().to_string(),
-            "my-product-doc"
-        );
+        assert_eq!(epic.parent_id().unwrap().to_string(), "my-product-doc");
 
         // Round-trip test: write to file and read back
         let temp_dir = tempdir().unwrap();
@@ -532,10 +529,7 @@ exit_criteria_met: false
             "Test Epic".to_string(),
             Some(DocumentId::from("parent-product-doc")),
             vec![],
-            vec![
-                Tag::Label("epic".to_string()),
-                Tag::Phase(Phase::Discovery),
-            ],
+            vec![Tag::Label("epic".to_string()), Tag::Phase(Phase::Discovery)],
             false,
             Complexity::M,
             "TEST-E-0301".to_string(),

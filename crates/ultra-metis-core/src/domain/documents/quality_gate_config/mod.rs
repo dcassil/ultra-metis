@@ -340,18 +340,20 @@ impl QualityGateConfig {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let gate_severity_default = FrontmatterParser::extract_optional_string(
-            &fm_map,
-            "gate_severity_default",
-        )
-        .and_then(|s| GateSeverity::from_str(&s).ok())
-        .unwrap_or(GateSeverity::Blocking);
+        let gate_severity_default =
+            FrontmatterParser::extract_optional_string(&fm_map, "gate_severity_default")
+                .and_then(|s| GateSeverity::from_str(&s).ok())
+                .unwrap_or(GateSeverity::Blocking);
 
         let default_thresholds = Self::parse_threshold_array(&fm_map, "default_thresholds")?;
         let transition_overrides = Self::parse_transition_overrides(&fm_map)?;
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -470,9 +472,8 @@ impl QualityGateConfig {
                             _ => GateSeverity::Blocking,
                         };
 
-                        let threshold =
-                            ThresholdType::from_parts(&threshold_type, threshold_value)
-                                .map_err(|e| DocumentValidationError::InvalidContent(e))?;
+                        let threshold = ThresholdType::from_parts(&threshold_type, threshold_value)
+                            .map_err(|e| DocumentValidationError::InvalidContent(e))?;
 
                         thresholds.push(MetricGateRule {
                             metric,
@@ -517,7 +518,10 @@ impl QualityGateConfig {
             "exit_criteria_met",
             &self.core.metadata.exit_criteria_met.to_string(),
         );
-        context.insert("gate_severity_default", &self.gate_severity_default.to_string());
+        context.insert(
+            "gate_severity_default",
+            &self.gate_severity_default.to_string(),
+        );
 
         // Serialize default thresholds as maps for Tera
         let threshold_maps: Vec<std::collections::HashMap<&str, String>> = self
@@ -584,11 +588,7 @@ impl QualityGateConfig {
 
     /// Get the effective thresholds for a given transition.
     /// Returns the transition-specific overrides if they exist, otherwise the defaults.
-    pub fn thresholds_for_transition(
-        &self,
-        from_phase: &str,
-        to_phase: &str,
-    ) -> &[MetricGateRule] {
+    pub fn thresholds_for_transition(&self, from_phase: &str, to_phase: &str) -> &[MetricGateRule] {
         for override_config in &self.transition_overrides {
             if override_config.matches(from_phase, to_phase) {
                 return &override_config.thresholds;
@@ -722,10 +722,7 @@ mod tests {
         assert_eq!(rel, ThresholdType::RelativeRegression(5.0));
 
         let trend = ThresholdType::from_parts("trend", 1.0).unwrap();
-        assert_eq!(
-            trend,
-            ThresholdType::Trend(TrendRequirement::Improving)
-        );
+        assert_eq!(trend, ThresholdType::Trend(TrendRequirement::Improving));
 
         let trend_stable = ThresholdType::from_parts("trend", 0.0).unwrap();
         assert_eq!(
@@ -747,10 +744,7 @@ mod tests {
         assert_eq!(advisory.severity, GateSeverity::Advisory);
 
         let relative = MetricGateRule::blocking_relative("coverage", 5.0);
-        assert_eq!(
-            relative.threshold,
-            ThresholdType::RelativeRegression(5.0)
-        );
+        assert_eq!(relative.threshold, ThresholdType::RelativeRegression(5.0));
     }
 
     #[test]
@@ -790,7 +784,10 @@ mod tests {
         assert_eq!(loaded.title(), config.title());
         assert_eq!(loaded.phase().unwrap(), config.phase().unwrap());
         assert_eq!(loaded.gate_severity_default, config.gate_severity_default);
-        assert_eq!(loaded.default_thresholds.len(), config.default_thresholds.len());
+        assert_eq!(
+            loaded.default_thresholds.len(),
+            config.default_thresholds.len()
+        );
         assert_eq!(
             loaded.transition_overrides.len(),
             config.transition_overrides.len()

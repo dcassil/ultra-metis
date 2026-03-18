@@ -497,9 +497,7 @@ impl DurableInsightNote {
         }
 
         // Check meh accumulation without positive signal
-        if self.total_feedback() >= min_feedback
-            && self.thumbs_up_count == 0
-            && self.meh_count > 0
+        if self.total_feedback() >= min_feedback && self.thumbs_up_count == 0 && self.meh_count > 0
         {
             return true;
         }
@@ -600,20 +598,20 @@ impl DurableInsightNote {
 
         let scope = Self::parse_scope(&fm_map)?;
 
-        let fetch_count = FrontmatterParser::extract_integer(&fm_map, "fetch_count")
-            .unwrap_or(0) as u32;
+        let fetch_count =
+            FrontmatterParser::extract_integer(&fm_map, "fetch_count").unwrap_or(0) as u32;
 
         let last_fetched_at =
             FrontmatterParser::extract_optional_string(&fm_map, "last_fetched_at")
                 .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                 .map(|dt| dt.with_timezone(&Utc));
 
-        let thumbs_up_count = FrontmatterParser::extract_integer(&fm_map, "thumbs_up_count")
-            .unwrap_or(0) as u32;
+        let thumbs_up_count =
+            FrontmatterParser::extract_integer(&fm_map, "thumbs_up_count").unwrap_or(0) as u32;
         let meh_count =
             FrontmatterParser::extract_integer(&fm_map, "meh_count").unwrap_or(0) as u32;
-        let thumbs_down_count = FrontmatterParser::extract_integer(&fm_map, "thumbs_down_count")
-            .unwrap_or(0) as u32;
+        let thumbs_down_count =
+            FrontmatterParser::extract_integer(&fm_map, "thumbs_down_count").unwrap_or(0) as u32;
 
         let last_feedback_at =
             FrontmatterParser::extract_optional_string(&fm_map, "last_feedback_at")
@@ -623,8 +621,12 @@ impl DurableInsightNote {
         // Extract note from the content body (first non-heading paragraph)
         let note = parsed.content.trim().to_string();
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -754,10 +756,7 @@ impl DurableInsightNote {
                 .unwrap_or_else(|| "NULL".to_string()),
         );
 
-        context.insert(
-            "scope_repo",
-            &self.scope.repo.as_deref().unwrap_or("NULL"),
-        );
+        context.insert("scope_repo", &self.scope.repo.as_deref().unwrap_or("NULL"));
         context.insert(
             "scope_package",
             &self.scope.package.as_deref().unwrap_or("NULL"),

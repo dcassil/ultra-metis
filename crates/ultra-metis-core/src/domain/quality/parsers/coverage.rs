@@ -55,9 +55,9 @@ impl ToolOutputParser for CoverageParser {
                 if let Ok(n) = val.parse::<u64>() {
                     total_lines_hit += n;
                     if let Some(ref file) = current_file {
-                        output.metrics.push(
-                            MetricEntry::new("lines_hit", n as f64, "count").with_file(file),
-                        );
+                        output
+                            .metrics
+                            .push(MetricEntry::new("lines_hit", n as f64, "count").with_file(file));
                     }
                 }
             } else if let Some(val) = line.strip_prefix("FNF:") {
@@ -100,11 +100,9 @@ impl ToolOutputParser for CoverageParser {
             0.0
         };
 
-        output.metrics.push(MetricEntry::new(
-            "line_coverage",
-            line_coverage,
-            "percent",
-        ));
+        output
+            .metrics
+            .push(MetricEntry::new("line_coverage", line_coverage, "percent"));
         output.metrics.push(MetricEntry::new(
             "function_coverage",
             function_coverage,

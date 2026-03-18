@@ -311,23 +311,25 @@ impl GateOverrideAuditEntry {
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
 
-        let overrider = FrontmatterParser::extract_string(&fm_map, "overrider")
-            .unwrap_or_default();
-        let override_reason = FrontmatterParser::extract_string(&fm_map, "override_reason")
-            .unwrap_or_default();
+        let overrider = FrontmatterParser::extract_string(&fm_map, "overrider").unwrap_or_default();
+        let override_reason =
+            FrontmatterParser::extract_string(&fm_map, "override_reason").unwrap_or_default();
         let override_type = FrontmatterParser::extract_optional_string(&fm_map, "override_type")
             .and_then(|s| OverrideType::from_str(&s).ok())
             .unwrap_or(OverrideType::Emergency);
         let gates_bypassed =
-            FrontmatterParser::extract_string_array(&fm_map, "gates_bypassed")
-                .unwrap_or_default();
+            FrontmatterParser::extract_string_array(&fm_map, "gates_bypassed").unwrap_or_default();
         let linked_quality_record =
             FrontmatterParser::extract_optional_string(&fm_map, "linked_quality_record");
         let linked_gate_config =
             FrontmatterParser::extract_optional_string(&fm_map, "linked_gate_config");
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -377,17 +379,11 @@ impl GateOverrideAuditEntry {
         context.insert("gates_bypassed", &self.gates_bypassed);
         context.insert(
             "linked_quality_record",
-            &self
-                .linked_quality_record
-                .as_deref()
-                .unwrap_or("NULL"),
+            &self.linked_quality_record.as_deref().unwrap_or("NULL"),
         );
         context.insert(
             "linked_gate_config",
-            &self
-                .linked_gate_config
-                .as_deref()
-                .unwrap_or("NULL"),
+            &self.linked_gate_config.as_deref().unwrap_or("NULL"),
         );
 
         let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
@@ -489,17 +485,11 @@ mod tests {
     fn test_override_entry_creation() {
         let entry = make_override_entry();
 
-        assert_eq!(
-            entry.title(),
-            "Gate Override: emergency (2 gates bypassed)"
-        );
+        assert_eq!(entry.title(), "Gate Override: emergency (2 gates bypassed)");
         assert_eq!(entry.overrider, "agent-001");
         assert_eq!(entry.override_type, OverrideType::Emergency);
         assert_eq!(entry.gates_bypassed.len(), 2);
-        assert_eq!(
-            entry.linked_quality_record.as_deref(),
-            Some("QR-0001")
-        );
+        assert_eq!(entry.linked_quality_record.as_deref(), Some("QR-0001"));
         assert!(entry.validate().is_ok());
     }
 
@@ -648,10 +638,7 @@ mod tests {
         assert_eq!(loaded.override_reason, entry.override_reason);
         assert_eq!(loaded.override_type, entry.override_type);
         assert_eq!(loaded.gates_bypassed, entry.gates_bypassed);
-        assert_eq!(
-            loaded.linked_quality_record,
-            entry.linked_quality_record
-        );
+        assert_eq!(loaded.linked_quality_record, entry.linked_quality_record);
         assert_eq!(loaded.linked_gate_config, entry.linked_gate_config);
     }
 }

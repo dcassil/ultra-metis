@@ -227,8 +227,12 @@ impl TransitionRecord {
         let reason = FrontmatterParser::extract_optional_string(&fm_map, "reason");
         let checks_run = Self::parse_check_results(&fm_map)?;
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -313,10 +317,7 @@ impl TransitionRecord {
         context.insert("actor", &self.actor);
         context.insert("timestamp", &self.timestamp.to_rfc3339());
         context.insert("forced", &self.forced.to_string());
-        context.insert(
-            "reason",
-            &self.reason.as_deref().unwrap_or("NULL"),
-        );
+        context.insert("reason", &self.reason.as_deref().unwrap_or("NULL"));
 
         let check_maps: Vec<serde_json::Value> = self
             .checks_run

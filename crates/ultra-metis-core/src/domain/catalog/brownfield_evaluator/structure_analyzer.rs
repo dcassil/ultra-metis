@@ -457,7 +457,9 @@ mod tests {
         assert!(analysis.detected_layers.contains(&"routes".to_string()));
         assert!(analysis.detected_layers.contains(&"handlers".to_string()));
         assert!(analysis.detected_layers.contains(&"services".to_string()));
-        assert!(analysis.detected_layers.contains(&"repositories".to_string()));
+        assert!(analysis
+            .detected_layers
+            .contains(&"repositories".to_string()));
         assert!(analysis.detected_layers.contains(&"middleware".to_string()));
         assert_eq!(analysis.total_files, 13);
     }
@@ -469,7 +471,9 @@ mod tests {
         assert!(analysis.has_src_root);
         assert!(analysis.detected_layers.contains(&"features".to_string()));
         assert!(analysis.detected_layers.contains(&"shared".to_string()));
-        assert!(analysis.module_boundaries.contains(&"src/features/auth".to_string()));
+        assert!(analysis
+            .module_boundaries
+            .contains(&"src/features/auth".to_string()));
     }
 
     #[test]
@@ -505,10 +509,7 @@ mod tests {
             "src/third_module.rs".to_string(),
         ];
         let analysis = StructureAnalyzer::analyze(&paths);
-        assert_eq!(
-            analysis.file_naming_convention,
-            NamingConvention::SnakeCase
-        );
+        assert_eq!(analysis.file_naming_convention, NamingConvention::SnakeCase);
     }
 
     #[test]
@@ -523,10 +524,7 @@ mod tests {
 
     #[test]
     fn test_test_pattern_separate() {
-        let paths = vec![
-            "src/main.ts".to_string(),
-            "tests/main.test.ts".to_string(),
-        ];
+        let paths = vec!["src/main.ts".to_string(), "tests/main.test.ts".to_string()];
         let analysis = StructureAnalyzer::analyze(&paths);
         assert_eq!(analysis.test_pattern, TestPattern::SeparateDir);
     }
@@ -574,9 +572,9 @@ mod tests {
     #[test]
     fn test_depth_distribution() {
         let paths = vec![
-            "a.ts".to_string(),           // depth 1
-            "src/b.ts".to_string(),        // depth 2
-            "src/foo/c.ts".to_string(),    // depth 3
+            "a.ts".to_string(),         // depth 1
+            "src/b.ts".to_string(),     // depth 2
+            "src/foo/c.ts".to_string(), // depth 3
         ];
         let analysis = StructureAnalyzer::analyze(&paths);
         assert_eq!(analysis.depth_distribution.get(&1), Some(&1));
@@ -593,9 +591,15 @@ mod tests {
             "src/utils/index.ts".to_string(),
         ];
         let analysis = StructureAnalyzer::analyze(&paths);
-        assert!(analysis.module_boundaries.contains(&"src/features/auth".to_string()));
-        assert!(analysis.module_boundaries.contains(&"src/features/dashboard".to_string()));
-        assert!(analysis.module_boundaries.contains(&"src/utils".to_string()));
+        assert!(analysis
+            .module_boundaries
+            .contains(&"src/features/auth".to_string()));
+        assert!(analysis
+            .module_boundaries
+            .contains(&"src/features/dashboard".to_string()));
+        assert!(analysis
+            .module_boundaries
+            .contains(&"src/utils".to_string()));
     }
 
     #[test]

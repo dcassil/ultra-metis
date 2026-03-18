@@ -44,7 +44,11 @@ pub enum RemediationTrigger {
 impl fmt::Display for RemediationTrigger {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::GateFailure { gate_config_ref, failed_metrics, .. } => {
+            Self::GateFailure {
+                gate_config_ref,
+                failed_metrics,
+                ..
+            } => {
                 write!(
                     f,
                     "gate_failure({}, {} metrics failed)",
@@ -52,7 +56,10 @@ impl fmt::Display for RemediationTrigger {
                     failed_metrics.len()
                 )
             }
-            Self::TrendDegradation { degrading_metrics, consecutive_regressions } => {
+            Self::TrendDegradation {
+                degrading_metrics,
+                consecutive_regressions,
+            } => {
                 write!(
                     f,
                     "trend_degradation({} metrics, {} consecutive)",
@@ -134,7 +141,9 @@ pub enum RemediationAction {
 impl fmt::Display for RemediationAction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::CreateInvestigation { suggested_title, .. } => {
+            Self::CreateInvestigation {
+                suggested_title, ..
+            } => {
                 write!(f, "create_investigation({})", suggested_title)
             }
             Self::CreateRemediationRecord { problem_type, .. } => {
@@ -469,7 +478,9 @@ mod tests {
     fn test_cannot_transition_from_terminal() {
         let mut rl = make_loop();
         rl.transition(RemediationLoopPhase::Closed).unwrap();
-        let err = rl.transition(RemediationLoopPhase::Investigating).unwrap_err();
+        let err = rl
+            .transition(RemediationLoopPhase::Investigating)
+            .unwrap_err();
         assert!(err.contains("Cannot transition"));
     }
 

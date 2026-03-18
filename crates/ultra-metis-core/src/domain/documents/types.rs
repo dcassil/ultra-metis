@@ -290,7 +290,12 @@ impl DocumentType {
         match self {
             DocumentType::ProductDoc => vec![Phase::Draft, Phase::Review, Phase::Published],
             DocumentType::DesignContext => {
-                vec![Phase::Draft, Phase::Review, Phase::Published, Phase::Superseded]
+                vec![
+                    Phase::Draft,
+                    Phase::Review,
+                    Phase::Published,
+                    Phase::Superseded,
+                ]
             }
             DocumentType::Epic => vec![
                 Phase::Discovery,
@@ -307,12 +312,9 @@ impl DocumentType {
                 Phase::Active,
                 Phase::Completed,
             ],
-            DocumentType::Task => vec![
-                Phase::Backlog,
-                Phase::Todo,
-                Phase::Active,
-                Phase::Completed,
-            ],
+            DocumentType::Task => {
+                vec![Phase::Backlog, Phase::Todo, Phase::Active, Phase::Completed]
+            }
             DocumentType::Adr => vec![
                 Phase::Draft,
                 Phase::Discussion,
@@ -320,7 +322,12 @@ impl DocumentType {
                 Phase::Superseded,
             ],
             DocumentType::Specification => {
-                vec![Phase::Discovery, Phase::Drafting, Phase::Review, Phase::Published]
+                vec![
+                    Phase::Discovery,
+                    Phase::Drafting,
+                    Phase::Review,
+                    Phase::Published,
+                ]
             }
             DocumentType::Vision => vec![Phase::Draft, Phase::Review, Phase::Published],
             DocumentType::Initiative => vec![
@@ -657,13 +664,31 @@ mod tests {
 
     #[test]
     fn test_document_type_parsing() {
-        assert_eq!("product_doc".parse::<DocumentType>().unwrap(), DocumentType::ProductDoc);
-        assert_eq!("product-doc".parse::<DocumentType>().unwrap(), DocumentType::ProductDoc);
-        assert_eq!("design_context".parse::<DocumentType>().unwrap(), DocumentType::DesignContext);
+        assert_eq!(
+            "product_doc".parse::<DocumentType>().unwrap(),
+            DocumentType::ProductDoc
+        );
+        assert_eq!(
+            "product-doc".parse::<DocumentType>().unwrap(),
+            DocumentType::ProductDoc
+        );
+        assert_eq!(
+            "design_context".parse::<DocumentType>().unwrap(),
+            DocumentType::DesignContext
+        );
         assert_eq!("epic".parse::<DocumentType>().unwrap(), DocumentType::Epic);
-        assert_eq!("story".parse::<DocumentType>().unwrap(), DocumentType::Story);
-        assert_eq!("vision".parse::<DocumentType>().unwrap(), DocumentType::Vision);
-        assert_eq!("initiative".parse::<DocumentType>().unwrap(), DocumentType::Initiative);
+        assert_eq!(
+            "story".parse::<DocumentType>().unwrap(),
+            DocumentType::Story
+        );
+        assert_eq!(
+            "vision".parse::<DocumentType>().unwrap(),
+            DocumentType::Vision
+        );
+        assert_eq!(
+            "initiative".parse::<DocumentType>().unwrap(),
+            DocumentType::Initiative
+        );
     }
 
     #[test]
@@ -671,11 +696,26 @@ mod tests {
         assert_eq!("feature".parse::<StoryType>().unwrap(), StoryType::Feature);
         assert_eq!("bugfix".parse::<StoryType>().unwrap(), StoryType::Bugfix);
         assert_eq!("bug-fix".parse::<StoryType>().unwrap(), StoryType::Bugfix);
-        assert_eq!("refactor".parse::<StoryType>().unwrap(), StoryType::Refactor);
-        assert_eq!("migration".parse::<StoryType>().unwrap(), StoryType::Migration);
-        assert_eq!("architecture-change".parse::<StoryType>().unwrap(), StoryType::ArchitectureChange);
-        assert_eq!("investigation".parse::<StoryType>().unwrap(), StoryType::Investigation);
-        assert_eq!("remediation".parse::<StoryType>().unwrap(), StoryType::Remediation);
+        assert_eq!(
+            "refactor".parse::<StoryType>().unwrap(),
+            StoryType::Refactor
+        );
+        assert_eq!(
+            "migration".parse::<StoryType>().unwrap(),
+            StoryType::Migration
+        );
+        assert_eq!(
+            "architecture-change".parse::<StoryType>().unwrap(),
+            StoryType::ArchitectureChange
+        );
+        assert_eq!(
+            "investigation".parse::<StoryType>().unwrap(),
+            StoryType::Investigation
+        );
+        assert_eq!(
+            "remediation".parse::<StoryType>().unwrap(),
+            StoryType::Remediation
+        );
         assert_eq!("setup".parse::<StoryType>().unwrap(), StoryType::Setup);
     }
 
@@ -754,7 +794,10 @@ mod tests {
     #[test]
     fn test_risk_level_parsing() {
         assert_eq!("low".parse::<RiskLevel>().unwrap(), RiskLevel::Low);
-        assert_eq!("critical".parse::<RiskLevel>().unwrap(), RiskLevel::Critical);
+        assert_eq!(
+            "critical".parse::<RiskLevel>().unwrap(),
+            RiskLevel::Critical
+        );
         assert!("invalid".parse::<RiskLevel>().is_err());
     }
 

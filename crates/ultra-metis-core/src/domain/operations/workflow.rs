@@ -102,9 +102,7 @@ impl FromStr for WorkType {
             "refactor" | "refactoring" => Ok(Self::Refactor),
             "investigation" | "investigate" | "research" => Ok(Self::Investigation),
             "migration" | "migrate" => Ok(Self::Migration),
-            "architecture_change" | "arch_change" | "architecture" => {
-                Ok(Self::ArchitectureChange)
-            }
+            "architecture_change" | "arch_change" | "architecture" => Ok(Self::ArchitectureChange),
             "brownfield_evaluation" | "brownfield" | "eval" => Ok(Self::BrownfieldEvaluation),
             "remediation" | "remediate" | "tech_debt" => Ok(Self::Remediation),
             "greenfield_bootstrap" | "greenfield" | "bootstrap" => Ok(Self::GreenfieldBootstrap),
@@ -335,7 +333,10 @@ mod tests {
     fn test_work_type_from_str_aliases() {
         assert_eq!("bug".parse::<WorkType>().unwrap(), WorkType::Bugfix);
         assert_eq!("feat".parse::<WorkType>().unwrap(), WorkType::Feature);
-        assert_eq!("greenfield".parse::<WorkType>().unwrap(), WorkType::GreenfieldBootstrap);
+        assert_eq!(
+            "greenfield".parse::<WorkType>().unwrap(),
+            WorkType::GreenfieldBootstrap
+        );
     }
 
     #[test]
@@ -376,7 +377,10 @@ mod tests {
         assert_eq!(wf.name, "Bugfix Workflow");
         assert_eq!(wf.step_count(), 2);
         assert_eq!(wf.required_step_count(), 2);
-        assert_eq!(wf.loop_sequence(), vec![LoopKind::ObjectiveFraming, LoopKind::ContextSufficiency]);
+        assert_eq!(
+            wf.loop_sequence(),
+            vec![LoopKind::ObjectiveFraming, LoopKind::ContextSufficiency]
+        );
     }
 
     #[test]

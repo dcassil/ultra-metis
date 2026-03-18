@@ -60,7 +60,10 @@ pub struct ToolDetectionResult {
 impl ToolDetectionResult {
     /// Get tools by category.
     pub fn by_category(&self, category: &ToolCategory) -> Vec<&DetectedTool> {
-        self.tools.iter().filter(|t| t.category == *category).collect()
+        self.tools
+            .iter()
+            .filter(|t| t.category == *category)
+            .collect()
     }
 
     /// Get all linters.
@@ -103,8 +106,14 @@ struct ToolRule {
 const LINTER_RULES: &[ToolRule] = &[
     ToolRule {
         patterns: &[
-            ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json",
-            ".eslintrc.yml", ".eslintrc.yaml", "eslint.config.js", "eslint.config.mjs",
+            ".eslintrc",
+            ".eslintrc.js",
+            ".eslintrc.cjs",
+            ".eslintrc.json",
+            ".eslintrc.yml",
+            ".eslintrc.yaml",
+            "eslint.config.js",
+            "eslint.config.mjs",
             "eslint.config.cjs",
         ],
         name: "eslint",
@@ -146,7 +155,12 @@ const LINTER_RULES: &[ToolRule] = &[
         category: ToolCategory::Linter,
     },
     ToolRule {
-        patterns: &[".stylelintrc", ".stylelintrc.json", "stylelint.config.js", "stylelint.config.mjs"],
+        patterns: &[
+            ".stylelintrc",
+            ".stylelintrc.json",
+            "stylelint.config.js",
+            "stylelint.config.mjs",
+        ],
         name: "stylelint",
         category: ToolCategory::Linter,
     },
@@ -156,9 +170,16 @@ const LINTER_RULES: &[ToolRule] = &[
 const FORMATTER_RULES: &[ToolRule] = &[
     ToolRule {
         patterns: &[
-            ".prettierrc", ".prettierrc.js", ".prettierrc.cjs", ".prettierrc.json",
-            ".prettierrc.yml", ".prettierrc.yaml", ".prettierrc.toml",
-            "prettier.config.js", "prettier.config.cjs", "prettier.config.mjs",
+            ".prettierrc",
+            ".prettierrc.js",
+            ".prettierrc.cjs",
+            ".prettierrc.json",
+            ".prettierrc.yml",
+            ".prettierrc.yaml",
+            ".prettierrc.toml",
+            "prettier.config.js",
+            "prettier.config.cjs",
+            "prettier.config.mjs",
         ],
         name: "prettier",
         category: ToolCategory::Formatter,
@@ -184,7 +205,10 @@ const FORMATTER_RULES: &[ToolRule] = &[
 const TEST_RUNNER_RULES: &[ToolRule] = &[
     ToolRule {
         patterns: &[
-            "jest.config.js", "jest.config.ts", "jest.config.cjs", "jest.config.mjs",
+            "jest.config.js",
+            "jest.config.ts",
+            "jest.config.cjs",
+            "jest.config.mjs",
             "jest.config.json",
         ],
         name: "jest",
@@ -192,8 +216,11 @@ const TEST_RUNNER_RULES: &[ToolRule] = &[
     },
     ToolRule {
         patterns: &[
-            "vitest.config.js", "vitest.config.ts", "vitest.config.mjs",
-            "vitest.workspace.ts", "vitest.workspace.js",
+            "vitest.config.js",
+            "vitest.config.ts",
+            "vitest.config.mjs",
+            "vitest.workspace.ts",
+            "vitest.workspace.js",
         ],
         name: "vitest",
         category: ToolCategory::TestRunner,
@@ -204,7 +231,12 @@ const TEST_RUNNER_RULES: &[ToolRule] = &[
         category: ToolCategory::TestRunner,
     },
     ToolRule {
-        patterns: &[".mocharc.yml", ".mocharc.yaml", ".mocharc.json", ".mocharc.js"],
+        patterns: &[
+            ".mocharc.yml",
+            ".mocharc.yaml",
+            ".mocharc.json",
+            ".mocharc.js",
+        ],
         name: "mocha",
         category: ToolCategory::TestRunner,
     },
@@ -214,7 +246,12 @@ const TEST_RUNNER_RULES: &[ToolRule] = &[
         category: ToolCategory::TestRunner,
     },
     ToolRule {
-        patterns: &["cypress.config.js", "cypress.config.ts", "cypress.config.cjs", "cypress.config.mjs"],
+        patterns: &[
+            "cypress.config.js",
+            "cypress.config.ts",
+            "cypress.config.cjs",
+            "cypress.config.mjs",
+        ],
         name: "cypress",
         category: ToolCategory::TestRunner,
     },
@@ -492,10 +529,7 @@ mod tests {
 
     #[test]
     fn test_no_tools_detected() {
-        let paths = vec![
-            "README.md".to_string(),
-            "src/main.txt".to_string(),
-        ];
+        let paths = vec!["README.md".to_string(), "src/main.txt".to_string()];
         let result = ToolDetector::detect(&paths);
         assert!(result.tools.is_empty());
     }
@@ -537,10 +571,7 @@ mod tests {
 
     #[test]
     fn test_biome_detection() {
-        let paths = vec![
-            "package.json".to_string(),
-            "biome.json".to_string(),
-        ];
+        let paths = vec!["package.json".to_string(), "biome.json".to_string()];
         let result = ToolDetector::detect(&paths);
         assert!(result.has_tool("biome"));
     }
@@ -553,10 +584,18 @@ mod tests {
             ".github/workflows/test.yml".to_string(),
         ];
         let result = ToolDetector::detect(&paths);
-        let gh_count = result.tools.iter().filter(|t| t.name == "github-actions").count();
+        let gh_count = result
+            .tools
+            .iter()
+            .filter(|t| t.name == "github-actions")
+            .count();
         assert_eq!(gh_count, 1);
         // But all workflow files should be in config_files
-        let gh = result.tools.iter().find(|t| t.name == "github-actions").unwrap();
+        let gh = result
+            .tools
+            .iter()
+            .find(|t| t.name == "github-actions")
+            .unwrap();
         assert_eq!(gh.config_files.len(), 3);
     }
 
@@ -577,10 +616,7 @@ mod tests {
 
     #[test]
     fn test_eslint_flat_config() {
-        let paths = vec![
-            "package.json".to_string(),
-            "eslint.config.mjs".to_string(),
-        ];
+        let paths = vec!["package.json".to_string(), "eslint.config.mjs".to_string()];
         let result = ToolDetector::detect(&paths);
         assert!(result.has_tool("eslint"));
     }

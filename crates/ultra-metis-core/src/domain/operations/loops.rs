@@ -300,21 +300,15 @@ impl LoopDefinition {
 /// Returns default (entry_condition, exit_condition, max_iterations) per loop kind.
 fn default_loop_conditions(kind: LoopKind) -> (Condition, Condition, u32) {
     match kind {
-        LoopKind::ObjectiveFraming => (
-            Condition::Always,
-            Condition::ObjectiveEstablished,
-            3,
-        ),
+        LoopKind::ObjectiveFraming => (Condition::Always, Condition::ObjectiveEstablished, 3),
         LoopKind::ContextSufficiency => (
             Condition::ObjectiveEstablished,
             Condition::ContextSufficient,
             5,
         ),
-        LoopKind::ModelConstruction => (
-            Condition::ContextSufficient,
-            Condition::ModelSufficient,
-            3,
-        ),
+        LoopKind::ModelConstruction => {
+            (Condition::ContextSufficient, Condition::ModelSufficient, 3)
+        }
         LoopKind::FocusNarrowing => (
             Condition::ModelSufficient,
             Condition::Custom("focus area identified".into()),
@@ -397,10 +391,19 @@ mod tests {
 
     #[test]
     fn test_loop_from_str_aliases() {
-        assert_eq!("objective".parse::<LoopKind>().unwrap(), LoopKind::ObjectiveFraming);
-        assert_eq!("context".parse::<LoopKind>().unwrap(), LoopKind::ContextSufficiency);
+        assert_eq!(
+            "objective".parse::<LoopKind>().unwrap(),
+            LoopKind::ObjectiveFraming
+        );
+        assert_eq!(
+            "context".parse::<LoopKind>().unwrap(),
+            LoopKind::ContextSufficiency
+        );
         assert_eq!("risk".parse::<LoopKind>().unwrap(), LoopKind::RiskImpact);
-        assert_eq!("validate".parse::<LoopKind>().unwrap(), LoopKind::Validation);
+        assert_eq!(
+            "validate".parse::<LoopKind>().unwrap(),
+            LoopKind::Validation
+        );
     }
 
     #[test]
@@ -437,7 +440,10 @@ mod tests {
             .with_escalation_rule(EscalationCondition::AmbiguityDetected)
             .with_operations(vec![CognitiveOperation::FrameObjective]);
 
-        assert_eq!(def.entry_condition, Condition::Custom("custom entry".into()));
+        assert_eq!(
+            def.entry_condition,
+            Condition::Custom("custom entry".into())
+        );
         assert_eq!(def.exit_condition, Condition::AllValidationsPass);
         assert_eq!(def.max_iterations, 10);
         assert_eq!(def.operations.len(), 1);
@@ -455,7 +461,10 @@ mod tests {
     #[test]
     fn test_condition_display() {
         assert_eq!(Condition::Always.to_string(), "always");
-        assert_eq!(Condition::ContextSufficient.to_string(), "context_sufficient");
+        assert_eq!(
+            Condition::ContextSufficient.to_string(),
+            "context_sufficient"
+        );
         assert_eq!(
             Condition::ArtifactExists("foo".into()).to_string(),
             "artifact_exists(foo)"

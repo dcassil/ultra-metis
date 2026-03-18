@@ -150,12 +150,7 @@ impl GateCheckEngine {
         let mut advisory_failures = Vec::new();
 
         for rule in rules {
-            let result = Self::check_metric(
-                rule,
-                current_metrics,
-                baseline_metrics,
-                trend_history,
-            );
+            let result = Self::check_metric(rule, current_metrics, baseline_metrics, trend_history);
 
             if !result.passed {
                 match result.severity {
@@ -184,10 +179,7 @@ impl GateCheckEngine {
         baseline_metrics: Option<&HashMap<String, f64>>,
         trend_history: Option<&[HashMap<String, f64>]>,
     ) -> MetricCheckResult {
-        let actual_value = current_metrics
-            .get(&rule.metric)
-            .copied()
-            .unwrap_or(0.0);
+        let actual_value = current_metrics.get(&rule.metric).copied().unwrap_or(0.0);
 
         match &rule.threshold {
             ThresholdType::Absolute(max_value) => {
@@ -238,12 +230,8 @@ impl GateCheckEngine {
             }
 
             ThresholdType::Trend(requirement) => {
-                let (passed, delta) = Self::check_trend(
-                    &rule.metric,
-                    actual_value,
-                    requirement,
-                    trend_history,
-                );
+                let (passed, delta) =
+                    Self::check_trend(&rule.metric, actual_value, requirement, trend_history);
 
                 MetricCheckResult {
                     metric: rule.metric.clone(),
@@ -345,14 +333,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert!(result.passed);
         assert!(result.blocking_failures.is_empty());
@@ -370,14 +351,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert!(!result.passed);
         assert_eq!(result.blocking_failures.len(), 1);
@@ -395,14 +369,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert!(!result.passed);
         assert_eq!(result.blocking_failures.len(), 2);
@@ -420,14 +387,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert!(result.passed); // advisory failures don't block
         assert!(result.blocking_failures.is_empty());
@@ -496,14 +456,7 @@ mod tests {
         let current = metrics(&[("errors", 10.0)]);
         let baseline = metrics(&[("errors", 0.0)]); // zero baseline
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         // Zero baseline — can't compute regression %, passes to avoid false positive
         assert!(result.passed);
@@ -525,14 +478,7 @@ mod tests {
         let current = metrics(&[("errors", 11.0)]); // exactly 10% regression from 10
         let baseline = metrics(&[("errors", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         // 10% regression, threshold is 10% — should pass (<=)
         assert!(result.passed);
@@ -554,14 +500,7 @@ mod tests {
         let current = metrics(&[("errors", 11.1)]); // >10% regression from 10
         let baseline = metrics(&[("errors", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert!(!result.passed);
     }
@@ -586,14 +525,7 @@ mod tests {
         let current = metrics(&[("errors", 3.0)]);
         let history = vec![metrics(&[("errors", 5.0)])]; // was 5, now 3 — improving
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            None,
-            Some(&history),
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, None, Some(&history));
 
         assert!(result.passed);
     }
@@ -618,14 +550,7 @@ mod tests {
         let current = metrics(&[("errors", 8.0)]);
         let history = vec![metrics(&[("errors", 5.0)])]; // was 5, now 8 — regressed
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            None,
-            Some(&history),
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, None, Some(&history));
 
         assert!(!result.passed);
     }
@@ -650,14 +575,7 @@ mod tests {
         let current = metrics(&[("errors", 5.0)]);
         let history = vec![metrics(&[("errors", 5.0)])]; // unchanged — ok
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            None,
-            Some(&history),
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, None, Some(&history));
 
         assert!(result.passed);
     }
@@ -682,12 +600,7 @@ mod tests {
         let current = metrics(&[("errors", 5.0)]);
 
         let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            None,
-            None, // no history
+            &current, &config, None, None, None, None, // no history
         );
 
         // No history — can't assess trend, passes
@@ -709,14 +622,7 @@ mod tests {
 
         let current = HashMap::new(); // empty — lint_errors defaults to 0
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            None,
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, None, None);
 
         assert!(result.passed);
         assert_eq!(result.metric_results[0].actual_value, 0.0);
@@ -751,14 +657,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         let summary = result.failure_summary();
         assert!(summary.contains("BLOCKING"));
@@ -777,14 +676,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert_eq!(result.failure_summary(), "All quality gates passed.");
     }
@@ -799,14 +691,7 @@ mod tests {
         ]);
         let baseline = metrics(&[("total_warnings", 10.0)]);
 
-        let result = GateCheckEngine::check(
-            &current,
-            &config,
-            None,
-            None,
-            Some(&baseline),
-            None,
-        );
+        let result = GateCheckEngine::check(&current, &config, None, None, Some(&baseline), None);
 
         assert_eq!(result.total_failures(), 3);
     }

@@ -201,10 +201,7 @@ title: Test Epic
         ];
 
         for (level_str, expected_type) in types {
-            let content = format!(
-                "---\nlevel: {}\ntitle: Test\n---\n\n# Test\n",
-                level_str
-            );
+            let content = format!("---\nlevel: {}\ntitle: Test\n---\n\n# Test\n", level_str);
             let doc_type = DocumentFactory::extract_document_type(&content).unwrap();
             assert_eq!(doc_type, expected_type, "Failed for level: {}", level_str);
         }

@@ -1,7 +1,7 @@
+use super::types::{MetricDelta, ParsedToolOutput, TrendDirection};
 use crate::domain::documents::quality_record::{QualityRecord, QualityStatus};
 use crate::domain::documents::traits::DocumentValidationError;
 use crate::domain::documents::types::{Phase, Tag};
-use super::types::{MetricDelta, ParsedToolOutput, TrendDirection};
 use std::collections::{HashMap, HashSet};
 
 /// Engine for comparing two baselines and producing a QualityRecord.
@@ -11,8 +11,8 @@ pub struct BaselineComparisonEngine;
 #[derive(Debug)]
 pub struct ComparisonResult {
     pub metric_deltas: Vec<MetricDelta>,
-    pub new_findings: Vec<String>,      // finding keys only present in "after"
-    pub resolved_findings: Vec<String>,  // finding keys only present in "before"
+    pub new_findings: Vec<String>, // finding keys only present in "after"
+    pub resolved_findings: Vec<String>, // finding keys only present in "before"
     pub overall_status: QualityStatus,
     pub files_improved: Vec<String>,
     pub files_regressed: Vec<String>,
@@ -35,7 +35,8 @@ impl BaselineComparisonEngine {
         let (new_findings, resolved_findings) = Self::compute_finding_diff(before, after);
         let (files_improved, files_regressed) = Self::compute_file_changes(before, after);
 
-        let overall_status = Self::determine_status(&metric_deltas, &new_findings, &resolved_findings);
+        let overall_status =
+            Self::determine_status(&metric_deltas, &new_findings, &resolved_findings);
 
         Ok(ComparisonResult {
             metric_deltas,
@@ -86,7 +87,8 @@ impl BaselineComparisonEngine {
         let before_summary = &before.summary;
         let after_summary = &after.summary;
 
-        let all_keys: HashSet<&String> = before_summary.keys().chain(after_summary.keys()).collect();
+        let all_keys: HashSet<&String> =
+            before_summary.keys().chain(after_summary.keys()).collect();
         let mut sorted_keys: Vec<&&String> = all_keys.iter().collect();
         sorted_keys.sort();
 
@@ -132,17 +134,10 @@ impl BaselineComparisonEngine {
     ) -> (Vec<String>, Vec<String>) {
         let before_keys: HashSet<String> =
             before.findings.iter().map(|f| f.finding_key()).collect();
-        let after_keys: HashSet<String> =
-            after.findings.iter().map(|f| f.finding_key()).collect();
+        let after_keys: HashSet<String> = after.findings.iter().map(|f| f.finding_key()).collect();
 
-        let new_findings: Vec<String> = after_keys
-            .difference(&before_keys)
-            .cloned()
-            .collect();
-        let resolved_findings: Vec<String> = before_keys
-            .difference(&after_keys)
-            .cloned()
-            .collect();
+        let new_findings: Vec<String> = after_keys.difference(&before_keys).cloned().collect();
+        let resolved_findings: Vec<String> = before_keys.difference(&after_keys).cloned().collect();
 
         (new_findings, resolved_findings)
     }
@@ -161,10 +156,7 @@ impl BaselineComparisonEngine {
             *after_counts.entry(f.file_path.clone()).or_default() += 1;
         }
 
-        let all_files: HashSet<&String> = before_counts
-            .keys()
-            .chain(after_counts.keys())
-            .collect();
+        let all_files: HashSet<&String> = before_counts.keys().chain(after_counts.keys()).collect();
 
         let mut improved = Vec::new();
         let mut regressed = Vec::new();
@@ -190,9 +182,13 @@ impl BaselineComparisonEngine {
         new_findings: &[String],
         resolved_findings: &[String],
     ) -> QualityStatus {
-        let has_regressions = deltas.iter().any(|d| d.direction == TrendDirection::Regressed);
+        let has_regressions = deltas
+            .iter()
+            .any(|d| d.direction == TrendDirection::Regressed);
         let has_new_issues = !new_findings.is_empty();
-        let has_improvements = deltas.iter().any(|d| d.direction == TrendDirection::Improved);
+        let has_improvements = deltas
+            .iter()
+            .any(|d| d.direction == TrendDirection::Improved);
         let has_resolved = !resolved_findings.is_empty();
 
         if has_regressions || has_new_issues {
@@ -222,9 +218,15 @@ impl BaselineComparisonEngine {
 
         body.push_str("## Overview\n\n");
         body.push_str(&format!("- **Tool**: {}\n", after.tool_name));
-        body.push_str(&format!("- **Before**: {}\n", before.timestamp.to_rfc3339()));
+        body.push_str(&format!(
+            "- **Before**: {}\n",
+            before.timestamp.to_rfc3339()
+        ));
         body.push_str(&format!("- **After**: {}\n", after.timestamp.to_rfc3339()));
-        body.push_str(&format!("- **Status**: {}\n\n", comparison.overall_status.as_str()));
+        body.push_str(&format!(
+            "- **Status**: {}\n\n",
+            comparison.overall_status.as_str()
+        ));
 
         // Metric deltas
         if !comparison.metric_deltas.is_empty() {
@@ -311,9 +313,15 @@ mod tests {
         let mut output = ParsedToolOutput::new("eslint");
         output.summary.insert("total_errors".to_string(), 5.0);
         output.summary.insert("total_warnings".to_string(), 10.0);
-        output.findings.push(FindingEntry::new("rule1", Severity::Error, "err1", "a.js").with_location(1, 1));
-        output.findings.push(FindingEntry::new("rule2", Severity::Warning, "warn1", "a.js").with_location(5, 1));
-        output.findings.push(FindingEntry::new("rule3", Severity::Error, "err2", "b.js").with_location(10, 1));
+        output
+            .findings
+            .push(FindingEntry::new("rule1", Severity::Error, "err1", "a.js").with_location(1, 1));
+        output.findings.push(
+            FindingEntry::new("rule2", Severity::Warning, "warn1", "a.js").with_location(5, 1),
+        );
+        output
+            .findings
+            .push(FindingEntry::new("rule3", Severity::Error, "err2", "b.js").with_location(10, 1));
         output
     }
 
@@ -322,9 +330,13 @@ mod tests {
         output.summary.insert("total_errors".to_string(), 3.0);
         output.summary.insert("total_warnings".to_string(), 12.0);
         // rule1 in a.js resolved, rule2 still present, rule3 in b.js resolved
-        output.findings.push(FindingEntry::new("rule2", Severity::Warning, "warn1", "a.js").with_location(5, 1));
+        output.findings.push(
+            FindingEntry::new("rule2", Severity::Warning, "warn1", "a.js").with_location(5, 1),
+        );
         // new finding
-        output.findings.push(FindingEntry::new("rule4", Severity::Warning, "warn2", "c.js").with_location(1, 1));
+        output.findings.push(
+            FindingEntry::new("rule4", Severity::Warning, "warn2", "c.js").with_location(1, 1),
+        );
         output
     }
 
@@ -336,11 +348,19 @@ mod tests {
         let result = BaselineComparisonEngine::compare(&before, &after).unwrap();
 
         // Errors went from 5 to 3 (improved), warnings went from 10 to 12 (regressed)
-        let error_delta = result.metric_deltas.iter().find(|d| d.metric_name == "total_errors").unwrap();
+        let error_delta = result
+            .metric_deltas
+            .iter()
+            .find(|d| d.metric_name == "total_errors")
+            .unwrap();
         assert_eq!(error_delta.direction, TrendDirection::Improved);
         assert_eq!(error_delta.delta, -2.0);
 
-        let warning_delta = result.metric_deltas.iter().find(|d| d.metric_name == "total_warnings").unwrap();
+        let warning_delta = result
+            .metric_deltas
+            .iter()
+            .find(|d| d.metric_name == "total_warnings")
+            .unwrap();
         assert_eq!(warning_delta.direction, TrendDirection::Regressed);
         assert_eq!(warning_delta.delta, 2.0);
     }
@@ -390,7 +410,9 @@ mod tests {
     fn test_compare_all_improved() {
         let mut before = ParsedToolOutput::new("eslint");
         before.summary.insert("total_errors".to_string(), 5.0);
-        before.findings.push(FindingEntry::new("r1", Severity::Error, "e1", "a.js").with_location(1, 1));
+        before
+            .findings
+            .push(FindingEntry::new("r1", Severity::Error, "e1", "a.js").with_location(1, 1));
 
         let mut after = ParsedToolOutput::new("eslint");
         after.summary.insert("total_errors".to_string(), 0.0);
@@ -405,7 +427,9 @@ mod tests {
 
         let mut after = ParsedToolOutput::new("eslint");
         after.summary.insert("total_errors".to_string(), 5.0);
-        after.findings.push(FindingEntry::new("r1", Severity::Error, "e1", "a.js").with_location(1, 1));
+        after
+            .findings
+            .push(FindingEntry::new("r1", Severity::Error, "e1", "a.js").with_location(1, 1));
 
         let result = BaselineComparisonEngine::compare(&before, &after).unwrap();
         assert_eq!(result.overall_status, QualityStatus::Fail);

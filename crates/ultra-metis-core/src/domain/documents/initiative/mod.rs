@@ -181,8 +181,8 @@ impl Initiative {
             FrontmatterParser::extract_bool(&fm_map, "exit_criteria_met").unwrap_or(false);
         let tags = FrontmatterParser::extract_tags(&fm_map)?;
 
-        let parent_id = FrontmatterParser::extract_optional_string(&fm_map, "parent_id")
-            .map(DocumentId::from);
+        let parent_id =
+            FrontmatterParser::extract_optional_string(&fm_map, "parent_id").map(DocumentId::from);
 
         let blocked_by = FrontmatterParser::extract_string_array(&fm_map, "blocked_by")
             .unwrap_or_default()
@@ -461,7 +461,10 @@ mod tests {
 
         assert_eq!(loaded.title(), initiative.title());
         assert_eq!(loaded.phase().unwrap(), initiative.phase().unwrap());
-        assert_eq!(loaded.estimated_complexity(), initiative.estimated_complexity());
+        assert_eq!(
+            loaded.estimated_complexity(),
+            initiative.estimated_complexity()
+        );
         assert_eq!(
             loaded.parent_id().map(|id| id.to_string()),
             initiative.parent_id().map(|id| id.to_string())
@@ -489,7 +492,8 @@ mod tests {
         assert_eq!(initiative.transition_phase(None).unwrap(), Phase::Decompose);
         assert_eq!(initiative.transition_phase(None).unwrap(), Phase::Active);
         assert_eq!(initiative.transition_phase(None).unwrap(), Phase::Completed);
-        assert_eq!(initiative.transition_phase(None).unwrap(), Phase::Completed); // terminal
+        assert_eq!(initiative.transition_phase(None).unwrap(), Phase::Completed);
+        // terminal
     }
 
     #[test]

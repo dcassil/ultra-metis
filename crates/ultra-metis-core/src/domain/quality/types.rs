@@ -219,8 +219,13 @@ mod tests {
 
     #[test]
     fn test_finding_entry() {
-        let finding = FindingEntry::new("no-unused-vars", Severity::Warning, "unused var", "src/app.js")
-            .with_location(10, 5);
+        let finding = FindingEntry::new(
+            "no-unused-vars",
+            Severity::Warning,
+            "unused var",
+            "src/app.js",
+        )
+        .with_location(10, 5);
 
         assert_eq!(finding.rule_id, "no-unused-vars");
         assert_eq!(finding.severity, Severity::Warning);
@@ -232,10 +237,21 @@ mod tests {
     #[test]
     fn test_parsed_tool_output_counts() {
         let mut output = ParsedToolOutput::new("eslint");
-        output.findings.push(FindingEntry::new("rule1", Severity::Error, "err", "a.js"));
-        output.findings.push(FindingEntry::new("rule2", Severity::Error, "err", "b.js"));
-        output.findings.push(FindingEntry::new("rule3", Severity::Warning, "warn", "a.js"));
-        output.findings.push(FindingEntry::new("rule4", Severity::Info, "info", "c.js"));
+        output
+            .findings
+            .push(FindingEntry::new("rule1", Severity::Error, "err", "a.js"));
+        output
+            .findings
+            .push(FindingEntry::new("rule2", Severity::Error, "err", "b.js"));
+        output.findings.push(FindingEntry::new(
+            "rule3",
+            Severity::Warning,
+            "warn",
+            "a.js",
+        ));
+        output
+            .findings
+            .push(FindingEntry::new("rule4", Severity::Info, "info", "c.js"));
 
         assert_eq!(output.error_count(), 2);
         assert_eq!(output.warning_count(), 1);
@@ -246,9 +262,15 @@ mod tests {
     #[test]
     fn test_findings_by_file() {
         let mut output = ParsedToolOutput::new("eslint");
-        output.findings.push(FindingEntry::new("r1", Severity::Error, "e1", "a.js"));
-        output.findings.push(FindingEntry::new("r2", Severity::Warning, "w1", "a.js"));
-        output.findings.push(FindingEntry::new("r3", Severity::Error, "e2", "b.js"));
+        output
+            .findings
+            .push(FindingEntry::new("r1", Severity::Error, "e1", "a.js"));
+        output
+            .findings
+            .push(FindingEntry::new("r2", Severity::Warning, "w1", "a.js"));
+        output
+            .findings
+            .push(FindingEntry::new("r3", Severity::Error, "e2", "b.js"));
 
         let by_file = output.findings_by_file();
         assert_eq!(by_file.get("a.js").unwrap().len(), 2);

@@ -372,8 +372,7 @@ impl ExecutionRecord {
 
         let initiating_artifact =
             FrontmatterParser::extract_string(&fm_map, "initiating_artifact")?;
-        let execution_mode_str =
-            FrontmatterParser::extract_string(&fm_map, "execution_mode")?;
+        let execution_mode_str = FrontmatterParser::extract_string(&fm_map, "execution_mode")?;
         let execution_mode = ExecutionMode::from_str(&execution_mode_str)
             .map_err(|e| DocumentValidationError::InvalidContent(e))?;
 
@@ -395,29 +394,33 @@ impl ExecutionRecord {
         let final_disposition = Disposition::from_str(&final_disposition_str)
             .map_err(|e| DocumentValidationError::InvalidContent(e))?;
 
-        let context_sources = FrontmatterParser::extract_string_array(&fm_map, "context_sources")
-            .unwrap_or_default();
+        let context_sources =
+            FrontmatterParser::extract_string_array(&fm_map, "context_sources").unwrap_or_default();
         let architecture_consulted =
             FrontmatterParser::extract_optional_string(&fm_map, "architecture_consulted");
-        let rules_consulted = FrontmatterParser::extract_string_array(&fm_map, "rules_consulted")
-            .unwrap_or_default();
-        let notes_fetched = FrontmatterParser::extract_string_array(&fm_map, "notes_fetched")
-            .unwrap_or_default();
-        let files_touched = FrontmatterParser::extract_string_array(&fm_map, "files_touched")
-            .unwrap_or_default();
+        let rules_consulted =
+            FrontmatterParser::extract_string_array(&fm_map, "rules_consulted").unwrap_or_default();
+        let notes_fetched =
+            FrontmatterParser::extract_string_array(&fm_map, "notes_fetched").unwrap_or_default();
+        let files_touched =
+            FrontmatterParser::extract_string_array(&fm_map, "files_touched").unwrap_or_default();
         let artifacts_updated =
             FrontmatterParser::extract_string_array(&fm_map, "artifacts_updated")
                 .unwrap_or_default();
-        let decisions_made = FrontmatterParser::extract_string_array(&fm_map, "decisions_made")
-            .unwrap_or_default();
+        let decisions_made =
+            FrontmatterParser::extract_string_array(&fm_map, "decisions_made").unwrap_or_default();
 
         let tools_run = Self::parse_tool_entries(&fm_map)?;
         let validations_run = Self::parse_validation_entries(&fm_map)?;
         let escalations = Self::parse_escalation_entries(&fm_map)?;
         let overrides = Self::parse_override_entries(&fm_map)?;
 
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         Ok(Self::from_parts(
@@ -618,10 +621,7 @@ impl ExecutionRecord {
         context.insert("context_sources", &self.context_sources);
         context.insert(
             "architecture_consulted",
-            &self
-                .architecture_consulted
-                .as_deref()
-                .unwrap_or("NULL"),
+            &self.architecture_consulted.as_deref().unwrap_or("NULL"),
         );
         context.insert("rules_consulted", &self.rules_consulted);
         context.insert("notes_fetched", &self.notes_fetched);
@@ -768,11 +768,7 @@ mod tests {
         record.architecture_consulted = Some("PROJ-ARCH-0001".to_string());
         record.rules_consulted = vec!["PROJ-RC-0001".to_string()];
         record.notes_fetched = vec!["note-auth-pattern".to_string()];
-        record.tools_run = vec![ToolEntry::new(
-            "cargo test",
-            "--all",
-            "42 tests passed",
-        )];
+        record.tools_run = vec![ToolEntry::new("cargo test", "--all", "42 tests passed")];
         record.files_touched = vec!["src/auth.rs".to_string(), "src/login.rs".to_string()];
         record.validations_run = vec![ValidationEntry::new("clippy", true, "No warnings")];
         record.artifacts_updated = vec!["PROJ-T-0042".to_string()];
@@ -887,14 +883,8 @@ mod tests {
         assert_eq!(loaded.tools_run.len(), record.tools_run.len());
         assert_eq!(loaded.tools_run[0].name, record.tools_run[0].name);
         assert_eq!(loaded.files_touched.len(), record.files_touched.len());
-        assert_eq!(
-            loaded.validations_run.len(),
-            record.validations_run.len()
-        );
+        assert_eq!(loaded.validations_run.len(), record.validations_run.len());
         assert_eq!(loaded.decisions_made.len(), record.decisions_made.len());
-        assert_eq!(
-            loaded.architecture_consulted,
-            record.architecture_consulted
-        );
+        assert_eq!(loaded.architecture_consulted, record.architecture_consulted);
     }
 }

@@ -136,11 +136,7 @@ impl BrownfieldEvaluator {
             // Good architecture path
             if let Some(best_match) = &match_result.best_match {
                 // Matched a catalog entry
-                let ra = self.create_catalog_linked_ra(
-                    &analysis,
-                    best_match,
-                    short_code,
-                );
+                let ra = self.create_catalog_linked_ra(&analysis, best_match, short_code);
                 EvaluationOutcome::CatalogMatch {
                     reference_architecture: ra,
                     catalog_entry_id: best_match.catalog_id.clone(),
@@ -523,7 +519,11 @@ mod tests {
 
         let result = evaluator.evaluate(&server_paths(), &entries, "RA-BF-001".to_string());
 
-        assert!(result.quality_score >= 70.0, "Score: {}", result.quality_score);
+        assert!(
+            result.quality_score >= 70.0,
+            "Score: {}",
+            result.quality_score
+        );
         match &result.outcome {
             EvaluationOutcome::CatalogMatch {
                 catalog_entry_id,
@@ -533,7 +533,10 @@ mod tests {
                 assert_eq!(catalog_entry_id, "BUILTIN-AC-JS-SERVER");
                 assert!(match_score.overall_score >= 50.0);
             }
-            other => panic!("Expected CatalogMatch, got {:?}", std::mem::discriminant(other)),
+            other => panic!(
+                "Expected CatalogMatch, got {:?}",
+                std::mem::discriminant(other)
+            ),
         }
     }
 
@@ -573,10 +576,7 @@ mod tests {
 
         assert!(result.quality_score < 70.0);
         match &result.outcome {
-            EvaluationOutcome::RecommendCatalogPattern {
-                findings,
-                ..
-            } => {
+            EvaluationOutcome::RecommendCatalogPattern { findings, .. } => {
                 assert!(!findings.findings.is_empty());
                 assert!(findings.summary.contains_key("quality_score"));
             }
@@ -647,8 +647,11 @@ mod tests {
 
         if let EvaluationOutcome::RecommendCatalogPattern { findings, .. } = &result.outcome {
             // Should have findings about missing layers, tests, etc.
-            let finding_ids: Vec<&str> =
-                findings.findings.iter().map(|f| f.rule_id.as_str()).collect();
+            let finding_ids: Vec<&str> = findings
+                .findings
+                .iter()
+                .map(|f| f.rule_id.as_str())
+                .collect();
             assert!(
                 finding_ids.contains(&"no_tests_detected"),
                 "Expected no_tests_detected finding"

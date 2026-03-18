@@ -5,9 +5,9 @@ use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
 use chrono::Utc;
 use gray_matter;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tera::{Context, Tera};
-use serde::{Deserialize, Serialize};
 
 /// Result of an individual validation run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -197,14 +197,19 @@ impl ValidationRecord {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         let validation_type = FrontmatterParser::extract_string(&fm_map, "validation_type")?;
         let result_str = FrontmatterParser::extract_string(&fm_map, "result")?;
         let result = result_str.parse::<ValidationResult>()?;
-        let related_artifact = FrontmatterParser::extract_optional_string(&fm_map, "related_artifact");
+        let related_artifact =
+            FrontmatterParser::extract_optional_string(&fm_map, "related_artifact");
         let required = FrontmatterParser::extract_bool(&fm_map, "required").unwrap_or(false);
 
         Ok(Self::from_parts(
@@ -364,9 +369,18 @@ mod tests {
 
     #[test]
     fn test_validation_result_parsing() {
-        assert_eq!("Passed".parse::<ValidationResult>().unwrap(), ValidationResult::Passed);
-        assert_eq!("Failed".parse::<ValidationResult>().unwrap(), ValidationResult::Failed);
-        assert_eq!("Skipped".parse::<ValidationResult>().unwrap(), ValidationResult::Skipped);
+        assert_eq!(
+            "Passed".parse::<ValidationResult>().unwrap(),
+            ValidationResult::Passed
+        );
+        assert_eq!(
+            "Failed".parse::<ValidationResult>().unwrap(),
+            ValidationResult::Failed
+        );
+        assert_eq!(
+            "Skipped".parse::<ValidationResult>().unwrap(),
+            ValidationResult::Skipped
+        );
         assert!("unknown".parse::<ValidationResult>().is_err());
     }
 }

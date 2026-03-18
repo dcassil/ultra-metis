@@ -7,7 +7,7 @@
 //! This module defines the **type system** and **composition semantics** --
 //! not an execution engine.
 
-pub mod operation;
 pub mod loops;
-pub mod workflow;
+pub mod operation;
 pub mod templates;
+pub mod workflow;

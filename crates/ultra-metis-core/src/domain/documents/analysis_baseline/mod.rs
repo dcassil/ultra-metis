@@ -5,9 +5,9 @@ use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
 use chrono::Utc;
 use gray_matter;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tera::{Context, Tera};
-use serde::{Deserialize, Serialize};
 
 /// An AnalysisBaseline captures a point-in-time snapshot of quality thresholds.
 /// Used as a reference point for quality records to compare against.
@@ -150,11 +150,16 @@ impl AnalysisBaseline {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
-        let linked_rules_config = FrontmatterParser::extract_optional_string(&fm_map, "linked_rules_config");
+        let linked_rules_config =
+            FrontmatterParser::extract_optional_string(&fm_map, "linked_rules_config");
         let baseline_date = FrontmatterParser::extract_string(&fm_map, "baseline_date")?;
 
         Ok(Self::from_parts(
@@ -231,10 +236,7 @@ impl AnalysisBaseline {
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
 
-        let linked_rules_config_val = self
-            .linked_rules_config
-            .as_deref()
-            .unwrap_or("NULL");
+        let linked_rules_config_val = self.linked_rules_config.as_deref().unwrap_or("NULL");
         context.insert("linked_rules_config", linked_rules_config_val);
         context.insert("baseline_date", &self.baseline_date);
 

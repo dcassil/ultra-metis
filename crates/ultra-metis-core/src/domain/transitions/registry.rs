@@ -4,8 +4,7 @@
 //! registered, unregistered by name, and queried for a given transition event.
 
 use super::hooks::{
-    PostTransitionAction, PreTransitionCheck, TransitionEvent,
-    PostActionResult, PreCheckResult,
+    PostActionResult, PostTransitionAction, PreCheckResult, PreTransitionCheck, TransitionEvent,
 };
 
 // ---------------------------------------------------------------------------
@@ -262,10 +261,8 @@ mod tests {
         let mut registry = HookRegistry::new();
 
         registry.register_pre_check(
-            PreTransitionCheck::new("epic-only", |_| {
-                PreCheckResult::pass("epic-only", "ok")
-            })
-            .for_document_types(vec![DocumentType::Epic]),
+            PreTransitionCheck::new("epic-only", |_| PreCheckResult::pass("epic-only", "ok"))
+                .for_document_types(vec![DocumentType::Epic]),
         );
         registry.register_pre_check(PreTransitionCheck::new("all", |_| {
             PreCheckResult::pass("all", "ok")

@@ -464,8 +464,9 @@ mod tests {
 
     #[test]
     fn test_pre_transition_check_document_type_filter() {
-        let check = PreTransitionCheck::new("epic-only", |_| PreCheckResult::pass("epic-only", "ok"))
-            .for_document_types(vec![DocumentType::Epic]);
+        let check =
+            PreTransitionCheck::new("epic-only", |_| PreCheckResult::pass("epic-only", "ok"))
+                .for_document_types(vec![DocumentType::Epic]);
 
         let task_event = sample_event();
         assert!(!check.matches(&task_event));
@@ -535,7 +536,10 @@ mod tests {
     #[test]
     fn test_post_transition_action_matches_and_executes() {
         let action = PostTransitionAction::new("log", |event| {
-            PostActionResult::ok("log", format!("logged transition for {}", event.document_id))
+            PostActionResult::ok(
+                "log",
+                format!("logged transition for {}", event.document_id),
+            )
         })
         .for_document_types(vec![DocumentType::Task, DocumentType::Story]);
 
@@ -549,10 +553,9 @@ mod tests {
 
     #[test]
     fn test_post_transition_action_filter_mismatch() {
-        let action = PostTransitionAction::new("epic-only", |_| {
-            PostActionResult::ok("epic-only", "ok")
-        })
-        .for_document_types(vec![DocumentType::Epic]);
+        let action =
+            PostTransitionAction::new("epic-only", |_| PostActionResult::ok("epic-only", "ok"))
+                .for_document_types(vec![DocumentType::Epic]);
 
         assert!(!action.matches(&sample_event())); // sample is Task
     }

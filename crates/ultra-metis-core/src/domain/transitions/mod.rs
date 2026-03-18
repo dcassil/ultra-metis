@@ -6,8 +6,8 @@
 //! recording all transition history, and traceability queries for walking
 //! document hierarchies.
 
+pub mod audit;
+pub mod enforcer;
 pub mod hooks;
 pub mod registry;
-pub mod enforcer;
-pub mod audit;
 pub mod traceability;

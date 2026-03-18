@@ -131,7 +131,12 @@ fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow!("claude CLI exited with error: {}", stderr));
+        let detail = if stderr.trim().is_empty() {
+            "claude CLI exited without stderr output. Verify Claude Code is logged in and prompt execution is allowed in this environment.".to_string()
+        } else {
+            format!("claude CLI exited with error: {}", stderr)
+        };
+        return Err(anyhow!(detail));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);

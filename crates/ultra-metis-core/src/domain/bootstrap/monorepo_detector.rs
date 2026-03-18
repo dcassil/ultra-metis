@@ -106,31 +106,42 @@ impl MonorepoInfo {
 
     /// Get all app packages.
     pub fn apps(&self) -> Vec<&DiscoveredPackage> {
-        self.packages.iter().filter(|p| p.kind == PackageKind::App).collect()
+        self.packages
+            .iter()
+            .filter(|p| p.kind == PackageKind::App)
+            .collect()
     }
 
     /// Get all library packages.
     pub fn libraries(&self) -> Vec<&DiscoveredPackage> {
-        self.packages.iter().filter(|p| p.kind == PackageKind::Library).collect()
+        self.packages
+            .iter()
+            .filter(|p| p.kind == PackageKind::Library)
+            .collect()
     }
 }
 
 /// Well-known monorepo package directory names.
 const PACKAGE_DIRS: &[&str] = &[
-    "packages", "apps", "libs", "crates", "modules", "services",
-    "tools", "plugins", "extensions",
+    "packages",
+    "apps",
+    "libs",
+    "crates",
+    "modules",
+    "services",
+    "tools",
+    "plugins",
+    "extensions",
 ];
 
 /// Well-known app directory names (heuristic for classification).
 const APP_DIR_NAMES: &[&str] = &[
-    "apps", "app", "services", "server", "web", "api", "cli",
-    "bin", "cmd",
+    "apps", "app", "services", "server", "web", "api", "cli", "bin", "cmd",
 ];
 
 /// Well-known library directory names.
 const LIB_DIR_NAMES: &[&str] = &[
-    "packages", "libs", "lib", "shared", "common", "core",
-    "utils", "internal",
+    "packages", "libs", "lib", "shared", "common", "core", "utils", "internal",
 ];
 
 /// Detects monorepo patterns and discovers packages.
@@ -177,7 +188,11 @@ impl MonorepoDetector {
 
         let all_file_names: HashSet<String> = file_paths
             .iter()
-            .filter_map(|p| Path::new(p).file_name().map(|f| f.to_string_lossy().to_string()))
+            .filter_map(|p| {
+                Path::new(p)
+                    .file_name()
+                    .map(|f| f.to_string_lossy().to_string())
+            })
             .collect();
 
         let mut tools = Vec::new();
@@ -221,7 +236,9 @@ impl MonorepoDetector {
                         .file_name()
                         .map(|f| f.to_string_lossy() == "package.json")
                         .unwrap_or(false)
-                    && PACKAGE_DIRS.iter().any(|dir| p.starts_with(&format!("{}/", dir)))
+                    && PACKAGE_DIRS
+                        .iter()
+                        .any(|dir| p.starts_with(&format!("{}/", dir)))
             });
             if has_workspace_structure {
                 tools.push(MonorepoTool::NpmWorkspace);
@@ -288,10 +305,7 @@ impl MonorepoDetector {
     }
 
     /// Discover packages based on detected tools.
-    fn discover_packages(
-        file_paths: &[String],
-        tools: &[MonorepoTool],
-    ) -> Vec<DiscoveredPackage> {
+    fn discover_packages(file_paths: &[String], tools: &[MonorepoTool]) -> Vec<DiscoveredPackage> {
         let mut packages = Vec::new();
         let mut seen_paths: HashSet<String> = HashSet::new();
 

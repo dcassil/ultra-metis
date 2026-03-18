@@ -150,12 +150,7 @@ fn extract_sections(body: &str) -> Vec<(String, String)> {
 fn is_tracked_section(name: &str) -> bool {
     let lower = name.to_lowercase();
     // Strip `[REQUIRED]` / `[CONDITIONAL: ...]` labels
-    let clean = lower
-        .split('[')
-        .next()
-        .unwrap_or(&lower)
-        .trim()
-        .to_string();
+    let clean = lower.split('[').next().unwrap_or(&lower).trim().to_string();
 
     matches!(
         clean.as_str(),

@@ -5,12 +5,14 @@
 
 use crate::config::ProjectConfig;
 use crate::error::{Result, StoreError};
+use chrono;
 use std::path::{Path, PathBuf};
 use ultra_metis_core::domain::documents::hierarchy::HierarchyValidator;
 use ultra_metis_core::domain::documents::traits::{Document, DocumentValidationError};
-use ultra_metis_core::domain::documents::types::{DocumentType, Phase, Tag, Complexity, DocumentId};
+use ultra_metis_core::domain::documents::types::{
+    Complexity, DocumentId, DocumentType, Phase, Tag,
+};
 use ultra_metis_core::{Initiative, Task, Vision};
-use chrono;
 
 const DOCS_DIR: &str = "docs";
 
@@ -419,11 +421,7 @@ impl DocumentStore {
     }
 
     /// Transition a document to the next phase (or a specific phase)
-    pub fn transition_phase(
-        &self,
-        short_code: &str,
-        target_phase: Option<&str>,
-    ) -> Result<String> {
+    pub fn transition_phase(&self, short_code: &str, target_phase: Option<&str>) -> Result<String> {
         self.transition_phase_with_options(short_code, target_phase, false)
     }
 
@@ -518,10 +516,7 @@ impl DocumentStore {
         let mut doc = self.read_document(short_code)?;
 
         let target = match target_phase {
-            Some(p) => Some(
-                p.parse::<Phase>()
-                    .map_err(|e| StoreError::Validation(e))?,
-            ),
+            Some(p) => Some(p.parse::<Phase>().map_err(|e| StoreError::Validation(e))?),
             None => None,
         };
 
@@ -544,17 +539,23 @@ impl DocumentStore {
                     // Directly update the phase tag without exit criteria check
                     match &mut doc {
                         AnyDocument::Vision(d) => {
-                            d.core_mut().tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            d.core_mut()
+                                .tags
+                                .retain(|tag| !matches!(tag, Tag::Phase(_)));
                             d.core_mut().tags.push(Tag::Phase(phase));
                             d.core_mut().metadata.updated_at = chrono::Utc::now();
                         }
                         AnyDocument::Initiative(d) => {
-                            d.core_mut().tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            d.core_mut()
+                                .tags
+                                .retain(|tag| !matches!(tag, Tag::Phase(_)));
                             d.core_mut().tags.push(Tag::Phase(phase));
                             d.core_mut().metadata.updated_at = chrono::Utc::now();
                         }
                         AnyDocument::Task(d) => {
-                            d.core_mut().tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            d.core_mut()
+                                .tags
+                                .retain(|tag| !matches!(tag, Tag::Phase(_)));
                             d.core_mut().tags.push(Tag::Phase(phase));
                             d.core_mut().metadata.updated_at = chrono::Utc::now();
                         }
@@ -820,7 +821,9 @@ mod tests {
     fn test_create_and_read_initiative() {
         let (_dir, store) = setup_store();
 
-        let v_code = store.create_document("vision", "Parent Vision", None).unwrap();
+        let v_code = store
+            .create_document("vision", "Parent Vision", None)
+            .unwrap();
         let i_code = store
             .create_document("initiative", "My Initiative", Some(&v_code))
             .unwrap();
@@ -855,9 +858,7 @@ mod tests {
 
         store.create_document("vision", "Vision 1", None).unwrap();
         store.create_document("vision", "Vision 2", None).unwrap();
-        store
-            .create_document("initiative", "Init 1", None)
-            .unwrap();
+        store.create_document("initiative", "Init 1", None).unwrap();
 
         let docs = store.list_documents(false).unwrap();
         assert_eq!(docs.len(), 3);
@@ -943,7 +944,9 @@ mod tests {
         let (_dir, store) = setup_store();
 
         // Create vision -> initiative -> task hierarchy
-        let v = store.create_document("vision", "Product Vision", None).unwrap();
+        let v = store
+            .create_document("vision", "Product Vision", None)
+            .unwrap();
         let i = store
             .create_document("initiative", "Feature Work", Some(&v))
             .unwrap();
@@ -1071,8 +1074,12 @@ mod tests {
     fn test_archive_cascades_to_children() {
         let (_dir, store) = setup_store();
         let i_code = store.create_document("initiative", "Init", None).unwrap();
-        let t1 = store.create_document("task", "Task 1", Some(&i_code)).unwrap();
-        let t2 = store.create_document("task", "Task 2", Some(&i_code)).unwrap();
+        let t1 = store
+            .create_document("task", "Task 1", Some(&i_code))
+            .unwrap();
+        let t2 = store
+            .create_document("task", "Task 2", Some(&i_code))
+            .unwrap();
 
         store.archive_document(&i_code).unwrap();
 
@@ -1140,7 +1147,9 @@ mod tests {
     #[test]
     fn test_create_vision_rejects_parent() {
         let (_dir, store) = setup_store();
-        let v_code = store.create_document("vision", "First Vision", None).unwrap();
+        let v_code = store
+            .create_document("vision", "First Vision", None)
+            .unwrap();
         let result = store.create_document("vision", "Child Vision", Some(&v_code));
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
@@ -1160,7 +1169,10 @@ mod tests {
         // This test documents current behavior — a future task should add title validation.
         let (_dir, store) = setup_store();
         let result = store.create_document("vision", "", None);
-        assert!(result.is_ok(), "Empty title currently succeeds (gap to fix)");
+        assert!(
+            result.is_ok(),
+            "Empty title currently succeeds (gap to fix)"
+        );
     }
 
     #[test]
@@ -1331,7 +1343,10 @@ mod tests {
 
         let result = store.reassign_parent(&t, Some(&v), None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Initiative, Epic, or Story"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Initiative, Epic, or Story"));
     }
 
     // ===== edit_document_with_options Tests =====
@@ -1342,14 +1357,26 @@ mod tests {
         let code = store.create_document("vision", "My Vision", None).unwrap();
 
         // Add some repeated text
-        store.edit_document(&code, "# My Vision", "# My Vision\n\nfoo bar\n\nfoo bar\n\nfoo bar").unwrap();
+        store
+            .edit_document(
+                &code,
+                "# My Vision",
+                "# My Vision\n\nfoo bar\n\nfoo bar\n\nfoo bar",
+            )
+            .unwrap();
 
         // Replace all occurrences
-        store.edit_document_with_options(&code, "foo", "baz", true).unwrap();
+        store
+            .edit_document_with_options(&code, "foo", "baz", true)
+            .unwrap();
 
         let raw = store.read_document_raw(&code).unwrap();
         assert!(!raw.contains("foo"), "All 'foo' should be replaced");
-        assert_eq!(raw.matches("baz").count(), 3, "Should have 3 'baz' occurrences");
+        assert_eq!(
+            raw.matches("baz").count(),
+            3,
+            "Should have 3 'baz' occurrences"
+        );
     }
 
     #[test]
@@ -1357,14 +1384,22 @@ mod tests {
         let (_dir, store) = setup_store();
         let code = store.create_document("vision", "My Vision", None).unwrap();
 
-        store.edit_document(&code, "# My Vision", "# My Vision\n\nfoo bar\n\nfoo bar").unwrap();
+        store
+            .edit_document(&code, "# My Vision", "# My Vision\n\nfoo bar\n\nfoo bar")
+            .unwrap();
 
         // Replace only first occurrence (default)
-        store.edit_document_with_options(&code, "foo", "baz", false).unwrap();
+        store
+            .edit_document_with_options(&code, "foo", "baz", false)
+            .unwrap();
 
         let raw = store.read_document_raw(&code).unwrap();
         assert_eq!(raw.matches("baz").count(), 1, "Should have 1 'baz'");
-        assert_eq!(raw.matches("foo").count(), 1, "Should have 1 remaining 'foo'");
+        assert_eq!(
+            raw.matches("foo").count(),
+            1,
+            "Should have 1 remaining 'foo'"
+        );
     }
 
     // ===== search_documents_with_options Tests =====
@@ -1372,10 +1407,16 @@ mod tests {
     #[test]
     fn test_search_with_type_filter() {
         let (_dir, store) = setup_store();
-        store.create_document("vision", "Alpha Vision", None).unwrap();
-        let i_code = store.create_document("initiative", "Alpha Initiative", None).unwrap();
+        store
+            .create_document("vision", "Alpha Vision", None)
+            .unwrap();
+        let i_code = store
+            .create_document("initiative", "Alpha Initiative", None)
+            .unwrap();
 
-        let results = store.search_documents_with_options("Alpha", Some("vision"), None, false).unwrap();
+        let results = store
+            .search_documents_with_options("Alpha", Some("vision"), None, false)
+            .unwrap();
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].document_type, "vision");
     }
@@ -1387,22 +1428,30 @@ mod tests {
         store.create_document("vision", "Test B", None).unwrap();
         store.create_document("vision", "Test C", None).unwrap();
 
-        let results = store.search_documents_with_options("Test", None, Some(2), false).unwrap();
+        let results = store
+            .search_documents_with_options("Test", None, Some(2), false)
+            .unwrap();
         assert_eq!(results.len(), 2);
     }
 
     #[test]
     fn test_search_with_include_archived() {
         let (_dir, store) = setup_store();
-        let code = store.create_document("vision", "Archived Vision", None).unwrap();
+        let code = store
+            .create_document("vision", "Archived Vision", None)
+            .unwrap();
         store.archive_document(&code).unwrap();
 
         // Without include_archived
-        let results = store.search_documents_with_options("Archived", None, None, false).unwrap();
+        let results = store
+            .search_documents_with_options("Archived", None, None, false)
+            .unwrap();
         assert_eq!(results.len(), 0);
 
         // With include_archived
-        let results = store.search_documents_with_options("Archived", None, None, true).unwrap();
+        let results = store
+            .search_documents_with_options("Archived", None, None, true)
+            .unwrap();
         assert_eq!(results.len(), 1);
     }
 
@@ -1414,7 +1463,9 @@ mod tests {
         let code = store.create_document("vision", "V", None).unwrap();
 
         // Force transition should work the same as normal for valid transitions
-        let result = store.transition_phase_with_options(&code, Some("review"), true).unwrap();
+        let result = store
+            .transition_phase_with_options(&code, Some("review"), true)
+            .unwrap();
         assert!(result.contains("review"));
 
         let doc = store.read_document(&code).unwrap();

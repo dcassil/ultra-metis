@@ -246,11 +246,7 @@ impl EscalationEvent {
 
 impl fmt::Display for EscalationEvent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "[{}] {}: {}",
-            self.severity, self.trigger, self.summary
-        )
+        write!(f, "[{}] {}: {}", self.severity, self.trigger, self.summary)
     }
 }
 
@@ -502,35 +498,20 @@ mod tests {
     #[test]
     fn test_escalation_event_blocks_work() {
         // Low severity does not block
-        let low = EscalationEvent::new(
-            EscalationTrigger::InsufficientEvidence,
-            "test",
-            "gate",
-        );
+        let low = EscalationEvent::new(EscalationTrigger::InsufficientEvidence, "test", "gate");
         assert!(!low.blocks_work());
 
         // Medium does not block
-        let medium = EscalationEvent::new(
-            EscalationTrigger::PolicyConflict,
-            "test",
-            "gate",
-        );
+        let medium = EscalationEvent::new(EscalationTrigger::PolicyConflict, "test", "gate");
         assert!(!medium.blocks_work());
 
         // High blocks
-        let high = EscalationEvent::new(
-            EscalationTrigger::HighImpactChange,
-            "test",
-            "gate",
-        );
+        let high = EscalationEvent::new(EscalationTrigger::HighImpactChange, "test", "gate");
         assert!(high.blocks_work());
 
         // Critical blocks
-        let critical = EscalationEvent::new(
-            EscalationTrigger::SecuritySafetyConcern,
-            "test",
-            "gate",
-        );
+        let critical =
+            EscalationEvent::new(EscalationTrigger::SecuritySafetyConcern, "test", "gate");
         assert!(critical.blocks_work());
     }
 
@@ -614,20 +595,16 @@ mod tests {
             security_concern: true,    // Critical
             ..Default::default()
         };
-        let max = EscalationDetector::detect_max_severity(
-            &signals,
-            &EscalationThresholds::default(),
-        );
+        let max =
+            EscalationDetector::detect_max_severity(&signals, &EscalationThresholds::default());
         assert_eq!(max, Some(EscalationSeverity::Critical));
     }
 
     #[test]
     fn test_detector_max_severity_empty() {
         let signals = EscalationSignals::default();
-        let max = EscalationDetector::detect_max_severity(
-            &signals,
-            &EscalationThresholds::default(),
-        );
+        let max =
+            EscalationDetector::detect_max_severity(&signals, &EscalationThresholds::default());
         assert_eq!(max, None);
     }
 

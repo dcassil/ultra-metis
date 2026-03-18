@@ -62,9 +62,7 @@ impl HierarchyValidator {
             },
 
             // Cross-cutting types: parent is optional
-            DocumentType::DesignContext | DocumentType::Adr | DocumentType::Specification => {
-                Ok(())
-            }
+            DocumentType::DesignContext | DocumentType::Adr | DocumentType::Specification => Ok(()),
 
             // Legacy types
             DocumentType::Vision => {
@@ -97,7 +95,11 @@ impl HierarchyValidator {
         match doc_type {
             DocumentType::Epic => vec![DocumentType::ProductDoc],
             DocumentType::Story => vec![DocumentType::Epic],
-            DocumentType::Task => vec![DocumentType::Story, DocumentType::Epic, DocumentType::Initiative],
+            DocumentType::Task => vec![
+                DocumentType::Story,
+                DocumentType::Epic,
+                DocumentType::Initiative,
+            ],
             DocumentType::Initiative => vec![DocumentType::Vision],
             _ => vec![], // top-level or cross-cutting
         }
@@ -135,11 +137,10 @@ mod tests {
 
     #[test]
     fn test_story_requires_epic_parent() {
-        assert!(HierarchyValidator::validate_parent(
-            DocumentType::Story,
-            Some(DocumentType::Epic)
-        )
-        .is_ok());
+        assert!(
+            HierarchyValidator::validate_parent(DocumentType::Story, Some(DocumentType::Epic))
+                .is_ok()
+        );
         assert!(HierarchyValidator::validate_parent(DocumentType::Story, None).is_err());
         assert!(HierarchyValidator::validate_parent(
             DocumentType::Story,
@@ -150,16 +151,14 @@ mod tests {
 
     #[test]
     fn test_task_requires_story_epic_or_initiative_parent() {
-        assert!(HierarchyValidator::validate_parent(
-            DocumentType::Task,
-            Some(DocumentType::Story)
-        )
-        .is_ok());
-        assert!(HierarchyValidator::validate_parent(
-            DocumentType::Task,
-            Some(DocumentType::Epic)
-        )
-        .is_ok());
+        assert!(
+            HierarchyValidator::validate_parent(DocumentType::Task, Some(DocumentType::Story))
+                .is_ok()
+        );
+        assert!(
+            HierarchyValidator::validate_parent(DocumentType::Task, Some(DocumentType::Epic))
+                .is_ok()
+        );
         assert!(HierarchyValidator::validate_parent(
             DocumentType::Task,
             Some(DocumentType::Initiative)
@@ -175,18 +174,14 @@ mod tests {
 
     #[test]
     fn test_cross_cutting_types_accept_any_parent() {
-        assert!(
-            HierarchyValidator::validate_parent(DocumentType::DesignContext, None).is_ok()
-        );
+        assert!(HierarchyValidator::validate_parent(DocumentType::DesignContext, None).is_ok());
         assert!(HierarchyValidator::validate_parent(
             DocumentType::DesignContext,
             Some(DocumentType::Epic)
         )
         .is_ok());
         assert!(HierarchyValidator::validate_parent(DocumentType::Adr, None).is_ok());
-        assert!(
-            HierarchyValidator::validate_parent(DocumentType::Specification, None).is_ok()
-        );
+        assert!(HierarchyValidator::validate_parent(DocumentType::Specification, None).is_ok());
     }
 
     #[test]
@@ -204,8 +199,12 @@ mod tests {
         assert!(HierarchyValidator::requires_parent(DocumentType::Epic));
         assert!(HierarchyValidator::requires_parent(DocumentType::Story));
         assert!(HierarchyValidator::requires_parent(DocumentType::Task));
-        assert!(!HierarchyValidator::requires_parent(DocumentType::ProductDoc));
-        assert!(!HierarchyValidator::requires_parent(DocumentType::DesignContext));
+        assert!(!HierarchyValidator::requires_parent(
+            DocumentType::ProductDoc
+        ));
+        assert!(!HierarchyValidator::requires_parent(
+            DocumentType::DesignContext
+        ));
         assert!(!HierarchyValidator::requires_parent(DocumentType::Adr));
     }
 
@@ -221,7 +220,11 @@ mod tests {
         );
         assert_eq!(
             HierarchyValidator::valid_parent_types(DocumentType::Task),
-            vec![DocumentType::Story, DocumentType::Epic, DocumentType::Initiative]
+            vec![
+                DocumentType::Story,
+                DocumentType::Epic,
+                DocumentType::Initiative
+            ]
         );
         assert!(HierarchyValidator::valid_parent_types(DocumentType::ProductDoc).is_empty());
     }

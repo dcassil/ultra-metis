@@ -173,11 +173,9 @@ impl RulesConfig {
         let mut context = Context::new();
         context.insert("title", &title);
 
-        let rendered_content = tera
-            .render("rules_config_content", &context)
-            .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
-            })?;
+        let rendered_content = tera.render("rules_config_content", &context).map_err(|e| {
+            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+        })?;
 
         let content = DocumentContent::new(&rendered_content);
 
@@ -267,8 +265,12 @@ impl RulesConfig {
         }
 
         let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
-        let metadata =
-            DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        let metadata = DocumentMetadata::from_frontmatter(
+            created_at,
+            updated_at,
+            exit_criteria_met,
+            short_code,
+        );
         let content = DocumentContent::from_markdown(&parsed.content);
 
         let protection_level_str = FrontmatterParser::extract_string(&fm_map, "protection_level")?;
@@ -570,7 +572,10 @@ mod tests {
 
     #[test]
     fn test_rule_scope_parsing() {
-        assert_eq!("platform".parse::<RuleScope>().unwrap(), RuleScope::Platform);
+        assert_eq!(
+            "platform".parse::<RuleScope>().unwrap(),
+            RuleScope::Platform
+        );
         assert_eq!("org".parse::<RuleScope>().unwrap(), RuleScope::Organization);
         assert_eq!(
             "organization".parse::<RuleScope>().unwrap(),

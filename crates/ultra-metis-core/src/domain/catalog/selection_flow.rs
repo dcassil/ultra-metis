@@ -214,10 +214,7 @@ impl<'a> SelectionFlow<'a> {
                 .join("\n"),
         );
 
-        let source_short_code = entry
-            .metadata()
-            .short_code
-            .clone();
+        let source_short_code = entry.metadata().short_code.clone();
 
         let ra = ReferenceArchitecture::from_parts(
             title,
@@ -255,12 +252,15 @@ impl<'a> SelectionFlow<'a> {
         short_code: String,
         tailoring: Option<TailoringOptions>,
     ) -> Result<SelectionResult, DocumentValidationError> {
-        let entry = self.engine.find_exact(language, project_type).ok_or_else(|| {
-            DocumentValidationError::InvalidContent(format!(
-                "No catalog entry found for {}/{}",
-                language, project_type
-            ))
-        })?;
+        let entry = self
+            .engine
+            .find_exact(language, project_type)
+            .ok_or_else(|| {
+                DocumentValidationError::InvalidContent(format!(
+                    "No catalog entry found for {}/{}",
+                    language, project_type
+                ))
+            })?;
 
         self.create_reference_architecture(entry, short_code, tailoring)
     }
@@ -340,7 +340,10 @@ mod tests {
 
         let ra = &result.reference_architecture;
         assert!(ra.title().contains("server"));
-        assert_eq!(ra.source_catalog_ref.as_deref(), Some("BUILTIN-AC-JS-SERVER"));
+        assert_eq!(
+            ra.source_catalog_ref.as_deref(),
+            Some("BUILTIN-AC-JS-SERVER")
+        );
         assert!(!ra.is_derived);
         assert_eq!(ra.status, ArchitectureStatus::Draft);
         assert!(ra.is_catalog_linked());
