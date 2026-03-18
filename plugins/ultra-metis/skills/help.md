@@ -5,18 +5,32 @@ description: "Explain Ultra-Metis plugin and available commands. Use when user a
 
 # Ultra-Metis Help
 
-Ultra-Metis is a repo-native AI engineering orchestration system. It manages work through Flight Levels methodology — hierarchical documents that flow through lifecycle phases.
+Ultra-Metis is a repo-native AI engineering orchestration system. It manages work through a hierarchical document model that flows through lifecycle phases.
 
 ## Document Types
 
-| Type | Purpose | Parent Required |
-|------|---------|-----------------|
-| **Vision** | Strategic direction (6mo-2yr) | No |
-| **Strategy** | Coordinated approaches (Full preset only) | Vision (published) |
-| **Initiative** | Concrete projects (1-6mo) | Strategy or Vision (published) |
-| **Task** | Individual work (1-14 days) | Initiative (decompose/active) |
-| **Backlog** | Standalone bugs/features/debt | No (use `backlog_category`) |
-| **ADR** | Architecture decisions | No |
+| Type | Purpose | Phases | Parent |
+|------|---------|--------|--------|
+| **ProductDoc** | Product definition anchoring all planning | draft → review → published | None |
+| **Epic** | Major capability increments grouping stories | discovery → design → ready → decompose → active → completed | ProductDoc |
+| **Story** | Typed implementation slices within epics | discovery → design → ready → active → completed (+ blocked) | Epic |
+| **Task** | Execution-level work items | backlog → todo → active → completed (+ blocked) | Story |
+| **DesignContext** | Approved UI patterns, design specs | draft → review → published → superseded | None |
+| **ADR** | Architecture decisions | draft → discussion → decided → superseded | None |
+
+### Story Types
+Stories are typed by purpose: `feature`, `bugfix`, `refactor`, `migration`, `architecture-change`, `investigation`, `remediation`, `setup`
+
+### The Planning Hierarchy
+```
+ProductDoc: "Why does this product exist?"
+    ↓
+Epic: "User Authentication" (capability increment)
+    ↓
+Story: "Login flow" (typed: feature)
+    ↓
+Task: "Implement OAuth callback handler" (execution unit)
+```
 
 ## Available MCP Tools
 
@@ -25,67 +39,44 @@ All tools use the `mcp__ultra-metis__` prefix:
 | Tool | Purpose |
 |------|---------|
 | `initialize_project` | Create a new Ultra-Metis workspace |
-| `create_document` | Create vision, strategy, initiative, task, or ADR |
+| `create_document` | Create product_doc, epic, story, task, design_context, or ADR |
 | `read_document` | Read document content by short code |
 | `edit_document` | Update document content (search-and-replace) |
 | `list_documents` | List all documents with phases and short codes |
 | `search_documents` | Full-text search across documents |
 | `transition_phase` | Advance document to next phase |
 | `archive_document` | Archive document and children |
-| `reassign_parent` | Move task to different initiative or backlog |
+| `reassign_parent` | Move task/story to different parent |
 | `index_code` | Index source code symbols with tree-sitter |
 
 ## Common Workflows
 
 ### Start a New Project
 1. `initialize_project` — create workspace with prefix
-2. `create_document(type="vision")` — define strategic direction
-3. `transition_phase` twice — draft to review to published
-4. `create_document(type="initiative")` — create work under vision
+2. `create_document(type="product_doc")` — define product intent
+3. `transition_phase` twice — draft → review → published
+4. `create_document(type="epic")` — create capability increments under product doc
 
-### Track Work
-1. `list_documents` — see all active work
-2. `read_document` — check document details
-3. `edit_document` — update progress, add notes
-4. `transition_phase` — advance through lifecycle
-
-### Execute a Task
-1. `read_document` — understand the task
-2. `transition_phase` — move to active
-3. Do the work, updating progress via `edit_document`
-4. `transition_phase` — move to completed
-
-### Create Backlog Items
-For standalone bugs, features, or tech debt:
-```
-create_document(type="task", title="Fix login timeout", backlog_category="bug")
-```
-
-### Decompose an Initiative
-1. Transition initiative to "decompose" phase
-2. Create tasks with `parent_id` pointing to the initiative
-3. Transition initiative to "active" when ready
+### Plan and Execute Work
+1. Create Epic under published ProductDoc
+2. Progress Epic through discovery → design → ready → decompose
+3. Create Stories under Epic during decompose phase
+4. Create Tasks under Stories for execution-level work
+5. Execute tasks: todo → active → completed
 
 ## Short Codes
 
 Every document gets a unique ID: `PREFIX-TYPE-NNNN`
-- **V** = Vision, **S** = Strategy, **I** = Initiative, **T** = Task, **A** = ADR
-- Example: `PROJ-I-0001`, `ACME-T-0042`
+- **PD** = ProductDoc, **E** = Epic, **S** = Story, **T** = Task, **DC** = DesignContext, **A** = ADR
+- Example: `PROJ-E-0001`, `ACME-T-0042`
 
 Use short codes to reference documents in all operations.
-
-## Presets
-
-| Preset | Hierarchy | Best For |
-|--------|-----------|----------|
-| **Direct** | Vision → Task | Solo work |
-| **Streamlined** | Vision → Initiative → Task | Most projects (default) |
-| **Full** | Vision → Strategy → Initiative → Task | Multi-team coordination |
 
 ## Key Principles
 
 - **Work is pulled, not pushed** — low backlog signals to decompose more
-- **All work traces to vision** — if it doesn't align, question its value
+- **All work traces to product intent** — if it doesn't align, question its value
 - **Phases exist for a reason** — don't skip them
 - **Filesystem is truth** — documents are repo-native markdown+YAML
 - **Scope over time** — size by capability, not duration
+- **Static tools first** — prefer deterministic tools over unconstrained reasoning

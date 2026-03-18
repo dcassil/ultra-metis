@@ -11,25 +11,15 @@ This skill guides moving Ultra-Metis documents through their lifecycle phases.
 
 Phases move forward only. You cannot go backward to a previous phase. Terminal phases cannot transition further.
 
-### Vision
+### ProductDoc
 ```
 draft → review → published
 ```
-- **draft** → review
-- **review** → published
-- **published**: terminal
+- **draft**: Initial product definition
+- **review**: Stakeholder feedback and refinement
+- **published**: Stable product anchor, ready to drive work (terminal)
 
-### Strategy (Full preset only)
-```
-shaping → design → ready → active → completed
-```
-- **shaping** → design
-- **design** → ready
-- **ready** → active
-- **active** → completed
-- **completed**: terminal
-
-### Initiative
+### Epic
 ```
 discovery → design → ready → decompose → active → completed
 ```
@@ -40,6 +30,21 @@ discovery → design → ready → decompose → active → completed
 - **active** → completed
 - **completed**: terminal
 
+### Story
+```
+discovery → design → ready → active → completed
+                               ↓        ↓
+                            blocked ←───┘
+```
+- **discovery** → design
+- **design** → ready
+- **ready** → active
+- **active** → completed OR blocked
+- **blocked** → ready OR active (return from blocked)
+- **completed**: terminal
+
+Note: Stories do NOT have a decompose phase — they are the implementation slices. Tasks under stories are created directly.
+
 ### Task
 ```
 backlog → todo → active → completed
@@ -49,8 +54,17 @@ backlog → todo → active → completed
 - **backlog** → todo
 - **todo** → active OR blocked
 - **active** → completed OR blocked
-- **blocked** → todo OR active (return from blocked state)
+- **blocked** → todo OR active (return from blocked)
 - **completed**: terminal
+
+### DesignContext
+```
+draft → review → published → superseded
+```
+- **draft** → review
+- **review** → published
+- **published** → superseded
+- **superseded**: terminal
 
 ### ADR
 ```
@@ -66,13 +80,12 @@ draft → discussion → decided → superseded
 ## Default Phases
 
 When documents are created, they start in these phases:
-- **Vision**: `draft`
-- **Strategy**: `shaping`
-- **Initiative**: `discovery`
-- **Task**: `todo` (or `backlog` for backlog items)
+- **ProductDoc**: `draft`
+- **Epic**: `discovery`
+- **Story**: `discovery`
+- **Task**: `todo` (or `backlog`)
+- **DesignContext**: `draft`
 - **ADR**: `draft`
-
-**Backlog note**: Tasks created with `backlog_category` start in `backlog` phase and do NOT auto-transition. You must explicitly transition from `backlog` → `todo` before the task can be worked.
 
 ## Critical Rule: No Phase Skipping
 
@@ -87,7 +100,7 @@ Invalid transitions (will error):
 1. `transition_phase(short_code)` → todo to active
 2. `transition_phase(short_code)` → active to completed
 
-**To publish a vision**, call `mcp__ultra-metis__transition_phase` twice:
+**To publish a ProductDoc**, call `mcp__ultra-metis__transition_phase` twice:
 1. `transition_phase(short_code)` → draft to review
 2. `transition_phase(short_code)` → review to published
 
@@ -95,19 +108,19 @@ Invalid transitions (will error):
 
 **Auto-advance (recommended):**
 ```
-mcp__ultra-metis__transition_phase(short_code="PROJ-I-0001")
+mcp__ultra-metis__transition_phase(short_code="PROJ-E-0001")
 ```
 Moves to next valid phase. Validates exit criteria.
 
 **Explicit phase (for blocked state):**
 ```
-mcp__ultra-metis__transition_phase(short_code="PROJ-T-0042", phase="blocked")
+mcp__ultra-metis__transition_phase(short_code="PROJ-S-0042", phase="blocked")
 ```
-Use explicit phase only for moving to/from blocked state (tasks only).
+Use explicit phase only for moving to/from blocked state (stories and tasks only).
 
 **Force (use sparingly):**
 ```
-mcp__ultra-metis__transition_phase(short_code="PROJ-I-0001", force=true)
+mcp__ultra-metis__transition_phase(short_code="PROJ-E-0001", force=true)
 ```
 Skips exit criteria validation. Use only when accepting the risk.
 
@@ -115,96 +128,70 @@ Skips exit criteria validation. Use only when accepting the risk.
 
 Exit criteria are conditions that must be true before transitioning.
 
-### Good Exit Criteria
-- **Observable**: Can be verified
-- **Specific**: Clear what "done" means
-- **Relevant**: Matters for next phase
-- **Achievable**: Realistic for scope
-
 ### Common Exit Criteria Patterns
 
-**discovery → design:**
+**discovery → design (Epic/Story):**
 - Problem statement clear and validated
 - Key constraints identified
 - Stakeholders aligned on scope
 
-**design → ready:**
+**design → ready (Epic/Story):**
 - Solution approach documented
 - Technical risks identified
 - Dependencies mapped
 
-**ready → decompose:**
+**ready → decompose (Epic only):**
 - Design reviewed and approved
 - Team capacity available
 - No blocking dependencies
 
-**decompose → active:**
-- Tasks created with acceptance criteria
-- Task backlog sufficient to start
+**decompose → active (Epic):**
+- Stories created with acceptance criteria
+- Story backlog sufficient to start
 - Team understands the work
 
-**active → completed (tasks):**
+**ready → active (Story):**
+- Design approved, ready to implement
+- Tasks identified if needed
+
+**active → completed (Story/Task):**
 - Acceptance criteria met
 - Work verified/tested
 - No known defects
-
-### Tracking Exit Criteria
-
-Documents have `exit_criteria_met` frontmatter field:
-```yaml
-exit_criteria_met: false  # or true
-```
-Set to `true` when criteria are met. Used by `transition_phase` with `force: false`.
 
 ## Blocked Work
 
 Handle blocked work explicitly:
 
 1. Transition to blocked: `mcp__ultra-metis__transition_phase(short_code, phase="blocked")`
-2. Update `blocked_by` field in document to record what's blocking
+2. Update document to record what's blocking
 3. Address the blocker
-4. Return from blocked: `mcp__ultra-metis__transition_phase(short_code, phase="active")` or `phase="todo"`
+4. Return from blocked: `phase="active"` or `phase="ready"` (stories) / `phase="todo"` (tasks)
 
-**Note**: Only tasks can be blocked — visions, strategies, initiatives, and ADRs cannot use the blocked phase.
-
-Blocked is a special state that allows returning to todo or active. This is the only case where you can move "backward" — but it's really returning from a paused state, not reversing progress.
+**Note**: Only stories and tasks support the blocked state. ProductDocs, epics, DesignContexts, and ADRs cannot be blocked.
 
 ## Working in Active Phase
 
-**CRITICAL**: Active tasks and initiatives serve as persistent working memory. While in `active` phase, regularly update the document with:
+**CRITICAL**: Active stories and epics serve as persistent working memory. While in `active` phase, regularly update the document with:
 
 - **Progress**: What's been completed
 - **Findings**: Unexpected discoveries, blockers
 - **Decisions**: Why you chose approach A over B
 - **Next steps**: What remains if work is interrupted
 
-This ensures no work is lost if context is compacted or the session ends. Use `mcp__ultra-metis__edit_document` to update progress.
+Use `mcp__ultra-metis__edit_document` to update progress.
 
 ## When to Transition
 
 ### Pull-Based Transitions
-- Move initiative to **active** when capacity exists
-- Move task to **active** when ready to start
+- Move epic to **active** when capacity exists
+- Move story to **active** when ready to implement
 - Move to **completed** when actually done
 
 ### Don't Rush Transitions
 Common mistakes:
-- Initiative in "active" with no tasks isn't really active
-- Task marked "completed" that doesn't meet criteria isn't done
+- Epic in "active" with no stories isn't really active
+- Story marked "completed" that doesn't meet criteria isn't done
 - Design marked "ready" without review isn't ready
 
 **The phases protect you.** They force discipline that prevents rework.
-
-## Monitoring Phase Health
-
-### Healthy Signs
-- Work moves steadily through phases
-- Exit criteria met before transitions
-- Blocked items rare and resolved quickly
-- Completed work stays completed
-
-### Unhealthy Signs
-- Work stuck in early phases → unclear requirements or analysis paralysis
-- Work stuck in decompose → team struggling to understand work
-- Work jumping to active → skipping preparation
-- "Completed" work reopening → exit criteria not met

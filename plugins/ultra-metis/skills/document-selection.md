@@ -1,6 +1,6 @@
 ---
 name: ultra-metis:document-selection
-description: "This skill should be used when the user asks 'what document type should I create', 'create a bug ticket', 'create a feature request', 'should this be a task or initiative', 'when to use an ADR', 'track this bug', 'log this tech debt', or needs help choosing between vision, strategy, initiative, task, backlog item, or ADR document types."
+description: "This skill should be used when the user asks 'what document type should I create', 'create a bug ticket', 'create a feature request', 'should this be a story or epic', 'when to use an ADR', 'track this bug', 'log this tech debt', or needs help choosing between product_doc, epic, story, task, design_context, or ADR document types."
 ---
 
 # Document Type Selection
@@ -11,31 +11,31 @@ This skill helps choose the right Ultra-Metis document type for different kinds 
 
 **Is this work, or is it a decision?**
 - Decision about architecture/approach → **ADR**
+- Design spec or visual standard → **DesignContext**
 - Work to be done → Continue below
 
-**Does this define WHY the project exists?**
-- Yes → **Vision**
-
-**Does this coordinate multiple capability increments?**
-- Yes → **Strategy** (if Full preset enabled)
+**Does this define the product's purpose and direction?**
+- Yes → **ProductDoc**
 
 **Does this create a fundamental capability increment?**
-- Yes → **Initiative**
+- Yes → **Epic**
 
-**Is this a discrete, completable piece of work?**
-- Yes, belongs to an initiative → **Task**
-- Yes, standalone (bug/feature/debt) → **Backlog Item**
+**Is this an implementable slice of work within an epic?**
+- Yes → **Story** (choose appropriate story type)
+
+**Is this an atomic execution unit?**
+- Yes → **Task**
 
 ## Document Types Reference
 
-| Type | Purpose | Parent Required |
-|------|---------|-----------------|
-| Vision | North star objectives | No |
-| Strategy | Coordinated approaches | Vision (published) |
-| Initiative | Capability increments | Strategy/Vision (published) |
-| Task | Atomic work units | Initiative (decompose/active phase) |
-| Backlog Item | Ad-hoc bugs/features/debt | No |
-| ADR | Architectural decisions | No |
+| Type | Purpose | Parent Required | Short Code |
+|------|---------|-----------------|------------|
+| ProductDoc | Product definition | No | PD |
+| Epic | Capability increments | ProductDoc (published) | E |
+| Story | Typed implementation slices | Epic (decompose/active) | S |
+| Task | Atomic execution units | Story | T |
+| DesignContext | Design specs and patterns | No | DC |
+| ADR | Architectural decisions | No | A |
 
 ## User Terminology Mapping
 
@@ -43,76 +43,70 @@ When users request work items using common terms, map to Ultra-Metis document ty
 
 | User Says | Create |
 |-----------|--------|
-| "bug ticket", "bug", "defect" | `mcp__ultra-metis__create_document(type="task", backlog_category="bug", ...)` |
-| "feature ticket", "feature request" | `mcp__ultra-metis__create_document(type="task", backlog_category="feature", ...)` |
-| "tech debt ticket", "tech debt" | `mcp__ultra-metis__create_document(type="task", backlog_category="tech-debt", ...)` |
-| "project", "epic", "feature work" | Initiative (with parent) |
-| "work item", "ticket" | Task (if has parent) or Backlog Item (if standalone) |
+| "bug ticket", "bug", "defect" | Story (type=bugfix) under relevant Epic |
+| "feature ticket", "feature request" | Story (type=feature) or Epic if large |
+| "tech debt", "refactor" | Story (type=refactor) under relevant Epic |
+| "project", "big feature", "capability" | Epic (under ProductDoc) |
+| "investigation", "spike" | Story (type=investigation) |
+| "small work item", "execution step" | Task (under Story) |
 
 ## When to Create Each Type
 
-### Vision
+### ProductDoc
 Create when:
-- Starting a new project
-- Redefining project direction
-- Current vision no longer represents objectives
+- Starting a new project or product
+- Redefining product direction
+- Current product definition no longer represents objectives
 
-**Not a vision**: "Build feature X" (initiative), "Fix bugs" (operational), "Q1 goals" (strategy or initiatives)
+**Not a ProductDoc**: "Build feature X" (that's an epic), "Fix bugs" (that's operational), "Q1 goals" (could be epics)
 
-### Strategy
-Create when (Full preset only):
-- Multiple teams need coordination
-- Competing approaches to pursue
-- Resource allocation needs decisions
-- Strategic trade-offs should be documented
-
-**Fields**:
-- `stakeholders` - List of stakeholders involved
-- `risk_level` - One of: `low`, `medium`, `high`, `critical` (defaults to medium)
-
-**Not a strategy**: Single project (initiative), a decision (ADR), a wish list (backlog)
-
-### Initiative
+### Epic
 Create when:
-- Work delivers meaningful capability increment
-- Multiple tasks needed
-- Discovery/design phases valuable
-- Track as distinct project
+- Work delivers a meaningful capability increment
+- Multiple stories needed to deliver it
+- Discovery/design phases are valuable
+- You want to track it as a distinct project
 
-**Not an initiative**: Single task, ongoing operations (backlog), aspiration without commitment (keep in backlog)
+**Not an epic**: A single story (just make it a story), ongoing operations, an aspiration without commitment
+
+### Story
+Create when:
+- Work is an implementable slice within an epic
+- It has a clear type (feature, bugfix, refactor, migration, etc.)
+- Discovery/design phases may be needed
+- It's sized for meaningful delivery
+
+**Story Types**: `feature`, `bugfix`, `refactor`, `migration`, `architecture-change`, `investigation`, `remediation`, `setup`
+
+**Not a story**: Work too large to be a slice (that's an epic), a tiny execution step (that's a task)
 
 ### Task
 Create when:
-- Clear parent initiative exists
-- Discrete, completable unit
+- Clear parent story exists
+- Atomic execution unit
 - One person can own it
 - Done criteria are clear
 
-**Not a task**: Work with no parent (backlog item), work too large (break down or make initiative)
+**Not a task**: Work with no parent (needs a story/epic), work too large (break it down)
 
-### Backlog Item
+### DesignContext
 Create when:
-- Bug discovered in production
-- Feature request not tied to initiative
-- Tech debt to address when capacity allows
-- Operational/maintenance work
-
-**Categories**: `bug`, `feature`, `tech-debt`
-
-**Moving backlog items**: Use `mcp__ultra-metis__reassign_parent` to move a backlog item into an initiative, or move a task back to backlog.
+- Referencing approved UI patterns
+- Linking design specs to implementation work
+- Establishing visual standards for the product
 
 ### ADR
 Create when:
 - Making significant architectural decision
 - Choosing between meaningful alternatives
-- Decision affects multiple initiatives
+- Decision affects multiple epics
 - Future developers will wonder "why?"
 
-**Not an ADR**: Trivial decisions, work to be done (task/initiative), meeting notes
+**Not an ADR**: Trivial decisions, work to be done (story/task), meeting notes
 
 **The ADR Test** — if 2+ of these are true, write an ADR:
 1. Hard to reverse?
-2. Affects multiple initiatives?
+2. Affects multiple epics?
 3. Evaluated meaningful alternatives?
 4. Will outlive the current team?
 5. Disagreement worth documenting?
@@ -121,17 +115,15 @@ Create when:
 
 | Mistake | Problem | Fix |
 |---------|---------|-----|
-| Task that takes months | Wrong granularity | If it has subtasks, make it an initiative |
-| Initiative for every idea | Overhead | Use backlog items, promote when committed |
-| Strategy for single project | Wrong level | Strategy coordinates multiple initiatives |
-| ADR for implementation | Confusion | ADR records decision; tasks implement it |
+| Story that takes months | Wrong granularity | If it has sub-stories, make it an epic |
+| Epic for every idea | Overhead | Keep in backlog, promote to epic when committed |
+| ADR for implementation | Confusion | ADR records decision; stories/tasks implement it |
+| Task without parent story | Orphaned work | Create the story first, then tasks under it |
 
 ## Edge Cases
 
-**Task vs Initiative**: Does it need discovery/design phases? If yes, initiative.
+**Story vs Epic**: Does it need multiple typed stories to deliver? If yes, epic. Is it a single implementable slice? Story.
 
-**Initiative vs Backlog**: Committing to it now? If no, backlog.
+**Story vs Task**: Does it need discovery/design phases? If yes, story. Is it a pure execution step? Task.
 
-**Backlog vs Task**: Does it have a parent? If no, backlog.
-
-**Cross-cutting work**: Create initiative under most relevant parent; tasks can reference other initiatives.
+**Cross-cutting work**: Create epic under most relevant ProductDoc; stories can reference other epics in their documentation.
