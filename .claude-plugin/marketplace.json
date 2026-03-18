@@ -1,0 +1,17 @@
+{
+  "name": "dcassil-ultra-metis",
+  "owner": {
+    "name": "Daniel Cassil"
+  },
+  "plugins": [
+    {
+      "name": "ultra-metis",
+      "source": "./plugins/ultra-metis",
+      "description": "Repo-Native AI Engineering Orchestration — document management with flight levels methodology.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Daniel Cassil"
+      }
+    }
+  ]
+}

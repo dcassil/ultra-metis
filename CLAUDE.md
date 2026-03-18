@@ -68,6 +68,16 @@ While working on any active task or initiative:
 - **Workspace root**: `Cargo.toml` at repo root
 - **Language**: Rust
 
+## Building & Installing
+
+```bash
+make build          # Build all release binaries
+make install        # Build + copy to ~/.local/bin
+make test           # Run all workspace tests
+```
+
+After `make install`, the `ultra-metis-mcp` and `ultra-metis` binaries are on PATH. The `.mcp.json` at the repo root configures Claude Code to use the MCP server for this project.
+
 ## Code Standards
 
 - Follow existing patterns in `crates/ultra-metis-core/` codebase
