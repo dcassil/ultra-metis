@@ -10,6 +10,7 @@ use ultra_metis_core::domain::documents::hierarchy::HierarchyValidator;
 use ultra_metis_core::domain::documents::traits::{Document, DocumentValidationError};
 use ultra_metis_core::domain::documents::types::{DocumentType, Phase, Tag, Complexity, DocumentId};
 use ultra_metis_core::{Initiative, Task, Vision};
+use chrono;
 
 const DOCS_DIR: &str = "docs";
 
@@ -414,33 +415,7 @@ impl DocumentStore {
 
     /// Edit a document using search and replace
     pub fn edit_document(&self, short_code: &str, search: &str, replace: &str) -> Result<()> {
-        let path = self.doc_path(short_code);
-        if !path.exists() {
-            return Err(StoreError::DocumentNotFound {
-                short_code: short_code.to_string(),
-            });
-        }
-
-        let content = std::fs::read_to_string(&path)?;
-        if !content.contains(search) {
-            return Err(StoreError::EditFailed(format!(
-                "Search text not found in document {}",
-                short_code
-            )));
-        }
-
-        let new_content = content.replacen(search, replace, 1);
-
-        // Validate the edited content still has valid frontmatter
-        if let Err(e) = Self::parse_document(&new_content) {
-            return Err(StoreError::Validation(format!(
-                "Edit would corrupt document frontmatter: {}. Edit rolled back.",
-                e
-            )));
-        }
-
-        std::fs::write(&path, new_content)?;
-        Ok(())
+        self.edit_document_with_options(short_code, search, replace, false)
     }
 
     /// Transition a document to the next phase (or a specific phase)
@@ -449,77 +424,12 @@ impl DocumentStore {
         short_code: &str,
         target_phase: Option<&str>,
     ) -> Result<String> {
-        let mut doc = self.read_document(short_code)?;
-
-        let target = match target_phase {
-            Some(p) => Some(
-                p.parse::<Phase>()
-                    .map_err(|e| StoreError::Validation(e))?,
-            ),
-            None => None,
-        };
-
-        let old_phase = doc
-            .phase()
-            .map_err(|e| StoreError::Validation(e.to_string()))?;
-
-        let new_phase = doc
-            .transition_phase(target)
-            .map_err(|e| StoreError::Validation(e.to_string()))?;
-
-        // Detect terminal phase: if phase didn't change, the document is at a terminal phase
-        if old_phase == new_phase {
-            return Err(StoreError::Validation(format!(
-                "Document '{}' is already in terminal phase '{}'. No further transitions are possible.",
-                short_code, old_phase
-            )));
-        }
-
-        // Write the updated document back
-        let content = doc
-            .to_content()
-            .map_err(|e| StoreError::Serialization(e.to_string()))?;
-        let path = self.doc_path(short_code);
-        std::fs::write(&path, content)?;
-
-        Ok(format!("{} -> {}", old_phase, new_phase))
+        self.transition_phase_with_options(short_code, target_phase, false)
     }
 
     /// Search documents by text query
     pub fn search_documents(&self, query: &str) -> Result<Vec<DocumentSummary>> {
-        let docs_dir = self.docs_dir();
-        if !docs_dir.exists() {
-            return Ok(vec![]);
-        }
-
-        let query_lower = query.to_lowercase();
-        let mut results = Vec::new();
-
-        for entry in walkdir::WalkDir::new(&docs_dir)
-            .min_depth(1)
-            .max_depth(1)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
-            if entry.path().extension().and_then(|s| s.to_str()) != Some("md") {
-                continue;
-            }
-
-            let content = match std::fs::read_to_string(entry.path()) {
-                Ok(c) => c,
-                Err(_) => continue,
-            };
-
-            if content.to_lowercase().contains(&query_lower) {
-                match Self::parse_document(&content) {
-                    Ok(doc) => results.push(doc.to_summary()),
-                    Err(_) => continue,
-                }
-            }
-        }
-
-        results.sort_by(|a, b| a.short_code.cmp(&b.short_code));
-        Ok(results)
+        self.search_documents_with_options(query, None, None, false)
     }
 
     /// Archive a document (and all its children)
@@ -555,6 +465,308 @@ impl DocumentStore {
         let new_content = content.replace("archived: false", "archived: true");
         std::fs::write(&path, new_content)?;
         Ok(())
+    }
+
+    /// Edit a document using search and replace, with optional replace_all
+    pub fn edit_document_with_options(
+        &self,
+        short_code: &str,
+        search: &str,
+        replace: &str,
+        replace_all: bool,
+    ) -> Result<()> {
+        let path = self.doc_path(short_code);
+        if !path.exists() {
+            return Err(StoreError::DocumentNotFound {
+                short_code: short_code.to_string(),
+            });
+        }
+
+        let content = std::fs::read_to_string(&path)?;
+        if !content.contains(search) {
+            return Err(StoreError::EditFailed(format!(
+                "Search text not found in document {}",
+                short_code
+            )));
+        }
+
+        let new_content = if replace_all {
+            content.replace(search, replace)
+        } else {
+            content.replacen(search, replace, 1)
+        };
+
+        // Validate the edited content still has valid frontmatter
+        if let Err(e) = Self::parse_document(&new_content) {
+            return Err(StoreError::Validation(format!(
+                "Edit would corrupt document frontmatter: {}. Edit rolled back.",
+                e
+            )));
+        }
+
+        std::fs::write(&path, new_content)?;
+        Ok(())
+    }
+
+    /// Transition a document to the next phase, with optional force flag
+    pub fn transition_phase_with_options(
+        &self,
+        short_code: &str,
+        target_phase: Option<&str>,
+        force: bool,
+    ) -> Result<String> {
+        let mut doc = self.read_document(short_code)?;
+
+        let target = match target_phase {
+            Some(p) => Some(
+                p.parse::<Phase>()
+                    .map_err(|e| StoreError::Validation(e))?,
+            ),
+            None => None,
+        };
+
+        let old_phase = doc
+            .phase()
+            .map_err(|e| StoreError::Validation(e.to_string()))?;
+
+        // If force is set, we still validate the phase sequence but skip exit criteria
+        let new_phase = if force {
+            match target {
+                Some(phase) => {
+                    // Force still validates the phase transition is in the valid sequence
+                    let doc_type = doc.document_type();
+                    if !doc_type.can_transition(old_phase, phase) {
+                        return Err(StoreError::Validation(format!(
+                            "Cannot transition from '{}' to '{}' even with force (invalid sequence for {})",
+                            old_phase, phase, doc_type
+                        )));
+                    }
+                    // Directly update the phase tag without exit criteria check
+                    match &mut doc {
+                        AnyDocument::Vision(d) => {
+                            d.core_mut().tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            d.core_mut().tags.push(Tag::Phase(phase));
+                            d.core_mut().metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::Initiative(d) => {
+                            d.core_mut().tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            d.core_mut().tags.push(Tag::Phase(phase));
+                            d.core_mut().metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::Task(d) => {
+                            d.core_mut().tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            d.core_mut().tags.push(Tag::Phase(phase));
+                            d.core_mut().metadata.updated_at = chrono::Utc::now();
+                        }
+                    }
+                    phase
+                }
+                None => {
+                    // Auto-advance with force: use normal transition
+                    doc.transition_phase(None)
+                        .map_err(|e| StoreError::Validation(e.to_string()))?
+                }
+            }
+        } else {
+            doc.transition_phase(target)
+                .map_err(|e| StoreError::Validation(e.to_string()))?
+        };
+
+        if old_phase == new_phase {
+            return Err(StoreError::Validation(format!(
+                "Document '{}' is already in terminal phase '{}'. No further transitions are possible.",
+                short_code, old_phase
+            )));
+        }
+
+        let content = doc
+            .to_content()
+            .map_err(|e| StoreError::Serialization(e.to_string()))?;
+        let path = self.doc_path(short_code);
+        std::fs::write(&path, content)?;
+
+        Ok(format!("{} -> {}", old_phase, new_phase))
+    }
+
+    /// Search documents with filtering options
+    pub fn search_documents_with_options(
+        &self,
+        query: &str,
+        document_type: Option<&str>,
+        limit: Option<usize>,
+        include_archived: bool,
+    ) -> Result<Vec<DocumentSummary>> {
+        let docs_dir = self.docs_dir();
+        if !docs_dir.exists() {
+            return Ok(vec![]);
+        }
+
+        let type_filter: Option<DocumentType> = match document_type {
+            Some(t) => Some(
+                t.parse::<DocumentType>()
+                    .map_err(|e| StoreError::InvalidDocumentType(e))?,
+            ),
+            None => None,
+        };
+
+        let query_lower = query.to_lowercase();
+        let mut results = Vec::new();
+
+        for entry in walkdir::WalkDir::new(&docs_dir)
+            .min_depth(1)
+            .max_depth(1)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            if entry.path().extension().and_then(|s| s.to_str()) != Some("md") {
+                continue;
+            }
+
+            let content = match std::fs::read_to_string(entry.path()) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+
+            if content.to_lowercase().contains(&query_lower) {
+                match Self::parse_document(&content) {
+                    Ok(doc) => {
+                        if !include_archived && doc.archived() {
+                            continue;
+                        }
+                        if let Some(ref tf) = type_filter {
+                            if doc.document_type() != *tf {
+                                continue;
+                            }
+                        }
+                        results.push(doc.to_summary());
+                    }
+                    Err(_) => continue,
+                }
+            }
+        }
+
+        results.sort_by(|a, b| a.short_code.cmp(&b.short_code));
+
+        if let Some(lim) = limit {
+            results.truncate(lim);
+        }
+
+        Ok(results)
+    }
+
+    /// Reassign a task to a different parent or to/from the backlog
+    pub fn reassign_parent(
+        &self,
+        short_code: &str,
+        new_parent_id: Option<&str>,
+        _backlog_category: Option<&str>,
+    ) -> Result<String> {
+        // 1. Read and verify the document is a task
+        let doc = self.read_document(short_code)?;
+        if doc.document_type() != DocumentType::Task {
+            return Err(StoreError::Validation(format!(
+                "Only tasks can be reassigned. '{}' is a {}.",
+                short_code,
+                doc.document_type()
+            )));
+        }
+
+        let old_parent = doc.parent_id().unwrap_or_else(|| "backlog".to_string());
+
+        // 2. Validate new parent if provided
+        if let Some(parent_sc) = new_parent_id {
+            let parent_doc = self.read_document(parent_sc)?;
+            let parent_type = parent_doc.document_type();
+
+            // Validate parent type is valid for tasks
+            if !matches!(
+                parent_type,
+                DocumentType::Initiative | DocumentType::Epic | DocumentType::Story
+            ) {
+                return Err(StoreError::Validation(format!(
+                    "Task parent must be an Initiative, Epic, or Story. '{}' is a {}.",
+                    parent_sc, parent_type
+                )));
+            }
+
+            // Validate parent is in an appropriate phase
+            if let Ok(phase) = parent_doc.phase() {
+                if parent_type == DocumentType::Initiative
+                    && !matches!(phase, Phase::Decompose | Phase::Active)
+                {
+                    return Err(StoreError::Validation(format!(
+                        "Target initiative '{}' must be in 'decompose' or 'active' phase (currently '{}').",
+                        parent_sc, phase
+                    )));
+                }
+            }
+        }
+
+        // 3. Update parent_id in the raw content
+        let raw = self.read_document_raw(short_code)?;
+        let new_parent_value = new_parent_id.unwrap_or("NULL");
+
+        // Find and replace the parent_id line in frontmatter
+        let new_content = Self::replace_frontmatter_field(&raw, "parent_id", new_parent_value)?;
+
+        // 4. Validate the new content still parses
+        if let Err(e) = Self::parse_document(&new_content) {
+            return Err(StoreError::Validation(format!(
+                "Reassignment would corrupt document: {}. Operation rolled back.",
+                e
+            )));
+        }
+
+        // 5. Write back
+        let path = self.doc_path(short_code);
+        std::fs::write(&path, new_content)?;
+
+        let new_parent_display = new_parent_id.unwrap_or("backlog");
+        Ok(format!(
+            "Task {} reassigned: {} -> {}",
+            short_code, old_parent, new_parent_display
+        ))
+    }
+
+    /// Replace a frontmatter field value in raw document content
+    fn replace_frontmatter_field(content: &str, field: &str, new_value: &str) -> Result<String> {
+        let prefix = format!("{}:", field);
+        let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+        let mut found = false;
+        let mut in_frontmatter = false;
+        let mut frontmatter_start_seen = false;
+
+        for line in lines.iter_mut() {
+            let trimmed = line.trim();
+            if trimmed == "---" {
+                if !frontmatter_start_seen {
+                    frontmatter_start_seen = true;
+                    in_frontmatter = true;
+                    continue;
+                } else {
+                    break; // End of frontmatter
+                }
+            }
+            if in_frontmatter && trimmed.starts_with(&prefix) {
+                *line = format!("{}: {}", field, new_value);
+                found = true;
+                break;
+            }
+        }
+
+        if !found {
+            return Err(StoreError::EditFailed(format!(
+                "Field '{}' not found in document frontmatter",
+                field
+            )));
+        }
+
+        // Preserve trailing newline if original had one
+        let mut result = lines.join("\n");
+        if content.ends_with('\n') {
+            result.push('\n');
+        }
+        Ok(result)
     }
 }
 
@@ -1049,5 +1261,173 @@ mod tests {
         let (_dir, store) = setup_store();
         let result = store.create_document("task", "Orphan Task", None);
         assert!(result.is_err(), "Task without parent should be rejected");
+    }
+
+    // ===== reassign_parent Tests =====
+
+    #[test]
+    fn test_reassign_parent_between_initiatives() {
+        let (_dir, store) = setup_store();
+        let i1 = store.create_document("initiative", "Init 1", None).unwrap();
+        let i2 = store.create_document("initiative", "Init 2", None).unwrap();
+        let t = store.create_document("task", "My Task", Some(&i1)).unwrap();
+
+        // Move i2 to decompose phase so it can accept tasks
+        store.transition_phase(&i2, None).unwrap(); // discovery -> design
+        store.transition_phase(&i2, None).unwrap(); // design -> ready
+        store.transition_phase(&i2, None).unwrap(); // ready -> decompose
+
+        let result = store.reassign_parent(&t, Some(&i2), None).unwrap();
+        assert!(result.contains(&i2));
+
+        // Verify the task now has i2 as parent
+        let doc = store.read_document(&t).unwrap();
+        assert_eq!(doc.parent_id().unwrap(), i2);
+    }
+
+    #[test]
+    fn test_reassign_parent_to_backlog() {
+        let (_dir, store) = setup_store();
+        let i = store.create_document("initiative", "Init", None).unwrap();
+        let t = store.create_document("task", "My Task", Some(&i)).unwrap();
+
+        let result = store.reassign_parent(&t, None, Some("bug")).unwrap();
+        assert!(result.contains("backlog"));
+
+        // Verify the task has no parent
+        let raw = store.read_document_raw(&t).unwrap();
+        assert!(raw.contains("parent_id: NULL"));
+    }
+
+    #[test]
+    fn test_reassign_parent_rejects_non_task() {
+        let (_dir, store) = setup_store();
+        let i = store.create_document("initiative", "Init", None).unwrap();
+
+        let result = store.reassign_parent(&i, None, Some("bug"));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Only tasks"));
+    }
+
+    #[test]
+    fn test_reassign_parent_rejects_wrong_phase() {
+        let (_dir, store) = setup_store();
+        let i1 = store.create_document("initiative", "Init 1", None).unwrap();
+        let i2 = store.create_document("initiative", "Init 2", None).unwrap();
+        let t = store.create_document("task", "My Task", Some(&i1)).unwrap();
+
+        // i2 is in discovery phase — cannot accept tasks
+        let result = store.reassign_parent(&t, Some(&i2), None);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("decompose"));
+    }
+
+    #[test]
+    fn test_reassign_parent_rejects_invalid_parent_type() {
+        let (_dir, store) = setup_store();
+        let v = store.create_document("vision", "V", None).unwrap();
+        let i = store.create_document("initiative", "I", None).unwrap();
+        let t = store.create_document("task", "T", Some(&i)).unwrap();
+
+        let result = store.reassign_parent(&t, Some(&v), None);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Initiative, Epic, or Story"));
+    }
+
+    // ===== edit_document_with_options Tests =====
+
+    #[test]
+    fn test_edit_replace_all() {
+        let (_dir, store) = setup_store();
+        let code = store.create_document("vision", "My Vision", None).unwrap();
+
+        // Add some repeated text
+        store.edit_document(&code, "# My Vision", "# My Vision\n\nfoo bar\n\nfoo bar\n\nfoo bar").unwrap();
+
+        // Replace all occurrences
+        store.edit_document_with_options(&code, "foo", "baz", true).unwrap();
+
+        let raw = store.read_document_raw(&code).unwrap();
+        assert!(!raw.contains("foo"), "All 'foo' should be replaced");
+        assert_eq!(raw.matches("baz").count(), 3, "Should have 3 'baz' occurrences");
+    }
+
+    #[test]
+    fn test_edit_replace_first_only() {
+        let (_dir, store) = setup_store();
+        let code = store.create_document("vision", "My Vision", None).unwrap();
+
+        store.edit_document(&code, "# My Vision", "# My Vision\n\nfoo bar\n\nfoo bar").unwrap();
+
+        // Replace only first occurrence (default)
+        store.edit_document_with_options(&code, "foo", "baz", false).unwrap();
+
+        let raw = store.read_document_raw(&code).unwrap();
+        assert_eq!(raw.matches("baz").count(), 1, "Should have 1 'baz'");
+        assert_eq!(raw.matches("foo").count(), 1, "Should have 1 remaining 'foo'");
+    }
+
+    // ===== search_documents_with_options Tests =====
+
+    #[test]
+    fn test_search_with_type_filter() {
+        let (_dir, store) = setup_store();
+        store.create_document("vision", "Alpha Vision", None).unwrap();
+        let i_code = store.create_document("initiative", "Alpha Initiative", None).unwrap();
+
+        let results = store.search_documents_with_options("Alpha", Some("vision"), None, false).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].document_type, "vision");
+    }
+
+    #[test]
+    fn test_search_with_limit() {
+        let (_dir, store) = setup_store();
+        store.create_document("vision", "Test A", None).unwrap();
+        store.create_document("vision", "Test B", None).unwrap();
+        store.create_document("vision", "Test C", None).unwrap();
+
+        let results = store.search_documents_with_options("Test", None, Some(2), false).unwrap();
+        assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn test_search_with_include_archived() {
+        let (_dir, store) = setup_store();
+        let code = store.create_document("vision", "Archived Vision", None).unwrap();
+        store.archive_document(&code).unwrap();
+
+        // Without include_archived
+        let results = store.search_documents_with_options("Archived", None, None, false).unwrap();
+        assert_eq!(results.len(), 0);
+
+        // With include_archived
+        let results = store.search_documents_with_options("Archived", None, None, true).unwrap();
+        assert_eq!(results.len(), 1);
+    }
+
+    // ===== transition_phase_with_options (force) Tests =====
+
+    #[test]
+    fn test_transition_force_bypasses_criteria() {
+        let (_dir, store) = setup_store();
+        let code = store.create_document("vision", "V", None).unwrap();
+
+        // Force transition should work the same as normal for valid transitions
+        let result = store.transition_phase_with_options(&code, Some("review"), true).unwrap();
+        assert!(result.contains("review"));
+
+        let doc = store.read_document(&code).unwrap();
+        assert_eq!(doc.phase().unwrap(), Phase::Review);
+    }
+
+    #[test]
+    fn test_transition_force_still_validates_sequence() {
+        let (_dir, store) = setup_store();
+        let code = store.create_document("vision", "V", None).unwrap();
+
+        // Force cannot skip phases
+        let result = store.transition_phase_with_options(&code, Some("published"), true);
+        assert!(result.is_err(), "Force should not allow skipping phases");
     }
 }

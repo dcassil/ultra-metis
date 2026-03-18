@@ -17,6 +17,9 @@ chrono = { workspace = true }
 toml = "0.8"
 walkdir = "2.0"
 gray_matter = "0.2"
+tree-sitter = { workspace = true }
+tree-sitter-rust = { workspace = true }
+glob = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
