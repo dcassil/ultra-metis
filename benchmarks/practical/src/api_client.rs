@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
+use std::os::unix::process::CommandExt;
 use std::process::Stdio;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -132,6 +133,7 @@ fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
         ])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
+        .process_group(0)
         .spawn()
         .context("Failed to invoke `claude` CLI — is it installed and logged in?")?;
 
@@ -146,7 +148,7 @@ fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
         }
 
         if start.elapsed() >= CLAUDE_CLI_TIMEOUT {
-            let _ = child.kill();
+            terminate_process_group(&mut child);
             let _ = child.wait();
             return Err(anyhow!(
                 "claude CLI timed out after {:.0}s. Verify Claude Code is logged in and prompt execution is allowed in this environment.",
@@ -191,6 +193,14 @@ fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
         input_tokens,
         output_tokens,
     })
+}
+
+fn terminate_process_group(child: &mut std::process::Child) {
+    let pid = child.id() as i32;
+    unsafe {
+        libc::killpg(pid, libc::SIGKILL);
+    }
+    let _ = child.kill();
 }
 
 #[cfg(test)]

@@ -3,6 +3,7 @@ use serde_json::{json, Value};
 use std::collections::BTreeSet;
 use std::io::{BufRead, BufReader, Write};
 use std::os::fd::AsRawFd;
+use std::os::unix::process::CommandExt;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::Duration;
 
@@ -83,6 +84,7 @@ impl McpSession {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
+            .process_group(0)
             .spawn()
             .with_context(|| {
                 format!(
@@ -283,9 +285,17 @@ fn system_name(system: &SystemUnderTest) -> &'static str {
 
 impl Drop for McpSession {
     fn drop(&mut self) {
-        let _ = self.child.kill();
+        terminate_process_group(&mut self.child);
         let _ = self.child.wait();
     }
+}
+
+fn terminate_process_group(child: &mut Child) {
+    let pid = child.id() as i32;
+    unsafe {
+        libc::killpg(pid, libc::SIGKILL);
+    }
+    let _ = child.kill();
 }
 
 pub fn expected_shared_tool_names() -> BTreeSet<&'static str> {

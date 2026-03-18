@@ -8,7 +8,7 @@
       "name": "ultra-metis",
       "source": "./plugins/ultra-metis",
       "description": "Repo-Native AI Engineering Orchestration — document management with flight levels methodology.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Daniel Cassil"
       }
