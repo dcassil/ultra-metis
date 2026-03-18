@@ -7,19 +7,26 @@ pub mod analysis;
 pub mod api_client;
 pub mod prompt_builder;
 pub mod reports;
+pub mod doc_quality;
+pub mod tool_comparison;
+pub mod scenario_pack;
+pub mod mcp_adapter;
+pub mod mcp_comparison;
 pub use types::*;
 
 #[derive(Debug)]
 pub struct BenchmarkHarness {
-    scenario_path: std::path::PathBuf,
+    scenario: crate::scenario_pack::LoadedScenarioPack,
     #[allow(dead_code)]
     results_dir: std::path::PathBuf,
 }
 
 impl BenchmarkHarness {
     pub fn new(scenario_path: std::path::PathBuf, results_dir: std::path::PathBuf) -> Self {
+        let scenario = crate::scenario_pack::LoadedScenarioPack::load(&scenario_path)
+            .unwrap_or_else(|err| panic!("Failed to load scenario pack {}: {}", scenario_path.display(), err));
         Self {
-            scenario_path,
+            scenario,
             results_dir,
         }
     }
@@ -27,12 +34,12 @@ impl BenchmarkHarness {
     /// Run autonomous execution (baseline)
     pub async fn run_autonomous(&self) -> anyhow::Result<BenchmarkRun> {
         tracing::info!("Starting autonomous benchmark run");
-        runner::execute_autonomous(&self.scenario_path).await
+        runner::execute_autonomous(&self.scenario).await
     }
 
     /// Run validated execution (with gates)
     pub async fn run_validated(&self) -> anyhow::Result<BenchmarkRun> {
         tracing::info!("Starting validated benchmark run");
-        gated_runner::execute_with_gates(&self.scenario_path).await
+        gated_runner::execute_with_gates(&self.scenario).await
     }
 }

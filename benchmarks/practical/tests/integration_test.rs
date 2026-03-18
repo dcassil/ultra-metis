@@ -59,7 +59,14 @@ fn test_comparison_analysis_produces_positive_roi() {
     let autonomous = BenchmarkRun {
         run_id: "auto".to_string(),
         timestamp: Utc::now(),
+        scenario: ScenarioSummary {
+            id: "test-scenario".to_string(),
+            title: "Test Scenario".to_string(),
+            root: "scenario".to_string(),
+        },
         execution_mode: ExecutionMode::Autonomous,
+        phases: vec![],
+        trace: RunTrace::default(),
         initiatives: vec![],
         total_metrics: RunMetrics {
             total_tokens: 9000,
@@ -75,7 +82,14 @@ fn test_comparison_analysis_produces_positive_roi() {
     let validated = BenchmarkRun {
         run_id: "val".to_string(),
         timestamp: Utc::now(),
+        scenario: ScenarioSummary {
+            id: "test-scenario".to_string(),
+            title: "Test Scenario".to_string(),
+            root: "scenario".to_string(),
+        },
         execution_mode: ExecutionMode::Validated,
+        phases: vec![],
+        trace: RunTrace::default(),
         initiatives: vec![],
         total_metrics: RunMetrics {
             total_tokens: 10200,

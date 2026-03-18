@@ -1,0 +1,30 @@
+{
+  "id": "file-processing-toolkit",
+  "title": "File Processing Toolkit",
+  "description": "A canonical benchmark scenario for document generation, decomposition, and implementation quality.",
+  "documents": {
+    "vision": "vision.md",
+    "specification": "spec.md",
+    "seed_initiatives": [
+      "parse-initiative.md",
+      "transform-initiative.md"
+    ]
+  },
+  "expectations": {
+    "benchmark_tracks": [
+      "document_generation",
+      "decomposition",
+      "build_outcome"
+    ],
+    "required_document_roles": [
+      "vision",
+      "initiative",
+      "task"
+    ],
+    "architecture_focus": [
+      "unified data model",
+      "module boundaries",
+      "validation and export flow"
+    ]
+  }
+}

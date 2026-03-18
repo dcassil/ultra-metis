@@ -50,9 +50,19 @@ struct Usage {
     output_tokens: u64,
 }
 
-/// Send a prompt to Claude API and return the response with token counts.
-/// Reads API key from `ANTHROPIC_API_KEY` environment variable.
+/// Send a prompt to Claude and return the response with token counts.
+///
+/// Uses ANTHROPIC_API_KEY for direct HTTP calls if available.
+/// Falls back to the `claude` CLI subprocess (uses existing login) if not.
 pub async fn ask(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
+    if std::env::var("ANTHROPIC_API_KEY").is_ok() {
+        ask_via_http(system, user_prompt).await
+    } else {
+        ask_via_cli(system, user_prompt)
+    }
+}
+
+async fn ask_via_http(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
     let api_key = std::env::var("ANTHROPIC_API_KEY")
         .context("ANTHROPIC_API_KEY environment variable not set")?;
 
@@ -99,6 +109,50 @@ pub async fn ask(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse>
         content,
         input_tokens: msg.usage.input_tokens,
         output_tokens: msg.usage.output_tokens,
+    })
+}
+
+/// Call Claude via the `claude` CLI subprocess (no API key needed — uses existing login).
+fn ask_via_cli(system: &str, user_prompt: &str) -> anyhow::Result<ApiResponse> {
+    let output = std::process::Command::new("claude")
+        .args([
+            "-p",
+            user_prompt,
+            "--system-prompt",
+            system,
+            "--output-format",
+            "json",
+            "--model",
+            "haiku",
+            "--no-session-persistence",
+        ])
+        .output()
+        .context("Failed to invoke `claude` CLI — is it installed and logged in?")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow!("claude CLI exited with error: {}", stderr));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value =
+        serde_json::from_str(&stdout).context("Failed to parse claude CLI JSON output")?;
+
+    if parsed["is_error"].as_bool().unwrap_or(false) {
+        return Err(anyhow!(
+            "claude CLI returned error: {}",
+            parsed["result"].as_str().unwrap_or("unknown")
+        ));
+    }
+
+    let content = parsed["result"].as_str().unwrap_or("").to_string();
+    let input_tokens = parsed["usage"]["input_tokens"].as_u64().unwrap_or(0);
+    let output_tokens = parsed["usage"]["output_tokens"].as_u64().unwrap_or(0);
+
+    Ok(ApiResponse {
+        content,
+        input_tokens,
+        output_tokens,
     })
 }
 

@@ -5,9 +5,72 @@ use serde::{Deserialize, Serialize};
 pub struct BenchmarkRun {
     pub run_id: String,
     pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub scenario: ScenarioSummary,
     pub execution_mode: ExecutionMode,
+    #[serde(default)]
+    pub phases: Vec<PhaseResult>,
+    #[serde(default)]
+    pub trace: RunTrace,
     pub initiatives: Vec<InitiativeResult>,
     pub total_metrics: RunMetrics,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScenarioSummary {
+    pub id: String,
+    pub title: String,
+    pub root: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PhaseResult {
+    pub phase: BenchmarkPhase,
+    pub status: PhaseStatus,
+    pub tokens_used: u64,
+    pub time_elapsed: Duration,
+    #[serde(default)]
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum BenchmarkPhase {
+    ScenarioSetup,
+    DocumentGeneration,
+    Decomposition,
+    BuildOutcome,
+    Verification,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum PhaseStatus {
+    Completed,
+    Skipped,
+    Failed,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct RunTrace {
+    #[serde(default)]
+    pub prompt_events: Vec<PromptTraceEvent>,
+    #[serde(default)]
+    pub cli_events: Vec<CliTraceEvent>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PromptTraceEvent {
+    pub label: String,
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub duration: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CliTraceEvent {
+    pub label: String,
+    pub command: String,
+    pub exit_code: i32,
+    pub duration: Duration,
+    pub approx_tokens: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

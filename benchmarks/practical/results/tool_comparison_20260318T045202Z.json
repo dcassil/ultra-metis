@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-03-18T04:52:02.182017Z",
+  "ultra_metis": {
+    "tool_name": "ultra-metis",
+    "templates_tested": 3,
+    "avg_completeness_percent": 77.77778,
+    "avg_placeholder_count": 8.333333,
+    "total_filled_sections": 9,
+    "total_empty_sections": 3,
+    "tokens_used": 14922,
+    "time_elapsed": {
+      "secs": 144,
+      "nanos": 32145000
+    }
+  },
+  "original_metis": {
+    "tool_name": "original-metis",
+    "templates_tested": 3,
+    "avg_completeness_percent": 77.77778,
+    "avg_placeholder_count": 5.0,
+    "total_filled_sections": 9,
+    "total_empty_sections": 3,
+    "tokens_used": 18482,
+    "time_elapsed": {
+      "secs": 177,
+      "nanos": 466623042
+    }
+  },
+  "completeness_delta": 0.0,
+  "placeholder_delta": -3.333333
+}

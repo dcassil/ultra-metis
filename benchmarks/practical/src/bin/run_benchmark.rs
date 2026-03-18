@@ -35,10 +35,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Require API key
+    // Verify some form of Claude access is available
     if std::env::var("ANTHROPIC_API_KEY").is_err() {
-        eprintln!("Error: ANTHROPIC_API_KEY environment variable not set");
-        std::process::exit(1);
+        // Check claude CLI is available as fallback
+        if std::process::Command::new("claude").arg("--version").output().is_err() {
+            eprintln!("Error: Neither ANTHROPIC_API_KEY nor `claude` CLI found. Set ANTHROPIC_API_KEY or install Claude Code.");
+            std::process::exit(1);
+        }
+        println!("Note: Using `claude` CLI for API calls (no ANTHROPIC_API_KEY set)");
+        println!();
     }
 
     let history_path = results_dir.join("results_history.csv");

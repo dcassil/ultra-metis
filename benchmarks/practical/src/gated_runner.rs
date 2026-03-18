@@ -1,15 +1,16 @@
-use crate::{types::*, api_client, gate_scorer::GateScorer, prompt_builder, runner};
-use std::path::Path;
+use crate::{types::*, api_client, gate_scorer::GateScorer, prompt_builder, runner, scenario_pack::LoadedScenarioPack};
 use chrono::Utc;
 
 /// Execute validated benchmark run with quality gates after each initiative.
 ///
 /// Same flow as autonomous but each AI-identified initiative is reviewed by a
 /// gate check prompt before being accepted. Rework tokens are tracked.
-pub async fn execute_with_gates(scenario_path: &Path) -> anyhow::Result<BenchmarkRun> {
+pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result<BenchmarkRun> {
     let start_time = std::time::Instant::now();
     let run_id = uuid::Uuid::new_v4().to_string();
     let binary = runner::resolve_binary_path();
+    let mut phases = vec![];
+    let mut trace = RunTrace::default();
 
     tracing::info!("Starting validated run with gates: {}", run_id);
 
@@ -18,31 +19,76 @@ pub async fn execute_with_gates(scenario_path: &Path) -> anyhow::Result<Benchmar
     let proj_str = temp_dir.path().to_str().unwrap_or("/tmp/bench-validated");
 
     // Initialize project and known scenario documents
-    let _ = runner::run_cli(&binary, &["init", "--path", proj_str, "--prefix", "BENCH"]);
+    if let Ok(result) = runner::run_cli(&binary, &["init", "--path", proj_str, "--prefix", "BENCH"]) {
+        trace.cli_events.push(result.as_trace_event(
+            "workspace_init",
+            format!("{} init --path {} --prefix BENCH", binary.display(), proj_str),
+        ));
+    }
     let vision_result = runner::run_cli(&binary, &[
         "create", "--type", "vision", "--path", proj_str, "File Processing Toolkit",
     ]);
+    if let Ok(result) = &vision_result {
+        trace.cli_events.push(result.as_trace_event(
+            "seed_vision",
+            format!("{} create --type vision --path {} File Processing Toolkit", binary.display(), proj_str),
+        ));
+    }
     let vision_code = vision_result
         .as_ref()
         .map(|r| runner::extract_short_code(&r.stdout, "BENCH-V-"))
         .unwrap_or_default();
 
     if !vision_code.is_empty() {
-        let _ = runner::run_cli(&binary, &[
+        if let Ok(result) = runner::run_cli(&binary, &[
             "create", "--type", "initiative", "--path", proj_str,
             "--parent", &vision_code, "Parse Module",
-        ]);
-        let _ = runner::run_cli(&binary, &[
+        ]) {
+            trace.cli_events.push(result.as_trace_event(
+                "seed_initiative_parse",
+                format!("{} create --type initiative --path {} --parent {} Parse Module", binary.display(), proj_str, vision_code),
+            ));
+        }
+        if let Ok(result) = runner::run_cli(&binary, &[
             "create", "--type", "initiative", "--path", proj_str,
             "--parent", &vision_code, "Transform Module",
-        ]);
+        ]) {
+            trace.cli_events.push(result.as_trace_event(
+                "seed_initiative_transform",
+                format!("{} create --type initiative --path {} --parent {} Transform Module", binary.display(), proj_str, vision_code),
+            ));
+        }
     }
+    phases.push(PhaseResult {
+        phase: BenchmarkPhase::ScenarioSetup,
+        status: PhaseStatus::Completed,
+        tokens_used: trace.cli_events.iter().map(|e| e.approx_tokens).sum(),
+        time_elapsed: trace.cli_events.iter().map(|e| e.duration).sum(),
+        notes: vec![format!("Scenario materialized in {}", temp_dir.path().display())],
+    });
 
     // Ask Claude to assess what additional initiatives are needed
-    let prompt = prompt_builder::build_scenario_assessment_prompt(scenario_path)?;
+    let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)?;
     let api_start = std::time::Instant::now();
     let api_resp = api_client::ask(&prompt.system, &prompt.user).await?;
     let api_time = api_start.elapsed();
+    trace.prompt_events.push(PromptTraceEvent {
+        label: "scenario_assessment".to_string(),
+        input_tokens: api_resp.input_tokens,
+        output_tokens: api_resp.output_tokens,
+        duration: api_time,
+    });
+    phases.push(PhaseResult {
+        phase: BenchmarkPhase::DocumentGeneration,
+        status: PhaseStatus::Completed,
+        tokens_used: api_resp.total_tokens(),
+        time_elapsed: api_time,
+        notes: vec![format!(
+            "Scenario '{}' with {} seeded initiatives assessed",
+            scenario.manifest.id,
+            scenario.seed_initiatives.len()
+        )],
+    });
 
     let ai_initiatives = runner::parse_initiative_response(&api_resp.content);
     let response_was_valid_json = !ai_initiatives.is_empty()
@@ -56,10 +102,17 @@ pub async fn execute_with_gates(scenario_path: &Path) -> anyhow::Result<Benchmar
     for (idx, ai_init) in ai_initiatives.iter().enumerate() {
         // Create the initiative in CLI
         let cli_result = if !vision_code.is_empty() {
-            runner::run_cli(&binary, &[
+            let result = runner::run_cli(&binary, &[
                 "create", "--type", "initiative", "--path", proj_str,
                 "--parent", &vision_code, &ai_init.title,
-            ]).ok()
+            ]).ok();
+            if let Some(ref cli) = result {
+                trace.cli_events.push(cli.as_trace_event(
+                    format!("materialize_{}", ai_init.id),
+                    format!("{} create --type initiative --path {} --parent {} {}", binary.display(), proj_str, vision_code, ai_init.title),
+                ));
+            }
+            result
         } else {
             None
         };
@@ -194,20 +247,46 @@ pub async fn execute_with_gates(scenario_path: &Path) -> anyhow::Result<Benchmar
     let total_tokens: u64 =
         initiatives.iter().map(|i| i.total_tokens).sum::<u64>() + total_rework_tokens;
     let total_time = start_time.elapsed();
+    phases.push(PhaseResult {
+        phase: BenchmarkPhase::Decomposition,
+        status: PhaseStatus::Completed,
+        tokens_used: total_tokens,
+        time_elapsed: total_time,
+        notes: vec![format!("Produced {} gated initiative assessments", initiatives.len())],
+    });
     let gate_effectiveness = calculate_gate_effectiveness(&initiatives);
+
+    let task_count = initiatives.iter().map(|i| i.tasks.len()).sum::<usize>().max(1) as f32;
+    let avg_doc_accuracy = initiatives
+        .iter()
+        .flat_map(|i| i.tasks.iter().map(|t| t.code_metrics.doc_accuracy_percent))
+        .sum::<f32>()
+        / task_count;
+    let avg_instruction_adherence = initiatives
+        .iter()
+        .flat_map(|i| i.tasks.iter().map(|t| t.code_metrics.instruction_adherence_percent))
+        .sum::<f32>()
+        / task_count;
 
     Ok(BenchmarkRun {
         run_id,
         timestamp: Utc::now(),
+        scenario: ScenarioSummary {
+            id: scenario.manifest.id.clone(),
+            title: scenario.manifest.title.clone(),
+            root: scenario.root.display().to_string(),
+        },
         execution_mode: ExecutionMode::Validated,
+        phases,
+        trace,
         initiatives,
         total_metrics: RunMetrics {
             total_tokens,
             total_time,
-            avg_code_quality: 0.0,
+            avg_code_quality: avg_doc_accuracy,
             avg_test_coverage: 0.0,
-            avg_doc_accuracy: 0.0,
-            avg_instruction_adherence: 0.0,
+            avg_doc_accuracy,
+            avg_instruction_adherence,
             gate_effectiveness: Some(gate_effectiveness),
         },
     })
@@ -278,16 +357,17 @@ fn parse_gate_response(response: &str) -> (GateDecision, Vec<String>) {
     (decision, issues)
 }
 
+/// Percentage of gates that caught at least one issue (0-100%).
 fn calculate_gate_effectiveness(initiatives: &[InitiativeResult]) -> f32 {
-    let mut issues_found = 0;
-    let mut total_gates = 0;
+    let mut gates_with_issues = 0usize;
+    let mut total_gates = 0usize;
 
     for init in initiatives {
         for task in &init.tasks {
             if let Some(gate) = &task.validation_gate {
                 total_gates += 1;
                 if !gate.issues_found.is_empty() {
-                    issues_found += gate.issues_found.len();
+                    gates_with_issues += 1;
                 }
             }
         }
@@ -297,7 +377,7 @@ fn calculate_gate_effectiveness(initiatives: &[InitiativeResult]) -> f32 {
         return 0.0;
     }
 
-    (issues_found as f32 / total_gates as f32) * 100.0
+    (gates_with_issues as f32 / total_gates as f32) * 100.0
 }
 
 #[cfg(test)]

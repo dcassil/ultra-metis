@@ -1,5 +1,6 @@
 use std::path::Path;
 use anyhow::Context;
+use crate::scenario_pack::LoadedScenarioPack;
 
 pub struct ScenarioPrompt {
     pub system: String,
@@ -8,12 +9,20 @@ pub struct ScenarioPrompt {
 
 /// Build the scenario assessment prompt: given vision + 2 initiatives, what else is needed?
 pub fn build_scenario_assessment_prompt(scenario_path: &Path) -> anyhow::Result<ScenarioPrompt> {
-    let vision = std::fs::read_to_string(scenario_path.join("vision.md"))
-        .context("Failed to read vision.md")?;
-    let parse_init = std::fs::read_to_string(scenario_path.join("parse-initiative.md"))
-        .context("Failed to read parse-initiative.md")?;
-    let transform_init = std::fs::read_to_string(scenario_path.join("transform-initiative.md"))
-        .context("Failed to read transform-initiative.md")?;
+    let scenario = LoadedScenarioPack::load(scenario_path)
+        .with_context(|| format!("Failed to load scenario pack from {}", scenario_path.display()))?;
+    let seed_initiatives = scenario
+        .seed_initiatives
+        .iter()
+        .enumerate()
+        .map(|(idx, doc)| format!("### Initiative {}\n{}", idx + 1, doc.content.trim()))
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let spec_section = scenario
+        .specification
+        .as_ref()
+        .map(|spec| format!("\n\n## Detailed Specification\n\n{}", spec.trim()))
+        .unwrap_or_default();
 
     let system = r#"You are a software architect reviewing a project plan.
 Analyze the vision and existing initiatives, then assess what additional initiatives (if any) are needed to fully deliver the vision.
@@ -22,8 +31,12 @@ Return ONLY valid JSON with this exact structure:
 No markdown formatting, no code blocks, no text outside the JSON object."#.to_string();
 
     let user = format!(
-        "## Project Vision\n\n{}\n\n## Existing Initiatives\n\n### Initiative 1\n{}\n\n### Initiative 2\n{}\n\nAnalyze these documents. What additional initiatives are needed to fully deliver the vision? Consider: output/delivery mechanisms, validation, integration testing, and any missing functionality.",
-        vision.trim(), parse_init.trim(), transform_init.trim()
+        "## Scenario\n\nID: {}\nTitle: {}\n\n## Project Vision\n\n{}\n\n## Existing Initiatives\n\n{}{}\n\nAnalyze these documents. What additional initiatives are needed to fully deliver the vision? Consider: output and delivery mechanisms, validation, integration testing, architecture coverage, and any missing functionality.",
+        scenario.manifest.id,
+        scenario.manifest.title,
+        scenario.vision.trim(),
+        seed_initiatives,
+        spec_section,
     );
 
     Ok(ScenarioPrompt { system, user })
@@ -60,5 +73,13 @@ mod tests {
     fn test_scenario_prompt_missing_file() {
         let result = build_scenario_assessment_prompt(&PathBuf::from("/nonexistent/path"));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_scenario_prompt_includes_manifest_metadata() {
+        let prompt = build_scenario_assessment_prompt(&PathBuf::from("scenario")).unwrap();
+        assert!(prompt.user.contains("ID: file-processing-toolkit"));
+        assert!(prompt.user.contains("File Processing Toolkit"));
+        assert!(prompt.user.contains("Detailed Specification"));
     }
 }

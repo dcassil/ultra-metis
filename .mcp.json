@@ -1,9 +1,3 @@
 {
-  "mcpServers": {
-    "ultra-metis": {
-      "command": "ultra-metis-mcp",
-      "args": [],
-      "env": {}
-    }
-  }
+  "mcpServers": {}
 }

@@ -20,63 +20,43 @@ strategy_id: ultra-metis-core-engine-repo
 initiative_id: extend-mcp-tools-for-the-stronger
 ---
 
-# Extend MCP Tools for the Stronger Engineering Model
+# Extend MCP Tools: Expose Completed Domain Types as Static Tools
+
+## Strategy Update (2026-03-18)
+
+**Revised approach**: Rescoped from "expose everything" to "expose what agents actually need." Many domain types are already built in ultra-metis-core but have no MCP tool access. Priority is making completed work usable through static MCP tools, not adding new domain concepts.
+
+**Key decisions:**
+- Focus on exposing existing completed domain types (quality, rules, notes, traceability) as read/query MCP tools
+- Skip lease tools entirely (POST-MVP, SMET-I-0023 deferred)
+- Skip orchestration/workflow tools (execution handled by plugin skills, not MCP tools)
+- Use static tools for as much as possible — typed parameters, structured responses
+- Plugin skills handle execution workflows; MCP tools handle state queries and mutations
+- System prompt improvements are high-priority for agent usability
 
 ## Context
 
-Metis currently exposes MCP tools for document CRUD, phase transitions, search, and archival. Super-Metis introduces many new document types, quality operations, rule management, work leasing, and traceability queries. The MCP tool surface must be extended to expose all new capabilities to AI agents.
+Ultra-Metis has built extensive domain types in ultra-metis-core (quality baselines, rules, notes, traceability records, architecture catalog, operations kernel) but most are only accessible through code. The MCP server currently exposes document CRUD, phase transitions, search, archive, reassign, and index_code. Agents need MCP tool access to query and operate on the richer domain model.
 
-The MCP server is a primary interface for Super-Metis — AI agents interact with the system primarily through MCP tools. The tool design must be clear, well-documented, and provide rich system prompt instructions so agents know how to use the tools correctly.
-
-## Governing Commitments
-
-This initiative directly serves:
-- **Single-agent and orchestrated modes share one governance model.** MCP tools are the primary interface for AI agents. The same tools serve a single focused agent and a coordinated fleet — governance semantics are consistent regardless of execution mode.
-- **All durable project memory lives in the repo.** Every MCP tool operation creates or queries repo-native artifacts. Agents interact with the persistent state, not ephemeral context.
-- **Structural guidance over improvisation** (Principle #3). The tool surface encodes governance into operations: quality tools expose gate checks and baseline comparisons, rule tools expose protected rules and change proposals, lease tools enforce ownership before execution. System prompt documentation makes these workflows discoverable, but the tools themselves enforce correct sequencing.
-- **Governance and quality semantics remain consistent across execution modes** (Vision #9). Quality tools expose the same gate checks, rule tools enforce the same protections, and lease tools require the same ownership — whether the caller is a single focused agent or one runner in an orchestrated fleet.
+The existing tool set (completed in SMET-I-0055) covers core document operations. This initiative adds the next tier: tools that expose the governance, quality, and knowledge layers.
 
 ## Goals & Non-Goals
 
 **Goals:**
-- Extend MCP tools to support all new Super-Metis document types
-- Add MCP tools for quality operations (capture baseline, compare, check gates)
-- Add MCP tools for rule management (query rules, propose changes)
-- Add MCP tools for work leasing (acquire, release, check lease status)
-- Add MCP tools for traceability queries
-- Improve system prompt generation to include complete usage instructions
-- Ensure tool responses include enough context for agents to make informed decisions
+- Add MCP tools to query quality baselines and records
+- Add MCP tools to query engineering rules by scope
+- Add MCP tools to fetch/create/score durable insight notes
+- Add MCP tools for traceability queries (ancestry, descendants, cross-references)
+- Add MCP tools for architecture catalog queries
+- Improve system prompt with usage guidance for all tools
+- Ensure all tools return structured, actionable responses
 
 **Non-Goals:**
-- Building a REST API — MCP is the API surface
-- Implementing tool-specific UIs — that's SMET-I-0011
-- Defining the domain model — that's SMET-I-0001
-
-## Detailed Design
-
-### What to Reuse from `metis/`
-- The existing MCP server implementation and tool registration pattern
-- Tool response formatting conventions
-- System prompt generation infrastructure
-- The current tool set as a base (create, read, edit, list, search, transition, archive, reassign)
-
-### What to Change from `metis/`
-- Extend `create_document` to handle all new document types
-- Update `transition_phase` to handle new phase flows
-- Extend `list_documents` and `search_documents` to support new type filters
-- Update system prompt to document new document types, phase flows, and workflows
-
-### What is Net New
-- Quality tools: `capture_baseline`, `compare_baselines`, `check_quality_gate`, `list_quality_records`, `record_validation`
-- Rule tools: `query_rules`, `propose_rule_change`, `approve_rule_change`, `query_rules_by_scope`
-- Traceability tools: `trace_ancestry`, `trace_descendants`, `list_cross_references`, `query_execution_records`, `query_transitions`, `query_decisions`
-- Investigation tools: `create_investigation`, `link_investigation_to_baseline`
-- Design tools: `list_design_contexts`, `link_design_reference`
-- Note tools: `fetch_notes_by_scope`, `create_note`, `score_note`, `list_notes`, `propose_note_update`
-- Gate/autonomy tools: `check_gate`, `get_autonomy_mode`, `set_autonomy_mode`, `list_escalations`
-- Workflow tools: `list_workflow_templates`, `query_operations`, `query_loops`
-- Lease tools (post-MVP): `acquire_lease`, `release_lease`, `check_lease_status`, `list_leases`
-- Enhanced system prompt with complete Super-Metis workflow documentation including cognitive operations, gates, autonomy modes, and note system
+- Lease tools (POST-MVP)
+- Orchestration/execution tools (handled by plugin skills)
+- Gate/autonomy mode tools (premature — gates not yet wired to real workflows)
+- Workflow template tools (operations kernel is structural, not yet operational)
+- Rule change proposal tools (can wait until rules are actively enforced)
 
 ## Alternatives Considered
 

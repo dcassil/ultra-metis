@@ -39,15 +39,15 @@ Build implementation lives in the `super-metis/` folder using the original `meti
 
 These commitments govern all design decisions across the system:
 
-1. **All durable project memory lives in the repo.** Architecture, planning, rules, quality history, governance artifacts, and reusable insight notes are persisted as repo-native files. The repo is the long-term memory — not chat context, not external tools.
-2. **Every repo gets a persisted reference architecture.** Whether selected from a catalog (greenfield), matched/captured from a strong existing codebase (brownfield-good), or recorded as-is after the user declines a recommendation (brownfield-bad) — no repo operates without an explicit architecture reference.
-3. **The user may keep the current architecture as the governing reference if they choose.** The system supports guided architecture selection, not forced replacement. When an existing architecture is weak, the system recommends a stronger target pattern, but the user may explicitly retain the current architecture and record it as the governing reference.
-4. **Reference architecture drives rules, structure, and analysis.** The reference architecture is a living control artifact. It defines expected structure, module boundaries, dependency direction, naming conventions, and testing shape. Engineering rules are seeded from it, and analysis enforces it.
-5. **Brownfield repos are fully supported.** Existing systems are analyzed, understood, and resolved into an explicit architecture reference so they can participate fully in the same governance model as greenfield repos.
-6. **Quality includes architectural integrity and historical baselines.** Quality is measured as an evolving historical signal — snapshots, comparisons, and trends make progress visible over time. Boundary adherence, dependency direction, and architectural conformance are part of the quality model.
-7. **Planning is durable and traceable from product intent to execution.** ProductDoc → Epic → Story → Task creates clear traceability. Workflow progression is backed by persisted artifacts, not temporary conclusions.
-8. **All workflows are composed from a fixed set of reusable cognitive operations.** The system uses a cognitive operation kernel — frame objective, acquire context, build model, locate focus, analyze boundaries, trace flow, assess impact, shape solution, decompose work, create artifact, validate, reassess — as the universal reasoning substrate for all work types.
-9. **Internal reasoning stays internal unless promoted.** Ephemeral reasoning (file guesses, temporary hypotheses, micro-sequencing) remains in the model. Only confirmed, reusable, governing, cross-agent relevant, or risk-relevant knowledge is promoted to durable state. This prevents transcript archives while preserving meaningful repo memory.
+ 1. **All durable project memory lives in the repo.** Architecture, planning, rules, quality history, governance artifacts, and reusable insight notes are persisted as repo-native files. The repo is the long-term memory — not chat context, not external tools.
+ 2. **Every repo gets a persisted reference architecture.** Whether selected from a catalog (greenfield), matched/captured from a strong existing codebase (brownfield-good), or recorded as-is after the user declines a recommendation (brownfield-bad) — no repo operates without an explicit architecture reference.
+ 3. **The user may keep the current architecture as the governing reference if they choose.** The system supports guided architecture selection, not forced replacement. When an existing architecture is weak, the system recommends a stronger target pattern, but the user may explicitly retain the current architecture and record it as the governing reference.
+ 4. **Reference architecture drives rules, structure, and analysis.** The reference architecture is a living control artifact. It defines expected structure, module boundaries, dependency direction, naming conventions, and testing shape. Engineering rules are seeded from it, and analysis enforces it.
+ 5. **Brownfield repos are fully supported.** Existing systems are analyzed, understood, and resolved into an explicit architecture reference so they can participate fully in the same governance model as greenfield repos.
+ 6. **Quality includes architectural integrity and historical baselines.** Quality is measured as an evolving historical signal — snapshots, comparisons, and trends make progress visible over time. Boundary adherence, dependency direction, and architectural conformance are part of the quality model.
+ 7. **Planning is durable and traceable from product intent to execution.** ProductDoc → Epic → Story → Task creates clear traceability. Workflow progression is backed by persisted artifacts, not temporary conclusions.
+ 8. **All workflows are composed from a fixed set of reusable cognitive operations.** The system uses a cognitive operation kernel — frame objective, acquire context, build model, locate focus, analyze boundaries, trace flow, assess impact, shape solution, decompose work, create artifact, validate, reassess — as the universal reasoning substrate for all work types.
+ 9. **Internal reasoning stays internal unless promoted.** Ephemeral reasoning (file guesses, temporary hypotheses, micro-sequencing) remains in the model. Only confirmed, reusable, governing, cross-agent relevant, or risk-relevant knowledge is promoted to durable state. This prevents transcript archives while preserving meaningful repo memory.
 10. **Static tools are preferred over unconstrained reasoning.** When a question can be answered by a tool, prefer the tool. When a constraint can be enforced by a tool, prefer the tool. When a validation can be produced by a tool, require the tool result. AI reasoning selects tools, interprets outputs, synthesizes decisions, and creates durable records.
 11. **Parallel execution is enabled through explicit ownership and isolation.** Work leasing allows humans and agents to operate safely in parallel while preserving coordination through durable state.
 12. **Single-agent and orchestrated modes share one governance model.** Planning, governance, and quality semantics remain consistent regardless of execution scale.
@@ -60,6 +60,7 @@ These commitments govern all design decisions across the system:
 **Target audience:** Engineering teams and AI agents working within a single repo or monorepo, where planning, design, execution, and quality enforcement need to be tightly integrated and durable.
 
 **Key benefits:**
+
 - **Cognitive operation kernel** — all workflows composed from 12 reusable engineering operations, not brittle one-off scripts
 - **Reusable loops** — operations compose into objective framing, context sufficiency, model construction, focus narrowing, trace, risk/impact, solution shaping, decomposition, artifact production, validation, and adaptation loops
 - Curated architecture catalog with selection flow — repos get intentional, enforced architecture rather than improvised structure
@@ -77,6 +78,7 @@ These commitments govern all design decisions across the system:
 ## Current State
 
 The original Metis system (`metis/`) provides a solid foundation:
+
 - File-based durable documents with markdown + frontmatter structure
 - A three-level planning hierarchy: Vision → Initiative → Task
 - Phase-based workflow with forward-only transitions
@@ -88,6 +90,7 @@ The original Metis system (`metis/`) provides a solid foundation:
 - Code indexing capabilities
 
 However, it lacks:
+
 - Product-level definition and design reference handling
 - Richer planning levels between strategic vision and execution tasks
 - Architecture catalog and selection flow — no way to choose, persist, or enforce intentional repo architecture
@@ -109,11 +112,13 @@ However, it lacks:
 Super-Metis should be a complete repo-native AI engineering operating system that supports:
 
 ### Core Operating Model
+
 - **Cognitive Operation Kernel**: All workflows composed from 12 reusable operations — frame objective, acquire context, build/refine model, locate focus, analyze structure/boundaries, trace flow/causality, assess impact/risk, shape/select solution, decompose/sequence work, create/modify artifact, validate against reality, reassess/adapt. These operations are the universal reasoning substrate for bug fixes, feature work, refactors, migrations, architecture changes, brownfield evaluation, greenfield setup, remediation, code review, and quality investigations.
 - **Reusable Loops**: Operations compose into loops — objective framing, context sufficiency, model construction, focus narrowing, trace, risk/impact, solution shaping, decomposition, artifact production, validation, adaptation. A "workflow" is a predefined composition of loops with entry conditions, required artifacts, required validations, escalation rules, and completion rules. This is the central abstraction of the system.
 - **Internal Cognition vs Durable Persistence**: First-class design rule with three state categories — (A) ephemeral internal reasoning kept inside the model, (B) durable lightweight insight stored as notes, (C) durable governed records stored as formal docs. Promotion rules define when internal information should be promoted: when it becomes confirmed, reusable, governing, cross-agent relevant, human-review relevant, risk-relevant, repeated enough to matter, or needed for auditability.
 
 ### Planning Artifacts
+
 - **Product Doc**: A repo-level product definition that anchors all planning
 - **Architecture Catalog**: A curated library of approved architecture patterns organized by language and project type (e.g., javascript/server, javascript/react-app, javascript/component-lib), each defining folder structure, layers, dependency rules, module boundaries, naming conventions, testing layout, anti-patterns, and seed data for rules and analysis expectations
 - **Reference Architecture**: The selected (or derived) architecture pattern for this repo, persisted as a durable artifact and used as the stable source of truth for folder structure, package structure, layering, dependency direction, naming conventions, testing placement, rules generation, and static analysis expectations
@@ -123,6 +128,7 @@ Super-Metis should be a complete repo-native AI engineering operating system tha
 - **Tasks**: Execution-level work items with clear ownership
 
 ### Architecture and Design Artifacts
+
 - **Architecture Catalog**: Reusable patterns with name, category, structure expectations, dependency rules, layering rules, testing expectations, common risks, validation patterns, rule seeding hints
 - **Reference Architecture**: Per-repo (or per-package) persisted structural intent with layers, boundaries, dependency directions, ownership, naming conventions, integration seams, validation expectations, known tolerated exceptions
 - **Design Context**: References to approved UI patterns, design specs, and visual standards
@@ -130,6 +136,7 @@ Super-Metis should be a complete repo-native AI engineering operating system tha
 - **Architecture Investigations**: Triggered when quality degrades, repeated failures occur, architecture drift appears, or enforcement and actual code shape diverge
 
 ### Governance Artifacts
+
 - **Rules Config**: Protected engineering rules with controlled change workflows, layered scopes (platform → org → repo → package → component → task), typed by purpose (behavioral, architectural, operational, information-handling, decision-making, validation/quality, approval/escalation, execution-safety), partially seeded from the selected architecture pattern
 - **Approval Records**: Durable records of who approved what, when, and why
 - **Validation Policies**: Configurable policies defining what validations are required for different work types
@@ -137,29 +144,34 @@ Super-Metis should be a complete repo-native AI engineering operating system tha
 - **Constraint Records**: Explicit constraints that govern decision boundaries
 
 ### Quality Artifacts
+
 - **Analysis Baselines**: Point-in-time quality snapshots from deterministic tool outputs (lint, type-check, tests, coverage, dependency analysis, security, complexity, dead code)
 - **Quality Records**: Baseline comparisons with regressions, improvements, threshold breaches, blocked transitions, accepted overrides
 - **Validation Records**: Captures validation type, inputs, result, failures, evidence links, whether required or optional — critical for audits and autonomous modes
 - **Remediation Records**: Tracks detected problems, affected scope, required fixes, validation after fix, recurrence signals
 
 ### Execution and Traceability Artifacts
+
 - **Execution Records**: The audit spine — every meaningful work run records initiating artifact, execution mode, context sources, architecture/rules consulted, notes fetched, tools run, files touched, validations run, durable artifacts updated, decisions made, escalations/overrides, and final disposition
 - **Transition Records**: Audit trail of all phase transitions with full metadata
 - **Decision Records**: Durable records of significant decisions with rationale
 - **Cross-Reference Index**: Queryable graph of all document relationships (parent/child, governs, references, derived-from, supersedes, conflicts-with, validates, blocks, approved-by)
 
 ### Durable Insight Note System
+
 - **Durable Insight Notes**: Lightweight repo memory for compressed, local, reusable insight — hotspot warnings, misleading naming patterns, recurring bug signatures, validation hints, subsystem gotchas, local exception patterns. Scoped to repo/package/subsystem/path/symbol. Self-pruning through use-driven feedback: notes are scored on fetch (helpful/meh/harmful), marked as prune candidates when unused or harmful, flagged for human review on conflicts, and archived when superseded. Integrated into task start (fetch relevant notes) and task wrap-up (score and propose notes).
 
 ### Gates, Escalation, and Autonomy
+
 - **Major Gates**: Entry gate, context sufficiency gate, solution gate, execution readiness gate, validation gate, completion gate, escalation gate — abstract control points attachable to different workflows
 - **Escalation Triggers**: Insufficient evidence, unresolved contradiction, policy conflict, high-impact change, architecture mismatch, security/safety concern, failing required validation, uncertainty above threshold, business ambiguity with material impact
 - **Autonomy Modes**: Tight collaboration (human approval required often), mixed mode (AI proceeds within bounds, escalates on risk — the default), autonomous mode (AI proceeds without routine approval, respects gates and thresholds). Mode affects what can be changed, what requires approval, evidence requirements, and whether work can be decomposed and dispatched automatically.
 
 ### Execution Model
+
 - **Static-Tool-First**: Prefer deterministic tools (repo discovery, code search, dependency graphs, test runners, linters, type checkers, architecture validators, security analyzers, coverage tools, build tools, formatters, diff/review tools) over unconstrained reasoning
 - **Plugin Leverage**: Use existing tools/plugins for structured execution, subagent dispatch, code review, PR review, git workflows, hooks/enforcement, security guidance, static analysis, repo structure detection, code search, live docs lookup, GUI prototyping, browser debugging, E2E testing
-- **Story Leases**: Isolated execution ownership for work in progress (post-MVP)
+- **Work Leases**: Isolated execution ownership for work in progress (post-MVP)
 - **Quality-Gated Execution**: Enforcement of quality standards before work can proceed
 
 For **brownfield / existing repos**, the AI should evaluate the current repo architecture's quality — including running static analysis tools as part of the assessment. If the existing architecture is coherent and strong, the system matches it to a known catalog pattern or creates a custom reference to capture it faithfully. If the existing architecture is weak or incoherent, the system should identify the project's type and intent, recommend a first-class catalog pattern, and explain that a refactor would be needed — including which areas of the codebase would be affected. The user is given a clear choice: accept the recommended architecture (making refactoring the first order of work) or decline, in which case the current architecture is recorded as the reference despite its quality. No repo is left without a durable architecture reference.
@@ -169,6 +181,7 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 ## Major Features
 
 ### MVP Features (What Super-Metis Must Uniquely Own)
+
 - **Cognitive operation kernel and reusable loops**: The universal reasoning substrate — 12 operations composing into loops that define all workflows. This is the central abstraction replacing brittle one-off workflow scripts.
 - **Core planning hierarchy**: ProductDoc → Epic → Story → Task with typed Stories (feature, bugfix, refactor, migration, architecture-change, investigation, remediation, setup/bootstrap) and required planning fields (objective, scope, rationale, acceptance criteria, dependencies, architecture relevance, validation expectations, risk level)
 - **Durable state model and storage**: Repo-native persistence for all artifact classes — planning, architecture, governance, quality, execution, and memory artifacts. All durable objects cross-linkable and queryable.
@@ -191,28 +204,29 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 - **Templates**: Artifact templates (all document types) and workflow templates (bugfix, feature slice, refactor, migration, architecture change, brownfield evaluation, remediation, investigation, greenfield bootstrap) — context-aware, prefilling from parent artifacts and architecture scope.
 - **Migration path**: Smooth upgrade from original Metis concepts to Super-Metis concepts.
 - **Design-aware planning**: First-class references to design specs, approved patterns, and visual standards linked to implementation work.
+- **Plugin-based execution**: Skills, agents, hooks, and execution commands delivered as a Claude Code plugin leveraging ultra-metis MCP tools for state management.
 
 ### Post-MVP Features (Leverage Existing Tools or Defer)
-- **Work leasing**: Isolated execution ownership so agents can claim and work on stories without conflicts. Defer unless adoption pressure is strong.
-- **Git worktree isolation**: Automated worktree lifecycle for leased work. Defer.
-- **Single-agent runner**: Full internal runner with context enrichment. For MVP, leverage existing structured-execution plugins (Ralph loop, etc.) and enrich with durable context.
+
+- **Work leasing**: Isolated execution ownership so agents can claim and work on tasks without conflicts. Defer unless adoption pressure is strong.
+- **Git worktree isolation**: Automated worktree lifecycle for leased work. Defer — existing superpowers plugin handles worktrees.
 - **Multi-agent orchestrator**: Full orchestrated execution with work decomposition, scoped dispatch, conflict detection, execution log merge. Defer until repo-native state layer is mature.
-- **Full custom rule execution engine**: For MVP, partially delegate runtime enforcement to existing plugins and hooks. Super-Metis owns the persisted governed rule model and traceability.
+- **Full custom rule execution engine**: For MVP, partially delegate runtime enforcement to existing plugins and hooks. Ultra-Metis owns the persisted governed rule model and traceability.
 - **GUI productization**: Valuable but not MVP-critical. Prototype with existing rapid GUI tools. Eventually: hierarchy tree, architecture browser, traceability graph, quality dashboards, note browser, investigation tracker, rule browser, blocked work view.
 - **Bespoke analyzers**: Use existing tools where they suffice; only build custom when uniquely valuable.
 - **Monorepo-root orchestration**: Cross-package coordination with per-package architecture profiles. Defer until single-project model is proven.
 
 ## Success Criteria
 
-1. Super-Metis can represent a complete product development lifecycle from product definition through architecture selection, design, planning, execution, and quality enforcement
-2. The cognitive operation kernel and reusable loops are implemented as the universal reasoning substrate — all workflow templates compose from them
-3. A curated architecture catalog exists with practical patterns for common project types, starting with JavaScript/TypeScript
-4. Every initialized repo has a persisted Reference Architecture — either selected from the catalog (greenfield), matched/captured from a strong existing architecture (brownfield-good), or recommended as a replacement for a weak existing architecture with user consent (brownfield-bad) — with the user always having final say
-5. The selected architecture drives rule generation, analysis expectations, and planning guidance
-6. Engineering rules are enforced and cannot be bypassed without explicit approval workflows, with layered scoping from platform to task level
-7. The durable insight note system captures, fetches, scores, prunes, and archives reusable local knowledge as a self-maintaining repo memory layer
-8. Execution records provide a complete audit spine linking intent, context, tools, validations, decisions, and disposition for every meaningful work run
-9. Gates, escalation triggers, and autonomy modes are configurable and functional across all workflow types
+ 1. Super-Metis can represent a complete product development lifecycle from product definition through architecture selection, design, planning, execution, and quality enforcement
+ 2. The cognitive operation kernel and reusable loops are implemented as the universal reasoning substrate — all workflow templates compose from them
+ 3. A curated architecture catalog exists with practical patterns for common project types, starting with JavaScript/TypeScript
+ 4. Every initialized repo has a persisted Reference Architecture — either selected from the catalog (greenfield), matched/captured from a strong existing architecture (brownfield-good), or recommended as a replacement for a weak existing architecture with user consent (brownfield-bad) — with the user always having final say
+ 5. The selected architecture drives rule generation, analysis expectations, and planning guidance
+ 6. Engineering rules are enforced and cannot be bypassed without explicit approval workflows, with layered scoping from platform to task level
+ 7. The durable insight note system captures, fetches, scores, prunes, and archives reusable local knowledge as a self-maintaining repo memory layer
+ 8. Execution records provide a complete audit spine linking intent, context, tools, validations, decisions, and disposition for every meaningful work run
+ 9. Gates, escalation triggers, and autonomy modes are configurable and functional across all workflow types
 10. The internal cognition vs durable persistence design rule is enforced — promotion rules govern when internal reasoning becomes durable state
 11. Static analysis baselines are tracked, compared, and used to gate execution — including architecture boundary enforcement
 12. All original Metis capabilities (CLI, MCP, search, indexing) are preserved and extended
@@ -222,15 +236,15 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 
 ## Principles
 
-1. **Documents are durable memory, not chat context.** All planning, design, rules, quality data, and reusable insight must be persisted as repo-local artifacts.
-2. **The repo and durable artifacts are the source of truth.** Not conversation history, not external tools.
-3. **Enforced structure is more important than prompt-only behavior.** The system should make it hard to do the wrong thing, not just suggest the right thing.
-4. **Product, design, architecture, and code quality should be connected.** Traceability from product intent through design to implementation to quality outcomes.
-5. **Architecture should be explicit, not improvised.** Every repo should have a selected or derived architecture pattern persisted as a durable reference. The AI should never improvise repo structure — it should follow the chosen architecture.
-6. **Workflows compose from reusable cognitive operations.** The operation kernel and loop model replace brittle one-off workflow scripts with a universal, auditable reasoning substrate.
-7. **Only promote what matters.** Internal reasoning stays internal. Only confirmed, reusable, governing, cross-agent relevant, or risk-relevant knowledge becomes durable state.
-8. **Static tools first, AI reasoning second.** Prefer deterministic tools for answering questions, enforcing constraints, and producing validations. AI reasoning selects, interprets, synthesizes, and records.
-9. **Build only what is uniquely valuable.** Use existing plugins and tools aggressively for execution, review, enforcement, scanning, and docs. Reserve custom investment for the durable repo-native layer that other tools do not provide.
+ 1. **Documents are durable memory, not chat context.** All planning, design, rules, quality data, and reusable insight must be persisted as repo-local artifacts.
+ 2. **The repo and durable artifacts are the source of truth.** Not conversation history, not external tools.
+ 3. **Enforced structure is more important than prompt-only behavior.** The system should make it hard to do the wrong thing, not just suggest the right thing.
+ 4. **Product, design, architecture, and code quality should be connected.** Traceability from product intent through design to implementation to quality outcomes.
+ 5. **Architecture should be explicit, not improvised.** Every repo should have a selected or derived architecture pattern persisted as a durable reference. The AI should never improvise repo structure — it should follow the chosen architecture.
+ 6. **Workflows compose from reusable cognitive operations.** The operation kernel and loop model replace brittle one-off workflow scripts with a universal, auditable reasoning substrate.
+ 7. **Only promote what matters.** Internal reasoning stays internal. Only confirmed, reusable, governing, cross-agent relevant, or risk-relevant knowledge becomes durable state.
+ 8. **Static tools first, AI reasoning second.** Prefer deterministic tools for answering questions, enforcing constraints, and producing validations. AI reasoning selects, interprets, synthesizes, and records.
+ 9. **Build only what is uniquely valuable.** Use existing plugins and tools aggressively for execution, review, enforcement, scanning, and docs. Reserve custom investment for the durable repo-native layer that other tools do not provide.
 10. **The same model should support both single-agent and orchestrated workflows.** No separate systems for different execution modes.
 11. **Extend, don't rebuild.** Reuse and evolve Metis foundations wherever possible.
 12. **Repo-native by default.** Everything lives in the repo. No external dependencies for core functionality.
@@ -244,44 +258,35 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 5. Must work with current MCP server patterns and Claude Code integration
 6. Rust codebase — maintain language consistency with original Metis
 
-## Suggested Durable Repo Structure
+## Durable Repo Structure
 
 ```
-.super-metis/
-  product/
-    product-doc/
-    epics/
-    stories/
-    tasks/
-  architecture/
-    catalog/
-    reference/
-    investigations/
-    design/
-  governance/
-    rules/
-    approvals/
-    constraints/
-    validation-policies/
-  quality/
-    baselines/
-    records/
-    remediation/
-  execution/
-    runs/
-    transitions/
-    decisions/
-    trace-index/
-  memory/
-    notes/
-  templates/
-  config/
-  migrations/
+.metis/
+  visions/                    # Vision documents
+  strategies/                 # Strategy documents (full preset)
+    SMET-S-NNNN/
+      initiatives/            # Initiatives under strategy
+        SMET-I-NNNN/
+          tasks/              # Tasks under initiative
+  initiatives/                # Initiatives (streamlined preset, direct under vision)
+  tasks/                      # Standalone backlog items
+  adrs/                       # Architecture Decision Records
+  config.yaml                 # Project configuration (preset, prefix, enabled types)
 ```
-
-For monorepos, package-local `.super-metis/` folders may exist with a lighter root layer.
 
 ## Workspace Model
 
-- `metis/` — Original source/reference implementation (read-only reference)
-- `super-metis/` — Target implementation (where all new code lives)
+Ultra-Metis is structured as a Rust monorepo:
+
+```
+crates/
+  ultra-metis-core/     # Domain types, templates, operations kernel
+  ultra-metis-store/    # File persistence layer
+  ultra-metis-mcp/      # MCP server binary
+  ultra-metis-cli/      # CLI binary
+plugins/
+  ultra-metis/          # Claude Code plugin (skills, agents, hooks, commands)
+apps/                   # Future: control-web, control-api, machine-runner
+```
+
+The `.metis/` directory in any project holds durable state. The `plugins/ultra-metis/` directory holds the Claude Code plugin that provides skills, guidance agents, lifecycle hooks, and execution commands on top of the MCP tool layer.

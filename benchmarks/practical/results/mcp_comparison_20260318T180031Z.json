@@ -1,0 +1,126 @@
+{
+  "timestamp": "2026-03-18T18:00:31.737717Z",
+  "scenario_id": "file-processing-toolkit",
+  "scenario_title": "File Processing Toolkit",
+  "original_metis": {
+    "system": "original-metis",
+    "tool_surface": "mcp-stdio",
+    "startup_ok": true,
+    "tools_available": [
+      "initialize_project",
+      "list_documents",
+      "search_documents",
+      "read_document",
+      "create_document",
+      "edit_document",
+      "transition_phase",
+      "archive_document",
+      "reassign_parent"
+    ],
+    "operations": [
+      {
+        "operation": "initialize_project",
+        "ok": true,
+        "duration_ms": 9.9095,
+        "output_size": 720,
+        "detail": "## Project Initialized\n\n✓ Initialized Metis workspace at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpoSxoCg/.metis\n\n| Field           | Value                                                                        |\n| --------------- | ---------------------------------------------------------------------------- |\n| Metis Directory | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpoSxoCg/.metis           |\n| Database        | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpoSxoCg/.metis/metis.db  |\n| Vision          | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpoSxoCg/.metis/vision.md |\n| Project Prefix  | BENCH                                                                        |"
+      },
+      {
+        "operation": "create_vision",
+        "ok": false,
+        "duration_ms": 5.844125,
+        "output_size": 44,
+        "detail": "Database error: no such table: configuration"
+      },
+      {
+        "operation": "create_initiative",
+        "ok": false,
+        "duration_ms": 4.660540999999999,
+        "output_size": 44,
+        "detail": "Database error: no such table: configuration"
+      },
+      {
+        "operation": "list_documents",
+        "ok": true,
+        "duration_ms": 4.5589580000000005,
+        "output_size": 164,
+        "detail": "## Documents (1 total)\n\n| Type   | Code         | Title      | Phase |\n| ------ | ------------ | ---------- | ----- |\n| vision | BENCH-V-0001 | .tmpoSxoCg | draft |"
+      },
+      {
+        "operation": "read_document",
+        "ok": false,
+        "duration_ms": 8.176959,
+        "output_size": 78,
+        "detail": "Resolution error: Not found: Document with short code 'BENCH-I-0001' not found"
+      },
+      {
+        "operation": "search_documents",
+        "ok": true,
+        "duration_ms": 4.592958,
+        "output_size": 46,
+        "detail": "## Search Results for \"Parse\"\n\nFound 0 matches"
+      }
+    ]
+  },
+  "ultra_metis_mcp": {
+    "system": "ultra-metis-mcp",
+    "tool_surface": "mcp-stdio",
+    "startup_ok": true,
+    "tools_available": [
+      "initialize_project",
+      "create_document",
+      "read_document",
+      "list_documents",
+      "edit_document",
+      "transition_phase",
+      "search_documents",
+      "archive_document",
+      "index_code",
+      "reassign_parent"
+    ],
+    "operations": [
+      {
+        "operation": "initialize_project",
+        "ok": true,
+        "duration_ms": 1.1795,
+        "output_size": 243,
+        "detail": "## Project Initialized\n\n| Field | Value |\n| ----- | ----- |\n| Path | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpm5npqp |\n| Prefix | BENCH |\n| Docs Dir | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpm5npqp/.ultra-metis/docs/ |"
+      },
+      {
+        "operation": "create_vision",
+        "ok": true,
+        "duration_ms": 2.799667,
+        "output_size": 175,
+        "detail": "## Document Created\n\nBENCH-V-0001 created successfully\n\n| Field | Value |\n| ----- | ----- |\n| Title | File Processing Toolkit |\n| Type | vision |\n| Short Code | BENCH-V-0001 |"
+      },
+      {
+        "operation": "create_initiative",
+        "ok": true,
+        "duration_ms": 1.1089170000000002,
+        "output_size": 194,
+        "detail": "## Document Created\n\nBENCH-I-0002 created successfully\n\n| Field | Value |\n| ----- | ----- |\n| Title | Parse Module |\n| Type | initiative |\n| Short Code | BENCH-I-0002 |\n| Parent | BENCH-V-0001 |"
+      },
+      {
+        "operation": "list_documents",
+        "ok": true,
+        "duration_ms": 0.21179099999999998,
+        "output_size": 248,
+        "detail": "## Documents (2)\n\n| Short Code | Title | Type | Phase | Parent |\n| ---------- | ----- | ---- | ----- | ------ |\n| BENCH-I-0002 | Parse Module | initiative | discovery | BENCH-V-0001 |\n| BENCH-V-0001 | File Processing Toolkit | vision | draft | - |\n"
+      },
+      {
+        "operation": "read_document",
+        "ok": true,
+        "duration_ms": 0.100666,
+        "output_size": 3379,
+        "detail": "---\nid: parse-module\nlevel: initiative\ntitle: \"Parse Module\"\nshort_code: \"BENCH-I-0002\"\ncreated_at: 2026-03-18T18:00:31.689751+00:00\nupdated_at: 2026-03-18T18:00:31.689751+00:00\nparent_id: BENCH-V-0001\nblocked_by:\n\narchived: false\n\ntags:\n  - \"#phase/discovery\"\n\n\nexit_criteria_met: false\nestimated_complexity: M\nschema_version: 1\ninitiative_id: parse-module\n---\n\n# Parse Module\n\n*Delete sections that don't apply to your specific use case.*\n\n## Context **[REQUIRED]**\n\n<!-- Why this initiative exists: what problem or opportunity it addresses, and why now.\nLink to the parent vision or strategy that motivates this work. -->\n\nDescribe the context and background for this initiative.\n\n## Goals & Non-Goals **[REQUIRED]**\n\n**Goals:**\n- Primary objective 1\n- Primary objective 2\n\n**Non-Goals:**\n- What this initiative will not address\n\n## Requirements **[CONDITIONAL: Requirements-Heavy Initiative]**\n\n<!-- Delete if not a requirements-focused initiative -->\n\n### User Requirements\n- **User Characteristics**: Technical background, experience level\n- **System Functionality**: What users expect the system to do\n- **User Interfaces**: How users will interact with the system\n\n### System Requirements\n- **Functional Requirements**:\n  - REQ-001: Functional requirement 1\n  - REQ-002: Functional requirement 2\n- **Non-Functional Requirements**:\n  - NFR-001: Performance requirement\n  - NFR-002: Security requirement\n\n## Use Cases **[CONDITIONAL: User-Facing Initiative]**\n\n<!-- Delete if not user-facing -->\n\n### Use Case 1: Use Case Name\n- **Actor**: Who performs this action\n- **Scenario**: Step-by-step interaction\n- **Expected Outcome**: What should happen\n\n## Architecture **[CONDITIONAL: Technically Complex Initiative]**\n\n<!-- Delete if not technically complex or if architecture is documented elsewhere -->\n\n### Overview\nHigh-level architectural approach — components and how they interact.\n\n### Component Diagrams\nDescribe or link to component diagrams.\n\n### Sequence Diagrams\nDescribe or link to sequence diagrams for key flows.\n\n## Detailed Design **[REQUIRED]**\n\n<!-- Be specific: name files, modules, APIs, and data shapes.\nInclude what is built, how it fits into existing architecture, and key design decisions. -->\n\nTechnical approach and implementation details.\n\n## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**\n\n<!-- Delete if testing is covered inline in tasks or by a separate initiative -->\n\n### Unit Testing\n- **Strategy**: Approach to unit testing\n- **Coverage Target**: Expected coverage percentage\n- **Tools**: Testing frameworks and tools\n\n### Integration Testing\n- **Strategy**: Approach to integration testing\n- **Test Environment**: Where integration tests run\n\n### System Testing\n- **Strategy**: End-to-end testing approach\n- **User Acceptance**: How UAT will be conducted\n\n## Alternatives Considered **[REQUIRED]**\n\n<!-- What other approaches were evaluated and why they were rejected. -->\n\n- **Alternative 1**: Rejected because ...\n- **Alternative 2**: Rejected because ...\n\n## Implementation Plan **[REQUIRED]**\n\n<!-- Phases and milestones. Each phase should have a clear deliverable and exit criterion. -->\n\nPhase 1: Phase name — deliverable/exit criterion\nPhase 2: Phase name — deliverable/exit criterion\nPhase 3: Phase name — deliverable/exit criterion\n\n## Status Updates **[REQUIRED]**\n\n*To be added during implementation*\n"
+      },
+      {
+        "operation": "search_documents",
+        "ok": true,
+        "duration_ms": 0.104875,
+        "output_size": 30,
+        "detail": "No documents matching 'Parser'"
+      }
+    ]
+  }
+}

@@ -58,7 +58,7 @@ pub fn append_history(run: &BenchmarkRun, history_path: &Path) -> anyhow::Result
     if needs_header {
         writeln!(
             file,
-            "timestamp,run_id,mode,total_tokens,total_time_secs,avg_doc_accuracy,avg_instruction_adherence,gate_effectiveness"
+            "timestamp,run_id,scenario_id,mode,total_tokens,total_time_secs,avg_doc_accuracy,avg_instruction_adherence,gate_effectiveness"
         )?;
     }
 
@@ -70,9 +70,10 @@ pub fn append_history(run: &BenchmarkRun, history_path: &Path) -> anyhow::Result
 
     writeln!(
         file,
-        "{},{},{:?},{},{},{:.2},{:.2},{}",
+        "{},{},{},{:?},{},{},{:.2},{:.2},{}",
         run.timestamp.format("%Y-%m-%dT%H:%M:%SZ"),
         run.run_id,
+        run.scenario.id,
         run.execution_mode,
         run.total_metrics.total_tokens,
         run.total_metrics.total_time.as_secs(),
@@ -94,12 +95,12 @@ fn format_report(
 
     // Header
     out.push_str(&format!(
-        "# Practical Benchmark Comparison Report\n\n\
+         "# Practical Benchmark Comparison Report\n\n\
          **Date**: {}\n\
-         **Scenario**: File Processing Toolkit\n\
+         **Scenario**: {} ({})\n\
          **Autonomous run ID**: {}\n\
          **Validated run ID**: {}\n\n",
-        date, autonomous.run_id, validated.run_id,
+        date, autonomous.scenario.title, autonomous.scenario.id, autonomous.run_id, validated.run_id,
     ));
 
     // Executive Summary
@@ -152,13 +153,22 @@ fn format_report(
             .next()
             .unwrap_or("—");
 
-        let token_delta = v_init.total_tokens as i64 - auto_tokens as i64;
+        let auto_str = if auto_tokens > 0 {
+            auto_tokens.to_string()
+        } else {
+            "—".to_string()
+        };
+        let delta_str = if auto_tokens > 0 {
+            format!("{:+}", v_init.total_tokens as i64 - auto_tokens as i64)
+        } else {
+            "—".to_string()
+        };
         out.push_str(&format!(
-            "| {} | {} | {} | {:+} | {} |\n",
+            "| {} | {} | {} | {} | {} |\n",
             v_init.initiative_title,
-            auto_tokens,
+            auto_str,
             v_init.total_tokens,
-            token_delta,
+            delta_str,
             gate_str,
         ));
     }
@@ -195,7 +205,7 @@ fn format_report(
     let error_rate = report.error_detection_rate;
     out.push_str(&format!(
         "- Error detection rate: **{:.1}%** of gates caught real issues\n\
-         - Gate effectiveness (issues per gate): **{:.1}%**\n\n",
+         - Gate effectiveness (gates that found issues): **{:.1}%**\n\n",
         error_rate, report.gate_effectiveness,
     ));
 
@@ -245,7 +255,14 @@ mod tests {
         BenchmarkRun {
             run_id: format!("{:?}-test", mode),
             timestamp: Utc::now(),
+            scenario: crate::types::ScenarioSummary {
+                id: "test-scenario".to_string(),
+                title: "Test Scenario".to_string(),
+                root: "scenario".to_string(),
+            },
             execution_mode: mode,
+            phases: vec![],
+            trace: crate::types::RunTrace::default(),
             initiatives: vec![],
             total_metrics: RunMetrics {
                 total_tokens: tokens,

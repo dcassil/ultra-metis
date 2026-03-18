@@ -20,35 +20,40 @@ strategy_id: ultra-metis-core-engine-repo
 initiative_id: extend-cli-support-for-the
 ---
 
-# Extend CLI Support for the Stronger Engineering Model
+# Extend CLI: Expose Completed Domain Types for Human Use
+
+## Strategy Update (2026-03-18)
+
+**Revised approach**: Rescoped to mirror I-0009 changes. Priority is CLI commands humans actually use interactively. Skip lease commands, orchestration commands. Focus on making the built domain types queryable from the terminal.
+
+**Key decisions:**
+- Focus on read/query commands for quality, rules, notes, traceability, architecture
+- Skip lease commands (POST-MVP)
+- Skip execution/orchestration commands (plugin skills handle this, not CLI)
+- Ensure parity with MCP tool additions from I-0009
+- Add `--json` output for scripting, human-readable output by default
+- CLI is for humans; MCP is for agents — design accordingly
 
 ## Context
 
-The CLI is the primary human interface for Super-Metis. Metis already has CLI commands for basic document operations. Super-Metis needs to extend the CLI to support all new document types, quality operations, rule management, work leasing, and traceability — while keeping the command surface intuitive and discoverable.
-
-## Governing Commitments
-
-This initiative directly serves:
-- **All durable project memory lives in the repo.** The CLI is the human's primary interface for creating, querying, and managing all repo-native artifacts — planning, architecture, rules, quality, and governance.
-- **Structural guidance over improvisation** (Principle #3). CLI commands expose the same governance controls as MCP tools: quality subcommands surface gate status and baseline comparisons, rule subcommands enforce protected change workflows, lease subcommands make ownership explicit. Help text and examples make these operations discoverable.
-- **Quality includes architectural integrity and is tracked over time.** Quality subcommands expose baseline capture, comparison, and gate checking — making quality history visible and actionable from the command line.
-- **Governance and quality semantics remain consistent across execution modes** (Vision #9). CLI commands operate on the same persisted artifacts and enforce the same transition rules, quality gates, and protection semantics as MCP tools — humans and agents interact with one governance model.
+Ultra-Metis CLI currently supports document CRUD, phase transitions, search, archive, reassign, validate, and status (completed in SMET-I-0056). The richer domain model (quality baselines, rules, notes, traceability, architecture catalog) is built in ultra-metis-core but not accessible from the command line. Humans need CLI access to inspect and manage these artifacts.
 
 ## Goals & Non-Goals
 
 **Goals:**
-- Extend existing CLI commands to handle all new document types
-- Add CLI commands for quality operations (capture baseline, compare, check gates)
-- Add CLI commands for rule management and rule change proposals
-- Add CLI commands for work leasing operations
-- Add traceability and cross-reference query commands
-- Improve CLI help and discoverability for the expanded command set
-- Support both interactive and scriptable (non-interactive) modes
+- Add CLI commands for quality inspection (view baselines, compare, check gates)
+- Add CLI commands for rule browsing (list rules by scope, view rule details)
+- Add CLI commands for note management (list, view, score notes)
+- Add CLI commands for traceability queries (trace ancestry/descendants)
+- Add CLI commands for architecture catalog browsing
+- Support `--json` output for all new commands
+- Improve `--help` with usage examples
 
 **Non-Goals:**
-- Building a TUI (text-based UI) — the CLI is command-based, not interactive
-- Replacing MCP as the agent interface — CLI is for humans
-- Building shell completions for every shell (start with bash/zsh)
+- Lease commands (POST-MVP)
+- Orchestration commands (execution is plugin-level)
+- TUI/interactive mode
+- Shell completions (low priority)
 
 ## Detailed Design
 
