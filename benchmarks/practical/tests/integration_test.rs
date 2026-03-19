@@ -70,6 +70,7 @@ fn test_comparison_analysis_produces_positive_roi() {
         execution_mode: ExecutionMode::Autonomous,
         phases: vec![],
         trace: RunTrace::default(),
+        artifacts: practical_benchmark::types::RunArtifacts::default(),
         initiatives: vec![],
         total_metrics: RunMetrics {
             total_tokens: 9000,
@@ -93,6 +94,7 @@ fn test_comparison_analysis_produces_positive_roi() {
         execution_mode: ExecutionMode::Validated,
         phases: vec![],
         trace: RunTrace::default(),
+        artifacts: practical_benchmark::types::RunArtifacts::default(),
         initiatives: vec![],
         total_metrics: RunMetrics {
             total_tokens: 10200,

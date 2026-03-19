@@ -5,3 +5,6 @@ timestamp,run_id,mode,total_tokens,total_time_secs,avg_doc_accuracy,avg_instruct
 2026-03-17T22:41:56Z,38957ee4-f0e2-4e42-8872-7d34db630e6b,Validated,5936,61,0.00,0.00,633.33
 2026-03-17T22:44:16Z,cea4873f-5622-4a14-8ffb-7a55edd7946f,Autonomous,4361,34,90.00,100.00,
 2026-03-17T22:45:32Z,33ab120e-63a7-4acb-bed7-97c9a7d09752,Validated,6931,76,90.00,100.00,100.00
+2026-03-18T19:00:38Z,72e9a64a-32bf-4adf-9df8-ebe00e6eda69,file-processing-toolkit,Autonomous,12,20,90.00,50.00,
+2026-03-18T19:09:43Z,fbf74871-c8b5-4b01-bc87-a6bec2dfdb4e,file-processing-toolkit,Autonomous,12,20,90.00,50.00,
+2026-03-18T19:10:23Z,108abd08-a2c2-41b8-8d04-7e91600d110a,file-processing-toolkit,Validated,512,40,90.00,50.00,100.00

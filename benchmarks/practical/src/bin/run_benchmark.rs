@@ -72,8 +72,10 @@ async fn main() -> anyhow::Result<()> {
             run.total_metrics.total_time.as_secs_f32(),
         );
         let path = practical_benchmark::reports::save_run(&run, &results_dir)?;
+        let report_path = practical_benchmark::reports::save_run_report(&run, &results_dir)?;
         practical_benchmark::reports::append_history(&run, &history_path)?;
         println!("  Saved: {}", path.display());
+        println!("  Report: {}", report_path.display());
         println!();
         Some(run)
     } else {
@@ -90,8 +92,10 @@ async fn main() -> anyhow::Result<()> {
             run.total_metrics.gate_effectiveness.unwrap_or(0.0),
         );
         let path = practical_benchmark::reports::save_run(&run, &results_dir)?;
+        let report_path = practical_benchmark::reports::save_run_report(&run, &results_dir)?;
         practical_benchmark::reports::append_history(&run, &history_path)?;
         println!("  Saved: {}", path.display());
+        println!("  Report: {}", report_path.display());
         println!();
         Some(run)
     } else {

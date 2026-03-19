@@ -25,6 +25,23 @@ pub fn save_run(run: &BenchmarkRun, results_dir: &Path) -> anyhow::Result<PathBu
     Ok(path)
 }
 
+/// Generate a markdown run report from a single benchmark run and save it next
+/// to the JSON artifact.
+pub fn save_run_report(run: &BenchmarkRun, results_dir: &Path) -> anyhow::Result<PathBuf> {
+    std::fs::create_dir_all(results_dir)?;
+
+    let ts = run.timestamp.format("%Y%m%dT%H%M%SZ");
+    let filename = format!("run_{}_{}.md", ts, mode_slug(run));
+    let path = results_dir.join(&filename);
+    let content = format_run_detail_report(run);
+    std::fs::write(&path, &content)?;
+
+    let latest = results_dir.join(format!("latest_run_{}.md", mode_slug(run)));
+    std::fs::write(latest, &content)?;
+
+    Ok(path)
+}
+
 /// Generate a markdown comparison report from two runs (autonomous vs validated).
 /// Mirrors the format of `benchmarks/REPORT.md`.
 pub fn generate_comparison_report(
@@ -246,6 +263,186 @@ fn format_report(
     out
 }
 
+pub fn format_run_detail_report(run: &BenchmarkRun) -> String {
+    let mut out = String::new();
+    out.push_str(&format!(
+        "# Practical Benchmark Run Report\n\n**Date**: {}  \n**Scenario**: {} ({})  \n**Mode**: {:?}  \n**Run ID**: {}\n\n",
+        run.timestamp.format("%Y-%m-%d %H:%M:%S UTC"),
+        run.scenario.title,
+        run.scenario.id,
+        run.execution_mode,
+        run.run_id,
+    ));
+
+    out.push_str("## Metrics\n\n");
+    out.push_str(&format!(
+        "- Total tokens: **{}**\n- Total time: **{:.2}s**\n- Average code quality: **{:.1}%**\n- Average doc accuracy: **{:.1}%**\n- Average instruction adherence: **{:.1}%**\n- Average test coverage: **{:.1}%**\n",
+        run.total_metrics.total_tokens,
+        run.total_metrics.total_time.as_secs_f64(),
+        run.total_metrics.avg_code_quality,
+        run.total_metrics.avg_doc_accuracy,
+        run.total_metrics.avg_instruction_adherence,
+        run.total_metrics.avg_test_coverage,
+    ));
+    if let Some(gate_effectiveness) = run.total_metrics.gate_effectiveness {
+        out.push_str(&format!(
+            "- Gate effectiveness: **{:.1}%**\n",
+            gate_effectiveness
+        ));
+    }
+    out.push('\n');
+
+    out.push_str("## Questions Asked\n\n");
+    if run.trace.prompt_events.is_empty() {
+        out.push_str("No prompt questions were captured for this run.\n\n");
+    } else {
+        for (idx, event) in run.trace.prompt_events.iter().enumerate() {
+            out.push_str(&format!(
+                "{}. **{}**  \nQuestion:\n```text\n{}\n```\nSystem framing:\n```text\n{}\n```\nResponse excerpt:\n```text\n{}\n```\nMetrics: {} input tokens, {} output tokens, {:.2}s\n\n",
+                idx + 1,
+                event.label,
+                event.user_prompt,
+                event.system_prompt,
+                event.response_excerpt,
+                event.input_tokens,
+                event.output_tokens,
+                event.duration.as_secs_f64(),
+            ));
+        }
+    }
+
+    out.push_str("## Steps Taken\n\n");
+    if run.trace.cli_events.is_empty() {
+        out.push_str("No CLI execution steps were captured for this run.\n\n");
+    } else {
+        for (idx, event) in run.trace.cli_events.iter().enumerate() {
+            out.push_str(&format!(
+                "{}. **{}**  \nCommand: `{}`  \nExit code: `{}`  \nDuration: {:.2}s  \nApprox tokens: {}\n",
+                idx + 1,
+                event.label,
+                event.command,
+                event.exit_code,
+                event.duration.as_secs_f64(),
+                event.approx_tokens,
+            ));
+            if !event.stdout_excerpt.is_empty() {
+                out.push_str(&format!(
+                    "Stdout excerpt:\n```text\n{}\n```\n",
+                    event.stdout_excerpt
+                ));
+            }
+            if !event.stderr_excerpt.is_empty() {
+                out.push_str(&format!(
+                    "Stderr excerpt:\n```text\n{}\n```\n",
+                    event.stderr_excerpt
+                ));
+            }
+            out.push('\n');
+        }
+    }
+
+    out.push_str("## Phase Metrics\n\n");
+    if run.phases.is_empty() {
+        out.push_str("No phase data captured.\n\n");
+    } else {
+        out.push_str("| Phase | Status | Tokens | Time (s) | Notes |\n");
+        out.push_str("|-------|--------|--------|----------|-------|\n");
+        for phase in &run.phases {
+            out.push_str(&format!(
+                "| {:?} | {:?} | {} | {:.2} | {} |\n",
+                phase.phase,
+                phase.status,
+                phase.tokens_used,
+                phase.time_elapsed.as_secs_f64(),
+                phase.notes.join("; ")
+            ));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Documents Created\n\n");
+    if run.artifacts.documents.is_empty() {
+        out.push_str("No document artifacts were captured.\n\n");
+    } else {
+        for doc in &run.artifacts.documents {
+            out.push_str(&format!(
+                "- **{}** (`{}`{})\n",
+                doc.title,
+                doc.path,
+                doc.short_code
+                    .as_ref()
+                    .map(|code| format!(", {}", code))
+                    .unwrap_or_default()
+            ));
+            out.push_str(&format!("```text\n{}\n```\n", doc.excerpt));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Code Written\n\n");
+    if run.artifacts.code_files.is_empty() {
+        out.push_str("No code artifacts were captured in this run.\n\n");
+    } else {
+        for file in &run.artifacts.code_files {
+            out.push_str(&format!(
+                "- **{}** (`{}`, {} lines)\n",
+                file.path, file.language, file.line_count
+            ));
+            out.push_str(&format!("```text\n{}\n```\n", file.excerpt));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Initiative Outcomes\n\n");
+    if run.initiatives.is_empty() {
+        out.push_str("No initiatives were recorded.\n");
+    } else {
+        for initiative in &run.initiatives {
+            out.push_str(&format!(
+                "- **{}** (`{}`): {} tokens, {:.2}s, {} task(s)\n",
+                initiative.initiative_title,
+                initiative.initiative_id,
+                initiative.total_tokens,
+                initiative.total_time.as_secs_f64(),
+                initiative.tasks.len()
+            ));
+            for task in &initiative.tasks {
+                out.push_str(&format!(
+                    "Task `{}`: {:?}, {} tokens, {:.2}s, doc accuracy {:.1}%, instruction adherence {:.1}%\n",
+                    task.task_title,
+                    task.status,
+                    task.tokens_used,
+                    task.time_elapsed.as_secs_f64(),
+                    task.code_metrics.doc_accuracy_percent,
+                    task.code_metrics.instruction_adherence_percent,
+                ));
+                if let Some(gate) = &task.validation_gate {
+                    out.push_str(&format!(
+                        "Gate: {:?}, rework tokens {}, issues: {}\n",
+                        gate.gate_decision,
+                        gate.rework_tokens,
+                        if gate.issues_found.is_empty() {
+                            "none".to_string()
+                        } else {
+                            gate.issues_found.join("; ")
+                        }
+                    ));
+                }
+            }
+            out.push('\n');
+        }
+    }
+
+    out
+}
+
+fn mode_slug(run: &BenchmarkRun) -> &'static str {
+    match run.execution_mode {
+        crate::types::ExecutionMode::Autonomous => "autonomous",
+        crate::types::ExecutionMode::Validated => "validated",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -265,6 +462,7 @@ mod tests {
             execution_mode: mode,
             phases: vec![],
             trace: crate::types::RunTrace::default(),
+            artifacts: crate::types::RunArtifacts::default(),
             initiatives: vec![],
             total_metrics: RunMetrics {
                 total_tokens: tokens,

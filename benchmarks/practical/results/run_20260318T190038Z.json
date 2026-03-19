@@ -1,12 +1,12 @@
 {
-  "run_id": "108abd08-a2c2-41b8-8d04-7e91600d110a",
-  "timestamp": "2026-03-18T19:10:23.312556Z",
+  "run_id": "72e9a64a-32bf-4adf-9df8-ebe00e6eda69",
+  "timestamp": "2026-03-18T19:00:38.431738Z",
   "scenario": {
     "id": "file-processing-toolkit",
     "title": "File Processing Toolkit",
     "root": "benchmarks/practical/scenario"
   },
-  "execution_mode": "Validated",
+  "execution_mode": "Autonomous",
   "phases": [
     {
       "phase": "ScenarioSetup",
@@ -14,10 +14,10 @@
       "tokens_used": 66,
       "time_elapsed": {
         "secs": 0,
-        "nanos": 48204250
+        "nanos": 37540917
       },
       "notes": [
-        "Scenario materialized in /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp"
+        "Scenario materialized in /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex"
       ]
     },
     {
@@ -26,7 +26,7 @@
       "tokens_used": 0,
       "time_elapsed": {
         "secs": 20,
-        "nanos": 70336958
+        "nanos": 22183333
       },
       "notes": [
         "Fallback initiative generation used after Claude failure: claude CLI timed out after 20s. Verify Claude Code is logged in and prompt execution is allowed in this environment."
@@ -35,13 +35,13 @@
     {
       "phase": "Decomposition",
       "status": "Completed",
-      "tokens_used": 512,
+      "tokens_used": 12,
       "time_elapsed": {
-        "secs": 40,
-        "nanos": 197098459
+        "secs": 20,
+        "nanos": 80562500
       },
       "notes": [
-        "Produced 1 gated initiative assessments"
+        "Produced 1 initiative assessments"
       ]
     }
   ],
@@ -56,30 +56,30 @@
         "output_tokens": 0,
         "duration": {
           "secs": 20,
-          "nanos": 70336958
+          "nanos": 22183333
         }
       }
     ],
     "cli_events": [
       {
         "label": "workspace_init",
-        "command": "target/release/ultra-metis init --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --prefix BENCH",
+        "command": "target/release/ultra-metis init --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex --prefix BENCH",
         "exit_code": 0,
         "duration": {
           "secs": 0,
-          "nanos": 9408208
+          "nanos": 14024417
         },
         "approx_tokens": 28,
-        "stdout_excerpt": "Initialized Ultra-Metis project at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp with prefix BENCH",
+        "stdout_excerpt": "Initialized Ultra-Metis project at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex with prefix BENCH",
         "stderr_excerpt": ""
       },
       {
         "label": "seed_vision",
-        "command": "target/release/ultra-metis create --type vision --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp File Processing Toolkit",
+        "command": "target/release/ultra-metis create --type vision --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex File Processing Toolkit",
         "exit_code": 0,
         "duration": {
           "secs": 0,
-          "nanos": 12201083
+          "nanos": 10219208
         },
         "approx_tokens": 13,
         "stdout_excerpt": "Created BENCH-V-0001 (vision: File Processing Toolkit)",
@@ -87,11 +87,11 @@
       },
       {
         "label": "seed_initiative_parse",
-        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Parse Module",
+        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex --parent BENCH-V-0001 Parse Module",
         "exit_code": 0,
         "duration": {
           "secs": 0,
-          "nanos": 15157500
+          "nanos": 7363208
         },
         "approx_tokens": 12,
         "stdout_excerpt": "Created BENCH-I-0002 (initiative: Parse Module)",
@@ -99,11 +99,11 @@
       },
       {
         "label": "seed_initiative_transform",
-        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Transform Module",
+        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex --parent BENCH-V-0001 Transform Module",
         "exit_code": 0,
         "duration": {
           "secs": 0,
-          "nanos": 11437459
+          "nanos": 5934084
         },
         "approx_tokens": 13,
         "stdout_excerpt": "Created BENCH-I-0003 (initiative: Transform Module)",
@@ -111,11 +111,11 @@
       },
       {
         "label": "materialize_output-module",
-        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Output Module",
+        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpYZRyex --parent BENCH-V-0001 Output Module",
         "exit_code": 0,
         "duration": {
           "secs": 0,
-          "nanos": 33623459
+          "nanos": 19954709
         },
         "approx_tokens": 12,
         "stdout_excerpt": "Created BENCH-I-0004 (initiative: Output Module)",
@@ -129,25 +129,25 @@
         "path": ".ultra-metis/docs/BENCH-I-0002.md",
         "title": "Parse Module",
         "short_code": "BENCH-I-0002",
-        "excerpt": "---\nid: parse-module\nlevel: initiative\ntitle: \"Parse Module\"\nshort_code: \"BENCH-I-0002\"\ncreated_at: 2026-03-18T19:09:43.151436+00:00\nupdated_at: 2026-03-18T19:09:43.151436+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
+        "excerpt": "---\nid: parse-module\nlevel: initiative\ntitle: \"Parse Module\"\nshort_code: \"BENCH-I-0002\"\ncreated_at: 2026-03-18T19:00:18.382304+00:00\nupdated_at: 2026-03-18T19:00:18.382304+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
       },
       {
         "path": ".ultra-metis/docs/BENCH-I-0003.md",
         "title": "Transform Module",
         "short_code": "BENCH-I-0003",
-        "excerpt": "---\nid: transform-module\nlevel: initiative\ntitle: \"Transform Module\"\nshort_code: \"BENCH-I-0003\"\ncreated_at: 2026-03-18T19:09:43.163100+00:00\nupdated_at: 2026-03-18T19:09:43.163100+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
+        "excerpt": "---\nid: transform-module\nlevel: initiative\ntitle: \"Transform Module\"\nshort_code: \"BENCH-I-0003\"\ncreated_at: 2026-03-18T19:00:18.388346+00:00\nupdated_at: 2026-03-18T19:00:18.388346+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
       },
       {
         "path": ".ultra-metis/docs/BENCH-I-0004.md",
         "title": "Output Module",
         "short_code": "BENCH-I-0004",
-        "excerpt": "---\nid: output-module\nlevel: initiative\ntitle: \"Output Module\"\nshort_code: \"BENCH-I-0004\"\ncreated_at: 2026-03-18T19:10:03.265980+00:00\nupdated_at: 2026-03-18T19:10:03.265980+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
+        "excerpt": "---\nid: output-module\nlevel: initiative\ntitle: \"Output Module\"\nshort_code: \"BENCH-I-0004\"\ncreated_at: 2026-03-18T19:00:38.429089+00:00\nupdated_at: 2026-03-18T19:00:38.429089+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
       },
       {
         "path": ".ultra-metis/docs/BENCH-V-0001.md",
         "title": "File Processing Toolkit",
         "short_code": "BENCH-V-0001",
-        "excerpt": "---\nid: file-processing-toolkit\nlevel: vision\ntitle: \"File Processing Toolkit\"\nshort_code: \"BENCH-V-0001\"\ncreated_at: 2026-03-18T19:09:43.136925+00:00\nupdated_at: 2026-03-18T19:09:43.136925+00:00\narchived: false\ntags:\n  - \"#phase/draft\"\nexit_criteria_met: false\nschema_version: 1"
+        "excerpt": "---\nid: file-processing-toolkit\nlevel: vision\ntitle: \"File Processing Toolkit\"\nshort_code: \"BENCH-V-0001\"\ncreated_at: 2026-03-18T19:00:18.373140+00:00\nupdated_at: 2026-03-18T19:00:18.373140+00:00\narchived: false\ntags:\n  - \"#phase/draft\"\nexit_criteria_met: false\nschema_version: 1"
       }
     ],
     "code_files": []
@@ -164,7 +164,7 @@
           "tokens_used": 12,
           "time_elapsed": {
             "secs": 20,
-            "nanos": 103960417
+            "nanos": 42138042
           },
           "code_metrics": {
             "lines_of_code": 2,
@@ -173,36 +173,26 @@
             "doc_accuracy_percent": 90.0,
             "instruction_adherence_percent": 50.0
           },
-          "validation_gate": {
-            "gate_decision": "RequiresRework",
-            "issues_found": [
-              "Task 'Assess and design: Output Module' has low instruction adherence (50% < 70% threshold) — AI may not have followed prompt format"
-            ],
-            "rework_tokens": 500,
-            "rework_time": {
-              "secs": 0,
-              "nanos": 0
-            }
-          }
+          "validation_gate": null
         }
       ],
       "total_tokens": 12,
       "total_time": {
         "secs": 20,
-        "nanos": 103960417
+        "nanos": 42138042
       }
     }
   ],
   "total_metrics": {
-    "total_tokens": 512,
+    "total_tokens": 12,
     "total_time": {
-      "secs": 40,
-      "nanos": 197098459
+      "secs": 20,
+      "nanos": 80562500
     },
     "avg_code_quality": 90.0,
     "avg_test_coverage": 0.0,
     "avg_doc_accuracy": 90.0,
     "avg_instruction_adherence": 50.0,
-    "gate_effectiveness": 100.0
+    "gate_effectiveness": null
   }
 }

@@ -11,6 +11,8 @@ pub struct BenchmarkRun {
     pub phases: Vec<PhaseResult>,
     #[serde(default)]
     pub trace: RunTrace,
+    #[serde(default)]
+    pub artifacts: RunArtifacts,
     pub initiatives: Vec<InitiativeResult>,
     pub total_metrics: RunMetrics,
 }
@@ -59,6 +61,9 @@ pub struct RunTrace {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptTraceEvent {
     pub label: String,
+    pub system_prompt: String,
+    pub user_prompt: String,
+    pub response_excerpt: String,
     pub input_tokens: u64,
     pub output_tokens: u64,
     pub duration: Duration,
@@ -71,6 +76,32 @@ pub struct CliTraceEvent {
     pub exit_code: i32,
     pub duration: Duration,
     pub approx_tokens: u64,
+    pub stdout_excerpt: String,
+    pub stderr_excerpt: String,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct RunArtifacts {
+    #[serde(default)]
+    pub documents: Vec<DocumentArtifact>,
+    #[serde(default)]
+    pub code_files: Vec<CodeArtifact>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentArtifact {
+    pub path: String,
+    pub title: String,
+    pub short_code: Option<String>,
+    pub excerpt: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CodeArtifact {
+    pub path: String,
+    pub language: String,
+    pub line_count: u32,
+    pub excerpt: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

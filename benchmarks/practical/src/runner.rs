@@ -1,5 +1,6 @@
 use crate::{api_client, prompt_builder, scenario_pack::LoadedScenarioPack, types::*};
 use chrono::Utc;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -48,6 +49,8 @@ impl CliResult {
             exit_code: self.exit_code,
             duration: self.elapsed,
             approx_tokens: self.approx_tokens(),
+            stdout_excerpt: excerpt(&self.stdout, 400),
+            stderr_excerpt: excerpt(&self.stderr, 400),
         }
     }
 }
@@ -171,6 +174,144 @@ pub fn score_ai_initiative(init: &AiInitiative, response_was_valid_json: bool) -
     }
 }
 
+pub fn prompt_trace_event(
+    label: impl Into<String>,
+    system_prompt: impl Into<String>,
+    user_prompt: impl Into<String>,
+    response_content: &str,
+    input_tokens: u64,
+    output_tokens: u64,
+    duration: std::time::Duration,
+) -> PromptTraceEvent {
+    PromptTraceEvent {
+        label: label.into(),
+        system_prompt: system_prompt.into(),
+        user_prompt: user_prompt.into(),
+        response_excerpt: excerpt(response_content, 500),
+        input_tokens,
+        output_tokens,
+        duration,
+    }
+}
+
+pub fn snapshot_workspace_artifacts(root: &Path) -> RunArtifacts {
+    let mut files = vec![];
+    collect_files(root, &mut files);
+    files.sort();
+
+    let mut artifacts = RunArtifacts::default();
+    for path in files {
+        let rel = path
+            .strip_prefix(root)
+            .unwrap_or(&path)
+            .display()
+            .to_string();
+        let content = match fs::read_to_string(&path) {
+            Ok(content) => content,
+            Err(_) => continue,
+        };
+
+        if is_document_file(&path) {
+            artifacts.documents.push(DocumentArtifact {
+                path: rel,
+                title: extract_document_title(&content, &path),
+                short_code: extract_any_short_code(&content),
+                excerpt: excerpt(&content, 600),
+            });
+        } else if let Some(language) = code_language(&path) {
+            artifacts.code_files.push(CodeArtifact {
+                path: rel,
+                language: language.to_string(),
+                line_count: content.lines().count() as u32,
+                excerpt: excerpt(&content, 600),
+            });
+        }
+    }
+
+    artifacts
+}
+
+fn collect_files(root: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = fs::read_dir(root) else {
+        return;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_files(&path, out);
+        } else {
+            out.push(path);
+        }
+    }
+}
+
+fn is_document_file(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|ext| ext.to_str()),
+        Some("md" | "mdx" | "txt" | "yaml" | "yml" | "json")
+    )
+}
+
+fn code_language(path: &Path) -> Option<&'static str> {
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("rs") => Some("Rust"),
+        Some("ts" | "tsx") => Some("TypeScript"),
+        Some("js" | "jsx") => Some("JavaScript"),
+        Some("py") => Some("Python"),
+        Some("go") => Some("Go"),
+        Some("java") => Some("Java"),
+        Some("rb") => Some("Ruby"),
+        Some("sh") => Some("Shell"),
+        Some("c") => Some("C"),
+        Some("cc" | "cpp" | "cxx" | "hpp" | "h") => Some("C++"),
+        _ => None,
+    }
+}
+
+fn extract_document_title(content: &str, path: &Path) -> String {
+    content
+        .lines()
+        .find_map(|line| line.strip_prefix("title:"))
+        .map(|title| title.trim().trim_matches('"').to_string())
+        .or_else(|| {
+            content
+                .lines()
+                .find_map(|line| line.strip_prefix("# "))
+                .map(|title| title.trim().to_string())
+        })
+        .unwrap_or_else(|| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("Untitled document")
+                .to_string()
+        })
+}
+
+fn extract_any_short_code(content: &str) -> Option<String> {
+    content
+        .split_whitespace()
+        .map(|word| word.trim_matches(|c: char| !c.is_alphanumeric() && c != '-'))
+        .find(|word| word.contains("-V-") || word.contains("-I-") || word.contains("-T-"))
+        .map(ToString::to_string)
+}
+
+pub fn excerpt(content: &str, max_chars: usize) -> String {
+    let normalized = content
+        .lines()
+        .map(str::trim_end)
+        .filter(|line| !line.is_empty())
+        .take(12)
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let mut out = normalized.chars().take(max_chars).collect::<String>();
+    if normalized.chars().count() > max_chars {
+        out.push_str("...");
+    }
+    out
+}
+
 fn fallback_initiative(
     api_tokens: u64,
     api_time: std::time::Duration,
@@ -197,6 +338,20 @@ fn fallback_initiative(
         }],
         total_tokens: api_tokens,
         total_time: api_time,
+    }
+}
+
+pub fn default_fallback_ai_initiative() -> AiInitiative {
+    AiInitiative {
+        id: "output-module".to_string(),
+        title: "Output Module".to_string(),
+        objective: "Implement export, validation, and delivery workflow for processed datasets."
+            .to_string(),
+        tasks: vec![
+            "Design output writer abstractions".to_string(),
+            "Implement CSV, JSON, and YAML exports".to_string(),
+            "Add output-schema validation and integration tests".to_string(),
+        ],
     }
 }
 
@@ -316,29 +471,58 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     // Ask Claude to assess what additional initiatives are needed
     let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)?;
     let api_start = std::time::Instant::now();
-    let api_resp = api_client::ask(&prompt.system, &prompt.user).await?;
+    let api_result = api_client::ask(&prompt.system, &prompt.user).await;
     let api_time = api_start.elapsed();
-    trace.prompt_events.push(PromptTraceEvent {
-        label: "scenario_assessment".to_string(),
-        input_tokens: api_resp.input_tokens,
-        output_tokens: api_resp.output_tokens,
-        duration: api_time,
-    });
+    let (
+        api_input_tokens,
+        api_output_tokens,
+        api_content,
+        ai_initiatives,
+        response_was_valid_json,
+        phase_note,
+    ) = match api_result {
+        Ok(api_resp) => {
+            let parsed = parse_initiative_response(&api_resp.content);
+            let valid_json =
+                !parsed.is_empty() || api_resp.content.contains("additional_initiatives_needed");
+            (
+                api_resp.input_tokens,
+                api_resp.output_tokens,
+                api_resp.content,
+                parsed,
+                valid_json,
+                format!(
+                    "Scenario '{}' with {} seeded initiatives assessed",
+                    scenario.manifest.id,
+                    scenario.seed_initiatives.len()
+                ),
+            )
+        }
+        Err(err) => (
+            0,
+            0,
+            format!("Deterministic fallback used because scenario assessment failed: {err}"),
+            vec![default_fallback_ai_initiative()],
+            false,
+            format!("Fallback initiative generation used after Claude failure: {err}"),
+        ),
+    };
+    trace.prompt_events.push(prompt_trace_event(
+        "scenario_assessment",
+        &prompt.system,
+        &prompt.user,
+        &api_content,
+        api_input_tokens,
+        api_output_tokens,
+        api_time,
+    ));
     phases.push(PhaseResult {
         phase: BenchmarkPhase::DocumentGeneration,
         status: PhaseStatus::Completed,
-        tokens_used: api_resp.total_tokens(),
+        tokens_used: api_input_tokens + api_output_tokens,
         time_elapsed: api_time,
-        notes: vec![format!(
-            "Scenario '{}' with {} seeded initiatives assessed",
-            scenario.manifest.id,
-            scenario.seed_initiatives.len()
-        )],
+        notes: vec![phase_note],
     });
-
-    let ai_initiatives = parse_initiative_response(&api_resp.content);
-    let response_was_valid_json =
-        !ai_initiatives.is_empty() || api_resp.content.contains("additional_initiatives_needed");
 
     // Build initiative results from AI response
     let mut initiatives = vec![];
@@ -380,7 +564,7 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
 
         let cli_tokens = cli_result.as_ref().map(|r| r.approx_tokens()).unwrap_or(0);
         let cli_time = cli_result.as_ref().map(|r| r.elapsed).unwrap_or_default();
-        let task_tokens = (api_resp.total_tokens() / n as u64) + cli_tokens;
+        let task_tokens = ((api_input_tokens + api_output_tokens) / n as u64) + cli_tokens;
         let task_time = (api_time / n) + cli_time;
 
         tracing::info!(
@@ -411,7 +595,7 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     if initiatives.is_empty() {
         tracing::info!("AI identified no additional initiatives");
         initiatives.push(fallback_initiative(
-            api_resp.total_tokens(),
+            api_input_tokens + api_output_tokens,
             api_time,
             response_was_valid_json,
         ));
@@ -460,6 +644,7 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         execution_mode: ExecutionMode::Autonomous,
         phases,
         trace,
+        artifacts: snapshot_workspace_artifacts(temp_dir.path()),
         initiatives,
         total_metrics: RunMetrics {
             total_tokens,
@@ -563,6 +748,7 @@ mod tests {
             execution_mode: ExecutionMode::Autonomous,
             phases: vec![],
             trace: RunTrace::default(),
+            artifacts: RunArtifacts::default(),
             initiatives: vec![],
             total_metrics: RunMetrics {
                 total_tokens: 0,
