@@ -1,4 +1,5 @@
-.PHONY: build build-mcp build-cli install install-binary test clean
+.PHONY: build build-mcp build-cli install install-binary test clean \
+       ci lint fmt fmt-check release-local package
 
 INSTALL_DIR ?= $(HOME)/.local/bin
 
@@ -33,3 +34,39 @@ test:
 # Clean build artifacts
 clean:
 	cargo clean
+	rm -rf dist/
+
+# --------------------------------------------------------------------------
+# CI / Quality targets
+# --------------------------------------------------------------------------
+
+# Run the full CI suite locally (matches GitHub Actions CI workflow)
+ci: test lint fmt-check
+	@echo "All CI checks passed."
+
+# Run clippy with warnings-as-errors (matches CI)
+lint:
+	cargo clippy --workspace --all-targets -- -D warnings
+
+# Auto-format all Rust code
+fmt:
+	cargo fmt --all
+
+# Check formatting without modifying files (matches CI)
+fmt-check:
+	cargo fmt --all -- --check
+
+# --------------------------------------------------------------------------
+# Release / Packaging targets
+# --------------------------------------------------------------------------
+
+# Build release binaries for the current platform
+release-local: build
+	@echo "Release binaries built:"
+	@ls -lh target/release/ultra-metis target/release/ultra-metis-mcp
+
+# Package release binaries into distributable archive
+package: release-local
+	@VERSION=$$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')-local; \
+	echo "Packaging version v$$VERSION..."; \
+	bash scripts/package.sh "v$$VERSION"
