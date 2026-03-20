@@ -6,8 +6,9 @@ use crate::protocol::ToolDefinition;
 use serde_json::Value;
 use std::path::Path;
 use ultra_metis_core::{
-    BaselineCaptureService, BaselineComparisonEngine, ClippyParser, CoverageParser, EslintParser,
-    RulesConfig, ToolOutputParser, TypeScriptParser,
+    BaselineCaptureService, BaselineComparisonEngine, ClippyParser, CoverageParser,
+    DurableInsightNote, EslintParser, FeedbackSignal, InsightCategory, InsightScope, RulesConfig,
+    ToolOutputParser, TypeScriptParser,
 };
 use ultra_metis_core::domain::rules::query::{RuleQuery, RuleQueryEngine, scope_hierarchy};
 use ultra_metis_store::{CodeIndexer, DocumentStore};
@@ -370,6 +371,69 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "create_insight_note".to_string(),
+            description: "Create a durable insight note capturing reusable local knowledge".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "title": { "type": "string", "description": "Short descriptive title for the insight" },
+                    "note": { "type": "string", "description": "The insight text — what the agent should know" },
+                    "category": { "type": "string", "description": "Category: hotspot_warning, recurring_failure, misleading_name, validation_hint, local_exception, boundary_warning, subsystem_quirk" },
+                    "scope_repo": { "type": "string", "description": "Repository name (optional)" },
+                    "scope_package": { "type": "string", "description": "Package/crate name (optional)" },
+                    "scope_subsystem": { "type": "string", "description": "Logical subsystem label (optional)" },
+                    "scope_paths": { "type": "array", "items": { "type": "string" }, "description": "File paths the insight applies to (optional)" },
+                    "scope_symbols": { "type": "array", "items": { "type": "string" }, "description": "Symbol names the insight applies to (optional)" }
+                },
+                "required": ["project_path", "title", "note", "category"]
+            }),
+        },
+        ToolDefinition {
+            name: "fetch_insight_notes".to_string(),
+            description: "Fetch insight notes relevant to a given scope (call at task start to load contextual knowledge)".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "scope_repo": { "type": "string", "description": "Repository name (optional)" },
+                    "scope_package": { "type": "string", "description": "Package/crate name (optional)" },
+                    "scope_subsystem": { "type": "string", "description": "Logical subsystem label (optional)" },
+                    "scope_paths": { "type": "array", "items": { "type": "string" }, "description": "File paths to match (optional)" },
+                    "scope_symbols": { "type": "array", "items": { "type": "string" }, "description": "Symbol names to match (optional)" },
+                    "limit": { "type": "integer", "description": "Max notes to return (default: 10)" }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
+            name: "score_insight_note".to_string(),
+            description: "Record feedback on an insight note after using it (helpful/meh/harmful)".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "short_code": { "type": "string", "description": "Short code of the insight note" },
+                    "signal": { "type": "string", "description": "Feedback signal: helpful, meh, or harmful" }
+                },
+                "required": ["project_path", "short_code", "signal"]
+            }),
+        },
+        ToolDefinition {
+            name: "list_insight_notes".to_string(),
+            description: "List insight notes with optional status and category filtering".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "status": { "type": "string", "description": "Filter by status: active, prune_candidate, needs_human_review, archived (optional)" },
+                    "category": { "type": "string", "description": "Filter by category (optional)" },
+                    "include_archived": { "type": "boolean", "description": "Include archived notes (default: false)" }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
             name: "list_protected_rules".to_string(),
             description: "List all protected rules for governance auditing".to_string(),
             input_schema: serde_json::json!({
@@ -441,6 +505,10 @@ pub fn call_tool(name: &str, arguments: &Value) -> Result<String, String> {
         "check_architecture_conformance" => tool_check_architecture_conformance(arguments),
         "query_rules" => tool_query_rules(arguments),
         "get_applicable_rules" => tool_get_applicable_rules(arguments),
+        "create_insight_note" => tool_create_insight_note(arguments),
+        "fetch_insight_notes" => tool_fetch_insight_notes(arguments),
+        "score_insight_note" => tool_score_insight_note(arguments),
+        "list_insight_notes" => tool_list_insight_notes(arguments),
         "list_protected_rules" => tool_list_protected_rules(arguments),
         "reassign_parent" => tool_reassign_parent(arguments),
         _ => Err(format!("Unknown tool: {}", name)),
@@ -1001,6 +1069,285 @@ fn extract_tool_from_baseline(content: &str) -> Option<String> {
     }
     None
 }
+
+// ---------------------------------------------------------------------------
+// Insight Note tool handlers
+// ---------------------------------------------------------------------------
+
+fn build_scope_from_args(args: &Value) -> InsightScope {
+    let mut scope = InsightScope::new();
+    scope.repo = get_optional_str(args, "scope_repo").map(|s| s.to_string());
+    scope.package = get_optional_str(args, "scope_package").map(|s| s.to_string());
+    scope.subsystem = get_optional_str(args, "scope_subsystem").map(|s| s.to_string());
+    scope.paths = args
+        .get("scope_paths")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+        .unwrap_or_default();
+    scope.symbols = args
+        .get("scope_symbols")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+        .unwrap_or_default();
+    scope
+}
+
+fn tool_create_insight_note(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let title = get_str(args, "title")?;
+    let note_text = get_str(args, "note")?;
+    let category_str = get_str(args, "category")?;
+
+    let category: InsightCategory = category_str
+        .parse()
+        .map_err(|e: String| e)?;
+
+    let scope = build_scope_from_args(args);
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let short_code = store
+        .create_document("durable_insight_note", title, None)
+        .map_err(|e| e.user_message())?;
+
+    // Now create the proper note with scope and category, overwrite
+    let din = DurableInsightNote::new(
+        title.to_string(),
+        note_text.to_string(),
+        category,
+        scope.clone(),
+        vec![ultra_metis_core::Tag::Phase(ultra_metis_core::Phase::Draft)],
+        false,
+        short_code.clone(),
+    )
+    .map_err(|e| e.to_string())?;
+
+    let content = din.to_content().map_err(|e| e.to_string())?;
+    let doc_path = Path::new(project_path)
+        .join(".ultra-metis")
+        .join("docs")
+        .join(format!("{}.md", short_code));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write note: {}", e))?;
+
+    let scope_desc = [
+        scope.repo.as_deref().unwrap_or(""),
+        scope.package.as_deref().unwrap_or(""),
+        scope.subsystem.as_deref().unwrap_or(""),
+    ]
+    .iter()
+    .filter(|s| !s.is_empty())
+    .cloned()
+    .collect::<Vec<_>>()
+    .join(", ");
+
+    Ok(format!(
+        "## Insight Note Created\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Short Code | {} |\n\
+        | Title | {} |\n\
+        | Category | {} |\n\
+        | Scope | {} |",
+        short_code,
+        title,
+        category_str,
+        if scope_desc.is_empty() { "global" } else { &scope_desc }
+    ))
+}
+
+fn tool_fetch_insight_notes(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+
+    let query_scope = build_scope_from_args(args);
+    let store = DocumentStore::new(Path::new(project_path));
+
+    // Load all DurableInsightNote documents
+    let all_docs = store
+        .list_documents(false)
+        .map_err(|e| e.user_message())?;
+
+    let mut matched = Vec::new();
+    for doc in &all_docs {
+        if doc.document_type != "durable_insight_note" {
+            continue;
+        }
+        let raw = match store.read_document_raw(&doc.short_code) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+        if let Ok(din) = DurableInsightNote::from_content(&raw) {
+            if din.status != ultra_metis_core::NoteStatus::Active {
+                continue;
+            }
+            // Check scope match (if query scope has any fields set)
+            let has_query = query_scope.repo.is_some()
+                || query_scope.package.is_some()
+                || query_scope.subsystem.is_some()
+                || !query_scope.paths.is_empty()
+                || !query_scope.symbols.is_empty();
+
+            if !has_query || din.scope.matches(&query_scope) {
+                matched.push((doc.short_code.clone(), din));
+            }
+        }
+        if matched.len() >= limit {
+            break;
+        }
+    }
+
+    // Record fetch on each matched note and save back
+    for (sc, din) in &mut matched {
+        let mut note = DurableInsightNote::from_content(
+            &store.read_document_raw(sc).unwrap_or_default(),
+        ).ok();
+        if let Some(ref mut n) = note {
+            n.record_fetch();
+            if let Ok(content) = n.to_content() {
+                let doc_path = Path::new(project_path)
+                    .join(".ultra-metis")
+                    .join("docs")
+                    .join(format!("{}.md", sc));
+                let _ = std::fs::write(&doc_path, content);
+            }
+        }
+    }
+
+    if matched.is_empty() {
+        return Ok("No insight notes found for the given scope.".to_string());
+    }
+
+    let mut output = format!(
+        "## Insight Notes ({})\n\n",
+        matched.len()
+    );
+    for (sc, din) in &matched {
+        output.push_str(&format!(
+            "### {} — {} [{}]\n\n{}\n\n---\n\n",
+            sc, din.title(), din.category, din.note
+        ));
+    }
+    Ok(output)
+}
+
+fn tool_score_insight_note(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let short_code = get_str(args, "short_code")?;
+    let signal_str = get_str(args, "signal")?;
+
+    let signal: FeedbackSignal = signal_str.parse().map_err(|e: String| e)?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let raw = store.read_document_raw(short_code).map_err(|e| e.user_message())?;
+    let mut din = DurableInsightNote::from_content(&raw).map_err(|e| e.to_string())?;
+
+    din.record_feedback(signal);
+
+    // Check for prune candidate
+    let was_pruned = din.should_be_prune_candidate(30, 0.5, 3, 5, 0.3);
+    if was_pruned {
+        din.mark_prune_candidate();
+    }
+
+    let content = din.to_content().map_err(|e| e.to_string())?;
+    let doc_path = Path::new(project_path)
+        .join(".ultra-metis")
+        .join("docs")
+        .join(format!("{}.md", short_code));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write: {}", e))?;
+
+    let status_change = if was_pruned {
+        " (marked as prune candidate)"
+    } else {
+        ""
+    };
+
+    Ok(format!(
+        "## Feedback Recorded{}\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Note | {} |\n\
+        | Signal | {} |\n\
+        | Total Helpful | {} |\n\
+        | Total Meh | {} |\n\
+        | Total Harmful | {} |\n\
+        | Status | {} |",
+        status_change,
+        short_code,
+        signal_str,
+        din.thumbs_up_count,
+        din.meh_count,
+        din.thumbs_down_count,
+        din.status
+    ))
+}
+
+fn tool_list_insight_notes(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let status_filter = get_optional_str(args, "status");
+    let category_filter = get_optional_str(args, "category");
+    let include_archived = args
+        .get("include_archived")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let all_docs = store
+        .list_documents(include_archived)
+        .map_err(|e| e.user_message())?;
+
+    let mut notes = Vec::new();
+    for doc in &all_docs {
+        if doc.document_type != "durable_insight_note" {
+            continue;
+        }
+        let raw = match store.read_document_raw(&doc.short_code) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+        if let Ok(din) = DurableInsightNote::from_content(&raw) {
+            // Status filter
+            if let Some(sf) = status_filter {
+                if din.status.to_string() != sf {
+                    continue;
+                }
+            }
+            // Category filter
+            if let Some(cf) = category_filter {
+                if din.category.to_string() != cf {
+                    continue;
+                }
+            }
+            notes.push((doc.short_code.clone(), din));
+        }
+    }
+
+    if notes.is_empty() {
+        return Ok("No insight notes found.".to_string());
+    }
+
+    let mut output = format!(
+        "## Insight Notes ({})\n\n\
+        | Short Code | Title | Category | Status | Fetches | Helpful% |\n\
+        | ---------- | ----- | -------- | ------ | ------- | -------- |\n",
+        notes.len()
+    );
+    for (sc, din) in &notes {
+        let helpful_pct = if din.total_feedback() > 0 {
+            format!("{:.0}%", din.helpful_ratio() * 100.0)
+        } else {
+            "-".to_string()
+        };
+        output.push_str(&format!(
+            "| {} | {} | {} | {} | {} | {} |\n",
+            sc, din.title(), din.category, din.status, din.fetch_count, helpful_pct
+        ));
+    }
+    Ok(output)
+}
+
+// ---------------------------------------------------------------------------
+// Rules tool handlers
+// ---------------------------------------------------------------------------
 
 /// Helper to load all RulesConfig documents from the store
 fn load_all_rules_configs(store: &DocumentStore) -> Result<Vec<RulesConfig>, String> {
