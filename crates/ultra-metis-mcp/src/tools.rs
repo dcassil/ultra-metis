@@ -6,10 +6,10 @@ use crate::protocol::ToolDefinition;
 use serde_json::Value;
 use std::path::Path;
 use ultra_metis_core::{
-    BaselineCaptureService, BaselineComparisonEngine, ClippyParser, CoverageParser,
-    CrossReference, DurableInsightNote, EslintParser, FeedbackSignal, InsightCategory,
-    InsightScope, RelationshipType, RulesConfig, ToolOutputParser, TraceabilityIndex,
-    TypeScriptParser,
+    BaselineCaptureService, BaselineComparisonEngine, BrownfieldEvaluator, CatalogQueryEngine,
+    ClippyParser, CoverageParser, CrossReference, DurableInsightNote, EslintParser,
+    EvaluatorConfig, FeedbackSignal, InsightCategory, InsightScope, RelationshipType, RulesConfig,
+    ToolOutputParser, TraceabilityIndex, TypeScriptParser,
 };
 use ultra_metis_core::domain::rules::query::{RuleQuery, RuleQueryEngine, scope_hierarchy};
 use ultra_metis_store::{CodeIndexer, DocumentStore};
@@ -478,6 +478,55 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "query_architecture_catalog".to_string(),
+            description: "Search the architecture catalog by language and project type".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "language": { "type": "string", "description": "Filter by language (optional)" },
+                    "project_type": { "type": "string", "description": "Filter by project type (optional)" }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
+            name: "list_catalog_languages".to_string(),
+            description: "List all available languages and project types in the architecture catalog".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
+            name: "read_reference_architecture".to_string(),
+            description: "Read the project's selected reference architecture document".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "short_code": { "type": "string", "description": "Short code of the ReferenceArchitecture (optional, finds active one if omitted)" }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
+            name: "evaluate_brownfield".to_string(),
+            description: "Evaluate how well the current repo matches a catalog architecture entry".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "language": { "type": "string", "description": "Language to match against" },
+                    "project_type": { "type": "string", "description": "Project type to match against" }
+                },
+                "required": ["project_path", "language", "project_type"]
+            }),
+        },
+        ToolDefinition {
             name: "list_cross_references".to_string(),
             description: "List all cross-references with optional filtering".to_string(),
             input_schema: serde_json::json!({
@@ -570,6 +619,10 @@ pub fn call_tool(name: &str, arguments: &Value) -> Result<String, String> {
         "query_relationships" => tool_query_relationships(arguments),
         "trace_ancestry" => tool_trace_ancestry(arguments),
         "list_cross_references" => tool_list_cross_references(arguments),
+        "query_architecture_catalog" => tool_query_architecture_catalog(arguments),
+        "list_catalog_languages" => tool_list_catalog_languages(arguments),
+        "read_reference_architecture" => tool_read_reference_architecture(arguments),
+        "evaluate_brownfield" => tool_evaluate_brownfield(arguments),
         "list_protected_rules" => tool_list_protected_rules(arguments),
         "reassign_parent" => tool_reassign_parent(arguments),
         _ => Err(format!("Unknown tool: {}", name)),
@@ -1617,6 +1670,177 @@ fn tool_list_cross_references(args: &Value) -> Result<String, String> {
         ));
     }
     Ok(output)
+}
+
+// ---------------------------------------------------------------------------
+// Architecture Catalog tool handlers
+// ---------------------------------------------------------------------------
+
+fn tool_query_architecture_catalog(args: &Value) -> Result<String, String> {
+    let _project_path = get_str(args, "project_path")?;
+    let language = get_optional_str(args, "language");
+    let project_type = get_optional_str(args, "project_type");
+
+    let engine = CatalogQueryEngine::with_builtins();
+
+    let mut query = ultra_metis_core::CatalogQuery::new();
+    // For catalog queries, match all phases since builtins are Published
+    if let Some(lang) = language {
+        query = query.with_language(lang);
+    }
+    if let Some(pt) = project_type {
+        query = query.with_project_type(pt);
+    }
+
+    let matches = engine.query(&query);
+
+    if matches.is_empty() {
+        let filter_desc = match (language, project_type) {
+            (Some(l), Some(p)) => format!("language='{}', project_type='{}'", l, p),
+            (Some(l), None) => format!("language='{}'", l),
+            (None, Some(p)) => format!("project_type='{}'", p),
+            (None, None) => "no filters".to_string(),
+        };
+        return Ok(format!("No catalog entries found for {}.", filter_desc));
+    }
+
+    let mut output = format!(
+        "## Architecture Catalog ({} entries)\n\n",
+        matches.len()
+    );
+    for m in &matches {
+        let entry = m.entry;
+        output.push_str(&format!(
+            "### {} — {} / {}\n\n",
+            entry.title(), entry.language, entry.project_type
+        ));
+        if !entry.folder_layout.is_empty() {
+            output.push_str(&format!("**Folder Layout**: {}\n\n", entry.folder_layout.join(", ")));
+        }
+        if !entry.layers.is_empty() {
+            output.push_str(&format!("**Layers**: {}\n\n", entry.layers.join(", ")));
+        }
+        if !entry.dependency_rules.is_empty() {
+            output.push_str(&format!("**Dependency Rules**: {}\n\n", entry.dependency_rules.join("; ")));
+        }
+        if !entry.naming_conventions.is_empty() {
+            output.push_str(&format!("**Naming Conventions**: {}\n\n", entry.naming_conventions.join("; ")));
+        }
+        output.push_str("---\n\n");
+    }
+    Ok(output)
+}
+
+fn tool_list_catalog_languages(args: &Value) -> Result<String, String> {
+    let _project_path = get_str(args, "project_path")?;
+
+    let engine = CatalogQueryEngine::with_builtins();
+    let languages = engine.languages();
+
+    if languages.is_empty() {
+        return Ok("No languages found in the catalog.".to_string());
+    }
+
+    let mut output = "## Architecture Catalog Languages\n\n".to_string();
+    for lang in &languages {
+        let types = engine.project_types_for_language(lang);
+        output.push_str(&format!("### {}\n\n", lang));
+        for pt in &types {
+            output.push_str(&format!("- {}\n", pt));
+        }
+        output.push('\n');
+    }
+    Ok(output)
+}
+
+fn tool_read_reference_architecture(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let short_code = get_optional_str(args, "short_code");
+
+    let store = DocumentStore::new(Path::new(project_path));
+
+    let sc = if let Some(sc) = short_code {
+        sc.to_string()
+    } else {
+        // Find the first (active) reference architecture
+        let all_docs = store.list_documents(false).map_err(|e| e.user_message())?;
+        let ra = all_docs
+            .iter()
+            .find(|d| d.document_type == "reference_architecture");
+        match ra {
+            Some(d) => d.short_code.clone(),
+            None => return Ok("No reference architecture found. Create one first.".to_string()),
+        }
+    };
+
+    let raw = store.read_document_raw(&sc).map_err(|e| e.user_message())?;
+    Ok(format!("## Reference Architecture: {}\n\n{}", sc, raw))
+}
+
+fn tool_evaluate_brownfield(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let language = get_str(args, "language")?;
+    let project_type = get_str(args, "project_type")?;
+
+    let engine = CatalogQueryEngine::with_builtins();
+    let all_entries = engine.all_entries();
+
+    // Verify the requested language/project_type exists
+    if engine.find_exact(language, project_type).is_none() {
+        return Ok(format!(
+            "No catalog entry found for language='{}', project_type='{}'. \
+            Use `list_catalog_languages` to see available options.",
+            language, project_type
+        ));
+    }
+
+    // Collect file paths from the project
+    let mut file_paths = Vec::new();
+    let project = Path::new(project_path);
+    let pattern = project.join("**/*").display().to_string();
+    if let Ok(entries) = glob::glob(&pattern) {
+        for entry in entries.flatten() {
+            if entry.is_file() {
+                if let Ok(relative) = entry.strip_prefix(project) {
+                    let path_str = relative.display().to_string();
+                    // Skip hidden dirs and common noise
+                    if !path_str.starts_with('.') && !path_str.contains("/node_modules/") && !path_str.contains("/target/") {
+                        file_paths.push(path_str);
+                    }
+                }
+            }
+        }
+    }
+
+    let evaluator = BrownfieldEvaluator::new();
+    let result = evaluator.evaluate(&file_paths, all_entries, format!("eval-{}-{}", language, project_type));
+
+    let outcome_desc = match &result.outcome {
+        ultra_metis_core::EvaluationOutcome::CatalogMatch { catalog_entry_id, .. } =>
+            format!("Catalog Match ({})", catalog_entry_id),
+        ultra_metis_core::EvaluationOutcome::DerivedArchitecture { .. } =>
+            "Derived Architecture (no catalog match, good quality)".to_string(),
+        ultra_metis_core::EvaluationOutcome::RecommendCatalogPattern { recommended_entry_id, .. } =>
+            format!("Recommend Catalog Pattern ({})", recommended_entry_id),
+        ultra_metis_core::EvaluationOutcome::RecordAsIs { .. } =>
+            "Record As-Is".to_string(),
+    };
+
+    Ok(format!(
+        "## Brownfield Evaluation\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Language | {} |\n\
+        | Project Type | {} |\n\
+        | Outcome | {} |\n\
+        | Quality Score | {:.1}% |\n\
+        | Files Analyzed | {} |",
+        language,
+        project_type,
+        outcome_desc,
+        result.quality_score,
+        file_paths.len()
+    ))
 }
 
 fn capitalize_first(s: &str) -> String {
