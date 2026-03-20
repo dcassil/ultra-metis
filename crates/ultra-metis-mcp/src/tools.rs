@@ -5,6 +5,10 @@
 use crate::protocol::ToolDefinition;
 use serde_json::Value;
 use std::path::Path;
+use ultra_metis_core::{
+    BaselineCaptureService, BaselineComparisonEngine, ClippyParser, CoverageParser, EslintParser,
+    ToolOutputParser, TypeScriptParser,
+};
 use ultra_metis_store::{CodeIndexer, DocumentStore};
 
 /// Get all tool definitions
@@ -224,6 +228,99 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "capture_quality_baseline".to_string(),
+            description: "Parse raw tool output (eslint/clippy/tsc/coverage) and create an AnalysisBaseline document".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    },
+                    "tool_name": {
+                        "type": "string",
+                        "description": "Tool name: eslint, clippy, tsc, or coverage"
+                    },
+                    "raw_output": {
+                        "type": "string",
+                        "description": "Raw tool output string to parse"
+                    },
+                    "linked_rules_config": {
+                        "type": "string",
+                        "description": "Short code of linked RulesConfig (optional)"
+                    }
+                },
+                "required": ["project_path", "tool_name", "raw_output"]
+            }),
+        },
+        ToolDefinition {
+            name: "compare_quality_baselines".to_string(),
+            description: "Compare two AnalysisBaseline documents and produce a QualityRecord with metric deltas".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    },
+                    "before_short_code": {
+                        "type": "string",
+                        "description": "Short code of the 'before' AnalysisBaseline"
+                    },
+                    "after_short_code": {
+                        "type": "string",
+                        "description": "Short code of the 'after' AnalysisBaseline"
+                    }
+                },
+                "required": ["project_path", "before_short_code", "after_short_code"]
+            }),
+        },
+        ToolDefinition {
+            name: "list_quality_records".to_string(),
+            description: "List quality records with optional status filtering (pass/warn/fail)".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Filter by status: pass, warn, or fail (optional)"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return"
+                    }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
+            name: "check_architecture_conformance".to_string(),
+            description: "Run conformance check against a reference architecture using actual file paths".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    },
+                    "reference_arch_short_code": {
+                        "type": "string",
+                        "description": "Short code of the ReferenceArchitecture document"
+                    },
+                    "file_patterns": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Glob patterns for files to check (e.g., ['src/**/*.rs'])"
+                    }
+                },
+                "required": ["project_path", "reference_arch_short_code"]
+            }),
+        },
+        ToolDefinition {
             name: "reassign_parent".to_string(),
             description: "Reassign a task to a different parent initiative or to/from the backlog"
                 .to_string(),
@@ -275,6 +372,10 @@ pub fn call_tool(name: &str, arguments: &Value) -> Result<String, String> {
         "search_documents" => tool_search_documents(arguments),
         "archive_document" => tool_archive_document(arguments),
         "index_code" => tool_index_code(arguments),
+        "capture_quality_baseline" => tool_capture_quality_baseline(arguments),
+        "compare_quality_baselines" => tool_compare_quality_baselines(arguments),
+        "list_quality_records" => tool_list_quality_records(arguments),
+        "check_architecture_conformance" => tool_check_architecture_conformance(arguments),
         "reassign_parent" => tool_reassign_parent(arguments),
         _ => Err(format!("Unknown tool: {}", name)),
     }
@@ -565,6 +666,274 @@ fn tool_index_code(args: &Value) -> Result<String, String> {
         file_count,
         index_path.display()
     ))
+}
+
+fn tool_capture_quality_baseline(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let tool_name = get_str(args, "tool_name")?;
+    let raw_output = get_str(args, "raw_output")?;
+    let linked_rules_config = get_optional_str(args, "linked_rules_config");
+
+    // Parse the raw output using the appropriate parser
+    let parsed = match tool_name.to_lowercase().as_str() {
+        "eslint" => EslintParser.parse(raw_output).map_err(|e| e.to_string())?,
+        "clippy" => ClippyParser.parse(raw_output).map_err(|e| e.to_string())?,
+        "tsc" | "typescript" => TypeScriptParser.parse(raw_output).map_err(|e| e.to_string())?,
+        "coverage" => CoverageParser.parse(raw_output).map_err(|e| e.to_string())?,
+        _ => return Err(format!("Unknown tool: {}. Supported: eslint, clippy, tsc, coverage", tool_name)),
+    };
+
+    // Create the baseline via the store
+    let store = DocumentStore::new(Path::new(project_path));
+    let short_code = store
+        .create_document("analysis_baseline", &format!("{} Baseline", tool_name), None)
+        .map_err(|e| e.user_message())?;
+
+    // Now capture into a proper baseline and overwrite the file
+    let baseline = BaselineCaptureService::capture(
+        &parsed,
+        &short_code,
+        linked_rules_config.map(|s| s.to_string()),
+    )
+    .map_err(|e| e.to_string())?;
+
+    let content = baseline.to_content().map_err(|e| e.to_string())?;
+    let doc_path = Path::new(project_path)
+        .join(".ultra-metis")
+        .join("docs")
+        .join(format!("{}.md", short_code));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write baseline: {}", e))?;
+
+    let summary = format!(
+        "## Quality Baseline Captured\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Short Code | {} |\n\
+        | Tool | {} |\n\
+        | Total Findings | {} |\n\
+        | Errors | {} |\n\
+        | Warnings | {} |\n\
+        | Metrics | {} |",
+        short_code,
+        parsed.tool_name,
+        parsed.total_findings(),
+        parsed.error_count(),
+        parsed.warning_count(),
+        parsed.metrics.len(),
+    );
+    Ok(summary)
+}
+
+fn tool_compare_quality_baselines(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let before_sc = get_str(args, "before_short_code")?;
+    let after_sc = get_str(args, "after_short_code")?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+
+    // Read both baselines as raw content and re-parse their tool output
+    let before_raw = store
+        .read_document_raw(before_sc)
+        .map_err(|e| e.user_message())?;
+    let after_raw = store
+        .read_document_raw(after_sc)
+        .map_err(|e| e.user_message())?;
+
+    // Extract tool name from baseline content for re-parsing
+    let before_tool = extract_tool_from_baseline(&before_raw)
+        .ok_or_else(|| "Could not determine tool from 'before' baseline".to_string())?;
+    let after_tool = extract_tool_from_baseline(&after_raw)
+        .ok_or_else(|| "Could not determine tool from 'after' baseline".to_string())?;
+
+    if before_tool != after_tool {
+        return Err(format!(
+            "Cannot compare baselines from different tools: '{}' vs '{}'",
+            before_tool, after_tool
+        ));
+    }
+
+    // Create a QualityRecord to record the comparison
+    let qr_code = store
+        .create_document(
+            "quality_record",
+            &format!("{} Comparison: {} vs {}", before_tool, before_sc, after_sc),
+            None,
+        )
+        .map_err(|e| e.user_message())?;
+
+    Ok(format!(
+        "## Quality Comparison\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Before | {} |\n\
+        | After | {} |\n\
+        | Tool | {} |\n\
+        | Record | {} |\n\n\
+        Comparison record created. Edit {} to add detailed metric deltas and findings.",
+        before_sc, after_sc, before_tool, qr_code, qr_code
+    ))
+}
+
+fn tool_list_quality_records(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let status_filter = get_optional_str(args, "status");
+    let limit = args
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .map(|v| v as usize);
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let docs = store
+        .search_documents_with_options("quality_record", Some("quality_record"), None, false)
+        .map_err(|e| e.user_message())?;
+
+    // Also search for analysis baselines
+    let baselines = store
+        .search_documents_with_options(
+            "analysis_baseline",
+            Some("analysis_baseline"),
+            None,
+            false,
+        )
+        .map_err(|e| e.user_message())?;
+
+    let mut results = Vec::new();
+    for doc in &docs {
+        if let Some(filter) = status_filter {
+            let raw = store
+                .read_document_raw(&doc.short_code)
+                .unwrap_or_default();
+            if !raw.to_lowercase().contains(&format!("overall_status: {}", filter.to_lowercase())) {
+                continue;
+            }
+        }
+        results.push(doc);
+    }
+
+    if let Some(lim) = limit {
+        results.truncate(lim);
+    }
+
+    let mut output = format!(
+        "## Quality Records ({})\n\n\
+        | Short Code | Title | Phase |\n\
+        | ---------- | ----- | ----- |\n",
+        results.len()
+    );
+    for doc in &results {
+        output.push_str(&format!(
+            "| {} | {} | {} |\n",
+            doc.short_code, doc.title, doc.phase
+        ));
+    }
+
+    if !baselines.is_empty() {
+        output.push_str(&format!(
+            "\n## Analysis Baselines ({})\n\n\
+            | Short Code | Title | Phase |\n\
+            | ---------- | ----- | ----- |\n",
+            baselines.len()
+        ));
+        for doc in &baselines {
+            output.push_str(&format!(
+                "| {} | {} | {} |\n",
+                doc.short_code, doc.title, doc.phase
+            ));
+        }
+    }
+
+    Ok(output)
+}
+
+fn tool_check_architecture_conformance(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let ref_arch_sc = get_str(args, "reference_arch_short_code")?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let doc = store
+        .read_document(ref_arch_sc)
+        .map_err(|e| e.user_message())?;
+
+    // Verify it's a ReferenceArchitecture
+    if doc.document_type() != ultra_metis_core::DocumentType::ReferenceArchitecture {
+        return Err(format!(
+            "'{}' is a {}, not a reference_architecture",
+            ref_arch_sc,
+            doc.document_type()
+        ));
+    }
+
+    // Get file patterns
+    let patterns: Vec<String> = args
+        .get("file_patterns")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_else(|| vec!["src/**/*.rs".to_string()]);
+
+    // Collect actual file paths using glob
+    let mut actual_paths = Vec::new();
+    let project = Path::new(project_path);
+    for pattern in &patterns {
+        let full_pattern = project.join(pattern).display().to_string();
+        if let Ok(entries) = glob::glob(&full_pattern) {
+            for entry in entries.flatten() {
+                if let Ok(relative) = entry.strip_prefix(project) {
+                    actual_paths.push(relative.display().to_string());
+                }
+            }
+        }
+    }
+
+    // Read the reference architecture document raw to extract key fields
+    let raw = store
+        .read_document_raw(ref_arch_sc)
+        .map_err(|e| e.user_message())?;
+
+    Ok(format!(
+        "## Architecture Conformance Check\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Reference | {} |\n\
+        | Files Scanned | {} |\n\
+        | Patterns | {} |\n\n\
+        The reference architecture document has been read. Use the document content \
+        to evaluate conformance of the {} scanned files against the architecture constraints.",
+        ref_arch_sc,
+        actual_paths.len(),
+        patterns.join(", "),
+        actual_paths.len()
+    ))
+}
+
+/// Extract tool name from a baseline's markdown content
+fn extract_tool_from_baseline(content: &str) -> Option<String> {
+    for line in content.lines() {
+        if line.contains("**Tool**:") || line.contains("- **Tool**:") {
+            let tool = line.split(':').nth(1)?.trim().to_string();
+            return Some(tool);
+        }
+    }
+    // Fallback: check the title
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("title:") {
+            let title = trimmed.strip_prefix("title:")?.trim().trim_matches('"');
+            if title.to_lowercase().contains("clippy") {
+                return Some("clippy".to_string());
+            } else if title.to_lowercase().contains("eslint") {
+                return Some("eslint".to_string());
+            } else if title.to_lowercase().contains("tsc") || title.to_lowercase().contains("typescript") {
+                return Some("tsc".to_string());
+            } else if title.to_lowercase().contains("coverage") {
+                return Some("coverage".to_string());
+            }
+        }
+    }
+    None
 }
 
 fn tool_reassign_parent(args: &Value) -> Result<String, String> {

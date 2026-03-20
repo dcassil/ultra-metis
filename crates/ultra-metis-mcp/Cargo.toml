@@ -11,7 +11,9 @@ name = "ultra-metis-mcp"
 path = "src/main.rs"
 
 [dependencies]
+ultra-metis-core = { path = "../ultra-metis-core" }
 ultra-metis-store = { path = "../ultra-metis-store" }
+glob = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
