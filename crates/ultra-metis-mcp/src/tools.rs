@@ -2043,3 +2043,457 @@ fn tool_reassign_parent(args: &Value) -> Result<String, String> {
 
     Ok(format!("## Reassignment\n\n{}", result))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn setup_project() -> (tempfile::TempDir, String) {
+        let dir = tempdir().unwrap();
+        let path = dir.path().display().to_string();
+        let result = call_tool(
+            "initialize_project",
+            &serde_json::json!({"project_path": path, "prefix": "TEST"}),
+        );
+        assert!(result.is_ok(), "Initialize failed: {:?}", result);
+        (dir, path)
+    }
+
+    fn call_ok(name: &str, args: Value) -> String {
+        let result = call_tool(name, &args);
+        assert!(result.is_ok(), "Tool '{}' failed: {:?}", name, result);
+        result.unwrap()
+    }
+
+    fn call_err(name: &str, args: Value) -> String {
+        let result = call_tool(name, &args);
+        assert!(result.is_err(), "Tool '{}' should have failed but succeeded", name);
+        result.unwrap_err()
+    }
+
+    // ===== Core Document Tools =====
+
+    #[test]
+    fn test_create_and_read_vision() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "My Vision"
+        }));
+        assert!(out.contains("TEST-V-0001"));
+
+        let out = call_ok("read_document", serde_json::json!({
+            "project_path": path, "short_code": "TEST-V-0001"
+        }));
+        assert!(out.contains("My Vision"));
+    }
+
+    #[test]
+    fn test_create_governance_types() {
+        let (_dir, path) = setup_project();
+
+        // Analysis Baseline
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "analysis_baseline", "title": "Q1 Baseline"
+        }));
+        assert!(out.contains("TEST-AB-0001"));
+
+        // Quality Record
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "quality_record", "title": "Q1 Record"
+        }));
+        assert!(out.contains("TEST-QR-0002"));
+
+        // Rules Config
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "rules_config", "title": "Repo Rules"
+        }));
+        assert!(out.contains("TEST-RC-0003"));
+
+        // DurableInsightNote
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "durable_insight_note", "title": "Note 1"
+        }));
+        assert!(out.contains("TEST-DIN-0004"));
+
+        // CrossReference
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "cross_reference", "title": "XRef 1"
+        }));
+        assert!(out.contains("TEST-XR-0005"));
+
+        // ArchitectureCatalogEntry
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "architecture_catalog_entry", "title": "Arch Entry"
+        }));
+        assert!(out.contains("TEST-ACE-0006"));
+
+        // ReferenceArchitecture
+        let out = call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "reference_architecture", "title": "Ref Arch"
+        }));
+        assert!(out.contains("TEST-RA-0007"));
+    }
+
+    #[test]
+    fn test_list_includes_governance_types() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "rules_config", "title": "RC1"
+        }));
+
+        let out = call_ok("list_documents", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("TEST-V-0001"));
+        assert!(out.contains("TEST-RC-0002"));
+    }
+
+    #[test]
+    fn test_transition_governance_type() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "rules_config", "title": "Rules"
+        }));
+
+        let out = call_ok("transition_phase", serde_json::json!({
+            "project_path": path, "short_code": "TEST-RC-0001"
+        }));
+        assert!(out.contains("review"));
+    }
+
+    // ===== Quality Tools =====
+
+    #[test]
+    fn test_capture_quality_baseline_invalid_tool() {
+        let (_dir, path) = setup_project();
+        let err = call_err("capture_quality_baseline", serde_json::json!({
+            "project_path": path, "tool_name": "invalid_tool", "raw_output": "some output"
+        }));
+        assert!(err.contains("Unknown tool"));
+    }
+
+    #[test]
+    fn test_list_quality_records_empty() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("list_quality_records", serde_json::json!({
+            "project_path": path
+        }));
+        // No error, just empty results
+        assert!(out.contains("Quality Records (0)") || out.contains("Baselines (0)") || out.contains("Quality Records"));
+    }
+
+    // ===== Rule Tools =====
+
+    #[test]
+    fn test_query_rules_empty() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("query_rules", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("No rules"));
+    }
+
+    #[test]
+    fn test_get_applicable_rules_empty() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("get_applicable_rules", serde_json::json!({
+            "project_path": path, "target_scope": "repo"
+        }));
+        assert!(out.contains("No rules"));
+    }
+
+    #[test]
+    fn test_list_protected_rules_empty() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("list_protected_rules", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("No protected rules"));
+    }
+
+    // ===== Insight Note Tools =====
+
+    #[test]
+    fn test_create_insight_note() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("create_insight_note", serde_json::json!({
+            "project_path": path,
+            "title": "Watch out for trait bounds",
+            "note": "The Document trait requires Send + Sync",
+            "category": "subsystem_quirk",
+            "scope_package": "ultra-metis-core"
+        }));
+        assert!(out.contains("TEST-DIN-0001"));
+        assert!(out.contains("subsystem_quirk"));
+    }
+
+    #[test]
+    fn test_list_insight_notes_with_data() {
+        let (_dir, path) = setup_project();
+        call_ok("create_insight_note", serde_json::json!({
+            "project_path": path,
+            "title": "Note 1",
+            "note": "Content 1",
+            "category": "hotspot_warning",
+            "scope_repo": "test-repo"
+        }));
+
+        let out = call_ok("list_insight_notes", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("Note 1"));
+        assert!(out.contains("hotspot_warning"));
+    }
+
+    #[test]
+    fn test_score_insight_note() {
+        let (_dir, path) = setup_project();
+        call_ok("create_insight_note", serde_json::json!({
+            "project_path": path,
+            "title": "Score Me",
+            "note": "Test note",
+            "category": "validation_hint"
+        }));
+
+        let out = call_ok("score_insight_note", serde_json::json!({
+            "project_path": path,
+            "short_code": "TEST-DIN-0001",
+            "signal": "helpful"
+        }));
+        assert!(out.contains("Feedback Recorded"));
+        assert!(out.contains("Total Helpful | 1"));
+    }
+
+    #[test]
+    fn test_fetch_insight_notes_by_scope() {
+        let (_dir, path) = setup_project();
+        call_ok("create_insight_note", serde_json::json!({
+            "project_path": path,
+            "title": "Matching Note",
+            "note": "This should match",
+            "category": "subsystem_quirk",
+            "scope_repo": "my-repo"
+        }));
+        call_ok("create_insight_note", serde_json::json!({
+            "project_path": path,
+            "title": "Non-matching Note",
+            "note": "This should not match",
+            "category": "subsystem_quirk",
+            "scope_repo": "other-repo"
+        }));
+
+        let out = call_ok("fetch_insight_notes", serde_json::json!({
+            "project_path": path,
+            "scope_repo": "my-repo"
+        }));
+        assert!(out.contains("Matching Note"));
+        assert!(!out.contains("Non-matching Note"));
+    }
+
+    // ===== Traceability Tools =====
+
+    #[test]
+    fn test_create_cross_reference() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "initiative", "title": "I1",
+            "parent_id": "TEST-V-0001"
+        }));
+
+        let out = call_ok("create_cross_reference", serde_json::json!({
+            "project_path": path,
+            "source_ref": "TEST-V-0001",
+            "target_ref": "TEST-I-0002",
+            "relationship_type": "parent_child"
+        }));
+        assert!(out.contains("TEST-XR-0003"));
+        assert!(out.contains("parent_child"));
+    }
+
+    #[test]
+    fn test_create_cross_reference_self_reference_error() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+
+        let err = call_err("create_cross_reference", serde_json::json!({
+            "project_path": path,
+            "source_ref": "TEST-V-0001",
+            "target_ref": "TEST-V-0001",
+            "relationship_type": "references"
+        }));
+        assert!(err.contains("same document"));
+    }
+
+    #[test]
+    fn test_create_cross_reference_nonexistent_document_error() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+
+        let err = call_err("create_cross_reference", serde_json::json!({
+            "project_path": path,
+            "source_ref": "TEST-V-0001",
+            "target_ref": "TEST-V-9999",
+            "relationship_type": "references"
+        }));
+        assert!(err.contains("not found") || err.contains("Not found"));
+    }
+
+    #[test]
+    fn test_query_relationships() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "initiative", "title": "I1",
+            "parent_id": "TEST-V-0001"
+        }));
+        call_ok("create_cross_reference", serde_json::json!({
+            "project_path": path,
+            "source_ref": "TEST-V-0001",
+            "target_ref": "TEST-I-0002",
+            "relationship_type": "parent_child"
+        }));
+
+        let out = call_ok("query_relationships", serde_json::json!({
+            "project_path": path,
+            "short_code": "TEST-V-0001"
+        }));
+        assert!(out.contains("parent_child"));
+        assert!(out.contains("TEST-I-0002"));
+    }
+
+    #[test]
+    fn test_list_cross_references() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "initiative", "title": "I1",
+            "parent_id": "TEST-V-0001"
+        }));
+        call_ok("create_cross_reference", serde_json::json!({
+            "project_path": path,
+            "source_ref": "TEST-V-0001",
+            "target_ref": "TEST-I-0002",
+            "relationship_type": "governs"
+        }));
+
+        let out = call_ok("list_cross_references", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("governs"));
+    }
+
+    #[test]
+    fn test_trace_ancestry() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "vision", "title": "V1"
+        }));
+        call_ok("create_document", serde_json::json!({
+            "project_path": path, "document_type": "initiative", "title": "I1",
+            "parent_id": "TEST-V-0001"
+        }));
+        call_ok("create_cross_reference", serde_json::json!({
+            "project_path": path,
+            "source_ref": "TEST-V-0001",
+            "target_ref": "TEST-I-0002",
+            "relationship_type": "parent_child"
+        }));
+
+        let out = call_ok("trace_ancestry", serde_json::json!({
+            "project_path": path,
+            "short_code": "TEST-I-0002",
+            "direction": "ancestors"
+        }));
+        assert!(out.contains("TEST-V-0001"));
+    }
+
+    // ===== Architecture Tools =====
+
+    #[test]
+    fn test_list_catalog_languages() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("list_catalog_languages", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("javascript") || out.contains("JavaScript"));
+    }
+
+    #[test]
+    fn test_query_architecture_catalog() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("query_architecture_catalog", serde_json::json!({
+            "project_path": path,
+            "language": "javascript"
+        }));
+        assert!(out.contains("Architecture Catalog"));
+    }
+
+    #[test]
+    fn test_query_architecture_catalog_no_match() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("query_architecture_catalog", serde_json::json!({
+            "project_path": path,
+            "language": "cobol"
+        }));
+        assert!(out.contains("No catalog entries"));
+    }
+
+    #[test]
+    fn test_read_reference_architecture_not_found() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("read_reference_architecture", serde_json::json!({
+            "project_path": path
+        }));
+        assert!(out.contains("No reference architecture"));
+    }
+
+    #[test]
+    fn test_read_reference_architecture_by_short_code() {
+        let (_dir, path) = setup_project();
+        call_ok("create_document", serde_json::json!({
+            "project_path": path,
+            "document_type": "reference_architecture",
+            "title": "My Arch"
+        }));
+
+        let out = call_ok("read_reference_architecture", serde_json::json!({
+            "project_path": path,
+            "short_code": "TEST-RA-0001"
+        }));
+        assert!(out.contains("My Arch") || out.contains("TEST-RA-0001"));
+    }
+
+    #[test]
+    fn test_evaluate_brownfield_no_catalog() {
+        let (_dir, path) = setup_project();
+        let out = call_ok("evaluate_brownfield", serde_json::json!({
+            "project_path": path,
+            "language": "cobol",
+            "project_type": "mainframe"
+        }));
+        assert!(out.contains("No catalog entry"));
+    }
+
+    // ===== System Prompt =====
+
+    #[test]
+    fn test_unknown_tool_returns_error() {
+        let err = call_err("nonexistent_tool", serde_json::json!({}));
+        assert!(err.contains("Unknown tool"));
+    }
+}
