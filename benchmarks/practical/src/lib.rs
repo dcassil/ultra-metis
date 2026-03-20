@@ -12,6 +12,7 @@ pub mod prompt_builder;
 pub mod reports;
 pub mod runner;
 pub mod scenario_pack;
+pub mod scoring;
 pub mod tool_comparison;
 pub mod types;
 pub mod workspace;
