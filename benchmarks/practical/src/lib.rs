@@ -1,5 +1,6 @@
 pub mod analysis;
 pub mod api_client;
+pub mod comparison;
 pub mod doc_quality;
 pub mod gate_scorer;
 pub mod gated_runner;
