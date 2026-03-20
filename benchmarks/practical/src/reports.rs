@@ -1,6 +1,6 @@
 use crate::{
     analysis::{BenchmarkAnalysis, ComparisonReport},
-    types::{BenchmarkRun, GateDecision},
+    types::{BenchmarkRun, GateDecision, NormalizedResult},
 };
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -434,6 +434,24 @@ pub fn format_run_detail_report(run: &BenchmarkRun) -> String {
     }
 
     out
+}
+
+/// Save the normalized result as JSON for machine-readable trend tracking.
+pub fn save_normalized_result(
+    run: &BenchmarkRun,
+    results_dir: &Path,
+) -> anyhow::Result<PathBuf> {
+    std::fs::create_dir_all(results_dir)?;
+    let result = NormalizedResult::from_run(run);
+    let ts = run.timestamp.format("%Y%m%dT%H%M%SZ");
+    let path = results_dir.join(format!("normalized_{}.json", ts));
+    let json = serde_json::to_string_pretty(&result)?;
+    std::fs::write(&path, &json)?;
+
+    let latest = results_dir.join("latest_normalized.json");
+    std::fs::write(latest, &json)?;
+
+    Ok(path)
 }
 
 fn mode_slug(run: &BenchmarkRun) -> &'static str {

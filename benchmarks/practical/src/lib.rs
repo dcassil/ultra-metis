@@ -4,6 +4,7 @@ pub mod comparison;
 pub mod doc_quality;
 pub mod gate_scorer;
 pub mod gated_runner;
+pub mod history;
 pub mod mcp_adapter;
 pub mod mcp_comparison;
 pub mod mcp_planning_comparison;
