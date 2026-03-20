@@ -7,8 +7,9 @@ use serde_json::Value;
 use std::path::Path;
 use ultra_metis_core::{
     BaselineCaptureService, BaselineComparisonEngine, ClippyParser, CoverageParser,
-    DurableInsightNote, EslintParser, FeedbackSignal, InsightCategory, InsightScope, RulesConfig,
-    ToolOutputParser, TypeScriptParser,
+    CrossReference, DurableInsightNote, EslintParser, FeedbackSignal, InsightCategory,
+    InsightScope, RelationshipType, RulesConfig, ToolOutputParser, TraceabilityIndex,
+    TypeScriptParser,
 };
 use ultra_metis_core::domain::rules::query::{RuleQuery, RuleQueryEngine, scope_hierarchy};
 use ultra_metis_store::{CodeIndexer, DocumentStore};
@@ -434,6 +435,62 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "create_cross_reference".to_string(),
+            description: "Create a typed relationship between two documents".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "source_ref": { "type": "string", "description": "Short code of the source document" },
+                    "target_ref": { "type": "string", "description": "Short code of the target document" },
+                    "relationship_type": { "type": "string", "description": "Type: parent_child, governs, references, derived_from, supersedes, conflicts_with, validates, blocks, approved_by" },
+                    "description": { "type": "string", "description": "Human-readable description of the relationship (optional)" },
+                    "bidirectional": { "type": "boolean", "description": "Whether traversable in both directions (default: false)" }
+                },
+                "required": ["project_path", "source_ref", "target_ref", "relationship_type"]
+            }),
+        },
+        ToolDefinition {
+            name: "query_relationships".to_string(),
+            description: "Query all relationships involving a specific document".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "short_code": { "type": "string", "description": "Document short code to query relationships for" },
+                    "direction": { "type": "string", "description": "Direction: outgoing, incoming, or all (default: all)" },
+                    "relationship_type": { "type": "string", "description": "Filter by relationship type (optional)" }
+                },
+                "required": ["project_path", "short_code"]
+            }),
+        },
+        ToolDefinition {
+            name: "trace_ancestry".to_string(),
+            description: "Walk the document hierarchy to find ancestors, descendants, or siblings".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "short_code": { "type": "string", "description": "Document short code to trace from" },
+                    "direction": { "type": "string", "description": "Direction: ancestors, descendants, or siblings" }
+                },
+                "required": ["project_path", "short_code", "direction"]
+            }),
+        },
+        ToolDefinition {
+            name: "list_cross_references".to_string(),
+            description: "List all cross-references with optional filtering".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": { "type": "string", "description": "Path to the project root directory" },
+                    "relationship_type": { "type": "string", "description": "Filter by relationship type (optional)" },
+                    "involving": { "type": "string", "description": "Filter to show only references involving this short code (optional)" }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
             name: "list_protected_rules".to_string(),
             description: "List all protected rules for governance auditing".to_string(),
             input_schema: serde_json::json!({
@@ -509,6 +566,10 @@ pub fn call_tool(name: &str, arguments: &Value) -> Result<String, String> {
         "fetch_insight_notes" => tool_fetch_insight_notes(arguments),
         "score_insight_note" => tool_score_insight_note(arguments),
         "list_insight_notes" => tool_list_insight_notes(arguments),
+        "create_cross_reference" => tool_create_cross_reference(arguments),
+        "query_relationships" => tool_query_relationships(arguments),
+        "trace_ancestry" => tool_trace_ancestry(arguments),
+        "list_cross_references" => tool_list_cross_references(arguments),
         "list_protected_rules" => tool_list_protected_rules(arguments),
         "reassign_parent" => tool_reassign_parent(arguments),
         _ => Err(format!("Unknown tool: {}", name)),
@@ -1343,6 +1404,227 @@ fn tool_list_insight_notes(args: &Value) -> Result<String, String> {
         ));
     }
     Ok(output)
+}
+
+// ---------------------------------------------------------------------------
+// Traceability tool handlers
+// ---------------------------------------------------------------------------
+
+/// Helper to build a TraceabilityIndex from all CrossReference documents in the store
+fn build_traceability_index(store: &DocumentStore) -> Result<(TraceabilityIndex, Vec<(String, CrossReference)>), String> {
+    let all_docs = store.list_documents(false).map_err(|e| e.user_message())?;
+    let mut index = TraceabilityIndex::new();
+    let mut xrefs = Vec::new();
+
+    for doc in &all_docs {
+        if doc.document_type != "cross_reference" {
+            continue;
+        }
+        let raw = match store.read_document_raw(&doc.short_code) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+        if let Ok(xref) = CrossReference::from_content(&raw) {
+            index.add_from_document(&xref);
+            xrefs.push((doc.short_code.clone(), xref));
+        }
+    }
+    Ok((index, xrefs))
+}
+
+fn tool_create_cross_reference(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let source_ref = get_str(args, "source_ref")?;
+    let target_ref = get_str(args, "target_ref")?;
+    let rel_type_str = get_str(args, "relationship_type")?;
+    let description = get_optional_str(args, "description").unwrap_or("");
+    let bidirectional = args.get("bidirectional").and_then(|v| v.as_bool()).unwrap_or(false);
+
+    if source_ref == target_ref {
+        return Err("Source and target cannot be the same document.".to_string());
+    }
+
+    let rel_type: RelationshipType = rel_type_str
+        .parse()
+        .map_err(|e: String| e)?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+
+    // Verify both documents exist
+    store.read_document(source_ref).map_err(|e| e.user_message())?;
+    store.read_document(target_ref).map_err(|e| e.user_message())?;
+
+    let title = format!("{} {} {}", source_ref, rel_type, target_ref);
+    let short_code = store
+        .create_document("cross_reference", &title, None)
+        .map_err(|e| e.user_message())?;
+
+    // Create the proper cross-reference and overwrite
+    let xref = CrossReference::new(
+        title.clone(),
+        vec![ultra_metis_core::Tag::Phase(ultra_metis_core::Phase::Draft)],
+        false,
+        short_code.clone(),
+        source_ref.to_string(),
+        target_ref.to_string(),
+        rel_type,
+        description.to_string(),
+        bidirectional,
+    )
+    .map_err(|e| e.to_string())?;
+
+    let content = xref.to_content().map_err(|e| e.to_string())?;
+    let doc_path = Path::new(project_path)
+        .join(".ultra-metis")
+        .join("docs")
+        .join(format!("{}.md", short_code));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write: {}", e))?;
+
+    let bidir_label = if bidirectional { " (bidirectional)" } else { "" };
+    Ok(format!(
+        "## Cross-Reference Created{}\n\n\
+        | Field | Value |\n\
+        | ----- | ----- |\n\
+        | Short Code | {} |\n\
+        | Source | {} |\n\
+        | Target | {} |\n\
+        | Type | {} |\n\
+        | Description | {} |",
+        bidir_label, short_code, source_ref, target_ref, rel_type, description
+    ))
+}
+
+fn tool_query_relationships(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let short_code = get_str(args, "short_code")?;
+    let direction = get_optional_str(args, "direction").unwrap_or("all");
+    let rel_type_filter = get_optional_str(args, "relationship_type");
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let (index, xrefs) = build_traceability_index(&store)?;
+
+    let entries = match direction {
+        "outgoing" => index.outgoing(short_code),
+        "incoming" => index.incoming(short_code),
+        _ => index.involving(short_code),
+    };
+
+    let filtered: Vec<_> = if let Some(rt) = rel_type_filter {
+        let rel_type: RelationshipType = rt.parse().map_err(|e: String| e)?;
+        entries.into_iter().filter(|e| e.relationship_type == rel_type).collect()
+    } else {
+        entries
+    };
+
+    if filtered.is_empty() {
+        return Ok(format!("No {} relationships found for {}.", direction, short_code));
+    }
+
+    let mut output = format!(
+        "## Relationships for {} ({}, {})\n\n\
+        | Source | Type | Target | Bidirectional |\n\
+        | ------ | ---- | ------ | ------------- |\n",
+        short_code, direction, filtered.len()
+    );
+    for entry in &filtered {
+        output.push_str(&format!(
+            "| {} | {} | {} | {} |\n",
+            entry.source_ref, entry.relationship_type, entry.target_ref, entry.bidirectional
+        ));
+    }
+    Ok(output)
+}
+
+fn tool_trace_ancestry(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let short_code = get_str(args, "short_code")?;
+    let direction = get_str(args, "direction")?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let (index, _) = build_traceability_index(&store)?;
+
+    let results = match direction {
+        "ancestors" => index.ancestors(short_code),
+        "descendants" => index.descendants(short_code),
+        "siblings" => index.siblings(short_code),
+        _ => return Err(format!("Invalid direction '{}'. Use: ancestors, descendants, or siblings", direction)),
+    };
+
+    if results.is_empty() {
+        return Ok(format!("No {} found for {}.", direction, short_code));
+    }
+
+    let mut output = format!(
+        "## {} of {} ({})\n\n",
+        capitalize_first(direction), short_code, results.len()
+    );
+    for (i, sc) in results.iter().enumerate() {
+        let title = store
+            .read_document(sc)
+            .map(|d| d.title().to_string())
+            .unwrap_or_else(|_| "?".to_string());
+        let prefix = if direction == "ancestors" {
+            "  ".repeat(i)
+        } else {
+            "  ".repeat(0)
+        };
+        output.push_str(&format!("{}- {} ({})\n", prefix, sc, title));
+    }
+    Ok(output)
+}
+
+fn tool_list_cross_references(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let rel_type_filter = get_optional_str(args, "relationship_type");
+    let involving = get_optional_str(args, "involving");
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let (_, xrefs) = build_traceability_index(&store)?;
+
+    let filtered: Vec<_> = xrefs
+        .iter()
+        .filter(|(_, xref)| {
+            if let Some(rt) = rel_type_filter {
+                if let Ok(rel_type) = rt.parse::<RelationshipType>() {
+                    if xref.relationship_type != rel_type {
+                        return false;
+                    }
+                }
+            }
+            if let Some(inv) = involving {
+                if !xref.involves(inv) {
+                    return false;
+                }
+            }
+            true
+        })
+        .collect();
+
+    if filtered.is_empty() {
+        return Ok("No cross-references found.".to_string());
+    }
+
+    let mut output = format!(
+        "## Cross-References ({})\n\n\
+        | Short Code | Source | Type | Target | Bidirectional |\n\
+        | ---------- | ------ | ---- | ------ | ------------- |\n",
+        filtered.len()
+    );
+    for (sc, xref) in &filtered {
+        output.push_str(&format!(
+            "| {} | {} | {} | {} | {} |\n",
+            sc, xref.source_ref, xref.relationship_type, xref.target_ref, xref.bidirectional
+        ));
+    }
+    Ok(output)
+}
+
+fn capitalize_first(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+    }
 }
 
 // ---------------------------------------------------------------------------
