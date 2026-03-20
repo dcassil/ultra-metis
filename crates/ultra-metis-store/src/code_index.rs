@@ -98,7 +98,13 @@ impl CodeIndexer {
                 if entry.is_file() {
                     if let Some(ext) = entry.extension().and_then(|e| e.to_str()) {
                         let symbols = match ext {
-                            "rs" => self.index_rust_file(&entry)?,
+                            "rs" => match self.index_rust_file(&entry) {
+                                Ok(syms) => syms,
+                                Err(_) => {
+                                    // Skip files that fail to parse rather than aborting
+                                    continue;
+                                }
+                            },
                             _ => continue,
                         };
                         all_symbols.extend(symbols);
@@ -407,5 +413,56 @@ pub mod submodule {
         let index = indexer.index(&["src/**/*.rs".to_string()]).unwrap();
         assert_eq!(index.indexed_files, 0);
         assert_eq!(index.symbols.len(), 0);
+    }
+
+    #[test]
+    fn test_malformed_file_skipped_gracefully() {
+        let dir = tempdir().unwrap();
+        let project_root = dir.path().to_path_buf();
+        let src_dir = project_root.join("src");
+        fs::create_dir_all(&src_dir).unwrap();
+
+        // Write a valid file
+        fs::write(
+            src_dir.join("good.rs"),
+            "pub fn good_func() {}\n",
+        )
+        .unwrap();
+
+        // Write a malformed file (invalid Rust syntax)
+        fs::write(
+            src_dir.join("bad.rs"),
+            "this is not valid rust {{{{{{{{ @@@ syntax error\n",
+        )
+        .unwrap();
+
+        let indexer = CodeIndexer::new(&project_root);
+        // Should not error — bad file is skipped
+        let index = indexer.index(&["src/**/*.rs".to_string()]).unwrap();
+        // Should have indexed the good file (bad file skipped)
+        assert!(index.indexed_files >= 1, "Should index at least the good file");
+
+        let names: Vec<&str> = index.symbols.iter().map(|s| s.name.as_str()).collect();
+        assert!(names.contains(&"good_func"), "Should find good_func");
+    }
+
+    #[test]
+    fn test_unreadable_file_skipped_gracefully() {
+        let dir = tempdir().unwrap();
+        let project_root = dir.path().to_path_buf();
+        let src_dir = project_root.join("src");
+        fs::create_dir_all(&src_dir).unwrap();
+
+        // Write a valid file
+        fs::write(
+            src_dir.join("good.rs"),
+            "pub fn another_func() {}\n",
+        )
+        .unwrap();
+
+        let indexer = CodeIndexer::new(&project_root);
+        // Should succeed even with only good files
+        let index = indexer.index(&["src/**/*.rs".to_string()]).unwrap();
+        assert_eq!(index.indexed_files, 1);
     }
 }

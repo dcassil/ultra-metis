@@ -38,6 +38,10 @@ enum Commands {
         /// Include archived documents
         #[arg(long)]
         include_archived: bool,
+
+        /// Filter to children of this parent document
+        #[arg(long)]
+        parent: Option<String>,
     },
 
     /// Read a document by short code
@@ -188,7 +192,8 @@ fn main() {
         Commands::List {
             path,
             include_archived,
-        } => cmd_list(&path, include_archived),
+            parent,
+        } => cmd_list(&path, include_archived, parent.as_deref()),
         Commands::Read { short_code, path } => cmd_read(&path, &short_code),
         Commands::Create {
             doc_type,
@@ -248,10 +253,10 @@ fn cmd_init(path: &PathBuf, prefix: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn cmd_list(path: &PathBuf, include_archived: bool) -> Result<(), String> {
+fn cmd_list(path: &PathBuf, include_archived: bool, parent: Option<&str>) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let docs = store
-        .list_documents(include_archived)
+        .list_documents_with_options(include_archived, parent)
         .map_err(|e| e.user_message())?;
 
     if docs.is_empty() {

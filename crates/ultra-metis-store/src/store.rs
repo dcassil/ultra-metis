@@ -377,8 +377,17 @@ impl DocumentStore {
         Ok(std::fs::read_to_string(&path)?)
     }
 
-    /// List all documents
+    /// List all documents, optionally filtering by parent
     pub fn list_documents(&self, include_archived: bool) -> Result<Vec<DocumentSummary>> {
+        self.list_documents_with_options(include_archived, None)
+    }
+
+    /// List documents with optional parent filter
+    pub fn list_documents_with_options(
+        &self,
+        include_archived: bool,
+        parent_id: Option<&str>,
+    ) -> Result<Vec<DocumentSummary>> {
         let docs_dir = self.docs_dir();
         if !docs_dir.exists() {
             return Ok(vec![]);
@@ -405,7 +414,14 @@ impl DocumentStore {
                     if !include_archived && doc.archived() {
                         continue;
                     }
-                    summaries.push(doc.to_summary());
+                    let summary = doc.to_summary();
+                    if let Some(filter_parent) = parent_id {
+                        match &summary.parent_id {
+                            Some(pid) if pid == filter_parent => {}
+                            _ => continue,
+                        }
+                    }
+                    summaries.push(summary);
                 }
                 Err(_) => continue,
             }
@@ -413,6 +429,19 @@ impl DocumentStore {
 
         summaries.sort_by(|a, b| a.short_code.cmp(&b.short_code));
         Ok(summaries)
+    }
+
+    /// Find child documents of a specific type under a given parent
+    pub fn find_children_by_type(
+        &self,
+        parent_short_code: &str,
+        document_type: &str,
+    ) -> Result<Vec<DocumentSummary>> {
+        let docs = self.list_documents_with_options(false, Some(parent_short_code))?;
+        Ok(docs
+            .into_iter()
+            .filter(|d| d.document_type.eq_ignore_ascii_case(document_type))
+            .collect())
     }
 
     /// Edit a document using search and replace
@@ -1480,5 +1509,93 @@ mod tests {
         // Force cannot skip phases
         let result = store.transition_phase_with_options(&code, Some("published"), true);
         assert!(result.is_err(), "Force should not allow skipping phases");
+    }
+
+    // ===== list_documents_with_options (parent filter) Tests =====
+
+    #[test]
+    fn test_list_with_parent_filter() {
+        let (_dir, store) = setup_store();
+        let v_code = store.create_document("vision", "Parent Vision", None).unwrap();
+        let _i1 = store
+            .create_document("initiative", "Child Init 1", Some(&v_code))
+            .unwrap();
+        let _i2 = store
+            .create_document("initiative", "Child Init 2", Some(&v_code))
+            .unwrap();
+        let _i3 = store
+            .create_document("initiative", "Orphan Init", None)
+            .unwrap();
+
+        // Filter by parent
+        let children = store
+            .list_documents_with_options(false, Some(&v_code))
+            .unwrap();
+        assert_eq!(children.len(), 2, "Should find exactly 2 children");
+        for child in &children {
+            assert_eq!(child.parent_id.as_deref(), Some(v_code.as_str()));
+        }
+    }
+
+    #[test]
+    fn test_list_with_parent_filter_no_match() {
+        let (_dir, store) = setup_store();
+        store.create_document("vision", "V", None).unwrap();
+
+        let children = store
+            .list_documents_with_options(false, Some("NONEXISTENT"))
+            .unwrap();
+        assert_eq!(children.len(), 0);
+    }
+
+    #[test]
+    fn test_list_without_parent_filter_returns_all() {
+        let (_dir, store) = setup_store();
+        let v_code = store.create_document("vision", "V", None).unwrap();
+        store
+            .create_document("initiative", "I", Some(&v_code))
+            .unwrap();
+
+        let all = store.list_documents_with_options(false, None).unwrap();
+        assert_eq!(all.len(), 2, "Should return all documents without filter");
+    }
+
+    // ===== find_children_by_type Tests =====
+
+    #[test]
+    fn test_find_children_by_type() {
+        let (_dir, store) = setup_store();
+        let v_code = store.create_document("vision", "V", None).unwrap();
+        let i_code = store
+            .create_document("initiative", "Init 1", Some(&v_code))
+            .unwrap();
+        store
+            .create_document("initiative", "Init 2", Some(&v_code))
+            .unwrap();
+        store
+            .create_document("task", "Task 1", Some(&i_code))
+            .unwrap();
+
+        let inits = store.find_children_by_type(&v_code, "initiative").unwrap();
+        assert_eq!(inits.len(), 2);
+        for i in &inits {
+            assert_eq!(i.document_type, "initiative");
+        }
+
+        let tasks = store.find_children_by_type(&i_code, "task").unwrap();
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].document_type, "task");
+    }
+
+    #[test]
+    fn test_find_children_by_type_no_match() {
+        let (_dir, store) = setup_store();
+        let v_code = store.create_document("vision", "V", None).unwrap();
+        store
+            .create_document("initiative", "I", Some(&v_code))
+            .unwrap();
+
+        let tasks = store.find_children_by_type(&v_code, "task").unwrap();
+        assert_eq!(tasks.len(), 0);
     }
 }

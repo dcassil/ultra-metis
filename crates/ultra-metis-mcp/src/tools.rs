@@ -85,6 +85,10 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
                     "include_archived": {
                         "type": "boolean",
                         "description": "Include archived documents (default: false)"
+                    },
+                    "parent_id": {
+                        "type": "string",
+                        "description": "Filter to only show children of this parent document (optional)"
                     }
                 },
                 "required": ["project_path"]
@@ -334,10 +338,11 @@ fn tool_list_documents(args: &Value) -> Result<String, String> {
         .get("include_archived")
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
+    let parent_id = get_optional_str(args, "parent_id");
 
     let store = DocumentStore::new(Path::new(project_path));
     let docs = store
-        .list_documents(include_archived)
+        .list_documents_with_options(include_archived, parent_id)
         .map_err(|e| e.user_message())?;
 
     if docs.is_empty() {
