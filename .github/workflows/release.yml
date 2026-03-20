@@ -113,3 +113,64 @@ jobs:
             dist/*.zip
             dist/SHA256SUMS.txt
           generate_release_notes: true
+
+      - name: Upload SHA256SUMS as artifact for downstream jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums
+          path: dist/SHA256SUMS.txt
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download SHA256SUMS
+        uses: actions/download-artifact@v4
+        with:
+          name: sha256sums
+
+      - name: Extract version and checksums
+        id: info
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          ARM64_SHA=$(grep "aarch64-apple-darwin" SHA256SUMS.txt | awk '{print $1}')
+          X86_64_SHA=$(grep "x86_64-apple-darwin" SHA256SUMS.txt | awk '{print $1}')
+          echo "arm64_sha=${ARM64_SHA}" >> "$GITHUB_OUTPUT"
+          echo "x86_64_sha=${X86_64_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: dcassil/homebrew-ultra-metis
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          cd homebrew-tap
+          FORMULA="Formula/ultra-metis.rb"
+
+          # Update version
+          sed -i 's/version ".*"/version "${{ steps.info.outputs.version }}"/' "$FORMULA"
+
+          # Update ARM64 SHA256
+          # Find the sha256 line after the arm? block
+          sed -i '/aarch64-apple-darwin/{n;s/sha256 ".*"/sha256 "${{ steps.info.outputs.arm64_sha }}"/}' "$FORMULA"
+
+          # Update x86_64 SHA256
+          sed -i '/x86_64-apple-darwin/{n;s/sha256 ".*"/sha256 "${{ steps.info.outputs.x86_64_sha }}"/}' "$FORMULA"
+
+          echo "Updated formula:"
+          cat "$FORMULA"
+
+      - name: Commit and push formula update
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/ultra-metis.rb
+          git commit -m "Update ultra-metis to ${{ github.ref_name }}"
+          git push
