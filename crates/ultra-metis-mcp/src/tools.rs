@@ -7,8 +7,9 @@ use serde_json::Value;
 use std::path::Path;
 use ultra_metis_core::{
     BaselineCaptureService, BaselineComparisonEngine, ClippyParser, CoverageParser, EslintParser,
-    ToolOutputParser, TypeScriptParser,
+    RulesConfig, ToolOutputParser, TypeScriptParser,
 };
+use ultra_metis_core::domain::rules::query::{RuleQuery, RuleQueryEngine, scope_hierarchy};
 use ultra_metis_store::{CodeIndexer, DocumentStore};
 
 /// Get all tool definitions
@@ -321,6 +322,68 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "query_rules".to_string(),
+            description: "Query engineering rules by scope, category, and protection level".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    },
+                    "scope": {
+                        "type": "string",
+                        "description": "Filter by scope: platform, org, repo, package, component, task (optional)"
+                    },
+                    "protection_level": {
+                        "type": "string",
+                        "description": "Filter by protection level: standard or protected (optional)"
+                    },
+                    "source_architecture_ref": {
+                        "type": "string",
+                        "description": "Filter by source architecture short code (optional)"
+                    },
+                    "include_archived": {
+                        "type": "boolean",
+                        "description": "Include archived rules (default: false)"
+                    }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
+            name: "get_applicable_rules".to_string(),
+            description: "Get all rules that apply at a given scope via inheritance (broadest to narrowest)".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    },
+                    "target_scope": {
+                        "type": "string",
+                        "description": "Target scope level: platform, org, repo, package, component, task"
+                    }
+                },
+                "required": ["project_path", "target_scope"]
+            }),
+        },
+        ToolDefinition {
+            name: "list_protected_rules".to_string(),
+            description: "List all protected rules for governance auditing".to_string(),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "Path to the project root directory"
+                    }
+                },
+                "required": ["project_path"]
+            }),
+        },
+        ToolDefinition {
             name: "reassign_parent".to_string(),
             description: "Reassign a task to a different parent initiative or to/from the backlog"
                 .to_string(),
@@ -376,6 +439,9 @@ pub fn call_tool(name: &str, arguments: &Value) -> Result<String, String> {
         "compare_quality_baselines" => tool_compare_quality_baselines(arguments),
         "list_quality_records" => tool_list_quality_records(arguments),
         "check_architecture_conformance" => tool_check_architecture_conformance(arguments),
+        "query_rules" => tool_query_rules(arguments),
+        "get_applicable_rules" => tool_get_applicable_rules(arguments),
+        "list_protected_rules" => tool_list_protected_rules(arguments),
         "reassign_parent" => tool_reassign_parent(arguments),
         _ => Err(format!("Unknown tool: {}", name)),
     }
@@ -934,6 +1000,181 @@ fn extract_tool_from_baseline(content: &str) -> Option<String> {
         }
     }
     None
+}
+
+/// Helper to load all RulesConfig documents from the store
+fn load_all_rules_configs(store: &DocumentStore) -> Result<Vec<RulesConfig>, String> {
+    let docs = store
+        .search_documents_with_options("rules_config", Some("rules_config"), None, false)
+        .map_err(|e| e.user_message())?;
+
+    let mut rules = Vec::new();
+    for doc in &docs {
+        let raw = store
+            .read_document_raw(&doc.short_code)
+            .map_err(|e| e.user_message())?;
+        if let Ok(rc) = RulesConfig::from_content(&raw) {
+            rules.push(rc);
+        }
+    }
+    Ok(rules)
+}
+
+fn tool_query_rules(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let scope_str = get_optional_str(args, "scope");
+    let protection_str = get_optional_str(args, "protection_level");
+    let arch_ref = get_optional_str(args, "source_architecture_ref");
+    let include_archived = args
+        .get("include_archived")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let rules_configs = load_all_rules_configs(&store)?;
+    let refs: Vec<&RulesConfig> = rules_configs.iter().collect();
+    let engine = RuleQueryEngine::new(&refs);
+
+    let mut query = RuleQuery::new();
+    if let Some(s) = scope_str {
+        let scope = s.parse().map_err(|e: ultra_metis_core::DocumentValidationError| e.to_string())?;
+        query = query.with_scope(scope);
+    }
+    if let Some(p) = protection_str {
+        let level = p.parse().map_err(|e: ultra_metis_core::DocumentValidationError| e.to_string())?;
+        query = query.with_protection_level(level);
+    }
+    if let Some(a) = arch_ref {
+        query = query.with_source_architecture_ref(a);
+    }
+    if include_archived {
+        query = query.including_archived();
+    }
+
+    let results = engine.query(&query);
+
+    if results.is_empty() {
+        return Ok("No rules matching the query.".to_string());
+    }
+
+    let mut output = format!(
+        "## Rules Query Results ({})\n\n\
+        | Short Code | Title | Scope | Protection | Phase |\n\
+        | ---------- | ----- | ----- | ---------- | ----- |\n",
+        results.len()
+    );
+    for rule in &results {
+        let phase = rule
+            .phase()
+            .map(|p| p.to_string())
+            .unwrap_or_else(|_| "?".to_string());
+        output.push_str(&format!(
+            "| {} | {} | {} | {} | {} |\n",
+            rule.metadata().short_code,
+            rule.title(),
+            rule.scope,
+            rule.protection_level,
+            phase
+        ));
+    }
+    Ok(output)
+}
+
+fn tool_get_applicable_rules(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+    let target_scope_str = get_str(args, "target_scope")?;
+
+    let target_scope: ultra_metis_core::domain::documents::rules_config::RuleScope =
+        target_scope_str
+            .parse()
+            .map_err(|e: ultra_metis_core::DocumentValidationError| e.to_string())?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let rules_configs = load_all_rules_configs(&store)?;
+    let refs: Vec<&RulesConfig> = rules_configs.iter().collect();
+    let engine = RuleQueryEngine::new(&refs);
+
+    let results = engine.applicable_at_scope(target_scope);
+
+    if results.is_empty() {
+        return Ok(format!(
+            "No rules applicable at scope '{}'.",
+            target_scope_str
+        ));
+    }
+
+    // Show inheritance chain
+    let hierarchy: Vec<&str> = scope_hierarchy()
+        .iter()
+        .take_while(|s| {
+            ultra_metis_core::domain::rules::query::scope_rank(**s)
+                <= ultra_metis_core::domain::rules::query::scope_rank(target_scope)
+        })
+        .map(|s| match s {
+            ultra_metis_core::domain::documents::rules_config::RuleScope::Platform => "platform",
+            ultra_metis_core::domain::documents::rules_config::RuleScope::Organization => "org",
+            ultra_metis_core::domain::documents::rules_config::RuleScope::Repository => "repo",
+            ultra_metis_core::domain::documents::rules_config::RuleScope::Package => "package",
+            ultra_metis_core::domain::documents::rules_config::RuleScope::Component => "component",
+            ultra_metis_core::domain::documents::rules_config::RuleScope::Task => "task",
+        })
+        .collect();
+
+    let mut output = format!(
+        "## Applicable Rules at '{}' Scope ({} rules)\n\n\
+        Inheritance chain: {}\n\n\
+        | Short Code | Title | Scope | Protection |\n\
+        | ---------- | ----- | ----- | ---------- |\n",
+        target_scope_str,
+        results.len(),
+        hierarchy.join(" > ")
+    );
+    for rule in &results {
+        output.push_str(&format!(
+            "| {} | {} | {} | {} |\n",
+            rule.metadata().short_code,
+            rule.title(),
+            rule.scope,
+            rule.protection_level
+        ));
+    }
+    Ok(output)
+}
+
+fn tool_list_protected_rules(args: &Value) -> Result<String, String> {
+    let project_path = get_str(args, "project_path")?;
+
+    let store = DocumentStore::new(Path::new(project_path));
+    let rules_configs = load_all_rules_configs(&store)?;
+    let refs: Vec<&RulesConfig> = rules_configs.iter().collect();
+    let engine = RuleQueryEngine::new(&refs);
+
+    let results = engine.protected_rules();
+
+    if results.is_empty() {
+        return Ok("No protected rules found.".to_string());
+    }
+
+    let mut output = format!(
+        "## Protected Rules ({})\n\n\
+        | Short Code | Title | Scope | Source Architecture |\n\
+        | ---------- | ----- | ----- | ------------------- |\n",
+        results.len()
+    );
+    for rule in &results {
+        let arch_ref = rule
+            .source_architecture_ref
+            .as_deref()
+            .unwrap_or("-");
+        output.push_str(&format!(
+            "| {} | {} | {} | {} |\n",
+            rule.metadata().short_code,
+            rule.title(),
+            rule.scope,
+            arch_ref
+        ));
+    }
+    Ok(output)
 }
 
 fn tool_reassign_parent(args: &Value) -> Result<String, String> {
