@@ -1,6 +1,6 @@
 use crate::{
     api_client, gate_scorer::GateScorer, prompt_builder, runner, scenario_pack::LoadedScenarioPack,
-    types::*,
+    types::*, workspace,
 };
 use chrono::Utc;
 
@@ -11,112 +11,17 @@ use chrono::Utc;
 pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result<BenchmarkRun> {
     let start_time = std::time::Instant::now();
     let run_id = uuid::Uuid::new_v4().to_string();
-    let binary = runner::resolve_binary_path();
     let mut phases = vec![];
     let mut trace = RunTrace::default();
+    let manifest = workspace::default_manifest(scenario, SystemUnderTest::UltraMetis);
 
     tracing::info!("Starting validated run with gates: {}", run_id);
 
-    // Create temp project (auto-cleaned on drop)
-    let temp_dir = tempfile::TempDir::new()?;
-    let proj_str = temp_dir.path().to_str().unwrap_or("/tmp/bench-validated");
-
-    // Initialize project and known scenario documents
-    if let Ok(result) = runner::run_cli(&binary, &["init", "--path", proj_str, "--prefix", "BENCH"])
-    {
-        trace.cli_events.push(result.as_trace_event(
-            "workspace_init",
-            format!(
-                "{} init --path {} --prefix BENCH",
-                binary.display(),
-                proj_str
-            ),
-        ));
-    }
-    let vision_result = runner::run_cli(
-        &binary,
-        &[
-            "create",
-            "--type",
-            "vision",
-            "--path",
-            proj_str,
-            "File Processing Toolkit",
-        ],
-    );
-    if let Ok(result) = &vision_result {
-        trace.cli_events.push(result.as_trace_event(
-            "seed_vision",
-            format!(
-                "{} create --type vision --path {} File Processing Toolkit",
-                binary.display(),
-                proj_str
-            ),
-        ));
-    }
-    let vision_code = vision_result
-        .as_ref()
-        .map(|r| runner::extract_short_code(&r.stdout, "BENCH-V-"))
-        .unwrap_or_default();
-
-    if !vision_code.is_empty() {
-        if let Ok(result) = runner::run_cli(
-            &binary,
-            &[
-                "create",
-                "--type",
-                "initiative",
-                "--path",
-                proj_str,
-                "--parent",
-                &vision_code,
-                "Parse Module",
-            ],
-        ) {
-            trace.cli_events.push(result.as_trace_event(
-                "seed_initiative_parse",
-                format!(
-                    "{} create --type initiative --path {} --parent {} Parse Module",
-                    binary.display(),
-                    proj_str,
-                    vision_code
-                ),
-            ));
-        }
-        if let Ok(result) = runner::run_cli(
-            &binary,
-            &[
-                "create",
-                "--type",
-                "initiative",
-                "--path",
-                proj_str,
-                "--parent",
-                &vision_code,
-                "Transform Module",
-            ],
-        ) {
-            trace.cli_events.push(result.as_trace_event(
-                "seed_initiative_transform",
-                format!(
-                    "{} create --type initiative --path {} --parent {} Transform Module",
-                    binary.display(),
-                    proj_str,
-                    vision_code
-                ),
-            ));
-        }
-    }
-    phases.push(PhaseResult {
-        phase: BenchmarkPhase::ScenarioSetup,
-        status: PhaseStatus::Completed,
-        tokens_used: trace.cli_events.iter().map(|e| e.approx_tokens).sum(),
-        time_elapsed: trace.cli_events.iter().map(|e| e.duration).sum(),
-        notes: vec![format!(
-            "Scenario materialized in {}",
-            temp_dir.path().display()
-        )],
-    });
+    // Create isolated workspace and seed scenario documents
+    let mut ws = workspace::BenchmarkWorkspace::setup(scenario)?;
+    let setup = ws.take_setup_trace();
+    trace.cli_events.extend(setup.cli_events);
+    phases.push(setup.phase_result);
 
     // Ask Claude to assess what additional initiatives are needed
     let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)?;
@@ -181,37 +86,13 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
 
     for (idx, ai_init) in ai_initiatives.iter().enumerate() {
         // Create the initiative in CLI
-        let cli_result = if !vision_code.is_empty() {
-            let result = runner::run_cli(
-                &binary,
-                &[
-                    "create",
-                    "--type",
-                    "initiative",
-                    "--path",
-                    proj_str,
-                    "--parent",
-                    &vision_code,
-                    &ai_init.title,
-                ],
-            )
-            .ok();
-            if let Some(ref cli) = result {
-                trace.cli_events.push(cli.as_trace_event(
-                    format!("materialize_{}", ai_init.id),
-                    format!(
-                        "{} create --type initiative --path {} --parent {} {}",
-                        binary.display(),
-                        proj_str,
-                        vision_code,
-                        ai_init.title
-                    ),
-                ));
-            }
-            result
-        } else {
-            None
-        };
+        let cli_result = ws.create_initiative(&ai_init.title);
+        if let Some(ref cli) = cli_result {
+            trace.cli_events.push(cli.as_trace_event(
+                format!("materialize_{}", ai_init.id),
+                format!("create initiative: {}", ai_init.title),
+            ));
+        }
 
         let cli_tokens = cli_result.as_ref().map(|r| r.approx_tokens()).unwrap_or(0);
         let cli_time = cli_result.as_ref().map(|r| r.elapsed).unwrap_or_default();
@@ -393,6 +274,7 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
     Ok(BenchmarkRun {
         run_id,
         timestamp: Utc::now(),
+        manifest,
         scenario: ScenarioSummary {
             id: scenario.manifest.id.clone(),
             title: scenario.manifest.title.clone(),
@@ -401,7 +283,7 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         execution_mode: ExecutionMode::Validated,
         phases,
         trace,
-        artifacts: runner::snapshot_workspace_artifacts(temp_dir.path()),
+        artifacts: runner::snapshot_workspace_artifacts(ws.path()),
         initiatives,
         total_metrics: RunMetrics {
             total_tokens,

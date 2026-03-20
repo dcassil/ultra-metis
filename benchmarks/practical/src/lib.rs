@@ -14,6 +14,7 @@ pub mod runner;
 pub mod scenario_pack;
 pub mod tool_comparison;
 pub mod types;
+pub mod workspace;
 pub use types::*;
 
 #[derive(Debug)]

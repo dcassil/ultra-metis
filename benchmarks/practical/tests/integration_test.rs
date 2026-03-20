@@ -62,6 +62,7 @@ fn test_comparison_analysis_produces_positive_roi() {
     let autonomous = BenchmarkRun {
         run_id: "auto".to_string(),
         timestamp: Utc::now(),
+        manifest: practical_benchmark::types::RunManifest::default(),
         scenario: ScenarioSummary {
             id: "test-scenario".to_string(),
             title: "Test Scenario".to_string(),
@@ -86,6 +87,7 @@ fn test_comparison_analysis_produces_positive_roi() {
     let validated = BenchmarkRun {
         run_id: "val".to_string(),
         timestamp: Utc::now(),
+        manifest: practical_benchmark::types::RunManifest::default(),
         scenario: ScenarioSummary {
             id: "test-scenario".to_string(),
             title: "Test Scenario".to_string(),

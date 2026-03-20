@@ -454,6 +454,7 @@ mod tests {
         BenchmarkRun {
             run_id: format!("{:?}-test", mode),
             timestamp: Utc::now(),
+            manifest: crate::types::RunManifest::default(),
             scenario: crate::types::ScenarioSummary {
                 id: "test-scenario".to_string(),
                 title: "Test Scenario".to_string(),
