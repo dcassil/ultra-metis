@@ -4,6 +4,7 @@
 //! management operations as tools. Communicates via JSON-RPC 2.0 over stdio.
 
 mod protocol;
+pub mod system_prompt;
 mod tools;
 
 use protocol::McpServer;
