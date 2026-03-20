@@ -316,6 +316,11 @@ impl RulesConfig {
         self.core.archived
     }
 
+    /// Get mutable access to the document core
+    pub fn core_mut(&mut self) -> &mut DocumentCore {
+        &mut self.core
+    }
+
     pub fn phase(&self) -> Result<Phase, DocumentValidationError> {
         for tag in self.tags() {
             if let Tag::Phase(phase) = tag {

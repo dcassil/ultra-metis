@@ -249,6 +249,11 @@ impl QualityRecord {
         Err(DocumentValidationError::MissingPhaseTag)
     }
 
+    /// Get mutable access to the document core
+    pub fn core_mut(&mut self) -> &mut DocumentCore {
+        &mut self.core
+    }
+
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {

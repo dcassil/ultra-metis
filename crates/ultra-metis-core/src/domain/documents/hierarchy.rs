@@ -64,6 +64,15 @@ impl HierarchyValidator {
             // Cross-cutting types: parent is optional
             DocumentType::DesignContext | DocumentType::Adr | DocumentType::Specification => Ok(()),
 
+            // Governance/architecture types: cross-cutting, no required parent
+            DocumentType::AnalysisBaseline
+            | DocumentType::QualityRecord
+            | DocumentType::RulesConfig
+            | DocumentType::DurableInsightNote
+            | DocumentType::CrossReference
+            | DocumentType::ArchitectureCatalogEntry
+            | DocumentType::ReferenceArchitecture => Ok(()),
+
             // Legacy types
             DocumentType::Vision => {
                 if parent_type.is_some() {
