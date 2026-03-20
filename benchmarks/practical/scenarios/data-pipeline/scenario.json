@@ -1,13 +1,13 @@
 {
-  "id": "file-processing-toolkit",
-  "title": "File Processing Toolkit",
-  "description": "A canonical benchmark scenario for document generation, decomposition, and implementation quality. Tests planning hierarchy, module boundaries, and typed data model discipline.",
+  "id": "data-pipeline",
+  "title": "Event-Driven Data Pipeline",
+  "description": "An architecture-sensitive scenario that rewards strong boundary discipline, layered processing stages, and deterministic error handling. Tests whether the agent creates clean stage boundaries, proper error types, and comprehensive validation.",
   "documents": {
     "vision": "vision.md",
     "specification": "spec.md",
     "seed_initiatives": [
-      "parse-initiative.md",
-      "transform-initiative.md"
+      "ingestion-initiative.md",
+      "enrichment-initiative.md"
     ]
   },
   "expectations": {
@@ -22,9 +22,10 @@
       "task"
     ],
     "architecture_focus": [
-      "unified data model",
-      "module boundaries",
-      "validation and export flow"
+      "pipeline stage isolation",
+      "error handling boundaries",
+      "typed event schema",
+      "backpressure and retry"
     ]
   },
   "run_rules": {
@@ -60,24 +61,35 @@
     ],
     "architecture_constraints": [
       {
-        "name": "typed-data-model",
-        "description": "All file formats must use a shared typed data model rather than raw strings",
+        "name": "stage-isolation",
+        "description": "Each pipeline stage must be a separate module with a defined input/output type",
         "boundary_patterns": [
           {
-            "pattern": "struct\\s+Record",
+            "pattern": "mod\\s+(ingestion|enrichment|routing|sink)",
+            "kind": "must_exist",
+            "file_glob": "src/lib.rs"
+          }
+        ]
+      },
+      {
+        "name": "typed-events",
+        "description": "Events must flow through typed structs, not raw JSON or strings",
+        "boundary_patterns": [
+          {
+            "pattern": "struct\\s+Event",
             "kind": "must_exist",
             "file_glob": "src/**/*.rs"
           }
         ]
       },
       {
-        "name": "module-boundaries",
-        "description": "Parse, transform, and export must be separate modules",
+        "name": "error-boundaries",
+        "description": "Each stage must define its own error type",
         "boundary_patterns": [
           {
-            "pattern": "mod\\s+(parse|transform|export)",
+            "pattern": "enum\\s+\\w+Error",
             "kind": "must_exist",
-            "file_glob": "src/lib.rs"
+            "file_glob": "src/**/*.rs"
           }
         ]
       }
@@ -94,6 +106,11 @@
       "command": "cargo test",
       "expected_exit_code": 0,
       "expected_stdout_contains": ["test result: ok"]
+    },
+    {
+      "name": "cargo-clippy",
+      "command": "cargo clippy -- -D warnings",
+      "expected_exit_code": 0
     }
   ]
 }

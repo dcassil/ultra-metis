@@ -4,16 +4,15 @@ level: task
 title: "Define scenario-pack manifest schema and directory layout"
 short_code: "SMET-T-0129"
 created_at: 2026-03-18T17:41:06.582750+00:00
-updated_at: 2026-03-18T17:41:06.582750+00:00
+updated_at: 2026-03-20T16:41:20.462228+00:00
 parent: build-canonical-scenario-packs-and
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -31,7 +30,7 @@ initiative_id: SMET-I-0059
 
 ## Objective **[REQUIRED]**
 
-{Clear statement of what this task accomplishes}
+Enhance the ScenarioPackManifest schema in scenario_pack.rs with run_rules, expected_outputs, and verification sections. Define canonical directory layout for scenario packs.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -66,6 +65,10 @@ initiative_id: SMET-I-0059
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

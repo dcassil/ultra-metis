@@ -14,6 +14,12 @@ pub struct ScenarioPackManifest {
     pub documents: ScenarioDocuments,
     #[serde(default)]
     pub expectations: ScenarioExpectations,
+    #[serde(default)]
+    pub run_rules: RunRules,
+    #[serde(default)]
+    pub expected_outputs: ExpectedOutputs,
+    #[serde(default)]
+    pub verification: Vec<VerificationCheck>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -33,6 +39,108 @@ pub struct ScenarioExpectations {
     pub required_document_roles: Vec<String>,
     #[serde(default)]
     pub architecture_focus: Vec<String>,
+}
+
+/// Budget and stopping constraints for a benchmark run.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct RunRules {
+    /// Maximum input+output tokens allowed for the entire run.
+    #[serde(default = "default_token_budget")]
+    pub token_budget: u64,
+    /// Maximum wall-clock seconds for the entire run.
+    #[serde(default = "default_time_budget_secs")]
+    pub time_budget_secs: u64,
+    /// Stop after this many consecutive failures without progress.
+    #[serde(default = "default_max_consecutive_failures")]
+    pub max_consecutive_failures: u32,
+    /// Tool surfaces the system under test is allowed to use.
+    #[serde(default)]
+    pub allowed_tool_surfaces: Vec<String>,
+}
+
+impl Default for RunRules {
+    fn default() -> Self {
+        Self {
+            token_budget: default_token_budget(),
+            time_budget_secs: default_time_budget_secs(),
+            max_consecutive_failures: default_max_consecutive_failures(),
+            allowed_tool_surfaces: Vec::new(),
+        }
+    }
+}
+
+fn default_token_budget() -> u64 {
+    500_000
+}
+fn default_time_budget_secs() -> u64 {
+    600
+}
+fn default_max_consecutive_failures() -> u32 {
+    3
+}
+
+/// What the agent is expected to produce, used for scoring.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExpectedOutputs {
+    /// Documents the agent must create (by role, e.g. "initiative", "task").
+    #[serde(default)]
+    pub required_docs: Vec<RequiredDoc>,
+    /// Expected parent-child hierarchy links.
+    #[serde(default)]
+    pub expected_hierarchy: Vec<HierarchyLink>,
+    /// Architecture constraints that must be preserved.
+    #[serde(default)]
+    pub architecture_constraints: Vec<ArchitectureConstraint>,
+}
+
+/// A document the agent is expected to create.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct RequiredDoc {
+    pub role: String,
+    #[serde(default)]
+    pub min_count: Option<u32>,
+    #[serde(default)]
+    pub required_sections: Vec<String>,
+}
+
+/// An expected hierarchy relationship.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct HierarchyLink {
+    pub parent_role: String,
+    pub child_role: String,
+    #[serde(default)]
+    pub min_children: Option<u32>,
+}
+
+/// An architecture constraint the system must respect.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ArchitectureConstraint {
+    pub name: String,
+    pub description: String,
+    /// Grep-style patterns that should or should not appear in generated code.
+    #[serde(default)]
+    pub boundary_patterns: Vec<BoundaryPattern>,
+}
+
+/// A pattern to check for architecture boundary conformance.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BoundaryPattern {
+    pub pattern: String,
+    /// "must_exist" or "must_not_exist"
+    pub kind: String,
+    #[serde(default)]
+    pub file_glob: Option<String>,
+}
+
+/// A deterministic verification check to run after a benchmark.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct VerificationCheck {
+    pub name: String,
+    pub command: String,
+    #[serde(default)]
+    pub expected_exit_code: Option<i32>,
+    #[serde(default)]
+    pub expected_stdout_contains: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -83,6 +191,26 @@ impl LoadedScenarioPack {
             specification,
             seed_initiatives,
         })
+    }
+
+    /// List all scenario pack directories under a parent path.
+    pub fn discover(scenarios_dir: &Path) -> Result<Vec<PathBuf>> {
+        let mut packs = Vec::new();
+        if !scenarios_dir.is_dir() {
+            return Ok(packs);
+        }
+        for entry in fs::read_dir(scenarios_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                let manifest_path = path.join(MANIFEST_FILE);
+                if manifest_path.exists() {
+                    packs.push(path);
+                }
+            }
+        }
+        packs.sort();
+        Ok(packs)
     }
 }
 
@@ -135,6 +263,9 @@ fn infer_legacy_manifest(scenario_root: &Path) -> ScenarioPackManifest {
                 "validation flow".to_string(),
             ],
         },
+        run_rules: RunRules::default(),
+        expected_outputs: ExpectedOutputs::default(),
+        verification: Vec::new(),
     }
 }
 
@@ -191,5 +322,154 @@ mod tests {
         );
         assert_eq!(loaded.seed_initiatives.len(), 1);
         assert_eq!(loaded.specification.as_deref(), Some("spec"));
+        // New fields default when omitted
+        assert_eq!(loaded.manifest.run_rules.token_budget, 500_000);
+        assert!(loaded.manifest.expected_outputs.required_docs.is_empty());
+        assert!(loaded.manifest.verification.is_empty());
+    }
+
+    #[test]
+    fn load_manifest_with_full_schema() {
+        let temp = tempfile::tempdir().unwrap();
+        fs::write(
+            temp.path().join(MANIFEST_FILE),
+            r#"{
+  "id": "full-schema-pack",
+  "title": "Full Schema Pack",
+  "documents": {
+    "vision": "vision.md"
+  },
+  "expectations": {
+    "benchmark_tracks": ["document_generation", "build_outcome"],
+    "architecture_focus": ["module boundaries"]
+  },
+  "run_rules": {
+    "token_budget": 200000,
+    "time_budget_secs": 300,
+    "max_consecutive_failures": 2,
+    "allowed_tool_surfaces": ["mcp", "cli"]
+  },
+  "expected_outputs": {
+    "required_docs": [
+      {"role": "initiative", "min_count": 2, "required_sections": ["Objective", "Acceptance Criteria"]},
+      {"role": "task", "min_count": 4}
+    ],
+    "expected_hierarchy": [
+      {"parent_role": "vision", "child_role": "initiative", "min_children": 2},
+      {"parent_role": "initiative", "child_role": "task", "min_children": 1}
+    ],
+    "architecture_constraints": [
+      {
+        "name": "module-isolation",
+        "description": "Each module must have its own directory",
+        "boundary_patterns": [
+          {"pattern": "mod\\.rs$", "kind": "must_exist", "file_glob": "src/*/mod.rs"}
+        ]
+      }
+    ]
+  },
+  "verification": [
+    {"name": "cargo-build", "command": "cargo build", "expected_exit_code": 0},
+    {"name": "cargo-test", "command": "cargo test", "expected_exit_code": 0, "expected_stdout_contains": ["test result: ok"]}
+  ]
+}"#,
+        )
+        .unwrap();
+        fs::write(temp.path().join("vision.md"), "# Full Vision").unwrap();
+
+        let loaded = LoadedScenarioPack::load(temp.path()).unwrap();
+
+        assert_eq!(loaded.manifest.id, "full-schema-pack");
+        assert_eq!(loaded.manifest.run_rules.token_budget, 200_000);
+        assert_eq!(loaded.manifest.run_rules.time_budget_secs, 300);
+        assert_eq!(loaded.manifest.run_rules.max_consecutive_failures, 2);
+        assert_eq!(
+            loaded.manifest.run_rules.allowed_tool_surfaces,
+            vec!["mcp".to_string(), "cli".to_string()]
+        );
+
+        assert_eq!(loaded.manifest.expected_outputs.required_docs.len(), 2);
+        assert_eq!(
+            loaded.manifest.expected_outputs.required_docs[0].role,
+            "initiative"
+        );
+        assert_eq!(
+            loaded.manifest.expected_outputs.required_docs[0].min_count,
+            Some(2)
+        );
+        assert_eq!(
+            loaded.manifest.expected_outputs.required_docs[0]
+                .required_sections
+                .len(),
+            2
+        );
+
+        assert_eq!(
+            loaded.manifest.expected_outputs.expected_hierarchy.len(),
+            2
+        );
+        assert_eq!(
+            loaded
+                .manifest
+                .expected_outputs
+                .architecture_constraints
+                .len(),
+            1
+        );
+        assert_eq!(
+            loaded.manifest.expected_outputs.architecture_constraints[0]
+                .boundary_patterns
+                .len(),
+            1
+        );
+
+        assert_eq!(loaded.manifest.verification.len(), 2);
+        assert_eq!(loaded.manifest.verification[0].name, "cargo-build");
+        assert_eq!(
+            loaded.manifest.verification[1]
+                .expected_stdout_contains
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn discover_scenario_packs() {
+        let temp = tempfile::tempdir().unwrap();
+
+        // Create two valid scenario packs
+        let pack_a = temp.path().join("pack-a");
+        let pack_b = temp.path().join("pack-b");
+        let not_a_pack = temp.path().join("not-a-pack");
+
+        fs::create_dir_all(&pack_a).unwrap();
+        fs::create_dir_all(&pack_b).unwrap();
+        fs::create_dir_all(&not_a_pack).unwrap();
+
+        fs::write(
+            pack_a.join(MANIFEST_FILE),
+            r#"{"id":"a","title":"A","documents":{"vision":"v.md"}}"#,
+        )
+        .unwrap();
+        fs::write(
+            pack_b.join(MANIFEST_FILE),
+            r#"{"id":"b","title":"B","documents":{"vision":"v.md"}}"#,
+        )
+        .unwrap();
+        // not_a_pack has no scenario.json
+
+        let found = LoadedScenarioPack::discover(temp.path()).unwrap();
+        assert_eq!(found.len(), 2);
+        assert!(found[0].ends_with("pack-a"));
+        assert!(found[1].ends_with("pack-b"));
+    }
+
+    #[test]
+    fn run_rules_defaults() {
+        let rules = RunRules::default();
+        assert_eq!(rules.token_budget, 500_000);
+        assert_eq!(rules.time_budget_secs, 600);
+        assert_eq!(rules.max_consecutive_failures, 3);
+        assert!(rules.allowed_tool_surfaces.is_empty());
     }
 }

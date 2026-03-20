@@ -4,16 +4,15 @@ level: task
 title: "Normalize existing practical and app-generation cases into canonical scenario packs"
 short_code: "SMET-T-0130"
 created_at: 2026-03-18T17:41:10.052030+00:00
-updated_at: 2026-03-18T17:41:10.052030+00:00
+updated_at: 2026-03-20T16:41:27.077542+00:00
 parent: build-canonical-scenario-packs-and
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -66,6 +65,10 @@ initiative_id: SMET-I-0059
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
