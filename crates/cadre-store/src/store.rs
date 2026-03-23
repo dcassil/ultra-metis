@@ -10,11 +10,12 @@ use std::path::{Path, PathBuf};
 use cadre_core::domain::documents::hierarchy::HierarchyValidator;
 use cadre_core::domain::documents::traits::{Document, DocumentValidationError};
 use cadre_core::domain::documents::types::{
-    Complexity, DocumentId, DocumentType, Phase, Tag,
+    Complexity, DocumentId, DocumentType, Phase, RiskLevel, StoryType, Tag,
 };
 use cadre_core::{
-    AnalysisBaseline, Architecture, ArchitectureCatalogEntry, CrossReference, DurableInsightNote,
-    Initiative, QualityRecord, ReferenceArchitecture, RulesConfig, Task, Vision,
+    AnalysisBaseline, Architecture, ArchitectureCatalogEntry, CrossReference, DesignContext,
+    DurableInsightNote, Epic, Initiative, ProductDoc, QualityRecord, ReferenceArchitecture,
+    RulesConfig, Story, Task, Vision,
 };
 
 const DOCS_DIR: &str = "docs";
@@ -35,6 +36,10 @@ pub enum AnyDocument {
     Vision(Vision),
     Initiative(Initiative),
     Task(Task),
+    ProductDoc(ProductDoc),
+    Epic(Epic),
+    Story(Story),
+    DesignContext(DesignContext),
     AnalysisBaseline(AnalysisBaseline),
     QualityRecord(QualityRecord),
     RulesConfig(RulesConfig),
@@ -51,6 +56,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => &d.metadata().short_code,
             AnyDocument::Initiative(d) => &d.metadata().short_code,
             AnyDocument::Task(d) => &d.metadata().short_code,
+            AnyDocument::ProductDoc(d) => &d.metadata().short_code,
+            AnyDocument::Epic(d) => &d.metadata().short_code,
+            AnyDocument::Story(d) => &d.metadata().short_code,
+            AnyDocument::DesignContext(d) => &d.metadata().short_code,
             AnyDocument::AnalysisBaseline(d) => &d.metadata().short_code,
             AnyDocument::QualityRecord(d) => &d.metadata().short_code,
             AnyDocument::RulesConfig(d) => &d.metadata().short_code,
@@ -67,6 +76,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.title(),
             AnyDocument::Initiative(d) => d.title(),
             AnyDocument::Task(d) => d.title(),
+            AnyDocument::ProductDoc(d) => d.title(),
+            AnyDocument::Epic(d) => d.title(),
+            AnyDocument::Story(d) => d.title(),
+            AnyDocument::DesignContext(d) => d.title(),
             AnyDocument::AnalysisBaseline(d) => d.title(),
             AnyDocument::QualityRecord(d) => d.title(),
             AnyDocument::RulesConfig(d) => d.title(),
@@ -83,6 +96,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.document_type(),
             AnyDocument::Initiative(d) => d.document_type(),
             AnyDocument::Task(d) => d.document_type(),
+            AnyDocument::ProductDoc(d) => d.document_type(),
+            AnyDocument::Epic(d) => d.document_type(),
+            AnyDocument::Story(d) => d.document_type(),
+            AnyDocument::DesignContext(d) => d.document_type(),
             AnyDocument::AnalysisBaseline(_) => DocumentType::AnalysisBaseline,
             AnyDocument::QualityRecord(_) => DocumentType::QualityRecord,
             AnyDocument::RulesConfig(_) => DocumentType::RulesConfig,
@@ -99,6 +116,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.phase(),
             AnyDocument::Initiative(d) => d.phase(),
             AnyDocument::Task(d) => d.phase(),
+            AnyDocument::ProductDoc(d) => d.phase(),
+            AnyDocument::Epic(d) => d.phase(),
+            AnyDocument::Story(d) => d.phase(),
+            AnyDocument::DesignContext(d) => d.phase(),
             AnyDocument::AnalysisBaseline(d) => d.phase(),
             AnyDocument::QualityRecord(d) => d.phase(),
             AnyDocument::RulesConfig(d) => d.phase(),
@@ -115,9 +136,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Initiative(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Task(d) => d.parent_id().map(|id| id.to_string()),
+            AnyDocument::Epic(d) => d.parent_id().map(|id| id.to_string()),
+            AnyDocument::Story(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Architecture(d) => d.parent_id().map(|s| s.to_string()),
-            // Governance types are cross-cutting, no parent
-            AnyDocument::AnalysisBaseline(_)
+            // Types without hierarchical parents
+            AnyDocument::ProductDoc(_)
+            | AnyDocument::DesignContext(_)
+            | AnyDocument::AnalysisBaseline(_)
             | AnyDocument::QualityRecord(_)
             | AnyDocument::RulesConfig(_)
             | AnyDocument::DurableInsightNote(_)
@@ -132,6 +157,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.archived(),
             AnyDocument::Initiative(d) => d.archived(),
             AnyDocument::Task(d) => d.archived(),
+            AnyDocument::ProductDoc(d) => d.archived(),
+            AnyDocument::Epic(d) => d.archived(),
+            AnyDocument::Story(d) => d.archived(),
+            AnyDocument::DesignContext(d) => d.archived(),
             AnyDocument::AnalysisBaseline(d) => d.archived(),
             AnyDocument::QualityRecord(d) => d.archived(),
             AnyDocument::RulesConfig(d) => d.archived(),
@@ -148,6 +177,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.to_content(),
             AnyDocument::Initiative(d) => d.to_content(),
             AnyDocument::Task(d) => d.to_content(),
+            AnyDocument::ProductDoc(d) => d.to_content(),
+            AnyDocument::Epic(d) => d.to_content(),
+            AnyDocument::Story(d) => d.to_content(),
+            AnyDocument::DesignContext(d) => d.to_content(),
             AnyDocument::AnalysisBaseline(d) => d.to_content(),
             AnyDocument::QualityRecord(d) => d.to_content(),
             AnyDocument::RulesConfig(d) => d.to_content(),
@@ -167,6 +200,10 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.transition_phase(target),
             AnyDocument::Initiative(d) => d.transition_phase(target),
             AnyDocument::Task(d) => d.transition_phase(target),
+            AnyDocument::ProductDoc(d) => d.transition_phase(target),
+            AnyDocument::Epic(d) => d.transition_phase(target),
+            AnyDocument::Story(d) => d.transition_phase(target),
+            AnyDocument::DesignContext(d) => d.transition_phase(target),
             AnyDocument::RulesConfig(d) => d.transition_phase(target),
             AnyDocument::ArchitectureCatalogEntry(d) => d.transition_phase(target),
             AnyDocument::ReferenceArchitecture(d) => d.transition_phase(target),
@@ -241,10 +278,19 @@ pub struct DocumentStore {
 }
 
 impl DocumentStore {
-    /// Create a new store for the given project path
+    /// Create a new store for the given project path.
+    /// Normalizes the path: if it ends with `.cadre` or `.metis`, strips the
+    /// suffix so the store always operates from the project root.
     pub fn new(project_path: &Path) -> Self {
+        let normalized = match project_path.file_name().and_then(|f| f.to_str()) {
+            Some(".cadre") | Some(".metis") => project_path
+                .parent()
+                .unwrap_or(project_path)
+                .to_path_buf(),
+            _ => project_path.to_path_buf(),
+        };
         Self {
-            project_path: project_path.to_path_buf(),
+            project_path: normalized,
         }
     }
 
@@ -418,6 +464,26 @@ impl DocumentStore {
                 let doc = ReferenceArchitecture::from_content(content)
                     .map_err(|e| StoreError::Validation(e.to_string()))?;
                 Ok(AnyDocument::ReferenceArchitecture(doc))
+            }
+            DocumentType::ProductDoc => {
+                let doc = ProductDoc::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::ProductDoc(doc))
+            }
+            DocumentType::Epic => {
+                let doc = Epic::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::Epic(doc))
+            }
+            DocumentType::Story => {
+                let doc = Story::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::Story(doc))
+            }
+            DocumentType::DesignContext => {
+                let doc = DesignContext::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::DesignContext(doc))
             }
             other => Err(StoreError::InvalidDocumentType(format!(
                 "Unsupported document type for store operations: {}",
@@ -598,6 +664,54 @@ impl DocumentStore {
                 )
                 .map_err(|e| StoreError::Validation(e.to_string()))?;
                 AnyDocument::ReferenceArchitecture(ra)
+            }
+            DocumentType::ProductDoc => {
+                let pd = ProductDoc::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::ProductDoc(pd)
+            }
+            DocumentType::Epic => {
+                let e = Epic::new(
+                    title.to_string(),
+                    parent_id,
+                    vec![],
+                    vec![Tag::Phase(Phase::Discovery)],
+                    false,
+                    Complexity::M,
+                    short_code.clone(),
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::Epic(e)
+            }
+            DocumentType::Story => {
+                let s = Story::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Discovery)],
+                    false,
+                    short_code.clone(),
+                    parent_id,
+                    StoryType::Feature,
+                    RiskLevel::Medium,
+                    None,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::Story(s)
+            }
+            DocumentType::DesignContext => {
+                let dc = DesignContext::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    vec![],
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::DesignContext(dc)
             }
             other => {
                 return Err(StoreError::InvalidDocumentType(format!(
@@ -892,6 +1006,30 @@ impl DocumentStore {
                             c.metadata.updated_at = chrono::Utc::now();
                         }
                         AnyDocument::ReferenceArchitecture(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::ProductDoc(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::Epic(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::Story(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::DesignContext(d) => {
                             let c = d.core_mut();
                             c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
                             c.tags.push(Tag::Phase(phase));
@@ -1906,5 +2044,38 @@ mod tests {
 
         let tasks = store.find_children_by_type(&v_code, "task").unwrap();
         assert_eq!(tasks.len(), 0);
+    }
+
+    #[test]
+    fn test_path_normalization_strips_cadre_suffix() {
+        let dir = tempdir().unwrap();
+        let store = DocumentStore::new(dir.path());
+        store.initialize("NORM").unwrap();
+
+        // Create store using path with .cadre suffix — should normalize to project root
+        let cadre_path = dir.path().join(".cadre");
+        let store2 = DocumentStore::new(&cadre_path);
+        assert!(store2.is_initialized());
+
+        // Should be able to create documents through the normalized path
+        let code = store2.create_document("vision", "Test", None).unwrap();
+        assert_eq!(code, "NORM-V-0001");
+    }
+
+    #[test]
+    fn test_path_normalization_strips_metis_suffix() {
+        let dir = tempdir().unwrap();
+        // Initialize using a path that has .metis as the last component
+        // First init normally
+        let store = DocumentStore::new(dir.path());
+        store.initialize("NORM2").unwrap();
+
+        // Create a .metis directory to simulate the old layout
+        let metis_path = dir.path().join(".metis");
+        std::fs::create_dir_all(&metis_path).unwrap();
+
+        // Store created with .metis path should normalize to parent
+        let store2 = DocumentStore::new(&metis_path);
+        assert!(store2.is_initialized());
     }
 }

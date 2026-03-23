@@ -38,6 +38,7 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
         ToolDefinition {
             name: "create_document".to_string(),
             description: "Create a new document (vision, initiative, or task)".to_string(),
+            // Also supports: product_doc, epic, story, design_context, adr, analysis_baseline, quality_record, rules_config, durable_insight_note, cross_reference, architecture, architecture_catalog_entry, reference_architecture
             input_schema: serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -47,7 +48,7 @@ pub fn get_tool_definitions() -> Vec<ToolDefinition> {
                     },
                     "document_type": {
                         "type": "string",
-                        "description": "Document type: vision, initiative, or task"
+                        "description": "Document type: product_doc, epic, story, task, design_context, vision, initiative, adr, analysis_baseline, quality_record, rules_config, durable_insight_note, cross_reference, architecture, architecture_catalog_entry, reference_architecture"
                     },
                     "title": {
                         "type": "string",
