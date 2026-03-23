@@ -5,3 +5,4 @@ target/
 *.log
 .claude/worktrees/*
 .mcp.json
+.cadre/
