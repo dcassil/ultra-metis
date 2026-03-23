@@ -380,6 +380,11 @@ impl Architecture {
         Ok(Phase::Published)
     }
 
+    /// Mutable access to the document core (needed by store for phase tag updates).
+    pub fn core_mut(&mut self) -> &mut DocumentCore {
+        &mut self.core
+    }
+
     // --- lock/unlock ---
 
     /// Unlock this document for editing. Records the unlock event.

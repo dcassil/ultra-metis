@@ -169,6 +169,7 @@ pub enum DocumentType {
     CrossReference,
 
     // Architecture types
+    Architecture,
     ArchitectureCatalogEntry,
     ReferenceArchitecture,
 }
@@ -190,6 +191,7 @@ impl fmt::Display for DocumentType {
             DocumentType::RulesConfig => write!(f, "rules_config"),
             DocumentType::DurableInsightNote => write!(f, "durable_insight_note"),
             DocumentType::CrossReference => write!(f, "cross_reference"),
+            DocumentType::Architecture => write!(f, "architecture"),
             DocumentType::ArchitectureCatalogEntry => write!(f, "architecture_catalog_entry"),
             DocumentType::ReferenceArchitecture => write!(f, "reference_architecture"),
         }
@@ -225,6 +227,7 @@ impl FromStr for DocumentType {
             "cross_reference" | "crossreference" | "cross-reference" => {
                 Ok(DocumentType::CrossReference)
             }
+            "architecture" => Ok(DocumentType::Architecture),
             "architecture_catalog_entry" | "architecturecatalogentry"
             | "architecture-catalog-entry" => Ok(DocumentType::ArchitectureCatalogEntry),
             "reference_architecture" | "referencearchitecture" | "reference-architecture" => {
@@ -253,6 +256,7 @@ impl DocumentType {
             DocumentType::RulesConfig => "RC",
             DocumentType::DurableInsightNote => "DIN",
             DocumentType::CrossReference => "XR",
+            DocumentType::Architecture => "AR",
             DocumentType::ArchitectureCatalogEntry => "ACE",
             DocumentType::ReferenceArchitecture => "RA",
         }
@@ -321,6 +325,9 @@ impl DocumentType {
                 Phase::Active => vec![Phase::Completed],
                 _ => vec![],
             },
+
+            // Architecture: always Published, no transitions
+            DocumentType::Architecture => vec![],
 
             // Governance types: Draft -> Review -> Published
             DocumentType::AnalysisBaseline
@@ -401,6 +408,9 @@ impl DocumentType {
                 Phase::Completed,
             ],
 
+            // Architecture: always Published (no lifecycle)
+            DocumentType::Architecture => vec![Phase::Published],
+
             // Governance types: Draft -> Review -> Published
             DocumentType::AnalysisBaseline
             | DocumentType::QualityRecord
@@ -434,7 +444,8 @@ impl DocumentType {
     pub fn is_governance_type(&self) -> bool {
         matches!(
             self,
-            DocumentType::AnalysisBaseline
+            DocumentType::Architecture
+                | DocumentType::AnalysisBaseline
                 | DocumentType::QualityRecord
                 | DocumentType::RulesConfig
                 | DocumentType::DurableInsightNote

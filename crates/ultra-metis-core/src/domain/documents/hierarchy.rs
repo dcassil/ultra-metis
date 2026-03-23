@@ -65,7 +65,8 @@ impl HierarchyValidator {
             DocumentType::DesignContext | DocumentType::Adr | DocumentType::Specification => Ok(()),
 
             // Governance/architecture types: cross-cutting, no required parent
-            DocumentType::AnalysisBaseline
+            DocumentType::Architecture
+            | DocumentType::AnalysisBaseline
             | DocumentType::QualityRecord
             | DocumentType::RulesConfig
             | DocumentType::DurableInsightNote

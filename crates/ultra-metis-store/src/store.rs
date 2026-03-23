@@ -13,8 +13,8 @@ use ultra_metis_core::domain::documents::types::{
     Complexity, DocumentId, DocumentType, Phase, Tag,
 };
 use ultra_metis_core::{
-    AnalysisBaseline, ArchitectureCatalogEntry, CrossReference, DurableInsightNote, Initiative,
-    QualityRecord, ReferenceArchitecture, RulesConfig, Task, Vision,
+    AnalysisBaseline, Architecture, ArchitectureCatalogEntry, CrossReference, DurableInsightNote,
+    Initiative, QualityRecord, ReferenceArchitecture, RulesConfig, Task, Vision,
 };
 
 const DOCS_DIR: &str = "docs";
@@ -40,6 +40,7 @@ pub enum AnyDocument {
     RulesConfig(RulesConfig),
     DurableInsightNote(DurableInsightNote),
     CrossReference(CrossReference),
+    Architecture(Architecture),
     ArchitectureCatalogEntry(ArchitectureCatalogEntry),
     ReferenceArchitecture(ReferenceArchitecture),
 }
@@ -55,6 +56,7 @@ impl AnyDocument {
             AnyDocument::RulesConfig(d) => &d.metadata().short_code,
             AnyDocument::DurableInsightNote(d) => &d.metadata().short_code,
             AnyDocument::CrossReference(d) => &d.metadata().short_code,
+            AnyDocument::Architecture(d) => &d.metadata().short_code,
             AnyDocument::ArchitectureCatalogEntry(d) => &d.metadata().short_code,
             AnyDocument::ReferenceArchitecture(d) => &d.metadata().short_code,
         }
@@ -70,6 +72,7 @@ impl AnyDocument {
             AnyDocument::RulesConfig(d) => d.title(),
             AnyDocument::DurableInsightNote(d) => d.title(),
             AnyDocument::CrossReference(d) => d.title(),
+            AnyDocument::Architecture(d) => d.title(),
             AnyDocument::ArchitectureCatalogEntry(d) => d.title(),
             AnyDocument::ReferenceArchitecture(d) => d.title(),
         }
@@ -85,6 +88,7 @@ impl AnyDocument {
             AnyDocument::RulesConfig(_) => DocumentType::RulesConfig,
             AnyDocument::DurableInsightNote(_) => DocumentType::DurableInsightNote,
             AnyDocument::CrossReference(_) => DocumentType::CrossReference,
+            AnyDocument::Architecture(_) => DocumentType::Architecture,
             AnyDocument::ArchitectureCatalogEntry(_) => DocumentType::ArchitectureCatalogEntry,
             AnyDocument::ReferenceArchitecture(_) => DocumentType::ReferenceArchitecture,
         }
@@ -100,6 +104,7 @@ impl AnyDocument {
             AnyDocument::RulesConfig(d) => d.phase(),
             AnyDocument::DurableInsightNote(d) => d.phase(),
             AnyDocument::CrossReference(d) => d.phase(),
+            AnyDocument::Architecture(d) => d.phase(),
             AnyDocument::ArchitectureCatalogEntry(d) => d.phase(),
             AnyDocument::ReferenceArchitecture(d) => d.phase(),
         }
@@ -110,6 +115,7 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Initiative(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Task(d) => d.parent_id().map(|id| id.to_string()),
+            AnyDocument::Architecture(d) => d.parent_id().map(|s| s.to_string()),
             // Governance types are cross-cutting, no parent
             AnyDocument::AnalysisBaseline(_)
             | AnyDocument::QualityRecord(_)
@@ -131,6 +137,7 @@ impl AnyDocument {
             AnyDocument::RulesConfig(d) => d.archived(),
             AnyDocument::DurableInsightNote(d) => d.archived(),
             AnyDocument::CrossReference(d) => d.archived(),
+            AnyDocument::Architecture(d) => d.archived(),
             AnyDocument::ArchitectureCatalogEntry(d) => d.archived(),
             AnyDocument::ReferenceArchitecture(d) => d.archived(),
         }
@@ -146,6 +153,7 @@ impl AnyDocument {
             AnyDocument::RulesConfig(d) => d.to_content(),
             AnyDocument::DurableInsightNote(d) => d.to_content(),
             AnyDocument::CrossReference(d) => d.to_content(),
+            AnyDocument::Architecture(d) => d.to_content(),
             AnyDocument::ArchitectureCatalogEntry(d) => d.to_content(),
             AnyDocument::ReferenceArchitecture(d) => d.to_content(),
         }
@@ -163,7 +171,8 @@ impl AnyDocument {
             AnyDocument::ArchitectureCatalogEntry(d) => d.transition_phase(target),
             AnyDocument::ReferenceArchitecture(d) => d.transition_phase(target),
             // Governance types without built-in transition_phase: use DocumentType-based transitions
-            AnyDocument::AnalysisBaseline(_)
+            AnyDocument::Architecture(_)
+            | AnyDocument::AnalysisBaseline(_)
             | AnyDocument::QualityRecord(_)
             | AnyDocument::DurableInsightNote(_)
             | AnyDocument::CrossReference(_) => {
@@ -193,6 +202,7 @@ impl AnyDocument {
     /// Internal helper to update phase tag on governance types
     fn update_phase_tag(&mut self, new_phase: Phase) {
         let core = match self {
+            AnyDocument::Architecture(d) => d.core_mut(),
             AnyDocument::AnalysisBaseline(d) => d.core_mut(),
             AnyDocument::QualityRecord(d) => d.core_mut(),
             AnyDocument::DurableInsightNote(d) => d.core_mut(),
@@ -311,6 +321,7 @@ impl DocumentStore {
             "RC" => Ok(DocumentType::RulesConfig),
             "DIN" => Ok(DocumentType::DurableInsightNote),
             "XR" => Ok(DocumentType::CrossReference),
+            "AR" => Ok(DocumentType::Architecture),
             "ACE" => Ok(DocumentType::ArchitectureCatalogEntry),
             "RA" => Ok(DocumentType::ReferenceArchitecture),
             other => Err(StoreError::InvalidDocumentType(format!(
@@ -392,6 +403,11 @@ impl DocumentStore {
                 let doc = CrossReference::from_content(content)
                     .map_err(|e| StoreError::Validation(e.to_string()))?;
                 Ok(AnyDocument::CrossReference(doc))
+            }
+            DocumentType::Architecture => {
+                let doc = Architecture::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::Architecture(doc))
             }
             DocumentType::ArchitectureCatalogEntry => {
                 let doc = ArchitectureCatalogEntry::from_content(content)
@@ -547,6 +563,16 @@ impl DocumentStore {
                 )
                 .map_err(|e| StoreError::Validation(e.to_string()))?;
                 AnyDocument::CrossReference(xr)
+            }
+            DocumentType::Architecture => {
+                let ar = Architecture::new(
+                    title.to_string(),
+                    short_code.clone(),
+                    parent_short_code.map(|s| s.to_string()),
+                    None,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::Architecture(ar)
             }
             DocumentType::ArchitectureCatalogEntry => {
                 let ace = ArchitectureCatalogEntry::new(
@@ -818,6 +844,12 @@ impl DocumentStore {
                             c.metadata.updated_at = chrono::Utc::now();
                         }
                         AnyDocument::Task(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::Architecture(d) => {
                             let c = d.core_mut();
                             c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
                             c.tags.push(Tag::Phase(phase));

@@ -35,6 +35,7 @@ pub use domain::documents::quality_gate_config::{
 };
 
 // Architecture types
+pub use domain::documents::architecture::Architecture;
 pub use domain::documents::{
     architecture_catalog_entry::ArchitectureCatalogEntry,
     reference_architecture::{ArchitectureStatus, ReferenceArchitecture},
