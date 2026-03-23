@@ -2507,6 +2507,7 @@ dependencies = [
  "anyhow",
  "clap",
  "serde_json",
+ "ultra-metis-core",
  "ultra-metis-store",
 ]
 
@@ -2545,10 +2546,13 @@ name = "ultra-metis-mcp"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "glob",
  "serde",
  "serde_json",
+ "tempfile",
  "tracing",
  "tracing-subscriber",
+ "ultra-metis-core",
  "ultra-metis-store",
 ]
 
