@@ -168,7 +168,7 @@ cat > .claude/ralph-loop.local.md <<EOF
 ---
 active: true
 iteration: 1
-session_id: ${CLAUDE_CODE_SESSION_ID:-}
+session_id: ${CLAUDE_SESSION_ID:-}
 max_iterations: $MAX_ITERATIONS
 completion_promise: "DECOMPOSITION COMPLETE"
 started_at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
