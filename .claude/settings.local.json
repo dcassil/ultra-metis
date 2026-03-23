@@ -18,7 +18,8 @@
       "mcp__plugin_cadre_cadre__list_documents",
       "mcp__plugin_figma_figma__whoami",
       "mcp__plugin_figma_figma__get_design_context",
-      "mcp__plugin_cadre_cadre__list_documents"
+      "mcp__plugin_cadre_cadre__list_documents",
+      "mcp__plugin_cadre_cadre__create_document"
     ]
   },
   "enableAllProjectMcpServers": true
