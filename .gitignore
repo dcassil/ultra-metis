@@ -4,3 +4,4 @@ target/
 *.db
 *.log
 .claude/worktrees/*
+.mcp.json
