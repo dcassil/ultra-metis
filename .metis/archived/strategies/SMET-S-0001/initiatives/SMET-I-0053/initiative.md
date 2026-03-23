@@ -1,0 +1,2765 @@
+---
+id: comprehensive-metis-vs-ultra-metis
+level: initiative
+title: "Comprehensive Metis vs Ultra-Metis Architectural Comparison and Gap Analysis"
+short_code: "SMET-I-0053"
+created_at: 2026-03-17T22:01:05.723496+00:00
+updated_at: 2026-03-18T16:59:02.548044+00:00
+parent: SMET-S-0001
+blocked_by: []
+archived: true
+
+tags:
+  - "#initiative"
+  - "#phase/completed"
+
+
+exit_criteria_met: false
+estimated_complexity: XL
+strategy_id: SMET-S-0001
+initiative_id: comprehensive-metis-vs-ultra-metis
+---
+
+# Comprehensive Metis vs Ultra-Metis Architectural Comparison and Gap Analysis Initiative
+
+*This template includes sections for various types of initiatives. Delete sections that don't apply to your specific use case.*
+
+## Context
+
+This initiative systematically compares the original Metis work management system with our Ultra-Metis implementation to identify gaps, missing capabilities, areas of greater robustness, and architectural differences. The goal is to create a comprehensive mapping document that shows:
+
+1. Where original Metis has capabilities that Ultra-Metis lacks
+2. Where Ultra-Metis has extended/enhanced capabilities beyond original Metis
+3. Which design patterns and architectural decisions differ
+4. Specific files and modules responsible for each major function
+5. Quality and completeness assessment for each mapped area
+
+This work will inform future prioritization of plugin development, feature parity, architectural decisions, and integration strategies between the two systems.
+
+## Goals & Non-Goals
+
+**Goals:**
+- Create a detailed architectural comparison of original Metis and Ultra-Metis covering document types, phase models, tooling, plugins, commands, hooks, and core operations
+- Map every major functional area in both systems to specific implementation files and modules
+- Identify all gaps (capabilities present in one but not the other)
+- Assess which system is more robust, feature-complete, or well-designed in each area
+- Document architectural differences and design pattern choices
+- Produce a comprehensive mapping artifact that can guide future work on feature parity, plugin development, and integration
+- Create a detailed list of missing capabilities in Ultra-Metis with estimated priority and impact
+
+**Non-Goals:**
+- Implement fixes or new features based on findings (defer to separate initiatives)
+- Modify either codebase (pure investigation)
+- Make value judgments about which system is "better" overall (context-dependent)
+- Scope changes to the reference Metis codebase
+
+## Requirements
+
+This initiative requires systematic, thorough investigation of both codebases with particular attention to:
+
+1. **Document Type Coverage** — Identify all document types in each system, their phases, phase transitions, validation rules, serialization, templates, and use patterns
+2. **Plugin Architecture** — Understand how original Metis plugins (skills, agents, commands, hooks) are structured and what ultra-metis equivalent exists
+3. **Core Operations** — Map cognitive operations, loops, workflow templates, and orchestration patterns
+4. **Tool Integration** — Document MCP server implementation, CLI structure, and tool invocation patterns
+5. **State Management** — Understand persistence, serialization, indexing, and document lifecycle
+6. **Validation and Gates** — Compare how phase transitions are validated, gates are enforced, and blocked states are handled
+7. **Governance** — Compare rule enforcement, protection semantics, and change workflows
+8. **Quality Systems** — Compare baseline capture, analysis, comparison, and quality gates
+9. **Catalog Systems** — Compare architecture catalog design and pattern matching
+10. **Execution Traceability** — Compare execution records, audit trails, and decision recording
+
+### Investigation Scope: Original Metis Areas to Map
+
+**Plugin Architecture:**
+1. Metis plugin for Claude Code (skills, agents, commands, hooks)
+2. Skill implementation (document-selection, decomposition, phase-transitions, project-patterns)
+3. Flight Levels agent design and triggering
+4. Ralph loop mechanism and stop hooks
+5. State file management (.claude/metis-ralph.local.md)
+6. Command infrastructure (/metis-ralph, /metis-decompose, /cancel-metis-ralph)
+7. MCP server configuration and integration
+
+**Core Document System:**
+1. Document types (Vision, Initiative, Task, Backlog, ADR, Specification)
+2. Phase definitions and transition rules per document type
+3. Document serialization (markdown + YAML frontmatter)
+4. Template system for all document types
+5. Hierarchy validation and relationships
+6. Archive and cleanup workflows
+
+**Execution and Governance:**
+1. Ralph loop implementation for autonomous task execution
+2. Decomposition algorithm for breaking down initiatives
+3. State transitions and phase validation logic
+4. Completion promise mechanism
+5. Escalation and human-in-the-loop patterns
+
+### Investigation Scope: Ultra-Metis Areas to Map
+
+**Core Domain:**
+1. Document types (Vision, Initiative, Task, Epic, Story, DesignContext, ProductDoc, Specification)
+2. Phase definitions and transition enforcement
+3. Hierarchy validation and relationships
+4. Serialization and template system
+
+**Governance Layer:**
+1. RulesConfig and protected rules
+2. Validation policies and approval records
+3. Constraint records and ownership maps
+4. Rule change proposal workflows
+
+**Quality System:**
+1. Quality gate configuration and checking
+2. Baseline capture and comparison
+3. Conformance checking and analysis
+4. Quality record generation and tracking
+
+**Catalog System:**
+1. Architecture catalog design and structure
+2. Selection flow for greenfield/brownfield
+3. Pattern matching and scoring
+4. Catalog query engine
+
+**Bootstrap System:**
+1. Repository scanning and language detection
+2. Monorepo detection and package discovery
+3. Build tool and dev tool detection
+4. Init flow orchestration
+
+**Operations Kernel:**
+1. Cognitive operation types
+2. Loop composition and definitions
+3. Workflow templates
+4. Orchestration patterns
+
+**Execution Traceability:**
+1. Execution records and audit spine
+2. Transition records with audit trail
+3. Decision records
+4. Cross-reference and relationship index
+
+**Execution & Memory:**
+1. Durable insight note system
+2. Note scoring and pruning
+3. Conflict detection
+4. Integration with task workflow
+
+## Use Cases **[CONDITIONAL: User-Facing Initiative]**
+
+{Delete if not user-facing}
+
+### Use Case 1: {Use Case Name}
+- **Actor**: {Who performs this action}
+- **Scenario**: {Step-by-step interaction}
+- **Expected Outcome**: {What should happen}
+
+### Use Case 2: {Use Case Name}
+- **Actor**: {Who performs this action}
+- **Scenario**: {Step-by-step interaction}
+- **Expected Outcome**: {What should happen}
+
+## Architecture **[CONDITIONAL: Technically Complex Initiative]**
+
+{Delete if not technically complex}
+
+### Overview
+{High-level architectural approach}
+
+### Component Diagrams
+{Describe or link to component diagrams}
+
+### Class Diagrams
+{Describe or link to class diagrams - for OOP systems}
+
+### Sequence Diagrams
+{Describe or link to sequence diagrams - for interaction flows}
+
+### Deployment Diagrams
+{Describe or link to deployment diagrams - for infrastructure}
+
+## Detailed Design
+
+### Investigation Methodology
+
+Each investigation task will:
+
+1. **Read and understand** the reference implementation (either original Metis or Ultra-Metis)
+2. **Document the design** — purpose, architecture, key abstractions, major types/interfaces, data model
+3. **Identify files and modules** — list all relevant source files with their roles
+4. **Map the comparison**:
+   - If feature exists in both: compare design, robustness, completeness, feature parity
+   - If feature exists only in Metis: document what's missing in Ultra-Metis and why it matters
+   - If feature exists only in Ultra-Metis: document how it extends beyond original Metis
+   - If neither have it: identify the closest analogous pattern in each system
+5. **Rate the quality** — assess which implementation is more robust, complete, or well-designed
+6. **Record findings** in the initiative document in a structured format
+
+### Comparison Grid Template
+
+For each major area, findings will be recorded as:
+
+```
+### [Area Name]
+
+**Original Metis:**
+- Location: [files]
+- Design: [high-level description]
+- Key Types: [main abstractions]
+- Features: [what it does]
+
+**Ultra-Metis:**
+- Location: [files]
+- Design: [high-level description]
+- Key Types: [main abstractions]
+- Features: [what it does]
+
+**Comparison:**
+- [ ] Both have feature
+- [ ] Only Metis has feature
+- [ ] Only Ultra-Metis has feature
+- [ ] Neither has feature
+
+**Assessment:**
+- Robustness: [Metis / Ultra-Metis / Comparable]
+- Completeness: [Metis / Ultra-Metis / Comparable]
+- Design quality: [Metis / Ultra-Metis / Comparable]
+- Notes: [specific observations]
+
+**Gap Analysis:**
+- Missing in Ultra-Metis: [if applicable]
+- Missing in Metis: [if applicable]
+- Closest analogous pattern: [if neither have exact feature]
+
+**Priority/Impact:**
+- Importance for feature parity: [Critical / High / Medium / Low]
+- Estimated effort to implement: [XS / S / M / L / XL]
+```
+
+### Granular Task Structure
+
+The initiative will decompose into focused investigation tasks for each major functional component:
+
+## Phase 1: Comparison Infrastructure & Summary
+
+1. **Comparative Analysis Summary & Findings Index** — Creates the main comparison artifact, grid template, and ongoing index of all findings across tasks
+
+## Phase 2: Document Types (Original Metis)
+
+2. **Document Type: Vision (Metis)** — Phase model, validation, serialization, templates, hierarchy rules
+3. **Document Type: Strategy (Metis)** — Phase model, validation, serialization, templates, hierarchy rules
+4. **Document Type: Initiative (Metis)** — Phase model, validation, serialization, templates, hierarchy rules
+5. **Document Type: Task (Metis)** — Phase model, validation, serialization, templates, blocked state handling
+6. **Document Type: Backlog (Metis)** — Phase model, backlog category handling, reassignment patterns
+7. **Document Type: ADR (Metis)** — Phase model, decision tracking, supersession handling
+8. **Document Type: Specification (Metis)** — Living document pattern, phase model, templating
+
+## Phase 3: Document Types (Ultra-Metis)
+
+9. **Document Type: Vision (Ultra-Metis)** — Phase model, validation, serialization, templates, hierarchy rules
+10. **Document Type: Initiative (Ultra-Metis)** — Phase model, validation, serialization, templates, hierarchy rules
+11. **Document Type: Task (Ultra-Metis)** — Phase model, validation, serialization, templates, blocked state handling
+12. **Document Type: Epic (Ultra-Metis)** — Introduction, hierarchy placement, relationship to stories
+13. **Document Type: Story (Ultra-Metis)** — Story typing (feature/bugfix/refactor/migration/etc.), phases, templates
+14. **Document Type: DesignContext (Ultra-Metis)** — Design references, visual patterns, architecture context
+15. **Document Type: ProductDoc (Ultra-Metis)** — Product definition, relationship to epics, templates
+16. **Document Type: Specification (Ultra-Metis)** — Living document pattern, phase model, templating
+
+## Phase 4: Plugin Architecture (Metis)
+
+17. **Plugin System: Overall Architecture** — Plugin structure, configuration, component organization
+18. **Skill System: Design and Implementation** — How skills work, triggering, skill types available
+19. **Skill: document-selection** — Triggers, content, decision trees, pattern matching
+20. **Skill: decomposition** — Triggers, content, decomposition patterns, sizing guidance
+21. **Skill: phase-transitions** — Triggers, content, exit criteria documentation
+22. **Skill: project-patterns** — Triggers, content, pattern catalog, anti-patterns
+23. **Agent System: Flight Levels Agent** — Design, triggering, capabilities, integration points
+24. **Command System: /metis-ralph** — Signature, parameters, flow, iteration logic
+25. **Command System: /metis-decompose** — Signature, parameters, flow, decomposition algorithm
+26. **Command System: /cancel-metis-ralph** — Signature, behavior, state cleanup
+27. **Hook System: SessionStart Hook** — Purpose, logic, project detection
+28. **Hook System: Stop Hook** — Purpose, logic, completion promise checking, loop control
+
+## Phase 5: Plugin Architecture (Ultra-Metis Equivalent)
+
+29. **Plugin Architecture (Ultra-Metis): Overall Capability Gap** — What exists, what doesn't, design approach
+30. **Skills Equivalent (Ultra-Metis): Methodology Guidance** — What replaces skills, agent vs skill patterns
+31. **Commands Equivalent (Ultra-Metis): CLI and MCP** — What replaces /metis-ralph, execution patterns
+32. **Hooks Equivalent (Ultra-Metis): Automation and Integration** — What replaces SessionStart/Stop hooks
+
+## Phase 6: Ralph Loop & Autonomous Execution
+
+33. **Ralph Loop: State Management** — .claude/metis-ralph.local.md structure, state variables, persistence
+34. **Ralph Loop: Iteration Logic** — Loop mechanics, iteration counting, completion detection
+35. **Ralph Loop: Completion Signals & Promises** — Promise mechanism, task/decomposition completion patterns
+36. **Ralph Loop: Task Execution Flow** — Read task → transition → work → update → complete
+37. **Ralph Loop: Decomposition Algorithm** — Initiative analysis, task creation, coverage iteration
+38. **Ralph Loop (Ultra-Metis Equivalent): Execution Pattern Comparison** — What pattern replaces Ralph loops
+
+## Phase 7: Serialization & Persistence
+
+39. **Serialization: Markdown + YAML Frontmatter** — Structure, parsing, round-trip handling
+40. **Document Factory & Type Registry** — Factory pattern, type mapping, document creation
+41. **SQLite Indexing & Search** — Schema, indexing strategy, query patterns
+42. **Template System: Design and Architecture** — Template structure, rendering, context passing
+43. **Template System: Per-Document-Type Templates** — Coverage, completeness, content quality
+44. **Archive & Cleanup Workflows** — Archive cascading, restoration, cleanup patterns
+45. **Serialization (Ultra-Metis): Markdown + YAML Comparison** — Schema differences, new fields
+46. **Template System (Ultra-Metis): Extended Coverage** — Additional document types, template quality
+
+## Phase 8: MCP Server & Tool Integration
+
+47. **MCP Server: Overall Architecture** — Entry points, tool definitions, request/response handling
+48. **MCP Tool: list_documents** — Parameters, filtering, output format, performance
+49. **MCP Tool: search_documents** — Query syntax, filtering, ranking, output
+50. **MCP Tool: read_document** — Parameters, metadata inclusion, error handling
+51. **MCP Tool: create_document** — Parameters, validation, hierarchy enforcement
+52. **MCP Tool: edit_document** — Search/replace semantics, conflict detection, validation
+53. **MCP Tool: transition_phase** — Phase validation, exit criteria, auto-advance logic
+54. **MCP Tool: archive_document** — Cascading, child handling, restoration
+55. **MCP Tool: reassign_parent** — Backlog handling, parent validation, constraints
+56. **MCP Server (Ultra-Metis): Tool Coverage** — Which tools exist, which are missing, API changes
+
+## Phase 9: CLI Architecture
+
+57. **CLI: Overall Structure** — Command framework, argument parsing, subcommands
+58. **CLI: Project Initialization** — Setup flow, configuration, defaults
+59. **CLI: Document CRUD Commands** — Create, list, read, edit, delete operations
+60. **CLI: Document Querying & Search** — Query syntax, filtering, output formats
+61. **CLI: Workflow Management** — Phase transitions, status checking
+62. **CLI: Validation & Error Handling** — Validation logic, error messages, recovery
+63. **CLI (Ultra-Metis): Command Coverage** — Which commands exist, which are missing, API differences
+
+## Phase 10: Governance & Rules
+
+64. **Governance: RulesConfig Document Type** — Structure, protection semantics, scope layers
+65. **Governance: Layered Rule Scopes** — Platform → org → repo → package → component → task
+66. **Governance: Protected Rule Enforcement** — Change proposal workflow, approval gating, edit guards
+67. **Governance: Rule Change Workflow** — Proposal creation, review, approval, application, recording
+68. **Governance: Architecture-Derived Rule Seeding** — How rules are generated from architecture
+69. **Governance: Rule Query & Enforcement Engine** — Finding applicable rules, validation checking
+70. **Governance (Metis): Gap Analysis** — What governance exists in Metis, what doesn't
+
+## Phase 11: Quality System
+
+71. **Quality Gates: Configuration & Semantics** — Gate types, severity levels, thresholds, types
+72. **Quality Gates: Gate Checking Engine** — Evaluation logic, pass/fail determination, evidence
+73. **Quality Gates: Phase Transition Integration** — Gates blocking transitions, override mechanism
+74. **Quality Gates: Emergency Override Model** — Override semantics, audit trail, escalation
+75. **Quality Baselines: Capture & Storage** — Tool output ingestion, baseline snapshots, indexing
+76. **Quality Baselines: Comparison Engine** — Delta detection, regression identification, trending
+77. **Quality Records: Structure & Generation** — What records baseline comparisons, metadata captured
+78. **Quality Records: Remediation Integration** — Investigation triggers, remediation tracking
+79. **Architecture Conformance: Checking Engine** — Boundary validation, dependency analysis, drift detection
+80. **Quality System (Metis): Gap Analysis** — What quality systems exist in Metis, what doesn't
+
+## Phase 12: Catalog & Architecture Selection
+
+81. **Architecture Catalog: Structure & Organization** — Language/project-type categorization, entry format
+82. **Catalog Entry: Content Model** — Folder structure, layers, dependencies, naming rules, testing
+83. **Catalog Entry: Validation Patterns & Rule Seeding** — What validation expectations, rule generation hints
+84. **Selection Flow: Greenfield Pattern** — How users choose from catalog, decision trees
+85. **Selection Flow: Brownfield Pattern** — How existing repos are matched/evaluated
+86. **Pattern Matching: Scoring Algorithm** — How repos are matched against catalog entries
+87. **Reference Architecture: Storage & Usage** — How selected pattern is persisted and referenced
+88. **Catalog (Metis): Gap Analysis** — What catalog capabilities exist in Metis
+
+## Phase 13: Bootstrap & Project Detection
+
+89. **Repository Scanner: Language Detection** — Supported languages, detection heuristics, accuracy
+90. **Repository Scanner: Build Tool Detection** — Supported build tools, detection patterns
+91. **Repository Scanner: Package Manager Detection** — Supported package managers, detection
+92. **Monorepo Detector: Pattern Recognition** — How monorepos are detected, tool identification
+93. **Monorepo Detector: Package Discovery** — How packages are found and analyzed, hierarchy
+94. **Tool Detector: Dev Tools Discovery** — Linters, formatters, test runners, detection
+95. **Bootstrap Init Flow: Orchestration** — How bootstrap flows run, results capture
+96. **Bootstrap (Metis): Gap Analysis** — What bootstrap capabilities exist in Metis
+
+## Phase 14: Operations Kernel & Cognitive Operations
+
+97. **Cognitive Operations: 12 Operation Types** — Frame, acquire, model, locate, analyze, trace, assess, shape, decompose, create, validate, reassess
+98. **Operation Specifications: Semantic Model** — Input/output, pre/post conditions, evidence requirements
+99. **Loop Definitions: Composition Patterns** — Loop kinds, composition semantics, termination conditions
+100. **Loop Definitions: Reusable Loop Types** — Objective framing, context sufficiency, model construction, etc.
+101. **Workflow Templates: Design & Structure** — What workflows exist, entry conditions, required artifacts
+102. **Workflow Templates: Execution Model** — How templates guide work, validation requirements
+103. **Operations (Metis): Gap Analysis** — What operation/loop patterns exist in Metis
+
+## Phase 15: Execution Traceability & Audit
+
+104. **Execution Records: Structure & Content Model** — What data is captured per execution run
+105. **Execution Records: Tool Entry Tracking** — Which tools were invoked, inputs/outputs, results
+106. **Execution Records: Validation Entry Recording** — Validations run, results, evidence links
+107. **Execution Records: Decision & Disposition Recording** — Decisions made, alternatives considered, final outcome
+108. **Transition Records: Audit Trail** — What data captured on phase transitions, pre/post conditions
+109. **Decision Records: Structure & Content** — Decision captured, rationale, alternatives, approval
+110. **Cross-Reference Index: Relationship Types** — Parent/child, governs, references, derived-from, supersedes, conflicts, validates
+111. **Cross-Reference Index: Query Engine** — How relationships are queried, traversal patterns
+112. **Traceability (Metis): Gap Analysis** — What traceability patterns exist in Metis
+
+## Phase 16: Durable Memory & Insight Notes
+
+113. **Durable Insight Notes: Structure & Content** — What notes capture, scoping (repo/package/subsystem)
+114. **Insight Notes: Categorization System** — Note types (hotspot, pattern, validation hint, gotcha, exception)
+115. **Insight Notes: Scoring & Feedback** — Helpful/meh/harmful scoring, scoring integration
+116. **Insight Notes: Prune Candidates & Archival** — Detection logic, archival triggers, supersession
+117. **Insight Notes: Conflict Detection** — How conflicts are identified, flagging for human review
+118. **Insight Notes: Task Integration** — Fetch on task start, scoring on task completion
+119. **Memory System (Metis): Gap Analysis** — What memory patterns exist in Metis
+
+## Phase 17: Validation & Transition Enforcement
+
+120. **Phase Validation: Forward-Only Enforcement** — Phase graph, skip prevention, transition rules
+121. **Phase Validation: Exit Criteria Checking** — Criteria definition, checking logic, override mechanism
+122. **Transition Hooks: Pre/Post Hook System** — Hook registration, execution, error handling
+123. **Transition Enforcer: Workflow** — Hook execution sequence, blocked determination, audit
+124. **Transition Audit Log: Recording** — What data captured, access patterns
+125. **Blocked State Handling** — How blocked works, transition from blocked, escalation
+126. **Validation (Metis): Gap Analysis** — What validation patterns exist in Metis
+
+## Phase 18: Synthesis & Comprehensive Mapping
+
+127. **Synthesis: Complete Comparison Matrix** — Grid of all areas with Metis vs Ultra-Metis
+128. **Synthesis: Missing Capabilities in Ultra-Metis** — Prioritized list with implementation estimates
+129. **Synthesis: Missing Capabilities in Metis** — Areas where Ultra-Metis exceeds original
+130. **Synthesis: Architectural Lessons & Design Patterns** — Key insights from comparison
+131. **Synthesis: Integration & Migration Recommendations** — How to bridge the two systems
+
+Each task investigates its specific component and updates this initiative with detailed findings in the structured comparison format.
+
+## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
+
+{Delete if no UI components}
+
+### User Interface Mockups
+{Describe or link to UI mockups}
+
+### User Flows
+{Describe key user interaction flows}
+
+### Design System Integration
+{How this fits with existing design patterns}
+
+## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**
+
+{Delete if covered by separate testing initiative}
+
+### Unit Testing
+- **Strategy**: {Approach to unit testing}
+- **Coverage Target**: {Expected coverage percentage}
+- **Tools**: {Testing frameworks and tools}
+
+### Integration Testing
+- **Strategy**: {Approach to integration testing}
+- **Test Environment**: {Where integration tests run}
+- **Data Management**: {Test data strategy}
+
+### System Testing
+- **Strategy**: {End-to-end testing approach}
+- **User Acceptance**: {How UAT will be conducted}
+- **Performance Testing**: {Load and stress testing}
+
+### Test Selection
+{Criteria for determining what to test}
+
+### Bug Tracking
+{How defects will be managed and prioritized}
+
+## Alternatives Considered
+
+**Alternative 1: Lightweight comparison (summary only)**
+- Rejected: Would miss important implementation details and architectural differences needed for accurate gap analysis and future planning
+
+**Alternative 2: Focus only on gaps**
+- Rejected: Would miss areas where Ultra-Metis exceeds original Metis and areas of comparable capability that are valuable
+
+**Alternative 3: Investigate only codebases (skip documentation)**
+- Rejected: Documentation provides context on design intent and constraints that raw code doesn't convey
+
+**Selected Approach: Comprehensive systematic investigation**
+- Thorough examination of both codebases AND documentation
+- Structured comparison grid for each major area
+- Separate task per functional area to enable focused investigation
+- Findings rolled up into comprehensive mapping artifact
+- Enables accurate gap analysis and future feature prioritization
+
+## Implementation Plan
+
+### Phase 1: Discovery (Current)
+- Review reference documents and high-level architecture
+- Create task breakdown
+- Define comparison methodology
+
+### Phase 2: Systematic Investigation (Next)
+Execute tasks in order:
+1. Comparative Analysis Summary — Setup the main comparison artifact
+2. Plugin Architecture — Investigate Metis plugin system vs Ultra-Metis
+3. Document Types — Map document type coverage and phases
+4. Serialization — Compare storage, templates, persistence
+5. Tool Integration — Compare MCP and command structure
+6. Execution (Ralph Loops) — Compare autonomous execution
+7. Governance — Compare rule systems
+8. Quality Gates — Compare quality systems
+9. Catalog — Compare architecture selection
+10. Bootstrap — Compare project detection
+11. Operations Kernel — Compare cognitive operations
+12. Traceability — Compare audit and execution recording
+13. Memory Systems — Compare durable insight notes
+14. Hooks and Validation — Compare validation enforcement
+
+### Phase 3: Synthesis
+- Compile all findings into comprehensive mapping document
+- Create gap analysis summary
+- Produce prioritized list of missing capabilities
+- Identify architectural lessons learned
+
+### Success Criteria
+- Comprehensive comparison grid for all major areas
+- Clear mapping of every major functional area to files/modules
+- Detailed gap analysis with priority/impact assessment
+- Architectural comparison document
+- Identification of missing capabilities with implementation estimates
+
+## Comprehensive Comparison Grid & Findings Index
+
+This section consolidates all investigation findings into structured comparison grids organized by functional area. Each area includes side-by-side comparison of original Metis and Ultra-Metis implementations, assessment of robustness/completeness/quality, and gap analysis.
+
+### Comparison Grid Template
+
+Each functional area uses this standardized template for consistency:
+
+```markdown
+### [Functional Area Name]
+
+#### Original Metis Implementation
+- **Location**: [Files/modules in original Metis codebase]
+- **Design Pattern**: [High-level architectural approach]
+- **Key Abstractions**: [Main types/interfaces/concepts]
+- **Features**: [What capabilities exist]
+- **Implementation Notes**: [Important design decisions]
+
+#### Ultra-Metis Implementation
+- **Location**: [Files/modules in ultra-metis codebase]
+- **Design Pattern**: [High-level architectural approach]
+- **Key Abstractions**: [Main types/interfaces/concepts]
+- **Features**: [What capabilities exist]
+- **Implementation Notes**: [Important design decisions]
+
+#### Comparison Assessment
+- **Coverage**: [Both | Only Metis | Only Ultra-Metis | Neither]
+- **Robustness**: [Metis | Ultra-Metis | Comparable | Not Applicable]
+  - Rationale: [Why one is more robust]
+- **Completeness**: [Metis | Ultra-Metis | Comparable | Not Applicable]
+  - Rationale: [Why one is more complete]
+- **Design Quality**: [Metis | Ultra-Metis | Comparable | Not Applicable]
+  - Rationale: [Why one has better design]
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: [Capabilities present in Metis but not Ultra-Metis]
+- **Missing in Metis**: [Capabilities present in Ultra-Metis but not Metis]
+- **Closest Analogous Pattern**: [If neither have exact feature]
+
+#### Priority & Impact
+- **Importance for Feature Parity**: [Critical | High | Medium | Low]
+- **Implementation Complexity**: [XS | S | M | L | XL]
+- **Business Impact**: [Why this gap matters]
+```
+
+### Findings Index by Functional Area
+
+#### A. Document Types & Hierarchy
+- [x] **SMET-T-0097**: Document Types Complete Coverage (Metis: Vision, Strategy, Initiative, Task, Backlog, ADR, Specification | Ultra-Metis: Vision, Initiative, Task, Epic, Story, DesignContext, ProductDoc, Specification)
+  - Phase definitions comparison
+  - Hierarchy constraints
+  - Serialization differences
+  - Template quality assessment
+
+### A1. Document Type: Vision
+
+#### Original Metis Implementation
+- **Location**: Metis plugin for Claude Code (skills, agent system)
+- **Design Pattern**: Top-level strategic direction document
+- **Phases**: Draft → Review → Published (3 phases)
+- **Key Abstractions**: Document with title, context, goals, constraints
+- **Features**: Strategic framing for entire project/initiative tree
+- **Hierarchy**: Root-level document (no parent requirement)
+- **Validation**: Vision must be published before initiatives can reference it
+- **Implementation Notes**: Used as anchor for work hierarchy
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/vision/mod.rs`
+- **Design Pattern**: Top-level document with metadata and templated content
+- **Phases**: Draft → Review → Published (3 phases, identical to Metis)
+- **Key Abstractions**: DocumentCore with Vision-specific template
+- **Features**: Markdown + YAML frontmatter serialization, tagged documents
+- **Hierarchy**: Root-level (flexible parent reference system)
+- **Validation**: Document ID derived from title slug
+- **Implementation Notes**: Template-based rendering using Tera, schema versioning included
+
+#### Comparison Assessment
+- **Coverage**: Both ✓
+- **Robustness**: Comparable (both enforce phase model)
+- **Completeness**: Comparable (both have phase transitions)
+- **Design Quality**: Ultra-Metis slightly better (explicit schema versioning, stronger typing)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: None
+- **Missing in Metis**: Schema versioning, explicit content validation
+- **Closest Analogous Pattern**: Direct 1:1 mapping
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Medium (core concept but both implement)
+- **Implementation Complexity**: N/A
+- **Business Impact**: Foundational but not a gap
+
+### A2. Document Type: Initiative
+
+#### Original Metis Implementation
+- **Location**: Metis plugin (initiative skill, commands)
+- **Phases**: Discovery → Design → Ready → Decompose → Active → Completed (6 phases)
+- **Key Abstractions**: Initiative with parent (Vision/Strategy), decomposition into tasks
+- **Features**: Scope definition, phase-gated transitions with human checkpoints
+- **Hierarchy**: Must have published Vision/Strategy as parent
+- **Validation**: Can only decompose in "decompose" phase
+- **Template Content**: Context, goals, non-goals, requirements, design, success criteria
+- **Implementation Notes**: Ralph loop integration for autonomous decomposition
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/initiative/mod.rs`
+- **Phases**: Discovery → Design → Ready → Decompose → Active → Completed (6 phases, identical)
+- **Key Abstractions**: DocumentCore with Initiative-specific fields (epic_id, complexity)
+- **Features**: Markdown serialization, template system, parent reference, blocked_by tracking
+- **Hierarchy**: Flexible parent reference (can have Vision/Epic as parent)
+- **Validation**: Parent/child relationship enforcement through hierarchy rules
+- **Template Content**: Structured markdown with YAML frontmatter
+- **Implementation Notes**: Epic integration, complexity scoring (XS-XL)
+
+#### Comparison Assessment
+- **Coverage**: Both ✓
+- **Robustness**: Comparable (both enforce phase progression)
+- **Completeness**: Ultra-Metis better (Epic integration, complexity scoring, richer hierarchy)
+- **Design Quality**: Ultra-Metis better (explicit schema, stronger typing)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: None
+- **Missing in Metis**: Epic relationship, complexity scoring, flexibility in hierarchy
+- **Closest Analogous Pattern**: Direct mapping with enhancements
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Low (both implement well)
+- **Implementation Complexity**: N/A
+- **Business Impact**: No gap
+
+### A3. Document Type: Task
+
+#### Original Metis Implementation
+- **Location**: Metis plugin (task system, ralph loop)
+- **Phases**: Backlog → Todo → Active → Completed (4 phases), supports Blocked state
+- **Key Abstractions**: Task with parent (Initiative/Epic/Story), duration tracking
+- **Features**: Phase transitions, blocked state, ralph loop execution
+- **Hierarchy**: Must have parent (Initiative, Epic, or Story)
+- **Validation**: Cannot skip phases (todo must go to active before completed)
+- **Blocked State**: Active/Todo → Blocked → Todo/Active transitions allowed
+- **Implementation Notes**: .claude/metis-ralph.local.md state file for loop management
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/task/mod.rs`
+- **Phases**: Backlog → Todo → Active → Completed (4 phases, identical), Blocked state
+- **Key Abstractions**: DocumentCore with parent_id and blocked_by tracking
+- **Features**: Dependency tracking, blocked state, template-based content
+- **Hierarchy**: Must have parent (Story, Epic, or Initiative)
+- **Validation**: Parent validation, blocked_by relationship validation
+- **Blocked State**: Supported with explicit blocked_by vector
+- **Implementation Notes**: Schema versioning, flexible parent types, explicit blocked state handling
+
+#### Comparison Assessment
+- **Coverage**: Both ✓ (exact phase model match)
+- **Robustness**: Ultra-Metis slightly better (explicit dependency tracking via blocked_by vector)
+- **Completeness**: Comparable
+- **Design Quality**: Ultra-Metis better (stronger typing, explicit blocked_by vector vs state file)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Ralph loop equivalent (handled differently)
+- **Missing in Metis**: Explicit blocked_by vector, dependency graph clarity
+- **Closest Analogous Pattern**: Core phases identical, dependency handling differs
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Medium (phases match but execution model differs)
+- **Implementation Complexity**: Medium (Ralph loop equivalent needed)
+- **Business Impact**: Important for autonomous task execution
+
+### A4. Document Type: Epic
+
+#### Original Metis Implementation
+- **Location**: Not present in original Metis
+- **Status**: Missing document type
+- **Rationale**: Metis uses Strategy as middle hierarchy level
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/epic/mod.rs`
+- **Design Pattern**: Intermediate organizational level between Initiative and Story
+- **Purpose**: Group related Stories for coherent feature/capability delivery
+- **Hierarchy**: Parent to Story documents, child to Initiative/ProductDoc
+- **Features**: Scope definition, Story aggregation, release planning
+- **Implementation Notes**: Epic_id tracked in all documents for easy relationship queries
+
+#### Comparison Assessment
+- **Coverage**: Only Ultra-Metis ✓
+- **Status**: Ultra-Metis has additional capability
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: None
+- **Missing in Metis**: Epic document type (Metis uses Strategy which serves similar role)
+- **Closest Analogous Pattern**: Strategy in Metis ≈ Epic in Ultra-Metis
+
+#### Priority & Impact
+- **Importance for Feature Parity**: High (represents organizational difference)
+- **Implementation Complexity**: Medium (new document type)
+- **Business Impact**: Significant (richer hierarchy in Ultra-Metis)
+
+### A5. Document Type: Story
+
+#### Original Metis Implementation
+- **Location**: Not present in original Metis
+- **Status**: Missing document type
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/story/mod.rs`
+- **Design Pattern**: User-facing work item type with story-specific semantics
+- **Story Types**: Feature, Bugfix, Refactor, Migration, Documentation, Investigation
+- **Hierarchy**: Parent to Task documents, child to Epic
+- **Features**: Story-specific template, type classification, acceptance criteria
+- **Implementation Notes**: Story type determines template and default task patterns
+
+#### Comparison Assessment
+- **Coverage**: Only Ultra-Metis ✓
+- **Status**: Ultra-Metis has additional capability
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: None
+- **Missing in Metis**: Story document type (no direct equivalent)
+- **Closest Analogous Pattern**: Metis Task serves similar role but less semantic richness
+
+#### Priority & Impact
+- **Importance for Feature Parity**: High (new document type category)
+- **Implementation Complexity**: Medium (new type)
+- **Business Impact**: Enhances product team integration
+
+### A6. Document Type: ADR (Architecture Decision Record)
+
+#### Original Metis Implementation
+- **Location**: Metis plugin (document-selection skill)
+- **Phases**: Draft → Discussion → Decided → Superseded (4 phases)
+- **Key Abstractions**: Decision with title, context, options, rationale, approval
+- **Features**: Decision recording, supersession tracking
+- **Hierarchy**: Optional parent (can reference initiative)
+- **Implementation Notes**: Terminal phase is Superseded (allows new decision to replace old)
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/adr/mod.rs`
+- **Phases**: Draft → Discussion → Decided → Superseded (4 phases, identical)
+- **Key Abstractions**: DocumentCore with ADR-specific template
+- **Features**: Markdown serialization, template-based decision capture
+- **Hierarchy**: No parent requirement
+- **Implementation Notes**: Schema versioned, template-based rendering
+
+#### Comparison Assessment
+- **Coverage**: Both ✓ (exact phase model match)
+- **Robustness**: Comparable
+- **Completeness**: Comparable
+- **Design Quality**: Ultra-Metis slightly better (schema versioning)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: None
+- **Missing in Metis**: Schema versioning
+- **Closest Analogous Pattern**: Direct 1:1 mapping
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Low (both implement well)
+- **Implementation Complexity**: N/A
+- **Business Impact**: No gap
+
+### A7. Document Type: Specification
+
+#### Original Metis Implementation
+- **Location**: Not explicitly documented in Metis skills
+- **Design Pattern**: Living document type for detailed requirements/design
+- **Purpose**: Long-form specification document for complex features
+- **Features**: Version tracking, acceptance criteria, API documentation
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/documents/specification/mod.rs`
+- **Design Pattern**: Template-based specification document
+- **Purpose**: Detailed requirements and design specification
+- **Features**: Markdown + YAML, structured sections, version tracking
+- **Implementation Notes**: Schema versioned, template-based
+
+#### Comparison Assessment
+- **Coverage**: Both (but Metis documentation minimal)
+- **Robustness**: Ultra-Metis better (explicit typing, validation)
+- **Completeness**: Ultra-Metis better (structured template)
+- **Design Quality**: Ultra-Metis better
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: None
+- **Missing in Metis**: Explicit Specification document type in plugin documentation
+- **Closest Analogous Pattern**: Similar purpose, different formalization
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Low
+- **Implementation Complexity**: N/A
+- **Business Impact**: Minor
+
+### A8. Document Type: Strategy (Metis-Only)
+
+#### Original Metis Implementation
+- **Location**: Metis plugin (flight levels)
+- **Phases**: Shaping → Design → Ready → Active → Completed (5 phases)
+- **Key Abstractions**: Mid-level strategic guidance with risk/complexity assessment
+- **Features**: Risk level (Low/Medium/High/Critical), scope coordination
+- **Hierarchy**: Parent to Initiative, child to Vision
+- **Purpose**: Coordinate multiple initiatives, set strategic direction
+
+#### Ultra-Metis Implementation
+- **Location**: Not present in Ultra-Metis
+- **Status**: Missing document type
+
+#### Comparison Assessment
+- **Coverage**: Only Metis ✓
+- **Status**: Metis has capability not in Ultra-Metis
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Strategy document type
+- **Missing in Metis**: None
+- **Closest Analogous Pattern**: Initiative can serve role but lacks strategy-level semantics
+
+#### Priority & Impact
+- **Importance for Feature Parity**: High (strategic capability gap)
+- **Implementation Complexity**: Large (new document type with unique phase model)
+- **Business Impact**: Important for large-scale program coordination
+
+### Document Type Summary
+
+| Type | Metis | Ultra-Metis | Status |
+|------|-------|-------------|--------|
+| Vision | ✓ | ✓ | Equivalent |
+| Strategy | ✓ | ✗ | Missing in Ultra-Metis (HIGH PRIORITY) |
+| Initiative | ✓ | ✓ | Equivalent, Ultra-Metis has Epic enhancement |
+| Task | ✓ | ✓ | Equivalent, different execution model |
+| Epic | ✗ | ✓ | New in Ultra-Metis (no Metis equivalent) |
+| Story | ✗ | ✓ | New in Ultra-Metis (no Metis equivalent) |
+| DesignContext | ✗ | ✓ | New in Ultra-Metis |
+| ProductDoc | ✗ | ✓ | New in Ultra-Metis |
+| ADR | ✓ | ✓ | Equivalent |
+| Specification | ✓ | ✓ | Equivalent (implicit in Metis) |
+| Backlog | ✓ | ✓ | Equivalent (Task phase in both) |
+
+**Key Findings:**
+1. **Missing in Ultra-Metis**: Strategy document type (blocks large-scale coordination)
+2. **Enhanced in Ultra-Metis**: Epic + Story enable richer organizational structure
+3. **Core Documents**: Vision, Initiative, Task, ADR identical phase models in both
+4. **Execution Difference**: Task execution via Ralph loop (Metis) vs direct operations (Ultra-Metis)
+
+#### B. Plugin Architecture & Extensibility
+
+### B1. Plugin Architecture Overview
+
+#### Original Metis Implementation
+- **Location**: `plugins/metis/` directory structure (Claude Code plugin)
+- **Architecture**: Distributed markdown + shell script based plugin system
+- **Components**:
+  - Plugin manifest (`.claude-plugin/plugin.json`)
+  - MCP server definition (`.mcp.json`)
+  - Hook definitions (`hooks/hooks.json`)
+  - Skill definitions (markdown + shell scripts)
+  - Agent definitions (markdown descriptions)
+  - Commands (markdown specifications + shell scripts)
+- **Integration**: Claude Code plugin system with script-based execution
+- **Key Design**: Lightweight, declarative plugin system relying on CLI tools and scripts
+
+#### Ultra-Metis Implementation
+- **Location**: 
+  - Core: `crates/ultra-metis-core/src/domain/`
+  - MCP: `crates/ultra-metis-mcp/src/` (protocol.rs, tools.rs)
+  - Agents: `crates/ultra-metis-agents/` (placeholder, not yet implemented)
+  - CLI: `crates/ultra-metis-cli/src/main.rs`
+- **Architecture**: Rust-native type-safe system with explicit registration
+- **Components**:
+  - MCP Server (JSON-RPC 2.0 over stdio)
+  - Tool definitions (in tools.rs)
+  - Hook system (TransitionEvent → PreTransitionCheck / PostTransitionAction)
+  - Hook registry (HookRegistry) for registration and execution
+  - CLI subcommands (clap-based argument parsing)
+- **Integration**: MCP protocol for tool exposure, CLI for direct access
+- **Key Design**: Type-safe, explicit component registration with priority-ordered execution
+
+#### Comparison Assessment
+- **Coverage**: Both ✓ (both have plugin infrastructure, different implementation)
+- **Robustness**: Ultra-Metis better (typed hooks with filters, priority ordering, blocking vs warning semantics)
+- **Completeness**: Metis more complete (agents implemented; Ultra-Metis agents crate is placeholder)
+- **Design Quality**: Comparable (Metis: lightweight and flexible; Ultra-Metis: type-safe and testable)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Agent system (agents crate placeholder), skills as separate skill objects, shell script execution patterns
+- **Missing in Metis**: Type-safe hook system, pre-check validation with explicit filtering, priority-ordered hook execution
+- **Closest Analogous Pattern**: Metis hooks.json ≈ Ultra-Metis HookRegistry (different mechanics: manifest-based vs code-based registration)
+
+#### Priority & Impact
+- **Importance for Feature Parity**: High (agents provide user-facing guidance; Ultra-Metis needs agent implementation)
+- **Implementation Complexity**: Large (requires agent framework, integration with llm-based guidance)
+- **Business Impact**: Important for methodology guidance and LLM integration
+
+### B2. Skills System (Metis Only)
+
+#### Original Metis Implementation
+- **Location**: `plugins/metis/skills/` directory
+- **Skill Types**: 
+  - `document-selection` - Help choose right document type
+  - `decomposition` - Guide task decomposition patterns
+  - `phase-transitions` - Explain phase flow and exit criteria
+  - `project-patterns` - Provide project patterns (greenfield, tech-debt, etc.)
+  - `code-index` - Repository structure and code navigation
+- **Design**: Markdown + shell scripts, discovered by Claude Code skill system
+- **Trigger Mechanism**: Keyword-based triggers in skill manifests
+- **Invocation**: Automatic by Claude Code when keywords match
+- **Purpose**: Provide methodology guidance without code execution
+
+#### Ultra-Metis Implementation
+- **Status**: Not implemented
+- **Equivalent Pattern**: Could be integrated as markdown guidance documents in project context
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Skills system entirely
+- **Closest Analogous Pattern**: Task descriptions and methodology guidance in documents serve partial role
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Medium (nice-to-have guidance; not core functionality)
+- **Implementation Complexity**: Medium (requires skill discovery and trigger system)
+- **Business Impact**: Improves user experience by providing contextual methodology guidance
+
+### B3. Agent System
+
+#### Original Metis Implementation
+- **Location**: `plugins/metis/agents/flight-levels.md`
+- **Agent Name**: `flight-levels`
+- **Purpose**: Flight Levels methodology expert for guidance on document selection, decomposition, phase transitions, anti-pattern identification
+- **Invocation**: Manual (user calls: `@flight-levels` or automatic by Claude Code when relevant)
+- **Tools**: Full access to Metis MCP tools (list, search, read, create, edit, transition, archive)
+- **Design**: Markdown-defined agent with example use cases and guidance content
+- **Capabilities**:
+  - Document type selection based on work scope
+  - Work decomposition patterns
+  - Phase transition guidance and exit criteria
+  - Anti-pattern identification
+  - User terminology mapping (e.g., "bug ticket" → backlog)
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-agents/` (placeholder with only .gitkeep)
+- **Status**: Not yet implemented
+- **Design Pattern**: Would be similar to Metis but integrated with Rust-based system
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Agent system entirely
+- **Impact**: No in-session methodology guidance available
+
+#### Priority & Impact
+- **Importance for Feature Parity**: High (agents provide critical user guidance)
+- **Implementation Complexity**: Large (requires LLM integration, agent framework)
+- **Business Impact**: Important for user experience and methodology adoption
+
+### B4. Command System (Ralph Loops)
+
+#### Original Metis Implementation
+- **Location**: `plugins/metis/commands/` directory
+- **Command Types**:
+  - `/metis-ralph <SHORT_CODE>` - Execute task with iterative loop
+  - `/metis-decompose <SHORT_CODE>` - Decompose initiative into tasks
+  - `/cancel-metis-ralph` - Cancel active Ralph loop
+- **Design**: Markdown specifications with linked shell scripts
+- **State Management**: `.claude/metis-ralph.local.md` file for loop state
+- **Invocation**: Slash command in Claude Code
+- **Flow**:
+  1. Read task/initiative from Metis
+  2. Transition to appropriate phase
+  3. Perform work iteratively
+  4. Check completion signals (promise tags)
+  5. Transition to next phase on completion
+- **Key Feature**: Stop hook prevents exit until completion signal is output
+- **Purpose**: Autonomous iterative execution of tasks and decomposition
+
+#### Ultra-Metis Implementation
+- **Location**: Not implemented (no Ralph loop equivalent)
+- **Alternative Pattern**: Direct CLI commands for document operations
+- **Tool Coverage**: 
+  - `ultra-metis-cli` provides: init, list, read, create, edit, transition, search, archive
+  - `ultra-metis-mcp` exposes same operations via MCP
+- **No Loop Control**: Commands are atomic, no state-based iteration
+
+#### Comparison Assessment
+- **Coverage**: Only Metis ✓ (Ralph loops are Metis-specific)
+- **Robustness**: Metis has complete loop implementation; Ultra-Metis has basic operations only
+- **Completeness**: Metis more complete (state file, stop hook, iteration control)
+- **Design Quality**: Metis: custom loop mechanism; Ultra-Metis: focuses on stateless operations
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Ralph loop mechanism entirely (autonomous task execution with state)
+- **Impact**: No autonomous iterative execution; would require external orchestration
+- **Architectural Difference**: Metis enables AI-in-the-loop autonomous work; Ultra-Metis focuses on document API
+
+#### Priority & Impact
+- **Importance for Feature Parity**: High (Ralph loops are core Metis capability for autonomous work)
+- **Implementation Complexity**: Large (requires state management, stop hook equivalent, iteration control)
+- **Business Impact**: Critical for autonomous AI execution workflows
+
+### B5. Hook System
+
+#### Original Metis Implementation
+- **Location**: `plugins/metis/hooks/` + `hooks.json`
+- **Hook Types**:
+  - `SessionStart` - Runs at session start (project detection)
+  - `PreCompact` - Before context compaction
+  - `PostToolUse` - After Write/Edit/NotebookEdit
+  - `Stop` - At session end (Ralph loop control)
+- **Implementation**: Shell scripts invoked by Claude Code
+- **Triggering**: Pattern matching on tool/event names
+- **Design**: Declarative JSON manifest with command execution
+- **Key Hook (Stop)**: Intercepts exit to check for Ralph loop completion
+- **Purpose**: Automate project detection and control autonomous loops
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-core/src/domain/transitions/`
+- **Component Structure**:
+  - `hooks.rs` - Hook definitions (TransitionEvent, PreTransitionCheck, PostTransitionAction)
+  - `registry.rs` - HookRegistry for registration and execution
+  - `enforcer.rs` - TransitionEnforcer for validation and hook pipeline
+- **Hook Types**:
+  - `PreTransitionCheck` - Runs before phase transition
+  - `PostTransitionAction` - Runs after successful transition
+- **Design Pattern**:
+  - Explicit Rust types vs manifest declaration
+  - Priority-based execution ordering (SYSTEM → GATE → USER → ADVISORY)
+  - Filtering by document type, from phase, to phase
+  - Blocking vs warning semantics
+  - Message/explanation for each result
+- **Registry System**: Central HookRegistry manages all hooks
+- **Execution Pipeline**: 
+  1. Event created (document_id, from_phase, to_phase)
+  2. Pre-checks run (can block transition)
+  3. If allowed, transition executes
+  4. Post-actions run (informational, no blocking)
+- **Purpose**: Enforce phase transitions, validate state, trigger side effects
+
+#### Comparison Assessment
+- **Coverage**: Both ✓ (but different scope: Metis general hooks; Ultra-Metis transition-specific)
+- **Robustness**: Ultra-Metis better (typed filters, priority ordering, blocking semantics)
+- **Completeness**: Metis more complete (covers all Claude Code lifecycle; Ultra-Metis limited to transitions)
+- **Design Quality**: Ultra-Metis better (type-safe, testable, explicit filtering)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: SessionStart hook (project detection), general Claude Code lifecycle hooks
+- **Missing in Metis**: Type-safe hook system with priorities and filtering
+- **Architectural Difference**: Metis is event-hook based; Ultra-Metis is transition-hook based
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Medium (functionality differs; Ultra-Metis covers core transition needs)
+- **Implementation Complexity**: Medium (would require Claude Code hook infrastructure)
+- **Business Impact**: Important for automation and project detection
+
+### B6. MCP Server & Tool Integration
+
+#### Original Metis Implementation
+- **Location**: Metis binary with MCP support
+- **Protocol**: MCP (Model Context Protocol)
+- **Tool Set**:
+  - `list_documents` - List all documents
+  - `search_documents` - Search by query
+  - `read_document` - Read document by short code
+  - `create_document` - Create new document
+  - `edit_document` - Search/replace edit
+  - `transition_phase` - Move to next phase
+  - `archive_document` - Archive document
+  - `reassign_parent` - Move task to different parent
+- **Tool Activation**: Via MCP server interface
+- **Error Handling**: User-friendly error messages
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-mcp/src/`
+- **Protocol**: MCP (Model Context Protocol) - JSON-RPC 2.0 over stdio
+- **Components**:
+  - `protocol.rs` - JSON-RPC server implementation
+  - `tools.rs` - Tool definitions and handlers
+- **Tool Set** (8 tools):
+  - `initialize_project` - Init project
+  - `list_documents` - List documents
+  - `search_documents` - Search query
+  - `read_document` - Read by short code
+  - `create_document` - Create document
+  - `edit_document` - Search/replace
+  - `transition_phase` - Phase transition
+  - `archive_document` - Archive document
+- **Tool Invocation**: Via JSON-RPC `tools/call` method
+- **Architecture**:
+  - JSON-RPC request parsing
+  - Tool name dispatch
+  - Parameter extraction and validation
+  - DocumentStore operation execution
+  - JSON response formatting
+- **Missing Tool**: `reassign_parent` (not in early version)
+
+#### Comparison Assessment
+- **Coverage**: Nearly equivalent (both have 8 core tools)
+- **Robustness**: Comparable (both handle errors, both validate parameters)
+- **Completeness**: Metis slightly better (has reassign_parent; Ultra-Metis may have it now)
+- **Design Quality**: Ultra-Metis better (explicit JSON-RPC protocol; typed parameter handling)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis (as shown)**: reassign_parent tool (may be added)
+- **Missing in Metis**: None, has complete tool set
+- **Protocol Difference**: Both use MCP but implementation approaches differ
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Low (tools are largely equivalent)
+- **Implementation Complexity**: Low (mostly already implemented in both)
+- **Business Impact**: Core functionality - must maintain parity
+
+### B7. CLI Architecture
+
+#### Original Metis Implementation
+- **Location**: Metis CLI binary
+- **Command Structure**: Subcommand-based (init, list, read, create, edit, search, transition, archive)
+- **Parameters**: Short flags and long flags
+- **Output Format**: Table format for lists
+- **Entry Points**: 
+  - Ralph loop setup and orchestration
+  - Direct document operations
+  - Project initialization
+- **State Handling**: Relies on state files (.claude/metis-ralph.local.md)
+
+#### Ultra-Metis Implementation
+- **Location**: `crates/ultra-metis-cli/src/main.rs`
+- **Framework**: `clap` for argument parsing
+- **Subcommands** (8):
+  - `init` - Initialize project with prefix
+  - `list` - List documents (with optional --include_archived)
+  - `read` - Read by short code
+  - `create` - Create new document (with optional parent)
+  - `edit` - Search/replace edit
+  - `transition` - Phase transition (with optional target phase)
+  - `search` - Query search
+  - `archive` - Archive document
+- **Output Format**: Formatted tables and status messages
+- **Error Handling**: user_message() error formatting
+- **No State File**: CLI is stateless
+
+#### Comparison Assessment
+- **Coverage**: Equivalent ✓
+- **Robustness**: Comparable
+- **Completeness**: Comparable
+- **Design Quality**: Ultra-Metis better (clap framework is more robust than manual parsing)
+
+#### Gap Analysis
+- **Missing in Ultra-Metis**: Ralph loop commands (/metis-ralph, /metis-decompose)
+- **Architectural Difference**: Metis CLI includes loop orchestration; Ultra-Metis is stateless
+
+#### Priority & Impact
+- **Importance for Feature Parity**: Medium (basic CLI parity exists; missing Ralph equivalents)
+- **Implementation Complexity**: Large (would need Ralph loop implementation)
+- **Business Impact**: Important for user access patterns
+
+### Plugin Architecture Summary
+
+| Component | Metis | Ultra-Metis | Status |
+|-----------|-------|------------|--------|
+| Skills System | ✓ (4 skills) | ✗ | Missing (Medium priority) |
+| Agents | ✓ (flight-levels) | ✗ (placeholder) | Missing (High priority) |
+| Commands (Ralph Loop) | ✓ | ✗ | Missing (High priority) |
+| Hooks (General) | ✓ | Limited | Partial (Transition-only) |
+| Hooks (Transition) | Basic | ✓ (Type-safe) | Stronger in Ultra-Metis |
+| MCP Tools | ✓ (8 tools) | ✓ (8 tools) | Equivalent |
+| CLI | ✓ | ✓ | Equivalent |
+
+**Key Findings:**
+1. **Ultra-Metis excels at**: Type-safe hook system with filtering and priorities, explicit tool definitions, stateless CLI
+2. **Metis excels at**: Agent-based methodology guidance, autonomous Ralph loop execution, general-purpose hooks
+3. **Critical Gap**: Ultra-Metis lacks autonomous execution capability and user-facing guidance agents
+4. **Architecture Philosophy**: Metis = flexible script-based plugin system; Ultra-Metis = type-safe Rust-native system
+
+- [ ] **SMET-T-0098**: Plugin System Architecture (Skills, Agents, Commands, Hooks) - IN PROGRESS
+  - Component registration and discovery
+  - Trigger mechanisms
+  - Integration patterns
+  - Missing equivalent systems
+
+#### C. Execution & Automation
+- [x] **SMET-T-0099**: Ralph Loop & Autonomous Execution (State management, iteration logic, completion signals)
+  - Loop control mechanisms
+  - State persistence patterns
+  - Completion promise semantics
+  - Execution traceability
+
+### Comparison Grids C1-C6: Ralph Loop & State Management
+
+#### C1: Loop Execution Modes
+
+| Aspect | Original Metis Ralph Loop | Ultra-Metis Execution | Gap/Difference |
+|--------|--------------------------|----------------------|-----------------|
+| **Single Task Execution** | `/metis-ralph TASK-CODE` — executes single task with Ralph loop | No direct equivalent; uses transition_phase + manual MCP calls | Ultra-Metis lacks automated Ralph loop wrapper |
+| **Multi-Task Execution** | `/metis-ralph-tasks CODE1 CODE2 CODE3` — serial execution of task list | No direct equivalent; would require manual iteration | Ultra-Metis has no serial multi-task loop command |
+| **Initiative Execution** | `/metis-ralph-initiative INIT-CODE` — auto-discovers and executes all tasks | No direct equivalent; requires explicit task listing | Ultra-Metis requires manual task discovery via list_documents |
+| **Verification Before Start** | Mandatory task existence check before loop begins | Assumed in MCP functions; no pre-flight check | Ultra-Metis relies on MCP error handling |
+| **Loop Semantics** | Explicit setup script creates .claude/metis-ralph-active.yaml state file | State tracked implicitly through document phases | Metis has persistent state pointer; Ultra-Metis uses document phase as state |
+
+#### C2: State Management & Persistence
+
+| Aspect | Original Metis Ralph Loop | Ultra-Metis Execution | Gap/Difference |
+|--------|--------------------------|----------------------|-----------------|
+| **Loop State Storage** | `.claude/metis-ralph-active.yaml` — YAML file with short_code, project_path, iteration count, max_iterations, completion_promise | Document phase stored in frontmatter (Draft/Todo/Active/Completed); no loop state file | Metis explicit loop state vs. Ultra-Metis phase-based state |
+| **Iteration Tracking** | `iteration: 1` — counter incremented per loop cycle; checked against `max_iterations` | Phase transitions (Todo→Active→Completed); no iteration counter | Ultra-Metis uses phase transitions instead of iteration count |
+| **Max Iterations Support** | `--max-iterations N` flag supported; 0 means unlimited | No max iterations feature for tasks; iterations implicit in phase sequence | Metis has bounded loop protection; Ultra-Metis unbounded |
+| **Progress Persistence** | Task document "Status Updates" section + loop state file; survives session interruption | Task document "Status Updates" section only; phase transitions are atomic | Both track progress in doc; Metis adds separate loop state |
+| **Blocking/Resume** | State file persists; can resume Ralph loop without re-setup | Phase persists; can transition_phase again from same state | Both support checkpoint/resume via persistent state |
+
+#### C3: Completion Signals & Promise Semantics
+
+| Aspect | Original Metis Ralph Loop | Ultra-Metis Execution | Gap/Difference |
+|--------|--------------------------|----------------------|-----------------|
+| **Completion Signal** | Output `<promise>TASK COMPLETE</promise>` or `<promise>ALL TASKS COMPLETE</promise>` | No formal promise mechanism; human transitions phases | Metis has explicit promise output; Ultra-Metis lacks this |
+| **Promise Semantics** | Promise signals readiness for human review; human then transitions phase to "completed" | Phase transition is immediate when transition_phase called | Metis decouples signal from action; Ultra-Metis couples them |
+| **Single vs. Multi-Task** | Single task: `TASK COMPLETE`; Multi-task: `ALL TASKS COMPLETE` | N/A — no multi-task loop | Metis distinguishes completion scope |
+| **False Promise Prevention** | Instructions explicitly forbid false promises; contract between agent and user | No formal mechanism; relies on agent honesty | Metis has stronger semantic contract |
+| **User Approval Gate** | Promise triggers user review; user validates and transitions to "completed" | Human must manually call transition_phase | Metis has explicit gate; Ultra-Metis implicit |
+
+#### C4: Task Phase Models
+
+| Aspect | Original Metis | Ultra-Metis | Gap/Difference |
+|--------|----------------|------------|-----------------|
+| **Task Phases** | Todo → Active → Completed (with Blocked as alternate) | Backlog → Todo → Active → Blocked → Completed | Ultra-Metis adds Backlog phase upfront; Blocked is accessible from all active/todo states |
+| **Phase Sequence** | Todo (start) → Active (in-progress) → Completed (done) | Backlog (queued) → Todo (ready) → Active (in-progress) → Completed (done) | Ultra-Metis pre-queues tasks in Backlog; both have Active→Completed terminal path |
+| **Blocked Semantics** | Phase for stuck tasks; must transition back to Todo or Active | Phase for stuck tasks; can transition back to Todo or Active | Both support unblocking; Ultra-Metis more explicit about recovery paths |
+| **Phase Validation** | Forward-only transitions enforced by metis-transition-phase command | Forward-only transitions enforced by transition_phase + valid_transitions_from check | Both enforce acyclic phase progression with escape valves (Blocked) |
+| **Initial Phase** | Task starts in "todo" after creation | Task starts in "backlog" after creation; must transition to "todo" explicitly | Ultra-Metis adds queueing phase; Metis starts execution-ready |
+
+#### C5: Loop Control & Iteration Logic
+
+| Aspect | Original Metis Ralph Loop | Ultra-Metis Execution | Gap/Difference |
+|--------|--------------------------|----------------------|-----------------|
+| **Loop Entry** | Verification step checks task exists; setup script creates state file | MCP read_document implicitly validates; no explicit setup | Metis has two-phase entry (verify + setup); Ultra-Metis one-phase |
+| **Loop Iteration** | Manual: read task → activate → implement → log progress → repeat until complete | Manual: read task → activate → implement → log progress → transition → complete | Both require human/agent to iterate manually; no auto-loop |
+| **Iteration Boundary** | Loop continues until agent outputs promise; can be indefinite | Loop continues until phase=completed; bounded by phase sequence length | Metis unbounded (human can skip); Ultra-Metis bounded by phase graph |
+| **Escalation on Max Iterations** | If --max-iterations reached, loop auto-exits (agent should acknowledge) | No automatic escalation; phase transitions are manual | Metis has fail-safe limit; Ultra-Metis relies on agent discipline |
+| **Task Dependency** | Multi-task loop works serially; one task at a time | No multi-task loop; each task must be manually transitioned | Metis supports dependency through serial loop; Ultra-Metis requires manual orchestration |
+
+#### C6: Execution Traceability & Audit Trail
+
+| Aspect | Original Metis Ralph Loop | Ultra-Metis Execution | Gap/Difference |
+|--------|--------------------------|----------------------|-----------------|
+| **Progress Logging** | Mandatory: update "Status Updates" section after each significant step via mcp__metis__edit_document | Mandatory: update "Status Updates" section after each significant step via mcp__metis__edit_document (same mechanism) | Both require same logging discipline |
+| **Loop History** | .claude/metis-ralph-active.yaml created at start; shows when loop began | No separate loop history; only document edit history (git history + task frontmatter) | Metis explicit loop metadata; Ultra-Metis implicit in git commit history |
+| **Iteration Depth** | Recorded in state file (iteration: N) | No iteration counter; phase sequence implicitly tracks position in workflow | Metis tracks iteration count; Ultra-Metis tracks phase progression |
+| **Decisions & Blockers** | Logged in "Status Updates" as prose; agent responsible for recording | Logged in "Status Updates" as prose; agent responsible for recording (same) | Both rely on agent to document decisions/blockers |
+| **Completion Record** | Promise output + user transition marks completion; state file cleaned up | Phase change to "completed" marks completion; no loop state to clean | Metis leaves state trail; Ultra-Metis uses clean phase transitions |
+| **Audit Compliance** | Full loop state available for audit; promise creates explicit checkpoint | Phase transitions + edit history available for audit | Metis more explicit; Ultra-Metis more implicit (requires git/edit history synthesis) |
+
+### Key Findings Summary
+
+**State Management Approach:**
+- **Metis**: Explicit loop state file (YAML) + document phases. Loop persists independently of task phase. Enables loop monitoring and iteration tracking.
+- **Ultra-Metis**: Implicit state via document phase only. No separate loop abstraction. Simpler but less visibility into loop progress.
+
+**Iteration Control:**
+- **Metis**: Iteration counter (`max_iterations` flag) + explicit promise output. Bounded execution with human gate. Loop can theoretically run indefinitely without agent action.
+- **Ultra-Metis**: Phase sequence acts as implicit iteration boundary. Unbounded unless phase transitions manually. Assumes agent discipline.
+
+**Completion Semantics:**
+- **Metis**: Promise (`<promise>...`) separates signal from action. Agent signals readiness; human approves transition. Strong contract enforcement.
+- **Ultra-Metis**: No promise mechanism. Transition is direct. Weaker semantic separation; phase changes are immediate.
+
+**Multi-Task Orchestration:**
+- **Metis**: Built-in `/metis-ralph-tasks` and `/metis-ralph-initiative` commands. Serial execution with no intermediate state exposure.
+- **Ultra-Metis**: No built-in multi-task loop. Would require wrapping MCP calls in external orchestration.
+
+**Execution Visibility:**
+- **Metis**: Loop state file provides real-time view of iteration count, mode, and promise type. Clear checkpoint tracking.
+- **Ultra-Metis**: Must infer loop progress from phase transitions + document edit history. Less immediate visibility.
+
+#### COMPLETED Gaps (see related initiatives)
+
+- [x] **SMET-I-0054**: Ralph Loop - Autonomous Task Execution Framework
+- [x] **SMET-I-0055**: Tool Integration - Add Missing Tools and Parameter Support
+- [x] **SMET-I-0056**: CLI Architecture - Add Missing Commands and Interactive Mode
+- [x] **SMET-I-0057**: Persistence & Search - Implement Code Indexing and SQLite FTS Backend
+
+#### D. Persistence & Serialization
+- [x] **SMET-T-0100**: Serialization & Persistence (Markdown + YAML, templates, indexing) - DETAILED IN SMET-I-0057
+  - Document storage format
+  - Field definitions per type
+  - Template rendering
+  - Search and indexing strategies
+
+### INVESTIGATION FINDINGS: D. Persistence & Serialization
+
+#### D1. Markdown + YAML Serialization Format
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Storage Format** | Markdown + YAML frontmatter | Markdown + YAML frontmatter | Comparable |
+| **File Organization** | Hierarchical directories per document type (visionary/, initiatives/, tasks/) | Flat `.metis/docs/` directory with short codes as filenames | Ultra-Metis cleaner |
+| **Filename Scheme** | Human-readable names with slugs | Short codes (PROJ-V-0001.md) | Ultra-Metis more index-friendly |
+| **Frontmatter Parser** | gray_matter library (YAML engine) | gray_matter library (YAML engine) | Identical |
+| **Round-trip Fidelity** | High - symmetric parse/serialize | High - symmetric parse/serialize | Comparable |
+| **YAML Robustness** | Validates all required fields during deserialization | Validates with FrontmatterParser helper utilities | Ultra-Metis slightly more structured |
+
+**Key Finding**: Both systems use identical serialization technology (gray_matter + YAML) but differ in file organization. Ultra-Metis flat file structure is more scalable.
+
+---
+
+#### D2. Template System Architecture
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Template Engine** | Tera (embedded templates in code) | Tera with registry pattern + optional overrides | Ultra-Metis more extensible |
+| **Templates per Type** | Embedded as static strings in document modules | TemplateRegistry with builtin + custom override paths | Ultra-Metis more configurable |
+| **Template Categories** | Inline within document creation logic | Explicit categories (Frontmatter, Content, AcceptanceCriteria) | Ultra-Metis more structured |
+| **Context Variables** | Basic rendering context | TemplateContext with parent info, project config, detected languages | Ultra-Metis more powerful |
+| **Override Mechanism** | Not supported (templates fixed at build time) | `.metis/templates/` directory with custom templates | Ultra-Metis more flexible |
+| **Template Discovery** | Fixed compiled-in templates | Builtin + dynamic custom template loading | Ultra-Metis more dynamic |
+
+**Key Finding**: Ultra-Metis provides significantly more template flexibility with explicit categorization, richer context variables, and runtime override capability.
+
+---
+
+#### D3. Content Quality & Field Coverage
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Document Types Supported** | Vision, Initiative, Task, ADR, Specification | Vision, Initiative, Task, Epic, Story, 40+ specialized types | Ultra-Metis far more comprehensive |
+| **Metadata Fields** | Basic (id, title, phase, tags, archived) | Rich (includes complexity, stakeholders, schema_version) | Ultra-Metis more detailed |
+| **Validation Rules** | Per-type validation in from_content methods | Schema-based validation with explicit error types | Ultra-Metis more robust |
+| **Phase Systems** | Simple sequential (Draft → Review → Published) | Sophisticated multi-phase models with forward-only rules | Ultra-Metis more controlled |
+| **Acceptance Criteria** | Informal checklist in content | Structured AC templates with explicit evaluation | Ultra-Metis more formal |
+| **Schema Versioning** | Not tracked | Explicit schema_version field for migration tracking | Ultra-Metis more maintainable |
+
+**Key Finding**: Ultra-Metis significantly extends document richness with far more specialized types, richer metadata, and explicit schema versioning.
+
+---
+
+#### D4. Indexing & Search Strategies
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Primary Index** | SQLite database with full-text search (FTS) | File-based with in-memory queries (metis.db metadata cache) | Metis more sophisticated |
+| **Search Implementation** | SQL FTS queries with ranking | Linear scan of markdown files, case-insensitive substring | Metis more scalable |
+| **Code Indexing** | metis-code-index crate (tree-sitter multi-language) | No integrated code indexing | Metis has specialized capability |
+| **Index Metadata** | Document relationships, parent-child, tags in DB | Relationships inferred from file content parsing | Metis more queryable |
+| **Search Performance** | O(log n) with indexed queries | O(n) linear scan on disk reads | Metis more performant |
+| **Cross-reference Index** | Foreign key relationships in database | Inferred from parent_id fields during parsing | Metis more explicit |
+
+**Key Finding**: Original Metis has significantly more sophisticated indexing via SQLite FTS and includes dedicated code indexing (tree-sitter).
+
+---
+
+#### D5. Archive & Restoration Patterns
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Archive Mechanism** | Marks archived flag + moves to `.metis/archived/` directory | Marks archived flag in-place (no file movement) | Metis more segregated |
+| **Cascade Behavior** | Recursive archival of all children | Recursive archival of all children | Comparable |
+| **Restoration Path** | Must reverse directory movement + update flag | Flip archived flag from true to false | Ultra-Metis simpler |
+| **Archive Validation** | Checks already-archived status | Checks already-archived status | Comparable |
+| **Orphaned Children** | Documented in archive service | Handled recursively without explicit cleanup | Metis more thorough |
+| **Archive Discovery** | Uses discovery service with archive-aware filters | Filters by archived flag during list operations | Comparable |
+
+**Key Finding**: Metis uses physical directory movement; Ultra-Metis uses logical flags. Metis provides better physical separation; Ultra-Metis is simpler to restore.
+
+---
+
+#### D6. Serialization Robustness & Round-trip Handling
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Error Handling** | Comprehensive MetisError enum with detailed variants | StoreError with validation, serialization, hierarchy types | Comparable depth |
+| **Required Fields Validation** | Explicit checks for all required frontmatter fields | Validated with FrontmatterParser | Ultra-Metis more structured |
+| **Type Coercion** | Explicit type parsing (string to DocumentType) | Type hints in FrontmatterParser methods | Ultra-Metis more typesafe |
+| **Datetime Handling** | Parsed as chrono DateTime with timezone | Chrono DateTime UTC-aware | Comparable |
+| **Content Preservation** | Markdown preserved as-is during round-trip | DocumentContent wrapper preserves formatting | Comparable |
+| **Frontmatter Mutation** | Direct mutation of core fields, then serialize | Replace operation on YAML strings | Ultra-Metis more immutable-friendly |
+| **Tag Round-trip** | Tag objects serialized to YAML list, parsed back | Tags reconstructed with Tag enum | Comparable |
+
+**Key Finding**: Both systems handle round-trip serialization robustly. Ultra-Metis provides slightly more type-safe parsing.
+
+---
+
+#### D7. Document Factory & Type Polymorphism Patterns
+
+| Aspect | Original Metis | Ultra-Metis | Assessment |
+|--------|---|---|---|
+| **Factory Pattern** | DocumentFactory with from_file and from_content methods | Document trait with from_content per type | Ultra-Metis decentralized |
+| **Type Detection** | Extract type from frontmatter (document_type, level, or type) | Explicit level field matching per type | Metis more flexible |
+| **Polymorphism** | Returns Box<dyn Document> trait object | AnyDocument enum wrapper | Metis more traditional |
+| **Async Support** | Async from_file for I/O | Async from_file available on types | Comparable |
+| **Type Dispatch** | Match on DocumentType enum to select impl | Document trait + AnyDocument wrapper | Ultra-Metis more layered |
+| **Extensibility** | Add new type → update factory match statement | Add new type → implement Document trait → update registry | Ultra-Metis trait-based |
+| **Deserialization Flow** | Factory → extract type → create instance | Parse content → extract type → create via impl → wrap | Metis simpler |
+
+**Key Finding**: Metis uses centralized factory pattern (simpler); Ultra-Metis uses decentralized trait-based (more compositional but adds layers).
+
+---
+
+### Summary of D. Persistence & Serialization
+
+**Original Metis Strengths:**
+- Sophisticated SQLite-based indexing with full-text search
+- Dedicated code indexing via tree-sitter (metis-code-index crate)
+- Centralized, simple DocumentFactory pattern
+- Physical archive segregation (.metis/archived/)
+- Flexible type field detection (document_type, level, type)
+
+**Ultra-Metis Strengths:**
+- Cleaner flat-file organization with short code filenames
+- Advanced template system with override capability and richer context
+- Structured FrontmatterParser with explicit validation utilities
+- Far more document types (40+ specialized types)
+- Schema versioning for forward compatibility
+- Simpler restoration logic (flag-based archives)
+
+**Critical Gaps in Ultra-Metis:**
+1. No equivalent to metis-code-index (no tree-sitter code indexing)
+2. Linear file scan search vs. SQLite FTS (performance concern at scale)
+3. No database-backed indexing for relationships
+4. Missing code symbol extraction capabilities
+
+**Critical Gaps in Original Metis:**
+1. Templates fixed at compile time (cannot override at project level)
+2. Limited template context variables
+3. Narrower document type coverage (5 vs 40+)
+4. No explicit schema versioning mechanism
+
+#### G. Governance & Rule Systems
+- [x] **SMET-T-0103**: Governance & Rules (Protection layers, scope hierarchy, enforcement)
+  - Rule configuration and scoping
+  - Protected rule enforcement
+  - Change proposal workflows
+  - Approval and audit trails
+
+### Comparison Grids: G1-G6
+
+#### G1. Rule Configuration & Structure
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Rule Configuration Document** | No native RulesConfig type | RulesConfig document with level, protection_level, scope, source_architecture_ref | Ultra-Metis provides first-class document for persistent rule storage |
+| **Protection Levels** | N/A — no rule protection system | Standard, Protected | Ultra-Metis enforces protection levels; protected rules require approval workflow |
+| **Rule Scope Hierarchy** | N/A | Platform, Organization, Repository, Package, Component, Task | Ultra-Metis defines 6-level scope pyramid with inheritance semantics |
+| **Rule Categories** | N/A | Behavioral, Architectural, Operational, InformationHandling, DecisionMaking, ValidationQuality, ApprovalEscalation, ExecutionSafety | Ultra-Metis categorizes rules by domain; enables targeted enforcement |
+| **Configuration Persistence** | File-based configuration for flight levels only | YAML frontmatter in RulesConfig documents + RuleChangeProposal audit trail | Ultra-Metis treats rules as durable, versioned artifacts |
+| **Robustness** | N/A | Comparable | Ultra-Metis has well-structured validation and FromStr parsing |
+| **Completeness** | Minimal (flight levels only) | Comprehensive | Ultra-Metis covers the full governance lifecycle |
+
+#### G2. Protection Layer & Edit Guards
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Edit Guard Pattern** | No edit guards for rules | EditGuard struct with explicit decision logic | Ultra-Metis enforces protection at enforcement layer, not at type level |
+| **Direct Edit Permission** | All edits allowed directly | Standard rules editable directly; Protected rules rejected | Two-tier system prevents accidental protected rule modification |
+| **Approved Proposal Pathway** | N/A | EditDecision::PermittedViaProposal { proposal_short_code } | Changes authorized by approved RuleChangeProposal linked in EditDecision |
+| **Force Override Mechanism** | N/A | ForceOverride { requested_by, reason } with mandatory audit | Emergency override path with full audit trail capture (who, when, why) |
+| **Audit Entry Creation** | N/A | EditAuditEntry records authorization type (Proposal or ForceOverride) | Ultra-Metis maintains append-only audit log for all protected edits |
+| **Error Messaging** | N/A | Actionable EditGuardError variants guiding users to RuleChangeProposal | Errors explain why edit was rejected and what to do next |
+| **Robustness** | N/A | High — comprehensive test coverage of guard logic | Ultra-Metis tested for standard, protected, proposal-based, and override scenarios |
+
+#### G3. Scope Hierarchy & Application Rules
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Scope Levels** | N/A — single-level scoping | 6-level hierarchy: Platform > Organization > Repository > Package > Component > Task | Ultra-Metis enables rules at different organizational levels |
+| **Scope Precedence** | N/A | Narrower scopes (Task) override broader scopes (Platform) via most-specific-wins | Inheritance model allows organizational defaults overridden by team/task rules |
+| **Default Scope** | N/A | RuleScope::Repository (most common) | Ultra-Metis defaults to repo-level, reflecting typical use case |
+| **Cross-Scope Inheritance** | N/A | Rules apply transitively down; task rules inherit platform/org rules not overridden | Rules compose hierarchically without explicit re-specification |
+| **Source Architecture Reference** | N/A | Optional source_architecture_ref field links rules to ArchitectureCatalog | Ultra-Metis enables traceability: which architecture decisions drove which rules |
+| **Scope Enforcement Points** | N/A | Scope checked during rule query, enforcement, and escalation | Rules filtered by scope at every decision point |
+| **Robustness** | N/A | High — FromStr parsing enforces scope validity at deserialization | Ultra-Metis validates scope at load time, preventing invalid scope propagation |
+
+#### G4. Enforcement Mechanisms & Rule Change Workflow
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Rule Change Types** | N/A | Add, Modify, Remove, Reclassify | Ultra-Metis distinguishes the kind of change being proposed |
+| **Change Proposal Document** | N/A | RuleChangeProposal document with target_rule, change_type, proposal_status, reviewer | First-class document enables structured review workflows |
+| **Proposal Workflow States** | N/A | Proposed -> UnderReview -> Approved -> Applied (or Rejected/Superseded) | 6-state machine with terminal states (Rejected, Superseded) |
+| **Status Transitions** | N/A | Enforced by valid_transitions() method; Proposed->UnderReview->Approved->Applied | Only legal transitions allowed; prevents invalid state changes |
+| **Reviewer Assignment** | N/A | Optional reviewer field on RuleChangeProposal | Tracks who is responsible for evaluating each change |
+| **Applied Timestamp** | N/A | applied_at: Option<DateTime<Utc>> | Records when change was applied, enabling audit trail reconstruction |
+| **Enforcement Integration** | N/A | EditGuard checks proposal status before permitting edit | Protection and change workflow integrated at enforcement boundary |
+| **Robustness** | N/A | High — comprehensive state machine with all transitions tested | Ultra-Metis enforces state preconditions; superseded is terminal to prevent re-application |
+
+#### G5. Gate-Based Execution Control
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Gate Types** | N/A | 7 gates: Entry, ContextSufficiency, Solution, ExecutionReadiness, Validation, Completion, Escalation | Ultra-Metis gates checkpoint workflow at conceptually distinct phases |
+| **Gate Configuration** | N/A | GateDefinition with evidence_requirements, default_failure_behavior, skippable | Gates are configurable, not hardcoded to specific flows |
+| **Evidence Requirements** | N/A | EvidenceRequirement { label, artifact_kind, required: bool } | Gates specify what artifacts must exist (required vs optional) |
+| **Failure Behaviors** | N/A | Block, Warn, EscalateToHuman — mode-dependent overrides | Three behaviors allow gates to hard-stop or escalate or warn |
+| **Gate Check Outcomes** | N/A | GateCheckOutcome { gate_type, passed, behavior, evidence_present, evidence_missing, message } | Rich outcome captures both pass/fail and diagnostic info |
+| **Evidence Tracking** | N/A | gates track evidence_present and evidence_missing separately | Enables targeted diagnostics: what's missing vs what's available |
+| **Mode-Dependent Strictness** | N/A | Gates can be overridden per autonomy mode (Tight/Mixed/Autonomous) | Same gate enforces different strictness in different modes |
+| **Robustness** | N/A | High — 7 gates pre-configured with sensible defaults, all with builder methods | Ultra-Metis provides well-tested defaults and customization paths |
+
+#### G6. Autonomy Modes & Escalation Control
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Autonomy Modes** | N/A | 3 modes: Tight (human approval at most gates), Mixed (default, escalates on risk), Autonomous (proceeds within bounds) | Ultra-Metis provides explicit governance model matching team maturity |
+| **Escalation Sensitivity** | N/A | EscalationLevel { High, Medium, Low } per mode | Tight: High (escalate on uncertainty); Mixed: Medium; Autonomous: Low |
+| **Evidence Thresholds** | N/A | EvidenceLevel { High (all), Medium (required only), Standard (critical only) } | Tight requires High (all evidence); Autonomous requires Standard (critical only) |
+| **Contradiction Tolerance** | N/A | ToleranceLevel { VeryLow, Low, Medium } | Tight: VeryLow (no ambiguity); Autonomous: Medium (reasoning acceptable) |
+| **Auto-Decomposition** | N/A | auto_decompose: bool per mode | Tight: false; Mixed: false; Autonomous: true |
+| **Auto-Dispatch** | N/A | auto_dispatch: bool per mode | Whether system can dispatch subtasks without asking |
+| **Gate Override Mechanism** | N/A | gate_overrides: HashMap<GateType, GateFailureBehavior> | Modes can override individual gate behaviors for flexibility |
+| **Robustness** | N/A | High — all 3 modes pre-configured with tested defaults | Ultra-Metis provides sensible presets; builders allow customization |
+| **Design Philosophy** | N/A | Mode is deliberate human choice, not AI decision | Prevents autonomous systems from choosing their own oversight level |
+
+### Summary: Governance & Rules Systems
+
+**Ultra-Metis Advantages:**
+- Rule protection system with enforcement guards (not present in original Metis)
+- 6-level scope hierarchy enabling org-wide rule composition
+- First-class RuleChangeProposal workflow with 6-state machine
+- 7-gate checkpoint system with mode-dependent behavior
+- 3 autonomy modes with configurable escalation and evidence thresholds
+- Edit audit trail captures authorization method (proposal vs force override)
+- Comprehensive error messages guide users toward correct workflow
+
+**Original Metis Gaps:**
+- No rule protection or enforcement
+- No scope hierarchy (rules apply uniformly)
+- No change proposal workflow (direct edits)
+- No gate-based execution control
+- No autonomy mode configuration
+- No escalation thresholds or evidence tracking
+- No audit trail for rule changes
+
+**Integration Points:**
+- RulesConfig can reference ArchitectureCatalog (source_architecture_ref)
+- Gates integrate with AutonomyConfig for mode-dependent behavior
+- RuleChangeProposal linked to RulesConfig via target_rule short code
+- EditGuard enforces protection at transaction boundary
+- Audit entries enable compliance and incident investigation
+
+#### H. Quality Assurance
+- [x] **SMET-T-0104**: Quality System (Gates, baselines, conformance checking)
+  - Quality gate definition and checking
+  - Baseline capture and comparison
+  - Conformance validation
+  - Quality record generation
+
+### Comparison Grids: H1-H10
+
+#### H1. Quality Gate Architecture & Configuration
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Gate Configuration Document** | No explicit quality gate system | QualityGateConfig document type with configurable thresholds | Ultra-Metis provides first-class document for persistent gate configuration |
+| **Threshold Types** | N/A | Absolute, RelativeRegression, Trend | Ultra-Metis supports multiple gate semantics: fixed values, regression limits, directional requirements |
+| **Gate Severity Levels** | N/A | Blocking (prevents transition), Advisory (reported only) | Two-tier severity enables enforcement vs guidance distinction |
+| **Transition-Specific Overrides** | N/A | TransitionGateConfig allows different thresholds for specific phase pairs | Ultra-Metis enables stricter gates for completion vs lenient for planning |
+| **Configuration Persistence** | N/A | YAML frontmatter in QualityGateConfig documents | Rules are durable, versioned, queryable documents |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/documents/quality_gate_config/mod.rs` | Comprehensive gate configuration with 150+ lines of type definitions |
+| **Robustness** | N/A | High — validated gate config, tested thresholds, error cases | Ultra-Metis gates are extensively unit tested (25+ tests) |
+
+#### H2. Quality Gate Checking Engine
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Gate Evaluation** | No gate checking | GateCheckEngine with stateless metric evaluation | Ultra-Metis checks current metrics against configured thresholds |
+| **Result Structure** | N/A | GateCheckResult with metric_results, blocking_failures, advisory_failures | Rich results enable detailed failure reporting |
+| **Failure Classification** | N/A | Blocking vs advisory separation | Clear distinction between must-fix (blocking) and should-fix (advisory) |
+| **Baseline Comparison** | N/A | RelativeRegression thresholds with optional baseline metrics | Detects regressions: "metric increased >10% from baseline" |
+| **Trend Analysis** | N/A | Trend thresholds: Improving vs NotRegressing | Requires metrics to improve or at least stay stable |
+| **Missing Metric Handling** | N/A | Defaults to 0.0 for missing metrics | Prevents false positives when tool output is incomplete |
+| **Failure Messages** | N/A | Actionable failure messages: "metric X: value Y (threshold Z, exceeded by W)" | Error messages guide remediation |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/quality/gate_engine.rs` (GateCheckEngine, GateCheckResult) | 814 lines including 50+ unit tests |
+
+#### H3. Baseline Capture Service
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Baseline Ingestion** | No baseline system | BaselineCaptureService converts ParsedToolOutput to AnalysisBaseline documents | Captures tool output as durable documents |
+| **Data Captured** | N/A | Tool name, timestamp, metrics, findings, summary statistics | Complete snapshot of quality state at point in time |
+| **Finding Organization** | N/A | Organized by severity (errors/warnings/info) and grouped by file path | Structured for easy analysis and comparison |
+| **Metrics Storage** | N/A | MetricEntry with name, value, unit, optional file path | Flexible metric capture supporting per-file and aggregate metrics |
+| **Document Type** | N/A | AnalysisBaseline (durable document with phase lifecycle) | Baselines are first-class artifacts enabling versioning |
+| **Metadata** | N/A | Includes source quality gate configuration link | Enables tracing baseline to its gate definition |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/quality/capture.rs` | 150+ lines for baseline capture and document creation |
+
+#### H4. Baseline Comparison Engine
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Comparison Logic** | No baseline comparison | BaselineComparisonEngine compares before/after ParsedToolOutputs | Identifies improvements and regressions |
+| **Delta Computation** | N/A | MetricDelta: before, after, delta, direction (Improved/Regressed/Unchanged) | Tracks both absolute changes and direction |
+| **Finding Diff** | N/A | Identifies new_findings (regressions), resolved_findings (improvements) | Uses finding_key deduplication: rule + file + line |
+| **File-Level Analysis** | N/A | Tracks files_improved and files_regressed | Identifies hotspots: which files improved/regressed |
+| **Status Determination** | N/A | Overall QualityStatus: Pass/Improved/Regressed/Error | Automated status based on comparison results |
+| **Document Generation** | N/A | Produces QualityRecord document with full comparison details | Comparison results persisted as audit trail |
+| **Direction Inference** | N/A | Automatically infers metric direction (lower=better for errors, higher=better for coverage) | Smart enough to classify improvements vs regressions without configuration |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/quality/comparison.rs` | 400+ lines with comprehensive comparison logic |
+
+#### H5. Quality Records (Status & Audit)
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Quality Recording** | No quality record system | QualityRecord document type captures assessment results | Durable audit trail of quality decisions |
+| **Status Values** | N/A | QualityStatus: Pass, Improved, Regressed, Error, NotRun | Rich status semantics supporting workflow decisions |
+| **Linked Baseline** | N/A | linked_baseline field references comparison baseline | Traceability: record → baseline → tool output |
+| **Linked Gate Config** | N/A | linked_gate_config field references applicable gates | Audit trail: record → gates that were checked |
+| **Phase Lifecycle** | N/A | Draft → Review → Approved → Archived | Workflow for quality record review and approval |
+| **Comparison Details** | N/A | Stores metric_deltas, new_findings, resolved_findings, files_improved, files_regressed | Complete forensics of what changed |
+| **Acceptance Criteria** | N/A | Criteria validate status, finding documentation, baseline linkage | Gate records transition via explicit acceptance |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/documents/quality_record/mod.rs` | First-class document type with full lifecycle |
+
+#### H6. Analysis Baseline Documents
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Baseline Document Type** | No baseline document type | AnalysisBaseline document (markdown + YAML) | Baselines are queryable, indexed artifacts |
+| **Tool Attribution** | N/A | Captures tool_name and timestamp | Identifies which tool produced the baseline and when |
+| **Finding Summary** | N/A | Total findings, error count, warning count, info count | Quick overview of baseline severity distribution |
+| **Metrics Section** | N/A | Table of metrics with values, units, optional file paths | Structured metric capture for gatekeeping |
+| **Summary Metrics** | N/A | Top-level metric values suitable for gate checking | Pre-computed summary enables quick gate evaluation |
+| **Findings by File** | N/A | Findings grouped by file path for easy navigation | Reveals file hotspots and problematic areas |
+| **Linkage to Gates** | N/A | Optional linked_rules_config field | Connects baseline to gate configuration that analyzed it |
+| **Indexing & Search** | N/A | Full-text indexable by tool name, timestamp, file paths | Baselines searchable within project history |
+
+#### H7. Architecture Conformance Checking
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Conformance Checking** | No architecture conformance system | ArchitectureConformanceChecker validates paths against ReferenceArchitecture | Detects architecture drift |
+| **Layout Validation** | N/A | Checks folder structure against expected directories | Ensures files are in correct architectural layers |
+| **Dependency Rules** | N/A | Validates extra_dependency_rules from ReferenceArchitecture | Prevents crossing architectural boundaries |
+| **Violation Detection** | N/A | Produces findings for each conformance violation | Violations reported as errors for gate integration |
+| **Conformance Score** | N/A | Computed as (total_checks - violations) / total_checks * 100 | Metric suitable for quality gates and trending |
+| **Tool Integration** | N/A | Outputs ParsedToolOutput format | Integrates with baseline and gate checking pipeline |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/quality/conformance.rs` | 300+ lines for boundary and structure validation |
+
+#### H8. Quality Tool Parsers
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Tool Output Parsing** | No tool parsers | ParserRegistry with pluggable tool-specific parsers | Extensible framework for new tools |
+| **Supported Tools** | N/A | ESLint, TypeScript, Clippy, Coverage (4 built-in) | Multi-language tool support: JavaScript, TypeScript, Rust, coverage |
+| **ESLint Parser** | N/A | Parses JSON output, maps rule IDs to findings, normalizes severity | JavaScript linting integrated |
+| **TypeScript Parser** | N/A | Extracts compiler errors/warnings with line/column | TypeScript type checking integrated |
+| **Clippy Parser** | N/A | Parses Rust linter output with severity mapping | Rust linting integrated |
+| **Coverage Parser** | N/A | Extracts coverage metrics (lines, branches, functions) | Coverage reporting integrated for threshold gates |
+| **Severity Normalization** | N/A | Normalizes tool severity levels to standard (Error/Warning/Info) | Consistent severity across different tools |
+| **Extensibility** | N/A | ParserRegistry pattern allows adding new parsers without modifying engine | Open/closed principle: extensible without modification |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/quality/parsers/` (5 files) | Modular parser implementations |
+
+#### H9. Quality Gate Override & Emergency Bypass
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Gate Override Mechanism** | No override system | GateOverride decision with justification | Allows emergency bypass of gates when necessary |
+| **Override Types** | N/A | Emergency, Approved, Rollback | Three override modes for different circumstances |
+| **Overrider Tracking** | N/A | Records who requested the override | Audit trail identifies override requester |
+| **Justification Required** | N/A | mandatory reasoning field | Forces explicit decision-making for overrides |
+| **Override Metrics** | N/A | Which specific gates were bypassed | Enables analysis: which gates most frequently overridden |
+| **Audit Entry** | N/A | GateOverrideAuditEntry with full forensics | Immutable record: when, who, why, which gates |
+| **Linked Records** | N/A | Links to QualityRecord and QualityGateConfig | Traceability chain: override → record → gates |
+| **Validation** | N/A | Validates override has justification and valid gates list | Prevents incomplete override records |
+| **Location** | N/A | `crates/ultra-metis-core/src/domain/documents/gate_override_audit_entry/mod.rs` | Comprehensive override auditing |
+
+#### H10. Quality System Integration & Transition Blocking
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Phase Transition Gating** | No quality gate integration to transitions | Quality gates evaluated during phase transitions | Gates prevent forward progress until satisfied |
+| **Blocking Mechanism** | N/A | Blocking gate failures prevent transition | Non-negotiable quality requirements enforced at workflow level |
+| **Advisory Reporting** | N/A | Advisory failures reported but don't block transition | Allows pragmatic tradeoffs while maintaining audit trail |
+| **Transition-Specific Rules** | N/A | Different gate thresholds per phase pair (e.g., stricter for completion) | Enables progressive enforcement: lenient early, strict late |
+| **Override Workflow** | N/A | Blocked transition → override decision → audit entry → transition allowed | Human-controlled bypass with full governance trail |
+| **Baseline Integration** | N/A | Gates checked against latest baseline before allowing transition | Quality decisions informed by most recent tool output |
+| **Failure Messaging** | N/A | Clear indication of which gates failed and why | Users see actionable remediation steps |
+| **Governance Policy** | N/A | Gates enforced per configured severity and scope | Organizations can define quality policy centrally |
+
+#### H. Summary: Quality System Capability Assessment
+
+**Key Finding**: Original Metis has **no built-in quality system** — no gates, baselines, conformance checking, or audit trails. Ultra-Metis implements a **comprehensive, production-grade quality system**.
+
+**Gap Analysis:**
+- **Missing in Metis**: Entire quality system — no gates, baselines, conformance checking, parsers, or audit trails
+- **Missing in Ultra-Metis**: Integration with external quality platforms (SonarQube, GitHub Insights), dashboard visualization, trend analysis over 6+ months
+- **Closest analogous pattern in Metis**: None
+
+**Capability Assessment:**
+- **Robustness**: Ultra-Metis (comprehensive error handling, extensive test coverage)
+- **Completeness**: Ultra-Metis (full pipeline from tool output to gated transitions)
+- **Design Quality**: Ultra-Metis (separation of concerns: parsing → capture → comparison → gating → override)
+
+**Priority/Impact for Feature Parity:**
+- Implementing quality gates in Metis: **Critical** (core workflow feature)
+- Estimated effort: **XL** (new architectural pattern)
+
+#### I. Architecture & Pattern Selection
+
+**STATUS**: Investigation complete. Task SMET-T-0105 executed with comprehensive findings.
+
+##### I1. Catalog Structure & Organization
+
+| Dimension | Original Metis | Ultra-Metis | Winner | Notes |
+|-----------|-----------------|-------------|--------|-------|
+| **Catalog Type** | Skill-based pattern guidance (project-patterns, decomposition) | Formal ArchitectureCatalogEntry with structured data | Ultra-Metis | Ultra-Metis uses typed domain objects for explicit catalog entries |
+| **Entry Format** | Markdown documentation with sections and tables | Rust structs with language, project_type, layers, folder_layout, dependencies, naming, anti-patterns | Ultra-Metis | Structured data enables programmatic matching and validation |
+| **Language Support** | Multiple languages via skill documentation | JavaScript-only (5 built-in entries) | Metis | Metis demonstrates patterns for any language; Ultra-Metis currently limited to JavaScript |
+| **Built-in Entries** | 5+ project patterns (greenfield, tech-debt, incident, feature, anti-patterns) | 5 JavaScript project types (server, react-app, component-lib, cli-tool, node-util) | Comparable | Both curate specific patterns; Metis broader scope, Ultra-Metis deeper architecture detail |
+| **Entry Density** | Pattern guidance + anti-patterns per section | Comprehensive: folder layout, layers, naming conventions, anti-patterns, quality expectations | Ultra-Metis | Ultra-Metis provides detailed architectural guidance for enforcement |
+| **Extensibility** | Documentation-based (human adds to references/) | Pluggable custom_loader + CatalogQueryEngine support for dynamic entries | Ultra-Metis | Ultra-Metis supports runtime custom catalog loading |
+| **Robustness** | Manual, human-curated patterns subject to interpretation drift | Strongly-typed Rust with tests for completeness | Ultra-Metis | Type system prevents incomplete entries |
+
+##### I2. Greenfield Selection Flow
+
+| Dimension | Original Metis | Ultra-Metis | Winner | Notes |
+|-----------|-----------------|-------------|--------|-------|
+| **Flow Model** | 4-step conceptual: Initialize → Vision → Initiatives → Decompose | 3-step programmatic: discover_options → select_by_index → create_reference_architecture | Comparable | Metis emphasizes work decomposition; Ultra-Metis catalog selection |
+| **User Interaction** | Human-driven reading and choosing | Structured SelectionFlow with presentable SelectionOption objects | Ultra-Metis | Ultra-Metis reduces cognitive load with ranked options |
+| **Filtering Capability** | Human filtering by reading documentation | CatalogQuery with language/project_type/phase filters | Ultra-Metis | Query-based filtering scales to large catalogs |
+| **Option Presentation** | Inline tables (Team Size, Preset Differences) | SelectionOption.summary() with layers, key rules, anti-patterns formatted | Ultra-Metis | Formatted summary reduces decision overhead |
+| **Tailoring Support** | ADRs and specifications capture decisions | Explicit TailoringOptions (layer_overrides, additional_boundaries, extra_dependency_rules, tolerated_exceptions) | Ultra-Metis | Structured tailoring inputs enable downstream enforcement |
+| **Persistence** | Work captured in Metis documents | ReferenceArchitecture document linked to source catalog entry | Ultra-Metis | Explicit architecture traceability to catalog source |
+
+##### I3. Brownfield Evaluation & Pattern Matching
+
+| Dimension | Original Metis | Ultra-Metis | Winner | Notes |
+|-----------|-----------------|-------------|--------|-------|
+| **Brownfield Support** | Documented as "existing codebase" pattern (implicit) | Explicit StructureAnalyzer → PatternMatcher pipeline | Ultra-Metis | Ultra-Metis formalizes brownfield detection |
+| **Structure Analysis** | Manual inspection | StructureAnalyzer inspects file paths; detects naming conventions, test patterns | Ultra-Metis | Programmatic analysis extracts architecture signals |
+| **Naming Convention Detection** | Implied from codebase structure | NamingConvention enum (CamelCase, PascalCase, KebabCase, SnakeCase, Mixed) | Ultra-Metis | Explicit convention classification |
+| **Pattern Matching Algorithm** | None documented | PatternMatcher with weighted multi-factor scoring: 40% folder_layout, 40% layer, 20% naming | Ultra-Metis | Quantified matching prevents false positives |
+| **Scoring Approach** | N/A | PatternMatchScore with overall_score (0-100), component scores, match/mismatch details | Ultra-Metis | Transparency: humans see why a pattern matched |
+| **Best-Match Selection** | N/A | MatchResult ranks entries by score; best_match only if score >= threshold | Ultra-Metis | Prevents low-confidence recommendations |
+
+##### I4. Reference Architecture Storage & Linking
+
+| Dimension | Original Metis | Ultra-Metis | Winner | Notes |
+|-----------|-----------------|-------------|--------|-------|
+| **Storage Format** | Not explicitly defined | ReferenceArchitecture document with explicit source_catalog_ref | Ultra-Metis | Explicit linkage to source catalog entry |
+| **Content Derivation** | Manual via ADRs and documentation | Auto-populates from catalog entry (title, layers, folder layout, rules, anti-patterns) | Ultra-Metis | Reduces manual transcription |
+| **Tailoring Capture** | ADR + specification documents | Structured ReferenceArchitecture fields: layer_overrides, additional_boundaries, extra_dependency_rules | Ultra-Metis | Structured overrides enable enforcement tooling |
+| **Analysis Baseline Link** | Not defined | ReferenceArchitecture.analysis_baseline_ref: optional link to triggering analysis | Ultra-Metis | Traceability from brownfield analysis → selection → baseline |
+| **Rules Configuration Link** | Not defined | ReferenceArchitecture.rules_config_ref: optional link to generated rules seed | Ultra-Metis | Audit trail from architecture → enforced rules |
+
+##### I5. Content Model Comparison
+
+| Field | Original Metis | Ultra-Metis | Notes |
+|-------|-----------------|-------------|-------|
+| **Title** | Pattern name (e.g., "JavaScript Server") | Same (stored in metadata) | Comparable |
+| **Identifier** | Not explicit (implicit in documentation path) | short_code: BUILTIN-AC-JS-SERVER | Ultra-Metis explicit |
+| **Language** | Mentioned in description but not indexed | language: "javascript" (indexed, queryable) | Ultra-Metis queryable |
+| **Project Type** | Mentioned inline | project_type: "server", "react-app", etc. (indexed) | Ultra-Metis supports multi-dimensional queries |
+| **Folder Layout** | Listed inline (src/routes/, src/handlers/) | folder_layout: Vec<String> with 10+ entries per pattern | Ultra-Metis comprehensive |
+| **Layers** | Textually ("Routes → Handlers → Services → Repositories") | layers: Vec<String> | Ultra-Metis explicit extraction |
+| **Dependency Rules** | Text descriptions | dependency_rules: Vec<String> with 4-5 specific rules per entry | Ultra-Metis enforcement-ready |
+| **Naming Conventions** | Listed as guidelines | naming_conventions: Vec<String> (8-10 rules per entry) | Ultra-Metis detailed |
+| **Anti-Patterns** | Section with 4-5 items | anti_patterns: Vec<String> (4-6 items per entry) | Comparable |
+| **Quality Expectations** | "ESLint clean, TypeScript strict mode, test coverage" | analysis_expectations: Vec<String> (named, checkable) | Ultra-Metis named, checkable |
+
+##### I6. Cross-System Capability Comparison
+
+| Capability | Metis | Ultra-Metis | Gap | Priority |
+|------------|-------|-------------|-----|----------|
+| **Catalog Entry Typing** | Untyped (documentation) | Typed Rust structs with validation | Ultra-Metis prevents invalid entries | High |
+| **Programmatic Query** | N/A (human reads) | CatalogQuery + CatalogQueryEngine with filters | Ultra-Metis enables tooling | High |
+| **Brownfield Detection** | Manual | StructureAnalyzer + PatternMatcher | Ultra-Metis automates baseline discovery | Medium |
+| **Scoring Transparency** | N/A | PatternMatchScore with match/mismatch reasons | Ultra-Metis aids debugging | Medium |
+| **Language Support** | Unlimited (pattern guidance) | JavaScript-only currently | Metis more flexible | Medium |
+| **Selection Automation** | Skill guides human (interactive) | Programmatic flow | Ultra-Metis supports batch selection | Medium |
+| **Tailoring** | ADR + documentation | Structured TailoringOptions | Ultra-Metis enables enforcement | High |
+| **Persistence & Traceability** | General Metis documents | Explicit ReferenceArchitecture with catalog_ref + analysis_ref + rules_ref | Ultra-Metis audit trail | High |
+| **Test Coverage** | Implicit in skill validation | ~35 unit tests across modules | Ultra-Metis quantified reliability | High |
+
+##### I7. Implementation Maturity Assessment
+
+| Dimension | Metis | Ultra-Metis | Assessment |
+|-----------|-------|-------------|------------|
+| **Completeness** | Broad pattern guidance for project types and work modes | Focused architecture patterns for JS; structured, enforceable | Ultra-Metis narrower but deeper |
+| **Rigor** | Documentation-based; interpretation risk | Type-safe Rust; tests validate required fields | Ultra-Metis more rigorous |
+| **Extensibility** | Add to references/ and update SKILL.md | ArchitectureCatalogEntry trait + custom_loader; modular | Ultra-Metis more modular |
+| **Automation Readiness** | Skills are instruction-heavy (human reads) | CatalogQueryEngine + PatternMatcher enable CLI/API automation | Ultra-Metis automation-ready |
+| **Enforcement Integration** | ADRs + specifications capture intent; manual verification | Explicit rules_seed_hints and analysis_expectations | Ultra-Metis enforcement-integrated |
+| **Brownfield Enablement** | Pattern guidance (implicit) | Explicit StructureAnalyzer → PatternMatcher pipeline with scoring | Ultra-Metis dramatically superior |
+
+**Key Findings**:
+
+1. **Metis Strengths**: Broad pattern guidance for greenfield, brownfield, tech debt, incidents, and anti-patterns. Language-agnostic. Human-friendly skill interface.
+
+2. **Ultra-Metis Strengths**: Typed catalog entries enable programmatic selection. StructureAnalyzer + PatternMatcher automate brownfield pattern detection. Explicit tailoring and rules seeding for enforcement.
+
+3. **Critical Gap**: Original Metis lacks formal brownfield detection. Ultra-Metis implements this for JavaScript only.
+
+4. **Future Direction**: Merge Metis' broad pattern guidance with Ultra-Metis' typed, queryable catalog + brownfield automation. Extend Ultra-Metis to additional languages using same ArchitectureCatalogEntry model.
+
+**Investigation Findings Documented**: SMET-T-0105 complete with grids I1-I7 covering catalog structure, selection flows, brownfield matching, and architectural maturity.
+
+#### J. Bootstrap & Repository Analysis
+
+**Investigation Status**: IN PROGRESS (SMET-T-0106)
+
+Ultra-Metis provides a sophisticated **Bootstrap module** for repo-aware initialization that detects project structure, language composition, build tools, and monorepo patterns. Original Metis has basic workspace detection but limited project auto-discovery capabilities.
+
+##### J1. Language Detection Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Detection Method** | File path scanning: manifest files (Cargo.toml, package.json, etc.) + source file extension counting | Workspace directory structure detection only | Ultra-Metis: Comprehensive language identification |
+| **Supported Languages** | 23+ languages (Rust, JavaScript/TypeScript, Python, Go, Java, Kotlin, Ruby, PHP, Elixir, Swift, C/C++, C#, F#, Scala, Clojure, Zig, Lua, Dart) | 1 language (Metis projects themselves) | Ultra-Metis: Polyglot project support |
+| **Primary Language Inference** | Sorted by file count with evidence tracking | N/A | Ultra-Metis: Statistically grounded |
+| **Multi-language Projects** | Full support with primary/secondary language ranking | Limited (only Metis) | Ultra-Metis: Explicit multi-language handling |
+| **Evidence Collection** | Tracks manifest files as evidence for language identification | No evidence collection | Ultra-Metis: Transparent reasoning |
+| **Type System** | Strongly-typed `DetectedLanguage` struct with evidence vector | String-based approach | Ultra-Metis: Type safety and clarity |
+| **Test Coverage** | Comprehensive: Rust, JavaScript, Python, Go, multi-language projects | Basic workspace validation | Ultra-Metis: 13+ language test cases |
+
+**Summary**: Ultra-Metis provides extensive language detection across 23+ languages with statistical ranking. Original Metis focuses only on Metis project detection within workspaces.
+
+##### J2. Build Tool Detection Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Tools Detected** | 14 build tools (Cargo, Make, Just, Turborepo, Nx, Webpack, Vite, esbuild, Rollup, Gradle, Maven, CMake, Bazel, Docker) | Implicit (no explicit detection) | Ultra-Metis: Comprehensive build system awareness |
+| **Detection Mechanism** | Config file presence scanning (Cargo.toml, Makefile, turbo.json, nx.json, webpack.config.*, etc.) | No automated detection | Ultra-Metis: File-based heuristics |
+| **Task Runner Detection** | Make, Just, npm scripts (via package.json) | Not explicitly tracked | Ultra-Metis: Task orchestration awareness |
+| **Bundler Support** | Webpack, Vite, esbuild, Rollup detection | Not supported | Ultra-Metis: Modern JS/TS tooling coverage |
+| **Container Support** | Docker/docker-compose detection | Not supported | Ultra-Metis: Containerization awareness |
+| **Monorepo Tools** | Turborepo, Nx, Lerna (detected in repo-level analysis) | Not detected | Ultra-Metis: Monorepo orchestration |
+| **Type System** | Enum-based `BuildTool` with Display trait | N/A | Ultra-Metis: Type-safe representation |
+| **Test Coverage** | 6+ build tool test scenarios | Not applicable | Ultra-Metis: Demonstrated verification |
+
+**Summary**: Ultra-Metis detects 14+ build tools across diverse ecosystems. Original Metis has no explicit build tool detection mechanism.
+
+##### J3. Package Manager Detection Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Package Managers** | 11 supported (Cargo, npm, Yarn, pnpm, Bun, Go modules, pip, Poetry, Maven, Gradle, .NET) | None (workspace-agnostic) | Ultra-Metis: Dependency ecosystem mapping |
+| **Detection Method** | Lock file presence (.lock files, workspace files) + manifest files | No detection | Ultra-Metis: Fingerprinting approach |
+| **JavaScript Variants** | Distinguishes npm, Yarn, pnpm, Bun with priority handling | Not supported | Ultra-Metis: JS ecosystem maturity recognition |
+| **Python Variants** | Distinguishes Poetry vs pip from poetry.lock presence | Not supported | Ultra-Metis: Python packaging strategy detection |
+| **Java/JVM** | Maven (pom.xml) + Gradle (build.gradle[.kts]) | Not supported | Ultra-Metis: JVM ecosystem coverage |
+| **Monorepo Detection** | Pnpm-workspace.yaml, Yarn workspace detection | Not supported | Ultra-Metis: Workspace semantics |
+| **Evidence Tracking** | Stores manifest/lock file evidence | N/A | Ultra-Metis: Transparent decision-making |
+| **Test Coverage** | 5+ package manager specific tests (pnpm, Yarn, npm, Poetry, Gradle) | N/A | Ultra-Metis: Verified correctness |
+
+**Summary**: Ultra-Metis identifies 11 package managers with ecosystem-specific detection. Original Metis has no package manager detection.
+
+##### J4. Monorepo Detection Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Monorepo Tools** | 9 tools (Cargo workspace, pnpm workspace, Yarn workspace, npm workspace, Turborepo, Nx, Lerna, Go workspace, .NET solution) | Not detected | Ultra-Metis: Polyglot monorepo support |
+| **Detection Strategy** | Explicit tool markers + structural heuristics (nested manifests in known dirs) | Workspace directory structure only | Ultra-Metis: Multi-faceted detection |
+| **Structural Detection** | Fallback detection without tool markers (e.g., 2+ nested Cargo.toml files) | Only directory traversal | Ultra-Metis: Pattern inference capability |
+| **Package Discovery** | Discovers nested packages with kind classification (app/library/unknown) | Not performed | Ultra-Metis: Workspace composition analysis |
+| **Package Classification** | App vs Library heuristics based on directory names (apps/, packages/, crates/, services/, libs/) | N/A | Ultra-Metis: Architectural clarity |
+| **Directory Inference** | Identifies common package directory patterns (packages/, apps/, libs/, crates/, modules/) | Not tracked | Ultra-Metis: Monorepo layout understanding |
+| **Tool Composition** | Supports layered tools (e.g., Turborepo + pnpm workspace) | N/A | Ultra-Metis: Tool stack comprehension |
+| **Type Safety** | Enums: `MonorepoTool`, `PackageKind` with evidence in `DiscoveredPackage` | String-based paths | Ultra-Metis: Structured representation |
+
+**Summary**: Ultra-Metis detects 9 monorepo patterns with package discovery and classification. Original Metis has no monorepo-specific capabilities.
+
+##### J5. Development Tool Discovery Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Tool Categories** | 7 categories (Linter, Formatter, Test Runner, Type Checker, CI/CD, Coverage, Bundler) | Implicit in skill/plugin system | Ultra-Metis: Organized dev tool taxonomy |
+| **Linters Detected** | 9 linters (ESLint, Clippy, pylint, flake8, ruff, golangci-lint, rubocop, Biome, stylelint) | Not explicitly catalogued | Ultra-Metis: Cross-language linting coverage |
+| **Formatters Detected** | 5+ formatters (Prettier, rustfmt, editorconfig, Deno fmt, Black via tool hints) | Not explicitly catalogued | Ultra-Metis: Code style tool awareness |
+| **Test Runners Detected** | 8 test frameworks (Jest, Vitest, pytest, Mocha, Playwright, Cypress, cargo-test, go-test) | Not explicitly detected | Ultra-Metis: Testing infrastructure mapping |
+| **Type Checkers** | TypeScript, mypy, Pyright detection | Not detected | Ultra-Metis: Static analysis awareness |
+| **CI/CD Detection** | 8 CI systems (GitHub Actions, GitLab CI, Jenkins, CircleCI, Travis CI, Azure DevOps, Bitbucket Pipelines, Buildkite) | Not detected | Ultra-Metis: CI/CD system discovery |
+| **Coverage Tools** | 3 coverage systems (NYC, coverage-py, codecov) | Not detected | Ultra-Metis: Quality metrics infrastructure |
+| **Config File Tracking** | Stores config file paths as evidence | N/A | Ultra-Metis: Tool location transparency |
+
+**Summary**: Ultra-Metis discovers 30+ dev tools across 7 categories with configuration file tracking. Original Metis has implicit tool integration only.
+
+##### J6. Project Type Inference Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Project Types** | 7 types (Server, WebApp, CliTool, Library, ComponentLibrary, FullStack, Unknown) | Single type (Metis workspace) | Ultra-Metis: Architectural classification |
+| **Inference Method** | Multi-factor heuristics (monorepo structure + file patterns + primary language + tool presence) | N/A | Ultra-Metis: Composite decision logic |
+| **File Pattern Analysis** | Scans for routes/, components/, handlers/, features/, stories/, bin/, cmd/, .storybook/ | Limited path analysis | Ultra-Metis: Directory convention understanding |
+| **WebApp Detection** | Components + features + routes patterns | Not applicable | Ultra-Metis: Frontend framework awareness |
+| **Server Detection** | Routes/handlers/controllers + language hints | Not applicable | Ultra-Metis: Backend architecture recognition |
+| **CLI Tool Detection** | Binary entry point + commands directory | Not applicable | Ultra-Metis: CLI project identification |
+| **Component Library** | Storybook + components + stories pattern | Not applicable | Ultra-Metis: Component architecture |
+| **Type Safety** | Enum-based `InferredProjectType` | N/A | Ultra-Metis: Type-safe classification |
+
+**Summary**: Ultra-Metis infers 7 project archetypes using multi-factor analysis. Original Metis treats all projects uniformly as Metis workspaces.
+
+##### J7. Brownfield vs Greenfield Detection Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Source Code Threshold** | 5+ source files of defined extensions | Not measured | Ultra-Metis: Greenfield cutoff detection |
+| **Source Extensions** | 19 tracked extensions (rs, js, jsx, ts, tsx, py, go, java, kt, rb, php, cs, fs, scala, swift, c, cpp, h, hpp) | Not measured | Ultra-Metis: Comprehensive language coverage |
+| **Test Infrastructure** | Presence of test runners indicates brownfield | Not tracked | Ultra-Metis: Established project indicator |
+| **CI/CD Presence** | CI system presence as brownfield marker | Not tracked | Ultra-Metis: DevOps maturity indicator |
+| **Heuristic Logic** | source_count >= 5 OR (source_count >= 2 AND (has_tests OR has_ci)) | Not applicable | Ultra-Metis: Graduated thresholds |
+| **Classification Certainty** | Clear brownfield/greenfield distinction | No distinction | Ultra-Metis: Project lifecycle awareness |
+| **Use Cases** | Informs initialization strategy and tool recommendations | N/A | Ultra-Metis: Context-aware bootstrap |
+
+**Summary**: Ultra-Metis classifies projects as brownfield/greenfield using source code, test, and CI presence. Original Metis has no maturity classification.
+
+##### J8. Bootstrap Orchestration & Deliverables Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Entry Point** | `BootstrapFlow::analyze(file_paths)` - pure function on path list | Workspace detection + manual setup | Ultra-Metis: Automated analysis |
+| **Input** | File path list (no filesystem I/O in domain layer) | File system traversal | Ultra-Metis: Separation of concerns |
+| **Output Structure** | `BootstrapResult` containing: scan, monorepo, tools, project_type, is_brownfield, summary | Implicit detection state | Ultra-Metis: Rich structured output |
+| **Summary Generation** | Human-readable facts + suggestions (e.g., "Consider adding ESLint") | Not provided | Ultra-Metis: Actionable recommendations |
+| **Suggestion Engine** | Language-aware tool recommendations (ESLint for JS/TS, Clippy for Rust, etc.) | Not implemented | Ultra-Metis: Intelligent guidance |
+| **Fact Extraction** | Primary language, additional languages, monorepo type/count, tool inventory, brownfield status | Detected state only | Ultra-Metis: Narrative generation |
+| **Downstream Use** | Informs architecture selection, product doc scaffolding, rules config generation | Manual configuration required | Ultra-Metis: Enabler for automation |
+| **Test Scenarios** | 10+ integration tests (Rust CLI, JS server, React app, Turborepo fullstack, component lib, greenfield, brownfield) | Basic workspace validation | Ultra-Metis: Comprehensive coverage |
+
+**Summary**: Ultra-Metis provides end-to-end bootstrap orchestration with intelligent analysis and recommendations. Original Metis requires manual configuration after basic workspace detection.
+
+#### K. Operations Kernel
+
+**Investigation Status**: COMPLETED (SMET-T-0107)
+
+Ultra-Metis implements a sophisticated **Operations Kernel** that provides a type-safe composition system for cognitive operations, reusable loops, and workflow templates. This is a novel architectural capability not found in original Metis.
+
+##### K1. Cognitive Operations Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Operation Types Defined** | 12 core cognitive operations (FrameObjective, AcquireContext, BuildModel, LocateFocus, AnalyzeStructure, TraceFlow, AssessImpact, ShapeSolution, DecomposeWork, CreateArtifact, ValidateReality, ReassessAdapt) | Implicit in workflow design but not formally enumerated | Ultra-Metis: Explicit type system with formal semantics |
+| **Specification Completeness** | Complete: Input requirements, output types, tool hints, escalation conditions per operation | Implicit assumptions in plugin logic | Ultra-Metis: Superior formalization |
+| **Tool Mapping** | 8 tool categories (Search, Analysis, Testing, Build, VersionControl, Documentation, CodeModification, Metrics) per operation | Tool selection implicit in skill implementation | Ultra-Metis: Explicit tool category hints |
+| **Escalation Semantics** | Formal escalation conditions (InsufficientContext, AmbiguityDetected, DesignConflict, RiskThresholdExceeded, ValidationFailed, IterationBudgetExhausted, Custom) | Human-in-the-loop escalation in Ralph loop | Ultra-Metis: More explicit and categorized |
+| **Reusability** | Each operation is independently reusable and can be composed into different loops | Embedded in specific workflow patterns | Ultra-Metis: Higher modularity and recomposability |
+| **Serialization** | Full JSON/YAML serialization support with serde | Not serialized as domain types | Ultra-Metis: First-class artifacts |
+| **Type Safety** | Strong enum-based typing with parse/display traits | String-based plugin command invocation | Ultra-Metis: Compile-time safety |
+
+**Summary**: Ultra-Metis defines a formal, reusable, type-safe operational calculus that goes well beyond the implicit workflow patterns in original Metis.
+
+##### K2. Loop Definition & Composition
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Reusable Loops** | 11 formally defined loops (ObjectiveFraming, ContextSufficiency, ModelConstruction, FocusNarrowing, Trace, RiskImpact, SolutionShaping, Decomposition, ArtifactProduction, Validation, Adaptation) | Patterns embedded in individual skill/agent designs | Ultra-Metis: Explicit loop library |
+| **Loop Composition** | Each loop composes 2-3 default operations with customizable overrides | Fixed sequences in skill implementations | Ultra-Metis: More flexible composition |
+| **Entry/Exit Conditions** | Formal condition system (Always, ArtifactExists, ArtifactValid, ContextSufficient, OperationsComplete, RiskAcceptable, AllValidationsPass, ObjectiveEstablished, ModelSufficient, Custom) | Implicit state checks in skill execution | Ultra-Metis: Explicit guard conditions |
+| **Iteration Limits** | Per-loop configurable max iterations (3-10 depending on loop type) | Implicit in Ralph loop iteration logic | Ultra-Metis: Explicit and tunable |
+| **Escalation Rules** | Per-loop escalation trigger conditions | In Ralph loop completion promise | Ultra-Metis: More granular control |
+| **Artifact Tracking** | Required input and produced output artifacts per loop step | Implicit in skill output assumptions | Ultra-Metis: Explicit artifact contracts |
+| **Default Operations** | Each loop has canonical default operation sequence | Not pre-composed; selected by skills | Ultra-Metis: Opinionated but customizable defaults |
+
+**Summary**: Ultra-Metis provides a declarative loop library with explicit composition semantics, while original Metis embeds loop patterns within imperative skill code.
+
+##### K3. Workflow Template System
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Work Types** | 9 work types defined (Bugfix, Feature, Refactor, Investigation, Migration, ArchitectureChange, BrownfieldEvaluation, Remediation, GreenfieldBootstrap) | Implicit work types (bug, feature, refactor, investigation) in skill routing | Ultra-Metis: More comprehensive |
+| **Template Definitions** | 5 fully implemented templates with step sequences, artifact flow, completion rules | Workflow selection logic in skills (partial implementation) | Ultra-Metis: More complete template library |
+| **Implemented Templates** | Bugfix, Feature, Refactor, Investigation, Migration | Implied through skill composition | Ultra-Metis: Explicit and persistent |
+| **Missing Templates** | ArchitectureChange, BrownfieldEvaluation, Remediation, GreenfieldBootstrap | No formal templates (skills handle ad-hoc) | Ultra-Metis: Identified gaps for future implementation |
+| **Loop Sequencing** | Each template specifies exact loop sequence with required/optional flags | Loop selection embedded in skill decision logic | Ultra-Metis: More declarative and auditable |
+| **Artifact Flow** | Each step declares required input and produced output artifacts | Artifact production implicit in skill outputs | Ultra-Metis: Explicit data flow contracts |
+| **Entry Conditions** | Per-template entry condition (e.g., "bug_report exists" for Bugfix) | Implicit in skill entry conditions | Ultra-Metis: Explicit template preconditions |
+| **Completion Rules** | Multiple completion rule types (AllRequiredLoopsComplete, ArtifactsExist, AllValidationsPass, GateSatisfied, Custom) | Completion promise in Ralph loop | Ultra-Metis: More flexible and expressive |
+| **Customization** | Workflow definitions immutable but loopsteps overridable at construction time | Skills can be dynamically selected/skipped | Ultra-Metis: Type-safe customization points |
+
+**Summary**: Ultra-Metis provides a complete workflow template library with explicit loop sequences and artifact contracts. Original Metis relies on skill-based routing with implicit template selection.
+
+##### K4. Execution Model Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Composition Hierarchy** | Operations → Loops → Workflows (3-level type system) | Skills → Ralph loop → Agents (implicit hierarchy) | Ultra-Metis: More formalized |
+| **Type Safety** | Strongly typed enums with parse/display for all domain types | String-based plugin commands | Ultra-Metis: Compile-time safety |
+| **Condition System** | Declarative conditions (entry, exit, escalation) evaluated at loop/operation boundaries | Imperative checks in skill/agent code | Ultra-Metis: More declarative |
+| **State Management** | Condition evaluation drives loop control (data-driven) | Ralph loop iteration and completion promise (imperative) | Ultra-Metis: More data-driven |
+| **Artifact Tracking** | Explicit artifact contracts on each loop step | Implicit assumptions about skill outputs | Ultra-Metis: More explicit and verifiable |
+| **Escalation Handling** | Formal escalation conditions trigger human escalation | Ralph loop catch block and escalation prompt | Ultra-Metis: More structured escalation |
+| **Iteration Budgets** | Per-loop iteration limits with forced escalation | Ralph loop iteration limit (global) | Ultra-Metis: More granular budgets |
+| **Tool Integration** | Tool categories hint at static tools (not execution engine) | Explicit tool invocation in skills | Ultra-Metis: Type system for tools but no runtime |
+| **Workflow Customization** | Immutable workflows; customization via composition at build time | Runtime skill selection and skipping | Ultra-Metis: More predictable but less dynamic |
+
+**Summary**: Ultra-Metis provides a declarative, type-safe execution model with explicit composition hierarchy. Original Metis uses imperative skill-based execution with implicit composition patterns.
+
+##### K5. Tool Integration & Capability Mapping
+
+| Tool Category | Example Use Cases | Operations | Loops |
+|---|---|---|---|
+| **Search** | Find files, functions, patterns (grep, find, ast-grep) | AcquireContext, BuildModel, LocateFocus, AnalyzeStructure, TraceFlow | ContextSufficiency, ModelConstruction, FocusNarrowing, Trace |
+| **Analysis** | Linting, code analysis, complexity metrics (clippy, eslint, semgrep) | BuildModel, AnalyzeStructure, TraceFlow, AssessImpact | ModelConstruction, AnalyzeStructure, RiskImpact |
+| **Testing** | Unit tests, integration tests, test frameworks (cargo test, jest, pytest) | ValidateReality | Validation, ArtifactProduction |
+| **Build** | Compilation, packaging (cargo build, tsc, make) | CreateArtifact, ValidateReality | ArtifactProduction, Validation |
+| **VersionControl** | Git log, diff, blame (git commands) | AcquireContext, LocateFocus, TraceFlow, AssessImpact | ContextSufficiency, FocusNarrowing, Trace, RiskImpact |
+| **Documentation** | API refs, man pages, design docs | FrameObjective, AcquireContext, ShapeSolution, DecomposeWork, ReassessAdapt | ObjectiveFraming, SolutionShaping, Decomposition, Adaptation |
+| **CodeModification** | Refactoring, patching, code generation (patch, sed, LLM tools) | CreateArtifact | ArtifactProduction |
+| **Metrics** | Coverage reports, performance metrics, complexity analysis | AssessImpact | RiskImpact |
+
+**Ultra-Metis Assessment**: Tool mapping is declared but not executed. Actual tool integration remains a future capability to be built on top of the operations kernel. The tool hints provide guidance for implementation but are not enforced by the type system.
+
+**Original Metis Assessment**: Tool integration is implicit in skill implementation—each skill hardcodes which tools it uses. No abstraction layer for tool categories.
+
+**Comparison**: Ultra-Metis provides a better foundation for tool abstraction but requires runtime implementation. Original Metis has concrete tool usage but no abstraction.
+
+##### K6. Loop Specifications & Control Flow
+
+| Loop | Default Operations | Entry Condition | Exit Condition | Max Iterations | Escalation Rules |
+|------|---|---|---|---|---|
+| **ObjectiveFraming** | FrameObjective → AcquireContext → FrameObjective | Always | ObjectiveEstablished | 3 | IterationBudgetExhausted |
+| **ContextSufficiency** | AcquireContext → BuildModel | ObjectiveEstablished | ContextSufficient | 5 | IterationBudgetExhausted |
+| **ModelConstruction** | AcquireContext → BuildModel → AnalyzeStructure | ContextSufficient | ModelSufficient | 3 | IterationBudgetExhausted |
+| **FocusNarrowing** | LocateFocus → AnalyzeStructure | ModelSufficient | Custom("focus area identified") | 3 | IterationBudgetExhausted |
+| **Trace** | LocateFocus → TraceFlow | Custom("focus area identified") | Custom("flow traced to satisfaction") | 5 | IterationBudgetExhausted |
+| **RiskImpact** | AnalyzeStructure → TraceFlow → AssessImpact | Custom("change described") | RiskAcceptable | 3 | IterationBudgetExhausted |
+| **SolutionShaping** | ShapeSolution → AssessImpact → ShapeSolution | Custom("problem understood") | Custom("solution design accepted") | 5 | IterationBudgetExhausted |
+| **Decomposition** | DecomposeWork → AssessImpact | Custom("solution design accepted") | Custom("work plan complete") | 3 | IterationBudgetExhausted |
+| **ArtifactProduction** | CreateArtifact → ValidateReality | Custom("work plan complete") | AllValidationsPass | 10 | IterationBudgetExhausted |
+| **Validation** | ValidateReality → ReassessAdapt | ArtifactExists("artifact") | AllValidationsPass | 5 | IterationBudgetExhausted |
+| **Adaptation** | ReassessAdapt → FrameObjective | Custom("new information available") | Custom("plan updated") | 3 | IterationBudgetExhausted |
+
+**Assessment**: Each loop is independently configurable with customizable operations, conditions, and iteration budgets. This provides fine-grained control over composition and execution boundaries.
+
+##### K7. Workflow Templates in Detail
+
+| Template | Work Type | Steps | Loop Sequence | Key Artifacts | Completion Rules | Escalation Triggers |
+|---|---|---|---|---|---|---|
+| **Bugfix** | Bugfix | 8 steps (7 required, 1 optional) | ObjectiveFraming → ContextSufficiency → FocusNarrowing → Trace → RiskImpact → ArtifactProduction → Validation → Adaptation | objective, context_set, focus_area, root_cause, impact_assessment, fix, validation_results | AllValidationsPass, RiskThresholdExceeded | RiskThresholdExceeded |
+| **Feature** | Feature | 8 steps (7 required, 1 optional) | ObjectiveFraming → ContextSufficiency → ModelConstruction → SolutionShaping → Decomposition → ArtifactProduction → Validation → Adaptation | objective, context_set, system_model, solution_design, work_plan, implementation, validation_results | AllValidationsPass | IterationBudgetExhausted |
+| **Refactor** | Refactor | 7 steps (all required) | ObjectiveFraming → ModelConstruction → FocusNarrowing → RiskImpact → ArtifactProduction → Validation → Adaptation | objective, system_model, focus_area, impact_assessment, refactored_code, validation_results | AllValidationsPass, Custom("Behavior preserved") | IterationBudgetExhausted |
+| **Investigation** | Investigation | 5 steps (4 required, 1 optional) | ObjectiveFraming → ContextSufficiency → ModelConstruction → Trace (optional) → ArtifactProduction | question, context_set, system_model, trace_results (optional), findings_document | ArtifactsExist("findings_document") | IterationBudgetExhausted |
+| **Migration** | Migration | 7 steps (all required) | ObjectiveFraming → ModelConstruction → RiskImpact → Decomposition → ArtifactProduction → Validation → Adaptation | migration_objective, current_state_model, migration_impact, migration_plan, migrated_code, validation_results | AllValidationsPass, RiskThresholdExceeded | RiskThresholdExceeded |
+| **ArchitectureChange** | ArchitectureChange | Not implemented | — | — | — | — |
+| **BrownfieldEvaluation** | BrownfieldEvaluation | Not implemented | — | — | — | — |
+| **Remediation** | Remediation | Not implemented | — | — | — | — |
+| **GreenfieldBootstrap** | GreenfieldBootstrap | Not implemented | — | — | — | — |
+
+**Assessment**: The 5 implemented templates cover the most common work types (bugfix, feature, refactor, investigation, migration). The template system provides explicit loop sequences, required/optional step marking, and artifact contracts. The 4 missing templates represent higher-complexity scenarios that require additional design work.
+
+##### K. Operations Kernel Summary
+
+**Architecture**: Ultra-Metis's operations kernel is a novel architectural capability providing:
+- Type-safe composition of 12 cognitive operations
+- 11 reusable loops with explicit control flow semantics
+- 5 implemented workflow templates (4 missing)
+- Formal specification of tool integration points
+- Declarative execution model with condition-based control
+
+**Compared to Original Metis**:
+- **More Robust**: Explicit, type-safe, formally specified
+- **More Complete**: Comprehensive operation/loop/workflow definitions
+- **More Modular**: Operations and loops are independently reusable
+- **More Declarative**: Data-driven execution rather than imperative skill code
+- **Novel Architecture**: No direct equivalent in original Metis—a genuine extension
+
+**Implementation Status**:
+- Complete: 12 operations, 11 loops, 5 workflow templates, specifications
+- In Progress: Runtime execution engine (type system is defined but not executing)
+- Missing: Full tool integration, 4 additional workflow templates, execution/tracing
+
+**Code Location**: `/Users/danielcassil/projects/ultra-metis/crates/ultra-metis-core/src/domain/operations/`
+
+**Acceptance Criteria Met**:
+- [x] All 12 cognitive operation types documented with semantics and specifications
+- [x] Loop definitions and composition patterns documented
+- [x] Workflow template system documented (5/9 templates implemented)
+- [x] Operation equivalents in Metis identified and compared
+- [x] Comparison grids K1-K7 completed with detailed findings
+
+#### L. Execution Traceability & Audit
+- [ ] **SMET-T-0108**: Execution Traceability & Audit (Records, decisions, indexes)
+  - Execution record capture
+  - Tool invocation logging
+  - Decision recording
+  - Cross-reference indexing
+
+##### L1. Execution Record Structure Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Document Type** | Dedicated ExecutionRecord type with rich metadata | No dedicated execution record type | Ultra-Metis: Purpose-built artifact |
+| **Persistence** | Markdown + YAML frontmatter (repo-native, durable) | No execution capture mechanism | Ultra-Metis: Durable repo-native persistence |
+| **Initiating Artifact Link** | Explicit `initiating_artifact` field (task/story short code) | N/A (no mechanism) | Ultra-Metis: Explicit traceability |
+| **Execution Mode Tracking** | Enum: SingleAgent, Orchestrated, Manual | N/A | Ultra-Metis: Distinguishes execution patterns |
+| **Temporal Tracking** | `started_at`, `completed_at` (RFC3339 timestamps) | Implicit in transition results | Ultra-Metis: Precise temporal record |
+| **Final Disposition** | Enum: Completed, Failed, Blocked, Abandoned, InProgress | Implicit in task phase | Ultra-Metis: Explicit execution outcome |
+| **Schema Evolution** | `schema_version` field for forward compatibility | Manual schema management | Ultra-Metis: Versioned schema support |
+
+**Summary**: Ultra-Metis provides a dedicated, purpose-built ExecutionRecord with rich metadata for linking intent to outcome. Original Metis has no execution record mechanism.
+
+##### L2. Tool Entry Tracking Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Tool Logging** | ToolEntry struct with name, arguments, result_summary | Tool invocations implicit in task work | Ultra-Metis: Explicit tool tracking |
+| **Field Coverage** | name (string), arguments (string), result_summary (string) | Not captured separately | Ultra-Metis: Structured tool metadata |
+| **Storage Format** | YAML array in execution record frontmatter | Not supported | Ultra-Metis: Queryable structured data |
+| **Multiple Tools** | Vec<ToolEntry> - support unlimited tools | Single implicit context | Ultra-Metis: Unbounded tool invocations |
+| **Serialization** | YAML hash parsing and rendering | N/A | Ultra-Metis: Robust round-trip conversion |
+| **Parsing Logic** | Dedicated parse_tool_entries() method with error handling | N/A | Ultra-Metis: Resilient parsing (skips malformed entries) |
+
+**Summary**: Ultra-Metis captures each tool invocation as a discrete, queryable entry. Original Metis provides no tool tracking.
+
+##### L3. Validation Entry Recording Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Validation Tracking** | ValidationEntry struct with name, passed, details | Not explicitly tracked | Ultra-Metis: Discrete validation records |
+| **Field Structure** | name (string), passed (bool), details (string) | Implicit in task status | Ultra-Metis: Structured validation data |
+| **Pass/Fail Clarity** | Boolean `passed` field for clarity | Implicit in task phase/completion | Ultra-Metis: Explicit validation outcome |
+| **Details Capture** | Detailed failure/success messages | Not captured | Ultra-Metis: Evidence preservation |
+| **Collection** | Vec<ValidationEntry> for multiple validations | Single implicit validation | Ultra-Metis: Unbounded validation suite |
+| **Parsing Robustness** | parse_validation_entries() with graceful degradation | N/A | Ultra-Metis: Malformed entry handling |
+
+**Summary**: Ultra-Metis records each validation run as a discrete entry with outcome and details. Original Metis provides implicit validation through task completion state.
+
+##### L4. Decision Recording Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Decision Artifact** | Dedicated DecisionRecord document type | No decision record mechanism | Ultra-Metis: Purpose-built decision capture |
+| **Decision Statement** | `decision` field (what was decided) | Not captured | Ultra-Metis: Explicit decision documentation |
+| **Decision Context** | `decision_context` field (why it was needed) | Not captured | Ultra-Metis: Contextual rationale |
+| **Alternatives** | Vec<Alternative> with title, description, rejected_reason | Not captured | Ultra-Metis: Explicit trade-off analysis |
+| **Rationale** | `rationale` field (why this decision was chosen) | Not captured | Ultra-Metis: Explicit justification |
+| **Approval** | `approved_by` field (optional stakeholder sign-off) | Not captured | Ultra-Metis: Stakeholder accountability |
+| **Evidence Links** | `evidence` field (Vec of supporting document short codes) | Not captured | Ultra-Metis: Transparent decision support |
+| **Related Artifacts** | `related_artifacts` field for bidirectional linking | Not captured | Ultra-Metis: Cross-reference support |
+| **Temporal Record** | `timestamp` (DateTime<Utc>) for decision point | Not captured | Ultra-Metis: Precise decision timing |
+| **Persistence** | Markdown + YAML frontmatter (durable) | N/A | Ultra-Metis: Durable repo-native storage |
+
+**Summary**: Ultra-Metis provides comprehensive decision recording with alternatives, rationale, and evidence. Original Metis has no decision documentation mechanism.
+
+##### L5. Transition Audit Trail Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Transition Record** | Dedicated TransitionRecord document type | TransitionResult struct with basic metadata | Ultra-Metis: Durable audit artifact |
+| **Document Reference** | `document_ref` (short code of transitioned document) | `document_id` and `document_type` | Comparable: Both track what was transitioned |
+| **From/To Phases** | String fields `from_phase`, `to_phase` | Phase enums in TransitionResult | Comparable: Both capture phase change |
+| **Actor Tracking** | `actor` field (who/what triggered transition) | No actor tracking | Ultra-Metis: Accountability |
+| **Transition Timestamp** | DateTime<Utc> for precise timing | Implicit at API call time | Ultra-Metis: Explicit temporal record |
+| **Pre-transition Checks** | CheckResult vector (exit criteria, quality gates, etc.) | Implicit in validate_transition() | Ultra-Metis: Durable check records |
+| **Force Override Tracking** | `forced` boolean field | No override tracking | Ultra-Metis: Policy violation detection |
+| **Transition Reason** | `reason` field (optional explanation) | Not captured | Ultra-Metis: Intent documentation |
+| **Persistence** | Markdown + YAML (durable repo-native) | In-memory TransitionResult only | Ultra-Metis: Durable audit trail |
+| **Backward Compatibility** | Schema versioning support | N/A | Ultra-Metis: Evolution support |
+
+**Summary**: Ultra-Metis records transitions as durable artifacts with actor, checks, and override tracking. Original Metis returns in-memory TransitionResult without persistence.
+
+##### L6. Cross-Reference Indexing Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Cross-Reference Type** | Dedicated CrossReference document type | No cross-reference indexing | Ultra-Metis: Typed relationship graph |
+| **Relationship Types** | 9 types: ParentChild, Governs, References, DerivedFrom, Supersedes, ConflictsWith, Validates, Blocks, ApprovedBy | Not supported | Ultra-Metis: Semantic relationship graph |
+| **Source/Target Links** | `source_ref`, `target_ref` (short codes) | Implicit parent-child relationships only | Ultra-Metis: Rich relationship model |
+| **Bidirectionality** | `bidirectional` boolean field for symmetric relationships | Parent-child only (unidirectional) | Ultra-Metis: Flexible directionality |
+| **Relationship Semantics** | Typed enum with symmetric/inverse support | Not defined | Ultra-Metis: Semantic clarity |
+| **Inverse Traversal** | `inverse()` method for relationship traversal | N/A | Ultra-Metis: Bidirectional querying |
+| **Description** | Human-readable `description` field | Not captured | Ultra-Metis: Semantic documentation |
+| **Persistence** | Markdown + YAML (repo-native index) | N/A | Ultra-Metis: Durable relationship index |
+| **Queryability** | All relationships stored as queryable artifacts | Hierarchical traversal only (implicit) | Ultra-Metis: Flexible graph queries |
+
+**Summary**: Ultra-Metis provides a rich, typed cross-reference system with 9 relationship types. Original Metis supports only implicit parent-child hierarchy.
+
+##### L7. Tool Integration & Context Capture Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Context Sources** | `context_sources` (Vec of document short codes consulted) | Implicit in workspace discovery | Ultra-Metis: Explicit context tracking |
+| **Architecture Reference** | `architecture_consulted` (optional single document) | Implicit if architecture exists | Ultra-Metis: Explicit pattern lookup |
+| **Rules Consulted** | `rules_consulted` (Vec of governance rules applied) | Implicit in validation | Ultra-Metis: Explicit rule tracking |
+| **Notes Fetched** | `notes_fetched` (Vec of insight/memory note IDs) | No insight notes mechanism | Ultra-Metis: Cognitive memory integration |
+| **Files Touched** | `files_touched` (Vec of modified file paths) | Implicit in task work | Ultra-Metis: Explicit file change tracking |
+| **Artifacts Updated** | `artifacts_updated` (Vec of documents changed) | Implicit via discovery | Ultra-Metis: Explicit artifact linkage |
+| **Escalations Raised** | `escalations` (Vec of EscalationEntry) | No escalation tracking | Ultra-Metis: Governance escalation records |
+| **Overrides Applied** | `overrides` (Vec of OverrideEntry: rule, reason, approved_by) | No override tracking | Ultra-Metis: Policy violation audit |
+| **Metadata Density** | 10+ contextual fields for rich execution context | Minimal metadata | Ultra-Metis: Comprehensive execution context |
+
+**Summary**: Ultra-Metis captures extensive execution context (sources, rules, notes, files, escalations, overrides). Original Metis provides minimal context tracking.
+
+##### L8. Auditability & Compliance Comparison
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Audit Trail Completeness** | Execution records + decision records + transition records + cross-reference index | Implicit in file timestamps | Ultra-Metis: Comprehensive audit trail |
+| **Who Changed What** | ExecutionRecord.actor + TransitionRecord.actor fields | Implicit in file ownership | Ultra-Metis: Explicit actor tracking |
+| **When Changes Happened** | ISO8601 timestamps on every record (created_at, updated_at, timestamps) | File modification times | Ultra-Metis: Precise temporal record |
+| **Why Changes Happened** | DecisionRecord with rationale + TransitionRecord.reason | Implicit in commit history | Ultra-Metis: Explicit intent documentation |
+| **Approval Chain** | DecisionRecord.approved_by + TransitionRecord.forced flag | Not tracked | Ultra-Metis: Policy accountability |
+| **Compliance Queries** | All relationships queryable via repo artifact index | Not queryable | Ultra-Metis: Compliance query capability |
+| **Immutability Support** | SHA-based versioning for decision/transition records | Not supported | Ultra-Metis: Forensic integrity |
+| **Regulatory Support** | Records suitable for audit/regulatory requirements | Not designed for compliance | Ultra-Metis: Compliance-ready design |
+
+**Summary**: Ultra-Metis provides comprehensive, queryable audit trails suitable for regulatory requirements. Original Metis relies on implicit file metadata and commit history.
+
+
+#### M. Durable Memory Systems
+
+**Status**: ✓ COMPLETED - Investigation findings aggregated from SMET-T-0109 analysis of DurableInsightNote module and task integration patterns.
+
+##### M1. System Overview & Capabilities
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Durable Memory System** | Not Implemented | Full system with DurableInsightNote document type | Ultra-Metis adds lightweight, scoped, self-pruning repository memory |
+| **Purpose** | N/A | Capture reusable local knowledge: hotspots, recurring failures, quirks, hints | Enables persistent insight sharing across task executions within scope |
+| **Scope Definition** | N/A | Repository, package, subsystem, file paths, symbol names | Sophisticated matching: any scope overlap triggers fetch; enables targeted retrieval |
+| **Lifecycle Model** | N/A | Active → PruneCandidate → NeedsHumanReview → Archived | 4-state lifecycle; notes transition based on usage patterns and feedback |
+| **Integration Point** | N/A | Task workflows fetch notes at start by scope; record feedback at wrap-up | Bidirectional: fetch for context, feedback for scoring |
+| **Governance Status** | N/A | Governance-type document (no Document trait, immutable structure) | Separate from mutable workflow documents; protected from phase transitions |
+| **File Format** | N/A | Markdown + YAML frontmatter (same serialization as workflow documents) | Repository-native storage; human-readable and version-control friendly |
+
+##### M2. Note Structure & Content Model
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Note Title** | N/A | Required string field, used as unique identifier base | Titles must be non-empty; converted to DocumentId |
+| **Note Body** | N/A | Free-form markdown text; validated as non-empty | Captures the actual insight; must contain meaningful content |
+| **Insight Category** | N/A | 7 types: HotspotWarning, RecurringFailure, MisleadingName, ValidationHint, LocalException, BoundaryWarning, SubsystemQuirk | Typed insight enables filtered retrieval and risk assessment |
+| **Scope Definition** | N/A | InsightScope struct with 5 fields (repo, package, subsystem, paths[], symbols[]) | Flexible hierarchical scope; any field can be populated or left empty |
+| **Metadata Fields** | N/A | title, short_code, created_at, updated_at, archived, tags, exit_criteria_met | Standard document metadata; notes timestamped at creation and update |
+| **Short Code** | N/A | Required unique identifier (format: PREFIX-TYPE-NNNN) | Enables precise reference in documentation and tool outputs |
+| **Tags** | N/A | Standard Tag types (Phase, Custom); Phase tag identifies note status | Notes support phase tagging for workflow integration |
+
+##### M3. Categorization & Classification
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **HotspotWarning** | N/A | Category type for dangerous code regions or anti-patterns | Signals areas prone to bugs or requiring careful modification |
+| **RecurringFailure** | N/A | Category type for frequently-failing patterns or tests | Captures institutional knowledge of flaky or problematic areas |
+| **MisleadingName** | N/A | Category type for confusing naming or API design | Warns about code that contradicts its own naming or behavior |
+| **ValidationHint** | N/A | Category type for non-obvious validation rules or constraints | Captures domain-specific validation that isn't obvious from code |
+| **LocalException** | N/A | Category type for exception-to-rule local behavior | Marks places where standard patterns don't apply |
+| **BoundaryWarning** | N/A | Category type for module boundary or interface issues | Highlights integration points prone to misuse or misconfiguration |
+| **SubsystemQuirk** | N/A | Category type for idiosyncratic subsystem behavior | Captures undocumented or counter-intuitive subsystem properties |
+| **Category Parsing** | N/A | FromStr trait for string parsing (e.g., "hotspot_warning" or "hotspot-warning") | Flexible parsing supports underscore and hyphen variants |
+
+##### M4. Scoring & Feedback System
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Feedback Types** | N/A | 3-signal system: Helpful, Meh, Harmful | Ternary classification enables quality trending |
+| **Signal Tracking** | N/A | Separate counters: thumbs_up_count, meh_count, thumbs_down_count | Per-signal granularity enables nuanced analysis |
+| **Feedback Recording** | N/A | record_feedback() method; increments counter and updates last_feedback_at | Feedback is append-only; new signals are added, old ones not overwritten |
+| **Fetch Tracking** | N/A | fetch_count incremented each time note is retrieved; last_fetched_at timestamp | Enables staleness detection and usage pattern analysis |
+| **Total Feedback Count** | N/A | total_feedback() = thumbs_up_count + meh_count + thumbs_down_count | Aggregate metric for threshold-based decisions |
+| **Helpful Ratio** | N/A | helpful_ratio() = thumbs_up_count / total_feedback (0.0 if no feedback) | Value indicator; notes with low helpful_ratio are candidates for pruning |
+| **Harmful Ratio** | N/A | harmful_ratio() = thumbs_down_count / total_feedback (0.0 if no feedback) | Risk indicator; notes with high harmful_ratio flagged for review |
+| **Last Feedback Timestamp** | N/A | last_feedback_at: Option<DateTime<Utc>>; updated on each feedback signal | Enables temporal analysis: when was this note last validated? |
+| **Scoring Semantics** | N/A | Signals are relative, not absolute; ratio-based thresholds avoid count inflation | 5 feedbacks with 4 helpful = 80% helpful (strong signal); 2 feedbacks with 1 helpful = 50% (uncertain) |
+
+##### M5. Prune Candidate Detection
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Detection Criteria** | N/A | 4 independent heuristics: staleness, harmful ratio, meh accumulation, low value ratio | Multi-factor approach prevents false positives from single signals |
+| **Staleness Detection** | N/A | should_be_prune_candidate() checks: days_since_last_fetch >= stale_days | Configurable threshold (e.g., 60 days); notes not recently accessed are candidates |
+| **Harmful Ratio Threshold** | N/A | If total_feedback > 0 AND harmful_ratio >= harmful_threshold, mark prune candidate | Configurable threshold (e.g., 0.5 = 50% harmful signals); prevents harmful notes from lingering |
+| **Meh Accumulation Pattern** | N/A | If total_feedback >= min_feedback AND thumbs_up_count == 0 AND meh_count > 0 | Captures notes receiving meh-only feedback; no positive signal ever recorded |
+| **Low Value Heuristic** | N/A | If fetch_count >= min_uses AND total_feedback >= min_feedback AND helpful_ratio < value_threshold | Notes used many times but rarely helpful become candidates |
+| **Configurable Parameters** | N/A | 5 thresholds: stale_days, harmful_threshold, min_feedback, min_uses, value_threshold | Organization can tune pruning aggressiveness |
+| **Status Transition** | N/A | mark_prune_candidate() sets status to PruneCandidate; timestamps update | Automatic on detection; human review can override via flag_for_review() |
+| **Immutability During Prune Check** | N/A | should_be_prune_candidate() is read-only; does not modify note | Enables repeated evaluation without side effects |
+
+##### M6. Conflict Detection & Human Review
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Review Reason Types** | N/A | 5 types: ConflictsWithArchitecture, ConflictsWithNote, StaleArchitecture, StaleNoteContent, RiskyToAutoPrune | Typed reasons enable triage and prioritized review workflows |
+| **ConflictsWithArchitecture** | N/A | ReviewReason type; note contradicts a documented architecture decision | Highest priority: architectural consistency violation |
+| **ConflictsWithNote** | N/A | ReviewReason type; note contradicts another active note in same/overlapping scope | Content coherence risk; both notes or one should be archived |
+| **StaleArchitecture** | N/A | ReviewReason type; architecture may have changed since note was written | Temporal consistency risk; architecture evolution may have invalidated note |
+| **StaleNoteContent** | N/A | ReviewReason type; note content itself may be outdated | Content validation risk; note author should update or archive |
+| **RiskyToAutoPrune** | N/A | ReviewReason type; note has high business or architectural relevance; risky to auto-prune | Captures high-value notes that should never be auto-pruned despite low usage |
+| **Flagging Method** | N/A | flag_for_review(reason: ReviewReason) sets status to NeedsHumanReview | Separates human review requirement from archived; allows workflow-based triage |
+| **Review Reason Storage** | N/A | review_reason: Option<ReviewReason> field on note | Tracks why review is needed; enables filtered querying |
+| **Parsing Support** | N/A | FromStr trait for ReviewReason (e.g., "conflicts_with_architecture" or "conflicts-with-architecture") | Flexible parsing supports underscore and hyphen variants |
+
+##### M7. Task Workflow Integration & Lifecycle
+
+| Aspect | Original Metis | Ultra-Metis | Notes |
+|--------|---|---|---|
+| **Fetch Trigger** | N/A | Task start: retrieve notes matching task scope via InsightScope::matches() | Proactive context injection at task initialization |
+| **Scope Matching Logic** | N/A | matches() returns true if any note scope field overlaps with query scope | Inclusive matching: repo overlap OR package overlap OR subsystem overlap OR path overlap OR symbol overlap triggers fetch |
+| **Fetch Recording** | N/A | record_fetch() increments fetch_count and updates last_fetched_at | Automatic side effect of fetch; enables usage tracking without explicit logging |
+| **Task-Scope Binding** | N/A | Task.fetch_related_notes(scope) retrieves all Active/NeedsHumanReview notes matching scope | Integration point: task operations layer calls into note repository |
+| **Feedback Recording at Wrap-Up** | N/A | Task completion flow calls record_feedback(signal) for notes fetched during task | Bidirectional: notes provide context, task execution validates note quality |
+| **Feedback Semantics** | N/A | Helpful: "This note was accurate and valuable for my task"; Meh: "Not directly applicable"; Harmful: "This note was misleading or wrong" | Clear semantics enable organizational learning |
+| **Status Transitions** | N/A | Active (default) → PruneCandidate (auto-detected) → NeedsHumanReview (flagged) → Archived (human decision) | One-way progression: notes never return to Active from Archived |
+| **Archival Method** | N/A | archive() sets status to Archived and core.archived = true | Dual flag ensures document-level visibility control |
+| **Non-Lifecycle Updates** | N/A | record_fetch() and record_feedback() update note.core.metadata.updated_at but do NOT change status | Metadata-only updates track activity without state change |
+
+**Findings Summary**: Ultra-Metis implements a sophisticated, multi-faceted durable memory system specifically designed for task-centric knowledge management. The system balances automated pruning (staleness, feedback ratios) with human oversight (review flags, conflicts) to maintain a high-quality insight database. Original Metis has no equivalent system; this is a significant capability gap. The design patterns (scope-based matching, feedback scoring, risk-aware lifecycle) provide a foundation for enterprise-grade memory management that could benefit any large-scale workflow system.
+
+**Gap Assessment**:
+- **Priority**: CRITICAL (capability entirely absent in original Metis)
+- **Implementation Complexity**: XL (full feature with multiple subsystems)
+- **Robustness**: Ultra-Metis significantly more robust
+- **Completeness**: Ultra-Metis complete; original N/A
+- **Design Quality**: Ultra-Metis cleaner (typed reasons, enums, FromStr parsing)
+
+#### N. Validation & Phase Enforcement
+
+**Investigation Complete**: SMET-T-0110 provides comprehensive analysis of validation and phase enforcement mechanisms. Six detailed comparison grids (N1-N6) document forward-only rules, exit criteria, hooks, policies, audit logging, and state transitions.
+
+##### N1. Forward-Only Phase Transition Rules
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Phase Graph Definition** | Explicit per-document type via `DocumentType::can_transition(from, to)` | Single flat phase enumeration with implicit validation | Ultra-Metis: Type-safe per-document-type graphs |
+| **Skip Prevention** | Enforcer rejects with `InvalidTransition` before hooks run | Service checks exact sequence match | Comparable: Both prevent phase skipping |
+| **Document Type Isolation** | Phase rules isolated by type via Rust enums | Single phase enumeration shared by all types | Ultra-Metis: Better encapsulation |
+| **Forced Transitions** | Bypasses pre-checks but NOT phase graph validity | Respects phase rules | Comparable: Both respect graph structure |
+
+**Summary**: Ultra-Metis uses strongly-typed per-document-type phase graphs. Both enforce strict forward-only movement.
+
+##### N2. Exit Criteria Definition & Checking
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Exit Criteria Storage** | Boolean flag `exit_criteria_met: bool` in frontmatter | Boolean flag in document | Comparable: Both use boolean flags |
+| **Check Registration** | Pre-transition hooks implement domain-specific checks via `HookRegistry` at GATE priority | Validation implicit in service | Ultra-Metis: Extensible hook system |
+| **Blocking vs Warning** | `PreCheckResult` distinguishes blocking vs warning (advisory) | Binary: allowed or blocked | Ultra-Metis: More nuanced failure handling |
+| **Customization** | Custom hooks for project-specific criteria | Hardcoded criteria | Ultra-Metis: Better customization |
+
+**Summary**: Both use boolean flags. Ultra-Metis provides extensible hooks for custom criteria with blocking/warning distinction.
+
+##### N3. Transition Hooks & Execution Sequence
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Hook Types** | `PreTransitionCheck` (block) + `PostTransitionAction` (side-effects) | No explicit hook infrastructure | Ultra-Metis: Explicit hook model |
+| **Hook Registry** | `HookRegistry` with `register_pre_check()`, `register_post_action()`, `run_pre_checks()`, `run_post_actions()` | Logic embedded in service | Ultra-Metis: Modular composition |
+| **Priority Levels** | 4 levels: SYSTEM, GATE, USER, ADVISORY (100,200,500,900) | No priority system | Ultra-Metis: More flexible ordering |
+| **Check Results** | 3 states: Pass, Block, Warn with messages | Binary: pass or fail | Ultra-Metis: More expressive results |
+| **Filter Capability** | Filter by document type, from-phase, to-phase | No filtering | Ultra-Metis: More selective execution |
+| **Post-Transition Actions** | Runs after success, returns success/failure | No post-hooks | Ultra-Metis: Extension point |
+
+**Summary**: Ultra-Metis provides rich hook infrastructure with priority ordering. Original Metis embeds logic inline.
+
+##### N4. Validation Policies & Records
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **ValidationPolicy Document** | Explicit document type: defines pattern (e.g., "story:feature") and required_validations list | No validation policy document type | Ultra-Metis: Policy as documents |
+| **Policy Patterns** | Pattern string matches document scope via pattern matching | No pattern matching | Ultra-Metis: Pattern-driven policies |
+| **ValidationRecord Document** | Explicit document type: records validation_type, result (Passed/Failed/Skipped), required, related_artifact | No validation record tracking | Ultra-Metis: Auditable records |
+| **Result Recording** | Each validation produces persisted `ValidationRecord` | Results not formally recorded | Ultra-Metis: Full audit trail |
+| **Enforcement** | Pre-transition hooks evaluate ValidationRecords for blocking transitions | No enforcement gate | Ultra-Metis: Enforced via hooks |
+
+**Summary**: Ultra-Metis has explicit `ValidationPolicy` and `ValidationRecord` document types. Original Metis lacks formal validation documents.
+
+##### N5. Audit Logging & Traceability
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Log Structure** | `TransitionAuditLog` with `AuditEntry`: entry_id, timestamp, document_id, document_type, from/to phases, actor, forced, outcome, check results, action results | Database records: document_id, from_phase, to_phase, timestamp | Ultra-Metis: Much more detailed |
+| **Outcome Tracking** | Enum: Allowed, Blocked, InvalidTransition, Forced | Binary: allowed or error | Ultra-Metis: More granular outcomes |
+| **Check Details** | `AuditCheckEntry` per pre-check: name, passed, blocking, message | Results not logged | Ultra-Metis: Complete check history |
+| **Action Details** | `AuditActionEntry` per post-action: name, success, message | No post-actions | Ultra-Metis: Post-action traceability |
+| **Query API** | Methods: by_document(), by_actor(), by_outcome(), by_to_phase(), by_time_range(), latest_for_document(), forced_transitions() | Limited queries | Ultra-Metis: Richer interface |
+| **Block Reason Tracking** | `BlockedReasonTracker` with categories (Dependency, QualityGate, ManualHold, MissingPrerequisite, External), blocking_documents, resolved_at | No separate tracking | Ultra-Metis: Explicit categorized blocks |
+| **Block Resolution** | resolved_at field + resolve() method tracks when blocks clear | No resolution tracking | Ultra-Metis: Clear→Resolved workflow |
+
+**Summary**: Ultra-Metis provides comprehensive audit with outcome enums, detailed check/action results, and structured block categories.
+
+##### N6. Enforcement Workflow & State Transitions
+
+| Aspect | Ultra-Metis | Original Metis | Assessment |
+|--------|-------------|----------------|-----------|
+| **Entry Point** | `TransitionEnforcer::enforce(&TransitionEvent) → EnforcementResult`. Caller applies state change | `PhaseTransitionService::transition_document()` owns full transition | Ultra-Metis: Separation of concerns |
+| **Enforcement Steps** | 1. Validate graph. 2. Run pre-checks. 3. Collect failures. 4. Determine outcome. 5. Run post-actions if allowed/forced | 1. Find document. 2. Get phase. 3. Validate. 4. Perform. Return result | Ultra-Metis: More granular |
+| **Hook Execution** | `HookRegistry::run_pre_checks()` returns Vec<PreCheckResult> | Validation inline, no composable hooks | Ultra-Metis: Extensible |
+| **Outcome Logic** | `has_blocking_failures`. If blocking+!forced → Blocked. If blocking+forced → Forced. Else → Allowed | Validation: Ok or Err. Force overrides | Ultra-Metis: More sophisticated |
+| **Invalid Path** | Returns `InvalidTransition` outcome. Caller doesn't apply change | Throws error. No change | Comparable: Both prevent invalid |
+| **Blocked Path** | Returns `Blocked` outcome. pre_check_results populated, post_action empty | Throws error. Transaction rolled back | Comparable: Both prevent blocked |
+| **Forced Path** | Returns `Forced` outcome. Shows failures but actions still run | Force flag set, validation skipped | Comparable: Both support force |
+| **Success Path** | Returns `Allowed` outcome. All checks passed. Caller applies change | State updated. Returns result | Metis: Simpler (service owns) |
+| **Post-Failure** | Failures recorded but don't rollback transition. `was_allowed()` true | N/A - no post-actions | Ultra-Metis: Failure doesn't rollback |
+| **State Ownership** | Enforcer reports. Caller responsible for change | Service owns lifecycle | Metis: Cleaner responsibility |
+| **Error Handling** | Enum outcomes: Allowed, Blocked, InvalidTransition, Forced | Exceptions or success | Ultra-Metis: Return-based |
+| **Diagnostics** | Complete result with all checks, messages, full audit context | Minimal result | Ultra-Metis: Better diagnostics |
+
+**Summary**: Ultra-Metis separates enforcement from mutation, returning comprehensive results. Original Metis couples them. Ultra-Metis better for auditability; original simpler.
+
+#### O. Synthesis & Gap Analysis
+
+**Status**: ✓ COMPLETED - Investigation findings aggregated from SMET-T-0096, SMET-T-0097, SMET-T-0098, SMET-T-0105, SMET-T-0107, SMET-T-0108
+
+##### O1. Master Comparison Matrix Summary
+
+| Functional Area | Coverage | Robustness | Completeness | Design Quality | Gap Priority |
+|-----------------|----------|-----------|--------------|-----------------|--------------|
+| Document Types | 91% Equivalent | Comparable | Ultra-Metis Better | Ultra-Metis Better | MEDIUM |
+| Plugin Architecture | Partial | Comparable | Metis Better | Ultra-Metis Better | CRITICAL |
+| CLI Architecture | Equivalent | Comparable | Comparable | Ultra-Metis Better | LOW |
+| MCP Tools | Equivalent | Comparable | Comparable | Comparable | LOW |
+| Serialization | Equivalent | Comparable | Comparable | Ultra-Metis Better | LOW |
+| Hooks System | Partial | Ultra-Metis Better | Partial | Ultra-Metis Better | MEDIUM |
+| Ralph Loop Execution | Metis Only | Metis Better | N/A | Metis Better | CRITICAL |
+| Skills/Agents | Metis Only | Metis Better | Metis Better | Metis Better | HIGH |
+| Operations Kernel | Ultra-Metis Only | N/A | Ultra-Metis Better | Ultra-Metis Better | MEDIUM |
+| Governance & Rules | Ultra-Metis Only | N/A | Ultra-Metis Better | Ultra-Metis Better | MEDIUM |
+| Quality System | Ultra-Metis Only | N/A | Ultra-Metis Better | Ultra-Metis Better | MEDIUM |
+
+##### O2. Prioritized Gap List with Implementation Estimates
+
+**CRITICAL PRIORITY:**
+
+1. **Ralph Loop Autonomous Execution (L - 1-2 weeks)**
+   - Gap: Ultra-Metis lacks autonomous task execution loop equivalent
+   - Current State: No state management, no loop orchestration mechanism
+   - Metis Reference: State file (.claude/metis-ralph.local.md), loop mechanics, completion signals, iteration counting
+   - Impact: Blocks AI-in-the-loop workflows, required for interactive task progression
+   - Recommendation: Implement durable loop state system with iteration tracking and completion signal detection
+   - Business Impact: CRITICAL - essential for autonomous execution mode
+
+2. **Plugin System Gaps (Agent/Skills) (3-4 weeks total)**
+   - Gap: Ultra-Metis lacks agent-based methodology guidance and skills system
+   - Current State: Only placeholder implementations
+   - Metis Reference: flight-levels agent (triggers, decision logic), 5 skills (document-selection, decomposition, phase-transitions, project-patterns, code-index)
+   - Impact: Reduces user discoverability, removes autonomous guidance capability, limits methodology support
+   - Recommendation: Implement agent framework first, then core skills (prioritize decomposition and phase-transitions)
+   - Business Impact: HIGH - important for user experience and adoption
+   - Implementation Path: Start with basic state query agent, expand to decision agents
+
+3. **Strategy Document Type (XL - 2+ weeks)**
+   - Gap: Ultra-Metis has no Strategy document type (critical Metis feature)
+   - Current State: Missing entirely
+   - Metis Reference: 5-phase model (Shaping → Design → Ready → Active → Completed), risk level tracking (Low/Medium/High), stakeholder management
+   - Impact: Reduces strategic planning capability for large programs
+   - Recommendation: Add Strategy document type with full 5-phase model and risk assessment
+   - Business Impact: CRITICAL - needed for program-level coordination
+
+##### O3. Areas Where Ultra-Metis Exceeds Metis
+
+**Type Safety & Compile-Time Guarantees:**
+- Strong Rust typing throughout domain layer prevents runtime errors
+- Schema versioning enables forward/backward compatible document evolution
+- Transition hook filtering with specific document type checking at compile time
+- Explicit tool parameter typing with validation in MCP definitions
+
+**Design Quality Improvements:**
+- Clap framework for CLI (more robust than Metis manual parsing)
+- Priority-ordered hook execution (SYSTEM → GATE → USER → ADVISORY) prevents conflicts
+- Blocking vs warning semantics in pre-transition checks provides clearer semantics
+- Explicit DocumentCore pattern for all document types reduces duplication
+- Tera templating system with context isolation prevents template injection
+
+**Document Type Enhancements:**
+1. **Epic document type** - No Metis equivalent, enables organizational hierarchy
+2. **Story document type** - No Metis equivalent, supports user story semantics (Feature/Bugfix/Refactor/Migration)
+3. **Story type classification** - Explicit work categorization not in Metis
+
+**Governance & Rules System** (no Metis equivalent):
+- RulesConfig document type with layered scope enforcement (Platform → Org → Repo → Package → Component → Task)
+- Protected rule workflow with change proposals and approval gating
+- Rule change audit trail with evidence tracking
+- Architecture-derived rule seeding from catalog patterns
+
+**Quality System** (no Metis equivalent):
+- Quality gate definitions with severity levels and thresholds
+- Baseline capture and comparison engine for trend analysis
+- Conformance checking for architecture boundaries and dependency rules
+- Quality record generation with evidence tracking and remediation integration
+
+**Catalog & Bootstrap System** (no Metis equivalent):
+- Architecture catalog with pattern matching and scoring algorithm
+- Repository scanner for language/tool/monorepo detection
+- Greenfield/brownfield project classification
+- Pattern selection flow with decision support
+
+**Operations Kernel** (formalized in Ultra-Metis):
+- 12 cognitive operation types (Frame, Acquire, Model, Locate, Analyze, Trace, Assess, Shape, Decompose, Create, Validate, Reassess)
+- Loop composition patterns with explicit entry/exit/escalation conditions
+- Workflow templates with 9 work types and artifact contracts
+- Execution model with iteration budgets and state-driven control
+
+**Execution Traceability** (comprehensive in Ultra-Metis):
+- Complete execution record system capturing tool invocations, parameters, results
+- Transition audit trails with pre/post conditions and proof
+- Decision recording with alternatives considered and rationale
+- Cross-reference index with relationship types (governs, references, derived-from, supersedes, conflicts, validates)
+
+**Durable Memory & Insight Notes** (formalized in Ultra-Metis):
+- Insight note system with scoring mechanism
+- Conflict detection logic for contradictory insights
+- Integration with task workflow for persistent learning
+- Pruning strategies to maintain knowledge quality
+
+##### O4. Architectural Lessons Learned
+
+**Philosophy Differences:**
+
+**Metis: Flexible, Lightweight, Script-Based**
+- Plugin ecosystem designed for rapid iteration and extension
+- Distributed markdown + shell scripts + JSON configuration
+- Agent-based methodology guidance reduces cognitive load
+- Autonomous loop execution enables hands-off task progression
+- Lower barrier to extension and customization
+- Strength: Adaptability and user autonomy
+- Weakness: Limited type safety and governance
+
+**Ultra-Metis: Type-Safe, Explicit, Rust-Native**
+- Compile-time guarantees throughout domain layer
+- Explicit registration and configuration prevents misconfiguration
+- Rust-based domain layer for robustness and performance
+- Governance and quality enforcement built into core
+- Rich extensibility through type system and traits
+- Strength: Safety, governance, scalability
+- Weakness: Lower flexibility, higher implementation cost
+
+**Design Pattern Insights:**
+
+1. **Document Serialization**:
+   - Both use markdown + YAML frontmatter effectively
+   - Ultra-Metis adds schema versioning for forward compatibility (RECOMMENDATION: adopt in Metis)
+   - Ultra-Metis uses slug-based DocumentId (vs hash-based in Metis)
+   - INSIGHT: Schema versioning should be standard practice
+
+2. **Hierarchy and Relationships**:
+   - Both enforce parent/child constraints at type level
+   - Ultra-Metis Epic/Story adds intermediate organizational layer (vs Metis flat Initiative/Task)
+   - INSIGHT: Three-level hierarchy (Epic/Story/Task) supports better organizational structure than two-level
+
+3. **Phase Models**:
+   - Identical for equivalent document types (Initiative: Discovery→Design→Ready→Decompose→Active→Completed)
+   - Strategy has unique 5-phase model in Metis (Shaping→Design→Ready→Active→Completed)
+   - Task phases identical in both systems
+   - INSIGHT: Standardized phase model across both systems except Strategy
+
+4. **Hook Systems**:
+   - Metis: General-purpose hooks (SessionStart, PreCompact, PostToolUse, Stop) - flexible but loose
+   - Ultra-Metis: Transition-focused hooks with type filtering and priority ordering - safer but less flexible
+   - INSIGHT: Hybrid approach optimal - transition hooks for safety, general hooks for extensibility
+
+5. **Governance**:
+   - Metis: Minimal governance, relies on skill/agent guidance
+   - Ultra-Metis: Sophisticated rules-based governance with scope layers and audit trails
+   - INSIGHT: Layered governance should be standard in Metis for larger teams
+
+##### O5. Integration & Migration Recommendations
+
+**For Migrating from Metis to Ultra-Metis:**
+
+**Phase 1: Core Document Type Mapping (1-2 weeks)**
+- Map existing Metis documents to Ultra-Metis types
+- Implement Strategy document type in Ultra-Metis first (critical blocker)
+- Create automated migration tool for document conversion
+- Validation: Ensure 100% document preservation and searchability
+- Risk: Loss of rich metadata during conversion
+
+**Phase 2: Plugin System Equivalent (2-3 weeks)**
+- Implement Agent framework for flight-levels equivalent
+- Add Skills system starting with decomposition and phase-transitions
+- Integrate with existing MCP command infrastructure
+- Validation: Achieve feature parity on methodology guidance
+- Risk: Agent logic must replicate Metis behavior accurately
+
+**Phase 3: Ralph Loop Implementation (3-4 weeks)**
+- Implement state management system for autonomous loops
+- Add loop orchestration and completion signal detection
+- Integrate stop hook for loop control and escalation
+- Validation: Achieve feature parity on autonomous execution
+- Risk: Loop state corruption or loss during crashes
+
+**Phase 4: Hook System Generalization (1 week)**
+- Extend hook system to support general-purpose hooks
+- Maintain priority ordering and type filtering
+- Implement SessionStart and PreCompact hooks
+- Validation: Support both transition and general hooks with no interference
+
+**Phase 5: Governance Adoption (2-3 weeks)**
+- Implement RulesConfig concept in project structure
+- Add layered scope enforcement
+- Integrate into phase transition validation
+- Validation: Governance rules block invalid transitions
+
+**For Integrating Ultra-Metis Improvements into Metis:**
+
+1. **Adopt Type-Safe Governance Model**
+   - Implement RulesConfig concept as document type
+   - Add layered scope enforcement in rule engine
+   - Add rule change audit trail
+
+2. **Adopt Quality Gate System**
+   - Implement quality gate checking before transitions
+   - Add baseline capture and comparison
+   - Integrate into phase transitions
+
+3. **Adopt Catalog & Pattern System**
+   - Add architecture catalog as document type
+   - Implement pattern matching algorithm
+   - Integrate with bootstrap and project initialization
+
+4. **Adopt Structured Operations**
+   - Document cognitive operations framework
+   - Create loop templates library
+   - Formalize workflow patterns
+
+**Interoperability Strategy:**
+
+Both systems should maintain compatibility by:
+- Using identical markdown + YAML serialization format
+- Supporting identical phase models for equivalent document types
+- Implementing cross-system document import/export
+- Sharing common validation rules and constraints
+- Using compatible MCP tool interfaces and parameter types
+- Supporting bidirectional document references
+
+##### O6. Implementation Priority Roadmap
+
+**IMMEDIATE (Week 1-2):**
+1. Add Strategy document type to Ultra-Metis (CRITICAL - blocks strategic workflows)
+2. Implement basic Ralph loop state management in Ultra-Metis (CRITICAL)
+3. Add Agent framework placeholder in Ultra-Metis (HIGH - unblocks milestone)
+4. Verify/implement reassign_parent MCP tool (LOW)
+
+**NEAR-TERM (Week 3-4):**
+1. Implement full Ralph loop with completion signals and iteration limits (CRITICAL)
+2. Implement core Skills system (decomposition, phase-transitions) (HIGH)
+3. Extend hooks to support general-purpose hooks (SessionStart, PreCompact) (MEDIUM)
+4. Add integration tests for Ralph loop state management (CRITICAL)
+
+**MID-TERM (Month 2):**
+1. Implement full Skills system with all 5 skills (document-selection, code-index) (MEDIUM)
+2. Implement full Agent system with trigger logic and decision trees (MEDIUM)
+3. Document interoperability standards between systems (HIGH)
+4. Create comprehensive migration guide with examples (MEDIUM)
+
+**LONG-TERM (Month 3+):**
+1. Implement Metis governance adoption plan (LOW)
+2. Create patterns library and best practices guide (MEDIUM)
+3. Build automated compatibility testing (MEDIUM)
+4. Establish unified documentation for both systems (LOW)
+
+##### O7. Critical Gap Analysis Summary Table
+
+| Gap | System | Priority | Complexity | Business Impact | Status | Timeline |
+|-----|--------|----------|-----------|-----------------|--------|----------|
+| Ralph Loop | Ultra-Metis Missing | CRITICAL | L | Blocks autonomous execution | Not Started | Week 1 |
+| Strategy Type | Ultra-Metis Missing | CRITICAL | XL | Blocks strategic capability | Not Started | Week 1 |
+| Agent System | Ultra-Metis Missing | HIGH | M | Reduces user guidance | Placeholder | Week 2 |
+| Skills System | Ultra-Metis Missing | HIGH | M | Reduces methodology | Not Started | Week 3 |
+| General Hooks | Ultra-Metis Limited | MEDIUM | M | Reduces extensibility | Partial | Week 4 |
+| Governance | Metis Missing | MEDIUM | L | Lacks compliance | Not Started | Month 2 |
+| reassign_parent | Unclear | LOW | XS | Minor operational | To Verify | Week 1 |
+
+##### O8. Key Findings Summary
+
+**Document Types (Coverage: 91%)**
+- Equivalent: Vision, Initiative, Task, ADR, Specification
+- Only in Metis: Strategy (CRITICAL GAP)
+- Only in Ultra-Metis: Epic, Story (enhancements)
+- Assessment: Ultra-Metis designs cleaner with schema versioning
+
+**Plugin Architecture (Coverage: 40%)**
+- Equivalent: MCP tools, CLI interface
+- Only in Metis: Skills (5), Agents (flight-levels), Ralph loop (CRITICAL GAPS)
+- Only in Ultra-Metis: Transition hooks with priority ordering
+- Assessment: Fundamental architectural difference (flexible vs type-safe)
+
+**Governance & Quality (Coverage: 0% in Metis)**
+- Only in Ultra-Metis: RulesConfig, quality gates, baselines, conformance, catalog
+- Assessment: Ultra-Metis significantly more sophisticated
+
+**Extensibility (Coverage: 70%)**
+- Both have similar CLI and MCP tool coverage
+- Ultra-Metis has better designed hooks but more limited scope
+- Metis has general-purpose hooks but less type safety
+
+**Design Quality**
+- Ultra-Metis generally superior in type safety, schema versioning, explicit design
+- Metis superior in flexibility, autonomy, user guidance
+- Both have strong markdown serialization
+
+**Critical Success Factors:**
+1. Implementing Ralph loop equivalent in Ultra-Metis is BLOCKING all advanced autonomous workflows
+2. Adding Strategy document type is BLOCKING all program-level coordination
+3. Agent system is BLOCKING user guidance and methodology adoption
+4. These three items are prerequisites for feature parity
+
+**Strategic Recommendation:**
+Prioritize Ralph loop (Week 1) + Strategy type (Week 1) + Agent system (Week 2) to achieve 90% feature parity. Then migrate to leveraging Ultra-Metis governance and quality systems as strategic advantages over original Metis. This positions Ultra-Metis as the superior long-term platform with better safety, governance, and extensibility.
+## Decomposition Complete
+
+**Decomposition Date**: 2026-03-17
+
+### Investigation Tasks Created
+
+15 major investigation phase tasks have been created and fully populated with objectives, acceptance criteria, and implementation guidance:
+
+| Task Code | Title | Focus Area |
+|-----------|-------|-----------|
+| SMET-T-0096 | Comparative Analysis Summary & Findings Index | Infrastructure & Methodology |
+| SMET-T-0097 | Document Types: Complete Coverage Analysis | Document type comparison (Metis & Ultra-Metis) |
+| SMET-T-0098 | Plugin Architecture: Skills, Agents, Commands & Hooks | Plugin system comparison |
+| SMET-T-0099 | Ralph Loop & Autonomous Execution | Execution patterns and state management |
+| SMET-T-0100 | Serialization & Persistence: Markdown, YAML & Templates | Storage and serialization mechanisms |
+| SMET-T-0101 | MCP Server & Tool Integration: Complete Tool Coverage | Tool API and functionality |
+| SMET-T-0102 | CLI Architecture: Command Structure & Operations | Command-line interface |
+| SMET-T-0103 | Governance & Rules: Protection Layers & Rule Enforcement | Governance and constraints |
+| SMET-T-0104 | Quality System: Gates, Baselines & Conformance | Quality gates and baseline systems |
+| SMET-T-0105 | Architecture Catalog & Pattern Selection System | Catalog and pattern matching |
+| SMET-T-0106 | Bootstrap & Repository Detection: Language, Tool & Monorepo | Repository analysis and detection |
+| SMET-T-0107 | Operations Kernel & Cognitive Operations: 12 Operation Types | Cognitive operations framework |
+| SMET-T-0108 | Execution Traceability & Audit: Records, Decisions & Index | Audit and execution tracking |
+| SMET-T-0109 | Durable Memory & Insight Notes: Scoring & Conflict Detection | Memory and insight systems |
+| SMET-T-0110 | Validation & Phase Enforcement: Forward-Only Rules & Hooks | Phase validation and enforcement |
+| SMET-T-0111 | Synthesis: Complete Comparison Matrix & Gap Analysis | Synthesis and final analysis |
+
+### Execution Readiness
+
+All tasks are ready for execution and follow the established investigation methodology:
+- Each task has clear objectives and acceptance criteria
+- Technical approach and dependencies documented
+- Risk considerations identified
+- Findings will roll up into initiative document and comprehensive comparison matrix
+- Tasks are sequenced logically with SMET-T-0096 as foundation task
+
+Ready for human review and approval before transitioning to active phase.
+
+## MCP Benchmark Update (2026-03-17)
+
+### Apples-to-Apples Speed Comparison
+
+Ran a new benchmark (`benchmarks/MCP_COMPARISON.md`) with both servers over identical stdio MCP transport (newline-delimited JSON-RPC 2.0). This replaces the misleading CLI-vs-MCP comparison in `benchmarks/REPORT.md`.
+
+**Key finding: Ultra-metis is ~10-14x faster (not 200x).** The previous 200x claim was inflated by comparing direct CLI execution vs MCP protocol overhead.
+
+| Scenario | Ultra-Metis (ms) | Original Metis (ms) | Speedup |
+|----------|:---:|:---:|:---:|
+| Project Bootstrap | 1.2 | 12.2 | 10x |
+| Planning Workflow (10 ops) | 6.7 | 72.1 | 11x |
+| Search and Query | 0.8 | 17.9 | 23x |
+| Document Edit | 0.4 | 5.4 | 12x |
+| Error Handling | 0.1 | 18.8 | 146x |
+| **Total (18 ops)** | **9.3** | **126.5** | **14x** |
+
+### Error Handling: Parity Achieved
+
+Both servers caught all 3 error test cases (read nonexistent, create with bad parent, invalid transition). The gaps identified in SMET-I-0036 have been fixed.
+
+### Template Quality: Gap Remains
+
+Template fill-in test (Claude Haiku fills initiative templates for 3 modules):
+- **Ultra-metis: 44% completeness, 11.3 placeholders/doc**
+- **Original metis: 67% completeness, 9.7 placeholders/doc**
+
+Despite SMET-I-0037 claiming 5/5 template quality in the core crate, the MCP server still serves weaker templates. The JSON Transformer module scored 0% completeness with ultra-metis vs 67% with original metis. Created SMET-T-0116 to close this gap.
+
+### Housekeeping
+
+- **Archived SMET-I-0035** — superseded by the new MCP benchmark
+- **Archived SMET-I-0014** — completed, references stale document types (ProductDoc, DesignContext, etc.)
+- **Completed SMET-I-0048** — all tasks were done, advanced through active to completed

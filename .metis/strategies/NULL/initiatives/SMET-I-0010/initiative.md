@@ -82,6 +82,21 @@ Ultra-Metis CLI currently supports document CRUD, phase transitions, search, arc
 2. **Single monolithic command with subcommands for everything**: This is the approach — `super-metis` as the root command with organized subcommand groups.
 3. **Separate CLIs for different concern areas**: Rejected because a single CLI is easier to discover and learn.
 
+## Progress (2026-03-23)
+
+**Scoped delivery**: Added 14 CLI subcommands mirroring MCP governance tools:
+- `quality capture|compare|list` (3 subcommands)
+- `rules query|applicable|protected` (3 subcommands)
+- `notes create|fetch|score|list` (4 subcommands)
+- `trace create|query|ancestry|list` (4 subcommands)
+
+Merged to main via branch `worktree-agent-a2261c5c`. Code review approved with minor items:
+- Future: extract shared utilities (extract_tool_from_baseline, build_traceability_index) to avoid CLI/MCP duplication
+- Future: split main.rs (now 2019 lines) into command modules
+- Future: support stdin piping for `quality capture --output`
+
+**Remaining work**: `--json` output, help text improvements, architecture catalog browsing, execution/mode/workflow commands.
+
 ## Implementation Plan
 
 Phase 1: Extend existing commands for new document types
