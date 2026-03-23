@@ -22,117 +22,68 @@ initiative_id: orchestrated-execution-sdd-style
 
 # Orchestrated Execution: SDD-Style Subagent Dispatch with Review Modes and A/B Testing Initiative
 
-*This template includes sections for various types of initiatives. Delete sections that don't apply to your specific use case.*
+## Context
 
-## Context **[REQUIRED]**
+The current execution model runs a single ralph loop sequentially through all stories. ADR SMET-A-0001 identified three problems: context pollution, no review gates, and no model selection. This initiative implements Phase 2: `/cadre-execute` with SDD-style fresh-subagent-per-task dispatch.
 
-{Describe the context and background for this initiative}
-
-## Goals & Non-Goals **[REQUIRED]**
+## Goals & Non-Goals
 
 **Goals:**
-- {Primary objective 1}
-- {Primary objective 2}
+- Build `/cadre-execute` command dispatching fresh subagent per task with curated context
+- Two-stage review (spec compliance + code quality) via `--review-mode full|light|none`
+- Deterministic story-type-to-skill mapping
+- Model selection guidance (cheap for mechanical, capable for judgment)
+- A/B testing infrastructure: ralph loop vs cadre-execute
+- Cadre document updates after each task
 
 **Non-Goals:**
-- {What this initiative will not address}
+- Parallel execution (SMET-I-0077)
+- Git worktrees (SMET-I-0077)
+- Task claiming (SMET-I-0077)
+- Replacing ralph loop entirely (coexists for single-task work)
 
-## Requirements **[CONDITIONAL: Requirements-Heavy Initiative]**
+## Detailed Design
 
-{Delete if not a requirements-focused initiative}
+### Agent Roles
+- **Orchestrator**: Reads initiative, curates context, dispatches agents, manages flow
+- **Implementer**: Fresh subagent per task with curated context and mapped skills
+- **Spec Reviewer**: Validates against acceptance criteria, distrusts implementer
+- **Quality Reviewer**: Checks code quality, patterns, coverage
 
-### User Requirements
-- **User Characteristics**: {Technical background, experience level, etc.}
-- **System Functionality**: {What users expect the system to do}
-- **User Interfaces**: {How users will interact with the system}
+### Review Modes
+- `full` (default): both reviewers after every task
+- `light`: quality review only
+- `none`: no inter-task review
 
-### System Requirements
-- **Functional Requirements**: {What the system should do - use unique identifiers}
-  - REQ-001: {Functional requirement 1}
-  - REQ-002: {Functional requirement 2}
-- **Non-Functional Requirements**: {How the system should behave}
-  - NFR-001: {Performance requirement}
-  - NFR-002: {Security requirement}
+### Story-Type-to-Skill Mapping
+- feature → brainstorming → writing-plans → TDD → verification
+- bugfix → systematic-debugging → verification
+- refactor → writing-plans → verification
+- investigation → brainstorming
+- (and others per ADR table)
 
-## Use Cases **[CONDITIONAL: User-Facing Initiative]**
+### Model Selection
+- Mechanical (1-2 files, clear spec): cheap model
+- Judgment (multi-file, design decisions): capable model
+- Debugging (unknown scope): capable model
 
-{Delete if not user-facing}
+### Escalation Policy
+Review failure escalates to user — no auto-retry.
 
-### Use Case 1: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+## Alternatives Considered
 
-### Use Case 2: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+1. **Add review to existing ralph loop**: Doesn't solve context pollution
+2. **Full parallel from start**: Conflates independent capabilities
+3. **LLM-as-judge scoring**: Less actionable than structured reviewer subagents
 
-## Architecture **[CONDITIONAL: Technically Complex Initiative]**
+## Implementation Plan
 
-{Delete if not technically complex}
+1. Core command and dispatch loop
+2. Review subagents and modes
+3. Model selection and skill mapping
+4. A/B testing infrastructure
 
-### Overview
-{High-level architectural approach}
+## Dependencies
 
-### Component Diagrams
-{Describe or link to component diagrams}
-
-### Class Diagrams
-{Describe or link to class diagrams - for OOP systems}
-
-### Sequence Diagrams
-{Describe or link to sequence diagrams - for interaction flows}
-
-### Deployment Diagrams
-{Describe or link to deployment diagrams - for infrastructure}
-
-## Detailed Design **[REQUIRED]**
-
-{Technical approach and implementation details}
-
-## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
-
-{Delete if no UI components}
-
-### User Interface Mockups
-{Describe or link to UI mockups}
-
-### User Flows
-{Describe key user interaction flows}
-
-### Design System Integration
-{How this fits with existing design patterns}
-
-## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**
-
-{Delete if covered by separate testing initiative}
-
-### Unit Testing
-- **Strategy**: {Approach to unit testing}
-- **Coverage Target**: {Expected coverage percentage}
-- **Tools**: {Testing frameworks and tools}
-
-### Integration Testing
-- **Strategy**: {Approach to integration testing}
-- **Test Environment**: {Where integration tests run}
-- **Data Management**: {Test data strategy}
-
-### System Testing
-- **Strategy**: {End-to-end testing approach}
-- **User Acceptance**: {How UAT will be conducted}
-- **Performance Testing**: {Load and stress testing}
-
-### Test Selection
-{Criteria for determining what to test}
-
-### Bug Tracking
-{How defects will be managed and prioritized}
-
-## Alternatives Considered **[REQUIRED]**
-
-{Alternative approaches and why they were rejected}
-
-## Implementation Plan **[REQUIRED]**
-
-{Phases and timeline for execution}
+- **Blocked by**: SMET-I-0075
+- **Blocks**: SMET-I-0077

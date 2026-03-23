@@ -144,3 +144,11 @@ Phase 5: Integration tests
 - Depends on SMET-I-0068 for the Architecture document type
 - Depends on SMET-I-0069 for hooks that create Architecture documents (tools need documents to operate on)
 - MCP tool schema must be compatible with existing tool patterns in ultra-metis-mcp
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Update dependencies + rename
+
+ADR point 6: This initiative is now a dependency of SMET-I-0078 (Quality Integration, Phase 4). The MCP tools here are the agent-facing interface consumed during `/cadre-execute` review stages.
+
+ADR point 1 (rename): Tool names change — `mcp__ultra-metis__get_architecture_context` → `mcp__cadre__get_architecture_context`, etc. Crate path: `crates/ultra-metis-mcp/` → `crates/cadre-mcp/`. Applied by I-0074.

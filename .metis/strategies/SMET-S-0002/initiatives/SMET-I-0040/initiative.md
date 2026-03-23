@@ -107,6 +107,18 @@ States: `starting → running → waiting_for_input → paused → completed | f
 - **SSH tunnel for command routing**: familiar but requires open SSH port on remote machine; the outbound connection model from Machine Runner avoids this; rejected
 - **Session state in runner only (no central state)**: runner is authoritative; simpler but breaks multi-device monitoring and recovery after disconnection; rejected in favor of central state in Control Service
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Update scope**
+
+Relevant ADR decision points:
+- **#1 Rename**: All references to "Ultra-Metis" become "Cadre." Session creation API, work item linkage, and documentation use Cadre namespace.
+- **#3 SDD-style execution**: This is the most impacted initiative. The session model must account for the fact that a session may internally use SDD-style fresh-subagent-per-task dispatch (via `/cadre-execute`), not just a single long-running AI process. The session state machine needs to accommodate orchestrated execution where the top-level process is a dispatcher spawning subagents. The Machine Runner's process supervisor must handle this pattern. Session state events should distinguish orchestrator-level state from individual subagent states.
+- **#5 Simple task claiming**: When multiple remote sessions target the same repo, the simple file-based task claiming mechanism (`.cadre/claims/`) prevents duplicate work. The session creation flow should check for existing claims on the target work item.
+- **#7 SubagentStart hook**: Sessions started remotely must have the SubagentStart hook active so all subagents within that session inherit Cadre context. The session start flow should verify hook availability as a prerequisite.
+
+No changes needed for: #2 (peer dependency is install-time concern), #4 (worktree delegation handled by execution layer), #6 (architecture hooks are Phase 4).
+
 ## Implementation Plan
 
 1. Define session data model and state machine enum

@@ -22,117 +22,54 @@ initiative_id: subagent-awareness-subagentstart
 
 # Subagent Awareness: SubagentStart Hook, Vendored Superpowers, and TodoWrite Replacement Initiative
 
-*This template includes sections for various types of initiatives. Delete sections that don't apply to your specific use case.*
+## Context
 
-## Context **[REQUIRED]**
+When Claude spawns subagents via the Agent tool in a Cadre project, those subagents have zero awareness of the work management system. They don't know about Cadre documents, MCP tools, phase lifecycles, or workflow rules. This was demonstrated when parallel agents were dispatched for SMET-I-0068 work — neither agent used Cadre tools, updated documents, or followed the prescribed workflow.
 
-{Describe the context and background for this initiative}
+This is Phase 1 of the Cadre Execution Architecture (ADR SMET-A-0001).
 
-## Goals & Non-Goals **[REQUIRED]**
+## Goals & Non-Goals
 
 **Goals:**
-- {Primary objective 1}
-- {Primary objective 2}
+- Implement SubagentStart hook that injects Cadre project context into every spawned subagent
+- Vendor the entire superpowers plugin (all 50+ files, v5.0.5) into vendor/superpowers/ with fallback resolution
+- Ensure all orchestration flows use Cadre documents instead of TodoWrite
 
 **Non-Goals:**
-- {What this initiative will not address}
+- Orchestrated multi-task execution (SMET-I-0076)
+- Parallel dispatch or worktree isolation (SMET-I-0077)
+- Two-stage review (SMET-I-0076)
 
-## Requirements **[CONDITIONAL: Requirements-Heavy Initiative]**
+## Detailed Design
 
-{Delete if not a requirements-focused initiative}
+### SubagentStart Hook
+- Register `SubagentStart` event in hooks.json
+- Hook checks for `.cadre` directory, injects: project awareness, active work items, MCP tool names, no-TodoWrite rule
+- Context kept under 500 tokens to preserve subagent context window
 
-### User Requirements
-- **User Characteristics**: {Technical background, experience level, etc.}
-- **System Functionality**: {What users expect the system to do}
-- **User Interfaces**: {How users will interact with the system}
+### Vendored Superpowers
+- Copy full superpowers v5.0.5 to vendor/superpowers/
+- VERSION file tracks pinned version
+- Setup scripts try installed plugin first, fall back to vendor
+- Updated deliberately, not automatically
 
-### System Requirements
-- **Functional Requirements**: {What the system should do - use unique identifiers}
-  - REQ-001: {Functional requirement 1}
-  - REQ-002: {Functional requirement 2}
-- **Non-Functional Requirements**: {How the system should behave}
-  - NFR-001: {Performance requirement}
-  - NFR-002: {Security requirement}
+### TodoWrite Replacement
+- All orchestration flows use Cadre document updates instead of TodoWrite
+- SubagentStart hook explicitly tells subagents not to use TodoWrite
 
-## Use Cases **[CONDITIONAL: User-Facing Initiative]**
+## Alternatives Considered
 
-{Delete if not user-facing}
+1. **Vendor only 7 mapped skills**: Rejected — full plugin is small, selective vendoring adds maintenance
+2. **Reuse SessionStart hook for subagents**: Rejected — subagents need concise context, not tutorial material
+3. **Skip vendoring, just document dependency**: Rejected — hard dependency makes Cadre fragile
 
-### Use Case 1: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+## Implementation Plan
 
-### Use Case 2: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+1. SubagentStart hook script and registration
+2. Vendor superpowers plugin with fallback resolution
+3. TodoWrite elimination in orchestration flows
 
-## Architecture **[CONDITIONAL: Technically Complex Initiative]**
+## Dependencies
 
-{Delete if not technically complex}
-
-### Overview
-{High-level architectural approach}
-
-### Component Diagrams
-{Describe or link to component diagrams}
-
-### Class Diagrams
-{Describe or link to class diagrams - for OOP systems}
-
-### Sequence Diagrams
-{Describe or link to sequence diagrams - for interaction flows}
-
-### Deployment Diagrams
-{Describe or link to deployment diagrams - for infrastructure}
-
-## Detailed Design **[REQUIRED]**
-
-{Technical approach and implementation details}
-
-## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
-
-{Delete if no UI components}
-
-### User Interface Mockups
-{Describe or link to UI mockups}
-
-### User Flows
-{Describe key user interaction flows}
-
-### Design System Integration
-{How this fits with existing design patterns}
-
-## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**
-
-{Delete if covered by separate testing initiative}
-
-### Unit Testing
-- **Strategy**: {Approach to unit testing}
-- **Coverage Target**: {Expected coverage percentage}
-- **Tools**: {Testing frameworks and tools}
-
-### Integration Testing
-- **Strategy**: {Approach to integration testing}
-- **Test Environment**: {Where integration tests run}
-- **Data Management**: {Test data strategy}
-
-### System Testing
-- **Strategy**: {End-to-end testing approach}
-- **User Acceptance**: {How UAT will be conducted}
-- **Performance Testing**: {Load and stress testing}
-
-### Test Selection
-{Criteria for determining what to test}
-
-### Bug Tracking
-{How defects will be managed and prioritized}
-
-## Alternatives Considered **[REQUIRED]**
-
-{Alternative approaches and why they were rejected}
-
-## Implementation Plan **[REQUIRED]**
-
-{Phases and timeline for execution}
+- **Blocked by**: SMET-I-0074 (rename)
+- **Blocks**: SMET-I-0076 (orchestrated execution)

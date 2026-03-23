@@ -94,6 +94,17 @@ This initiative is also the audit trail for the system — every approval, inter
 - **Separate audit database from session storage**: clean separation but operational complexity for MVP; rejected — single store with good schema is sufficient
 - **Client-side replay from stored event stream**: dashboard replays events locally; simpler but requires streaming entire event log to client on load; rejected in favor of server-side pagination
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Update scope**
+
+Relevant ADR decision points:
+- **#1 Rename**: All references to "Ultra-Metis" become "Cadre." The title references "Ultra-Metis work items" which becomes "Cadre work items."
+- **#3 SDD-style execution**: Session history must capture the full SDD execution structure: which subagents were dispatched, what task each handled, and the two-stage review results (spec compliance + code quality). The replay view should show subagent boundaries so reviewers can see per-task execution rather than a single undifferentiated stream. Execution records from the orchestrator (dispatch order, model selection, review verdicts) are first-class audit data.
+- **#6 Architecture hooks**: When architecture lifecycle hooks (SMET-I-0069) are wired into execution (ADR Phase 4), conformance check results should be captured in the session history as auditable events. This is a future dependency but should be noted in the event schema design now.
+
+No changes needed for: #2 (peer dependency is install-level), #4 (worktree usage would appear in history naturally as git events), #5 (task claiming is orthogonal), #7 (SubagentStart hook firing can be an event but doesn't change history architecture).
+
 ## Implementation Plan
 
 1. Confirm event log schema from SMET-I-0041 includes all necessary fields for history

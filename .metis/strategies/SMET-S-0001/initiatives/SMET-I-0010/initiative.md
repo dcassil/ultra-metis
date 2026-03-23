@@ -136,6 +136,14 @@ Phase 8: Add bash/zsh shell completions
 - `crates/ultra-metis-store/src/store.rs` — persistence API the CLI calls
 - `crates/ultra-metis-core/src/domain/` — domain types to expose as commands
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename)
+
+ADR point 1 (rename): CLI binary changes from `ultra-metis` to `cadre`. All subcommands change: `ultra-metis quality` → `cadre quality`, etc. Crate path changes: `crates/ultra-metis-cli/` → `crates/cadre-cli/`. The 14 subcommands already merged will be renamed mechanically by SMET-I-0074.
+
+Remaining work (`--json` output, help improvements, architecture catalog browsing) is unaffected by other ADR decisions and should proceed after the rename.
+
 ## Suggested Tasks for Decomposition
 
 1. Extend create/list/search/transition commands for new types

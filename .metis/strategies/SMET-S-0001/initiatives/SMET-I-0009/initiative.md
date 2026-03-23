@@ -141,3 +141,14 @@ New tools: 18 (4 quality + 3 rules + 4 notes + 4 traceability + 4 architecture -
 - Orchestration/execution tools (handled by plugin skills)
 - Gate/autonomy mode tools (premature)
 - Rule change proposal tools (can wait)
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename)
+
+All 8 tasks under this initiative are completed. The rename from ultra-metis to Cadre (SMET-I-0074) will change:
+- MCP tool prefix: `mcp__ultra-metis__` → `mcp__cadre__`
+- Crate paths: `crates/ultra-metis-mcp/` → `crates/cadre-mcp/`
+- Binary name: `ultra-metis-mcp` → `cadre-mcp`
+
+These are mechanical name changes applied by the rename initiative. No scope or functionality changes needed here.

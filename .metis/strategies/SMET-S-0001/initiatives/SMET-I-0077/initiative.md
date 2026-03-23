@@ -22,117 +22,64 @@ initiative_id: parallel-execution-git-worktrees
 
 # Parallel Execution: Git Worktrees, Multi-Story Dispatch, and Task Claiming Initiative
 
-*This template includes sections for various types of initiatives. Delete sections that don't apply to your specific use case.*
+## Context
 
-## Context **[REQUIRED]**
+SMET-I-0076 introduces SDD-style dispatch but processes tasks sequentially. When independent stories touch disjoint files, serializing them wastes time. This is Phase 3 of ADR SMET-A-0001.
 
-{Describe the context and background for this initiative}
-
-## Goals & Non-Goals **[REQUIRED]**
+## Goals & Non-Goals
 
 **Goals:**
-- {Primary objective 1}
-- {Primary objective 2}
+- Extend `/cadre-execute` to identify independent stories via file/dependency analysis
+- Dispatch independent stories to parallel subagents in separate git worktrees
+- Delegate worktree management to `superpowers:using-git-worktrees`
+- Simple file-based task claiming via `.cadre/claims/` lock files
+- Sequential fallback for dependent stories
+- Full test suite after integrating parallel results
 
 **Non-Goals:**
-- {What this initiative will not address}
+- Full work leasing with heartbeats (SMET-I-0023, future)
+- Distributed multi-machine coordination
+- Automatic conflict resolution on merge
 
-## Requirements **[CONDITIONAL: Requirements-Heavy Initiative]**
+## Detailed Design
 
-{Delete if not a requirements-focused initiative}
+### Dependency Analysis
+- Build file touchpoint sets per story from content and code index
+- Stories with disjoint file sets → independent (parallelizable)
+- Overlapping files → dependent (sequential)
+- Unknown touchpoints → conservative sequential fallback
 
-### User Requirements
-- **User Characteristics**: {Technical background, experience level, etc.}
-- **System Functionality**: {What users expect the system to do}
-- **User Interfaces**: {How users will interact with the system}
+### Worktree Management (Delegated)
+- `superpowers:using-git-worktrees` handles creation, setup, cleanup
+- Branch naming: `cadre/SMET-T-XXXX`
+- `.worktrees/` directory, gitignored
 
-### System Requirements
-- **Functional Requirements**: {What the system should do - use unique identifiers}
-  - REQ-001: {Functional requirement 1}
-  - REQ-002: {Functional requirement 2}
-- **Non-Functional Requirements**: {How the system should behave}
-  - NFR-001: {Performance requirement}
-  - NFR-002: {Security requirement}
+### Task Claiming (MVP)
+- `.cadre/claims/PROJ-T-XXXX.lock` with session_id and timestamp
+- Atomic acquire via temp file + rename
+- Release on completion or session end
+- No heartbeats or expiration for MVP
 
-## Use Cases **[CONDITIONAL: User-Facing Initiative]**
+### Integration
+- Merge worktree branches back to working branch
+- Conflict → flag for human resolution
+- Full test suite on integrated result
 
-{Delete if not user-facing}
+## Alternatives Considered
 
-### Use Case 1: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+1. **Reimplement worktrees**: Rejected — superpowers already handles this correctly
+2. **Full leasing from day one**: Rejected — overkill for MVP
+3. **Same-directory parallelism**: Rejected — git operations are workspace-global
+4. **Container isolation**: Rejected — heavyweight, loses git integration
 
-### Use Case 2: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+## Implementation Plan
 
-## Architecture **[CONDITIONAL: Technically Complex Initiative]**
+1. Worktree integration (delegate to superpowers)
+2. Dependency analysis
+3. Task claiming
+4. Parallel dispatch and integration
 
-{Delete if not technically complex}
+## Dependencies
 
-### Overview
-{High-level architectural approach}
-
-### Component Diagrams
-{Describe or link to component diagrams}
-
-### Class Diagrams
-{Describe or link to class diagrams - for OOP systems}
-
-### Sequence Diagrams
-{Describe or link to sequence diagrams - for interaction flows}
-
-### Deployment Diagrams
-{Describe or link to deployment diagrams - for infrastructure}
-
-## Detailed Design **[REQUIRED]**
-
-{Technical approach and implementation details}
-
-## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
-
-{Delete if no UI components}
-
-### User Interface Mockups
-{Describe or link to UI mockups}
-
-### User Flows
-{Describe key user interaction flows}
-
-### Design System Integration
-{How this fits with existing design patterns}
-
-## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**
-
-{Delete if covered by separate testing initiative}
-
-### Unit Testing
-- **Strategy**: {Approach to unit testing}
-- **Coverage Target**: {Expected coverage percentage}
-- **Tools**: {Testing frameworks and tools}
-
-### Integration Testing
-- **Strategy**: {Approach to integration testing}
-- **Test Environment**: {Where integration tests run}
-- **Data Management**: {Test data strategy}
-
-### System Testing
-- **Strategy**: {End-to-end testing approach}
-- **User Acceptance**: {How UAT will be conducted}
-- **Performance Testing**: {Load and stress testing}
-
-### Test Selection
-{Criteria for determining what to test}
-
-### Bug Tracking
-{How defects will be managed and prioritized}
-
-## Alternatives Considered **[REQUIRED]**
-
-{Alternative approaches and why they were rejected}
-
-## Implementation Plan **[REQUIRED]**
-
-{Phases and timeline for execution}
+- **Blocked by**: SMET-I-0076
+- **Future**: SMET-I-0023 replaces simple claiming with full leasing

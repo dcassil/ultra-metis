@@ -116,6 +116,17 @@ All session activity is represented as a stream of typed events. Event types:
 - **Parse raw terminal output for approvals (no hook integration)**: fragile; Claude Code's output format could change; rejected in favor of using Claude Code's hook system (PreToolUse/UserPromptSubmit hooks) for reliable structured approval events
 - **Full terminal emulator in dashboard**: high complexity, overkill for mobile; simple event stream with categorization is more useful than raw ANSI terminal; rejected
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Update scope (minor)**
+
+Relevant ADR decision points:
+- **#1 Rename**: References to "Ultra-Metis" become "Cadre" in event types, API documentation, and dashboard labels.
+- **#3 SDD-style execution**: The event model should accommodate events from orchestrated multi-subagent sessions. When the execution uses SDD-style dispatch, the monitoring system will see events from multiple subagents within a single session. Event types should include subagent identity (which task's subagent produced this output). The two-stage review events (spec compliance + code quality) should surface as distinct event types so users can monitor review outcomes.
+- **#7 SubagentStart hook**: Monitoring should be able to observe that the SubagentStart hook fired for each subagent, confirming Cadre context injection. This is an informational event, not a blocking concern.
+
+No changes needed for: #2 (peer dependency is install-level), #4 (worktree delegation is orthogonal to monitoring), #5 (task claiming is orthogonal), #6 (architecture hooks are Phase 4).
+
 ## Implementation Plan
 
 1. Define event types and event log schema

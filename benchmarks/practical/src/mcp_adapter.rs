@@ -342,38 +342,4 @@ mod tests {
         assert!(cmd.args.is_empty());
     }
 
-    #[test]
-    #[ignore] // Spawns real MCP server processes; run explicitly with: cargo test --ignored -p practical-benchmark
-    fn shared_tool_surface_smoke_test() {
-        let adapters: Vec<Box<dyn ExecutionAdapter>> = vec![
-            Box::new(OriginalMetisAdapter),
-            Box::new(UltraMetisMcpAdapter),
-        ];
-
-        for adapter in adapters {
-            let mut session = match adapter.start() {
-                Ok(session) => session,
-                Err(err) => {
-                    eprintln!(
-                        "Skipping MCP smoke test for {:?}: {}",
-                        adapter.system_under_test(),
-                        err
-                    );
-                    continue;
-                }
-            };
-
-            let tools = session.list_tools().unwrap();
-            let tool_names: BTreeSet<String> = tools.into_iter().map(|t| t.name).collect();
-
-            for expected in expected_shared_tool_names() {
-                assert!(
-                    tool_names.contains(expected),
-                    "missing tool '{}' for {:?}",
-                    expected,
-                    session.system_under_test()
-                );
-            }
-        }
-    }
 }

@@ -106,6 +106,18 @@ Policy fields:
 - **Single global policy instead of machine + repo scopes**: simpler but doesn't allow per-machine trust tiers (e.g., dev machine trusted, shared server restricted); rejected
 - **Trust all commands from Control Service in Machine Runner**: single enforcement point is simpler but catastrophically unsafe if service is compromised; defense in depth is non-negotiable
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Update scope (minor)**
+
+Relevant ADR decision points:
+- **#1 Rename**: References to "Ultra-Metis" become "Cadre" in policy documentation and dashboard labels.
+- **#2 Superpowers as peer dependency**: Policy must account for the fact that Cadre invokes superpowers skills during execution. Policy rules around allowed actions should consider superpowers skill invocations (e.g., `superpowers:using-git-worktrees` creates worktrees — policy should govern whether that is permitted on a given machine/repo).
+- **#3 SDD-style execution**: Policy enforcement must work with the orchestrated execution model. When a session dispatches multiple subagents, each subagent's actions are independently subject to policy. The policy layer should enforce at the action level regardless of whether the action originates from the main session process or a dispatched subagent.
+- **#4 Git worktree delegation**: Worktree creation via superpowers is a policy-relevant action. The policy model's action categories should include worktree operations so machines can allow or deny worktree creation.
+
+No changes needed for: #5 (task claiming is orthogonal to policy), #6 (architecture hooks are Phase 4 and would add conformance gates, not change policy model), #7 (SubagentStart hook is context injection, not a policy concern).
+
 ## Implementation Plan
 
 1. Define policy data model (machine policy, repo policy, action category enum)

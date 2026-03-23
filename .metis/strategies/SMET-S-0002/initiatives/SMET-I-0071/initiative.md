@@ -110,3 +110,13 @@ All planning views query the ultra-metis MCP server (or a REST wrapper around it
 6. Build rule browser with scope filtering
 7. Add "Planning Context" panel to session detail page (integrates with I-0040)
 8. Mobile-responsive layouts matching I-0042's design principles
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename + execution model)
+
+ADR point 1 (rename): All references to `ultra-metis` in this initiative become `cadre`. MCP API calls change prefix to `mcp__cadre__`.
+
+ADR point 3 (SDD execution): The dashboard should display SDD-style execution data — per-task subagent dispatches, review pass/fail results, model selection choices, token usage per task — not just ralph loop iterations. The "Session ↔ Work Item" integration should show the orchestrator→implementer→reviewer agent chain, not just a single session.
+
+The existing design for hierarchy tree, document views, quality dashboard, and rule browser is unaffected.

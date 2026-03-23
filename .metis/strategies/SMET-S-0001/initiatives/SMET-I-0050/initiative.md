@@ -228,3 +228,15 @@ Release flow:
 
 ### Total Estimated Effort
 9-15 days across all 6 tasks
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename)
+
+All 6 tasks completed. The rename (SMET-I-0074) will change:
+- Binary names in CI/release workflows: `ultra-metis` → `cadre`, `ultra-metis-mcp` → `cadre-mcp`
+- Artifact naming: `ultra-metis-{version}-{target}.tar.gz` → `cadre-{version}-{target}.tar.gz`
+- Homebrew tap: `homebrew-ultra-metis` → `homebrew-cadre`
+- Makefile targets reference new binary names
+
+These are mechanical updates applied during the rename initiative.

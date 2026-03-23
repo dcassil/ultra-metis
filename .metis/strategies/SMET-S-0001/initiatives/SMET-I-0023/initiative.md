@@ -111,5 +111,16 @@ Phase 9: Integration test concurrent acquisition
 - Depends on SMET-I-0018 for domain model (lease fields on Story/Task)
 - Atomic SQLite transactions need careful handling
 - Lease expiration via check-on-access means stale leases persist until someone queries them
-- Must coordinate with SMET-I-0024 (worktree integration adds worktree_path field)
+- SMET-I-0024 (worktree integration) has been archived — worktree delegation moved to superpowers
 - Must coordinate with SMET-I-0026 (orchestrator consumes lease APIs)
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Defer (confirmed)
+
+ADR point 5: Full work leasing is explicitly deferred. SMET-I-0077 (Parallel Execution, Phase 3) uses simple file-based task claiming (`.cadre/claims/` lock files) for MVP. This initiative remains as the future enhancement path — the claiming interface in I-0077 is designed to be replaceable by the full lease system without changing the execution command interface.
+
+When this initiative is eventually picked up:
+- SMET-I-0024 is archived — worktree lifecycle is delegated to `superpowers:using-git-worktrees`
+- The `lease_worktree_path` field design should be revisited since worktrees are no longer Cadre-managed
+- Binary/crate names will have changed per I-0074 rename

@@ -4,14 +4,14 @@ level: initiative
 title: "Session-Scoped Ralph Loop State to Prevent Cross-Session Interference"
 short_code: "SMET-I-0073"
 created_at: 2026-03-23T15:30:19.614433+00:00
-updated_at: 2026-03-23T15:30:19.614433+00:00
+updated_at: 2026-03-23T17:55:35.080463+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -93,3 +93,11 @@ If ultra-metis ever replaces ralph-loop with its own stop hook, follow the Metis
 3. ~~Sync fixes to installed plugin cache~~ — DONE (2026-03-23)
 4. ~~Verify with debug logging that session_id flows correctly~~ — DONE (2026-03-23)
 5. Future: if adding own stop hook, implement session-scoped state filenames
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Complete (transition to completed)
+
+All work is done. The session-scoped state fix is verified and working. Per ADR decision #2, the ralph loop coexists with the new SDD-style execution — so this fix remains relevant for `/cadre-ralph` single-task iteration.
+
+The rename (I-0074) will update the SessionStart hook and setup scripts with new paths/names, but the session_id mechanism is unchanged.

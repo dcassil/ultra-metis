@@ -103,6 +103,18 @@ This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops
 - **Automatic result handoff without user review**: simpler but risky — session outcomes may be partial or incorrect; rejected in favor of user-reviewed handoff
 - **No context loading at session start**: simpler Machine Runner, but loses the core value of the notes system; rejected — fetching relevant notes at start is a primary use case
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Update scope + rename**
+
+Relevant ADR decision points:
+- **#1 Rename**: This is the most rename-impacted initiative. The title itself is "Ultra-Metis Work and Notes Integration" and should become "Cadre Work and Notes Integration." All references to Ultra-Metis MCP, Ultra-Metis short codes, Ultra-Metis records, and Ultra-Metis workflow become Cadre equivalents. The MCP tool names change (e.g., `ultra-metis:fetch_notes` becomes `cadre:fetch_notes` or equivalent post-rename).
+- **#3 SDD-style execution**: Context loading at session start must account for orchestrated execution. When using SDD-style dispatch, the orchestrator curates context per subagent — notes and architecture guidance may need to be filtered per-task rather than loaded once for the whole session. The note feedback mechanism should attribute feedback at the task/subagent level, not just the session level.
+- **#6 Architecture hooks**: When architecture lifecycle hooks are active (Phase 4), this initiative's architecture guidance injection becomes richer — not just static guidance text but active conformance checking during execution. This is a future enhancement but the design should leave room for it.
+- **#7 SubagentStart hook**: The SubagentStart hook is directly relevant here — it is the mechanism that injects Cadre context (including notes, architecture guidance, and work item awareness) into subagents. This initiative's "context loading" feature and the SubagentStart hook are complementary: the hook provides baseline Cadre awareness, while this initiative provides task-specific notes and architecture context.
+
+No changes needed for: #2 (superpowers is a peer dependency but doesn't affect work item integration), #4 (worktree delegation is orthogonal), #5 (task claiming is orthogonal).
+
 ## Implementation Plan
 
 1. Add `work_item_id` field to session creation API and storage

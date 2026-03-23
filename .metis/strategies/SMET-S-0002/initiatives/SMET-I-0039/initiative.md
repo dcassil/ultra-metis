@@ -106,6 +106,17 @@ This is the foundational initiative for the Remote AI Operations Layer (SMET-S-0
 - **OAuth device flow for machine registration**: more standard but adds complexity for a local daemon; rejected in favor of explicit dashboard-based approval which fits the trust model better
 - **mDNS/local discovery instead of central registry**: works only on local network, breaks the remote control model; rejected
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Update scope**
+
+Relevant ADR decision points:
+- **#1 Rename**: All references to "Ultra-Metis" in this initiative become "Cadre." The Machine Runner daemon runs in a Cadre-managed project, not an ultra-metis project. API paths, config keys, and documentation references must use the Cadre namespace.
+- **#3 SDD-style execution**: The Machine Runner must support the new execution model where a session may spawn multiple fresh subagents per task (not just a single long-running process). The process supervisor in the runner needs to handle orchestrated multi-subagent sessions, not just a single AI process. Session start commands may include subagent dispatch configuration.
+- **#7 SubagentStart hook**: The Machine Runner must ensure the SubagentStart hook is active in the execution environment so that any subagents spawned during a remote session receive Cadre project context. The runner's environment setup should verify hook availability.
+
+No changes needed for: #2 (superpowers dependency is orchestration-level, not runner-level), #4 (worktree delegation is execution-level), #5 (task claiming is orthogonal to machine connectivity), #6 (architecture hooks don't affect machine registration).
+
 ## Implementation Plan
 
 1. Define machine data model (id, name, platform, status, trust\_tier, repos, last\_heartbeat)

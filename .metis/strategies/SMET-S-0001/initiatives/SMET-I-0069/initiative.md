@@ -196,3 +196,13 @@ Phase 6: End-to-end integration test for full lifecycle (Story design → Task a
 - **Conformance checker accuracy**: False positives in conformance checking will block legitimate Story completions. Mitigation: drift_tolerance buffer, force transition option
 - **Story scope detection**: Initially hooks use the full ReferenceArchitecture rather than scoping to relevant layers. Future improvement could use Story metadata about affected code areas.
 - **Performance**: Conformance check at Story completion adds latency. Should be fast for typical repos but may need profiling for large codebases.
+
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Audit date**: 2026-03-23 | **Recommendation**: Update dependencies
+
+ADR point 6: This initiative is now a dependency of SMET-I-0078 (Quality Integration, Phase 4). The hooks implemented here are registered and wired into the execution flow by I-0078.
+
+ADR point 7: The SubagentStart hook (SMET-I-0075) ensures subagents have Cadre context, which means architecture context snapshots (Hook 2) are available to subagents dispatched by `/cadre-execute`.
+
+No scope changes needed — the hook designs remain correct. Only naming changes from the rename (I-0074) apply.

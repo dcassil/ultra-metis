@@ -106,6 +106,15 @@ Events that generate notifications:
 - **In-app polling instead of push**: works only when app is open; misses the core use case (phone in pocket); rejected
 - **SMS via Twilio**: higher infrastructure cost and complexity for MVP; push covers the same use case; rejected for MVP
 
+## Cadre ADR Alignment (SMET-A-0001)
+
+**Recommendation: Keep as-is (rename only)**
+
+Relevant ADR decision points:
+- **#1 Rename**: References to "Ultra-Metis" become "Cadre" in notification text, dashboard branding, and API documentation.
+
+No changes needed for: #2, #3, #4, #5, #6, #7. Notifications and mobile control are UI/delivery concerns that are agnostic to the execution model. Whether a session uses a ralph loop or SDD-style subagent dispatch, the notification triggers (approval needed, session failed, session completed) remain the same.
+
 ## Implementation Plan
 
 1. Define notification data model (id, user\_id, session\_id, type, priority, payload, read\_at)

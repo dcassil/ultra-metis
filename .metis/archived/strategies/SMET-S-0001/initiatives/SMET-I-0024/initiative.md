@@ -7,7 +7,7 @@ created_at: 2026-03-11T21:52:28.960038+00:00
 updated_at: 2026-03-11T21:52:28.960038+00:00
 parent: SMET-S-0001
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#initiative"
@@ -81,6 +81,10 @@ Phase 4: Implement merge-back on completion
 Phase 5: Add configuration options
 Phase 6: Error handling and edge cases
 Phase 7: Integration tests
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

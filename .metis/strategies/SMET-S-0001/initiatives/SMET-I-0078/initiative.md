@@ -22,117 +22,60 @@ initiative_id: quality-integration-architecture
 
 # Quality Integration: Architecture Hooks, Conformance Gates, and Baseline Comparison Initiative
 
-*This template includes sections for various types of initiatives. Delete sections that don't apply to your specific use case.*
+## Context
 
-## Context **[REQUIRED]**
+Phase 4 of ADR SMET-A-0001. The building blocks exist in ultra-metis-core (Architecture document type, conformance checker, gate engine, baseline services) but nothing connects them to the execution lifecycle. This initiative wires architecture hooks into transitions and quality baselines into the review flow.
 
-{Describe the context and background for this initiative}
-
-## Goals & Non-Goals **[REQUIRED]**
+## Goals & Non-Goals
 
 **Goals:**
-- {Primary objective 1}
-- {Primary objective 2}
+- Wire architecture lifecycle hooks (SMET-I-0069) into HookRegistry
+- Conformance gate on story completion blocks on drift beyond tolerance
+- Quality baseline capture at story start, comparison after each task in `/cadre-execute`
+- Surface quality regressions to code quality reviewer
+- Auto-create investigation stories on conformance drift
+- Record quality deltas per task in documents
 
 **Non-Goals:**
-- {What this initiative will not address}
+- Modifying the Architecture document type (SMET-I-0068, completed)
+- Implementing the HookContext trait refactor (SMET-I-0069)
+- Implementing architecture MCP tools (SMET-I-0070)
+- Modifying conformance checker or gate engine algorithms
+- The `/cadre-execute` command itself (SMET-I-0076)
 
-## Requirements **[CONDITIONAL: Requirements-Heavy Initiative]**
+## Detailed Design
 
-{Delete if not a requirements-focused initiative}
+### Hook Registration
+- `register_architecture_hooks()` at MCP server and CLI startup
+- Hook 1: Story → design creates Architecture doc with checklist + baseline_score
+- Hook 2: Task → active snapshots architecture context from parent Story
+- Hook 3: Story → completed blocks on conformance drift, creates investigation story
 
-### User Requirements
-- **User Characteristics**: {Technical background, experience level, etc.}
-- **System Functionality**: {What users expect the system to do}
-- **User Interfaces**: {How users will interact with the system}
+### Quality Baseline Flow in /cadre-execute
+- Story start: capture quality metrics via existing parsers
+- After each task: compare via BaselineComparisonEngine
+- Review stage: quality delta formatted as markdown for reviewer context
+- Task document: quality delta recorded as audit trail
 
-### System Requirements
-- **Functional Requirements**: {What the system should do - use unique identifiers}
-  - REQ-001: {Functional requirement 1}
-  - REQ-002: {Functional requirement 2}
-- **Non-Functional Requirements**: {How the system should behave}
-  - NFR-001: {Performance requirement}
-  - NFR-002: {Security requirement}
+### Investigation Story Auto-Creation
+- Title: "Investigate architecture drift from [story title]"
+- Type: Investigation
+- Pre-populated: violated rules, score delta, affected files
 
-## Use Cases **[CONDITIONAL: User-Facing Initiative]**
+## Alternatives Considered
 
-{Delete if not user-facing}
+1. **Quality checks only at story completion**: Rejected — per-task tracking identifies which task introduced regression
+2. **Advisory-only gates**: Rejected as default — enforcement is the point. Configurable via GateSeverity
+3. **Inline quality checks in reviewer only**: Rejected — automated comparison provides objective deltas
 
-### Use Case 1: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+## Implementation Plan
 
-### Use Case 2: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+1. Hook registration
+2. Conformance gate wiring and end-to-end test
+3. Quality baseline capture integration in /cadre-execute
+4. Review stage integration
+5. Full lifecycle integration test
 
-## Architecture **[CONDITIONAL: Technically Complex Initiative]**
+## Dependencies
 
-{Delete if not technically complex}
-
-### Overview
-{High-level architectural approach}
-
-### Component Diagrams
-{Describe or link to component diagrams}
-
-### Class Diagrams
-{Describe or link to class diagrams - for OOP systems}
-
-### Sequence Diagrams
-{Describe or link to sequence diagrams - for interaction flows}
-
-### Deployment Diagrams
-{Describe or link to deployment diagrams - for infrastructure}
-
-## Detailed Design **[REQUIRED]**
-
-{Technical approach and implementation details}
-
-## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
-
-{Delete if no UI components}
-
-### User Interface Mockups
-{Describe or link to UI mockups}
-
-### User Flows
-{Describe key user interaction flows}
-
-### Design System Integration
-{How this fits with existing design patterns}
-
-## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**
-
-{Delete if covered by separate testing initiative}
-
-### Unit Testing
-- **Strategy**: {Approach to unit testing}
-- **Coverage Target**: {Expected coverage percentage}
-- **Tools**: {Testing frameworks and tools}
-
-### Integration Testing
-- **Strategy**: {Approach to integration testing}
-- **Test Environment**: {Where integration tests run}
-- **Data Management**: {Test data strategy}
-
-### System Testing
-- **Strategy**: {End-to-end testing approach}
-- **User Acceptance**: {How UAT will be conducted}
-- **Performance Testing**: {Load and stress testing}
-
-### Test Selection
-{Criteria for determining what to test}
-
-### Bug Tracking
-{How defects will be managed and prioritized}
-
-## Alternatives Considered **[REQUIRED]**
-
-{Alternative approaches and why they were rejected}
-
-## Implementation Plan **[REQUIRED]**
-
-{Phases and timeline for execution}
+- **Blocked by**: SMET-I-0068 (completed), SMET-I-0069, SMET-I-0070, SMET-I-0076
