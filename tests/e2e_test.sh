@@ -1,10 +1,10 @@
 #!/bin/bash
-# End-to-end test for Ultra-Metis
+# End-to-end test for Cadre
 # Tests the full workflow: init -> create documents -> transition phases -> verify
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLI="cargo run --manifest-path $SCRIPT_DIR/Cargo.toml -p ultra-metis-cli --"
+CLI="cargo run --manifest-path $SCRIPT_DIR/Cargo.toml -p cadre-cli --"
 TMPDIR=$(mktemp -d)
 
 cleanup() {
@@ -12,34 +12,34 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "=== Ultra-Metis End-to-End Test ==="
+echo "=== Cadre End-to-End Test ==="
 echo "Working directory: $TMPDIR"
 echo
 
 # 1. Initialize project
 echo "1. Initializing project..."
 $CLI init --path "$TMPDIR" --prefix E2E 2>/dev/null
-test -d "$TMPDIR/.ultra-metis" || { echo "FAIL: .ultra-metis dir not created"; exit 1; }
-test -f "$TMPDIR/.ultra-metis/config.toml" || { echo "FAIL: config.toml not created"; exit 1; }
-test -d "$TMPDIR/.ultra-metis/docs" || { echo "FAIL: docs dir not created"; exit 1; }
+test -d "$TMPDIR/.cadre" || { echo "FAIL: .cadre dir not created"; exit 1; }
+test -f "$TMPDIR/.cadre/config.toml" || { echo "FAIL: config.toml not created"; exit 1; }
+test -d "$TMPDIR/.cadre/docs" || { echo "FAIL: docs dir not created"; exit 1; }
 echo "   PASS: Project initialized"
 
 # 2. Create vision
 echo "2. Creating vision..."
 $CLI create -t vision "Product Vision" --path "$TMPDIR" 2>/dev/null
-test -f "$TMPDIR/.ultra-metis/docs/E2E-V-0001.md" || { echo "FAIL: vision file not created"; exit 1; }
+test -f "$TMPDIR/.cadre/docs/E2E-V-0001.md" || { echo "FAIL: vision file not created"; exit 1; }
 echo "   PASS: Vision E2E-V-0001 created"
 
 # 3. Create initiative under vision
 echo "3. Creating initiative..."
 $CLI create -t initiative "Feature Initiative" -P E2E-V-0001 --path "$TMPDIR" 2>/dev/null
-test -f "$TMPDIR/.ultra-metis/docs/E2E-I-0002.md" || { echo "FAIL: initiative file not created"; exit 1; }
+test -f "$TMPDIR/.cadre/docs/E2E-I-0002.md" || { echo "FAIL: initiative file not created"; exit 1; }
 echo "   PASS: Initiative E2E-I-0002 created"
 
 # 4. Create task under initiative
 echo "4. Creating task..."
 $CLI create -t task "Implement Feature" -P E2E-I-0002 --path "$TMPDIR" 2>/dev/null
-test -f "$TMPDIR/.ultra-metis/docs/E2E-T-0003.md" || { echo "FAIL: task file not created"; exit 1; }
+test -f "$TMPDIR/.cadre/docs/E2E-T-0003.md" || { echo "FAIL: task file not created"; exit 1; }
 echo "   PASS: Task E2E-T-0003 created"
 
 # 5. List documents

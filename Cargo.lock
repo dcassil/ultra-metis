@@ -156,6 +156,84 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
+name = "cadre-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cadre-core",
+ "cadre-store",
+ "clap",
+ "serde_json",
+]
+
+[[package]]
+name = "cadre-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "diesel",
+ "diesel_migrations",
+ "dirs",
+ "gray_matter",
+ "include_dir",
+ "libsqlite3-sys",
+ "pulldown-cmark",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2",
+ "tempfile",
+ "tera",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "toml 0.8.23",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "cadre-mcp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cadre-core",
+ "cadre-store",
+ "glob",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "cadre-store"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cadre-core",
+ "chrono",
+ "glob",
+ "gray_matter",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "toml 0.8.23",
+ "tracing",
+ "tree-sitter",
+ "tree-sitter-rust",
+ "walkdir",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2499,84 +2577,6 @@ name = "ucd-trie"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971"
-
-[[package]]
-name = "ultra-metis-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "serde_json",
- "ultra-metis-core",
- "ultra-metis-store",
-]
-
-[[package]]
-name = "ultra-metis-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "diesel",
- "diesel_migrations",
- "dirs",
- "gray_matter",
- "include_dir",
- "libsqlite3-sys",
- "pulldown-cmark",
- "regex",
- "serde",
- "serde_json",
- "serde_yaml",
- "sha2",
- "tempfile",
- "tera",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "toml 0.8.23",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "walkdir",
-]
-
-[[package]]
-name = "ultra-metis-mcp"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "glob",
- "serde",
- "serde_json",
- "tempfile",
- "tracing",
- "tracing-subscriber",
- "ultra-metis-core",
- "ultra-metis-store",
-]
-
-[[package]]
-name = "ultra-metis-store"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "glob",
- "gray_matter",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "toml 0.8.23",
- "tracing",
- "tree-sitter",
- "tree-sitter-rust",
- "ultra-metis-core",
- "walkdir",
-]
 
 [[package]]
 name = "unicase"

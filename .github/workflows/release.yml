@@ -59,7 +59,7 @@ jobs:
           ${{ matrix.use-cross && 'cross' || 'cargo' }} build \
             --release \
             --target ${{ matrix.target }} \
-            -p ultra-metis-cli
+            -p cadre-cli
         shell: bash
 
       - name: Build MCP binary
@@ -67,7 +67,7 @@ jobs:
           ${{ matrix.use-cross && 'cross' || 'cargo' }} build \
             --release \
             --target ${{ matrix.target }} \
-            -p ultra-metis-mcp
+            -p cadre-mcp
         shell: bash
 
       - name: Upload binaries (unix)
@@ -76,8 +76,8 @@ jobs:
         with:
           name: binaries-${{ matrix.target }}
           path: |
-            target/${{ matrix.target }}/release/ultra-metis
-            target/${{ matrix.target }}/release/ultra-metis-mcp
+            target/${{ matrix.target }}/release/cadre
+            target/${{ matrix.target }}/release/cadre-mcp
           if-no-files-found: error
 
       - name: Upload binaries (windows)
@@ -86,8 +86,8 @@ jobs:
         with:
           name: binaries-${{ matrix.target }}
           path: |
-            target/${{ matrix.target }}/release/ultra-metis.exe
-            target/${{ matrix.target }}/release/ultra-metis-mcp.exe
+            target/${{ matrix.target }}/release/cadre.exe
+            target/${{ matrix.target }}/release/cadre-mcp.exe
           if-no-files-found: error
 
   package:
@@ -144,14 +144,14 @@ jobs:
       - name: Checkout Homebrew tap
         uses: actions/checkout@v4
         with:
-          repository: dcassil/homebrew-ultra-metis
+          repository: dcassil/homebrew-cadre
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
 
       - name: Update formula
         run: |
           cd homebrew-tap
-          FORMULA="Formula/ultra-metis.rb"
+          FORMULA="Formula/cadre.rb"
 
           # Update version
           sed -i 's/version ".*"/version "${{ steps.info.outputs.version }}"/' "$FORMULA"
@@ -171,6 +171,6 @@ jobs:
           cd homebrew-tap
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/ultra-metis.rb
-          git commit -m "Update ultra-metis to ${{ github.ref_name }}"
+          git add Formula/cadre.rb
+          git commit -m "Update cadre to ${{ github.ref_name }}"
           git push

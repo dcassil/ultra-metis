@@ -498,10 +498,10 @@ impl BenchmarkHarness {
 ```toml
 # Add to [workspace] members array
 members = [
-    "crates/ultra-metis-core",
-    "crates/ultra-metis-cli",
-    "crates/ultra-metis-mcp",
-    "crates/ultra-metis-store",
+    "crates/cadre-core",
+    "crates/cadre-cli",
+    "crates/cadre-mcp",
+    "crates/cadre-store",
     "benchmarks/practical",
 ]
 ```

@@ -3,15 +3,15 @@
   "packages": {
     ".": {
       "release-type": "rust",
-      "component": "ultra-metis",
+      "component": "cadre",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        "crates/ultra-metis-core/Cargo.toml",
-        "crates/ultra-metis-cli/Cargo.toml",
-        "crates/ultra-metis-mcp/Cargo.toml",
-        "crates/ultra-metis-store/Cargo.toml"
+        "crates/cadre-core/Cargo.toml",
+        "crates/cadre-cli/Cargo.toml",
+        "crates/cadre-mcp/Cargo.toml",
+        "crates/cadre-store/Cargo.toml"
       ]
     }
   }

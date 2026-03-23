@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Release artifact packaging script for ultra-metis.
+# Release artifact packaging script for cadre.
 # Packages cross-compiled binaries into distributable archives with checksums.
 #
 # Usage: scripts/package.sh <version-tag>
@@ -20,7 +20,7 @@ TARGETS=(
   x86_64-pc-windows-msvc
 )
 
-BINARIES=(ultra-metis ultra-metis-mcp)
+BINARIES=(cadre cadre-mcp)
 
 DIST_DIR="dist"
 rm -rf "${DIST_DIR}"
@@ -86,7 +86,7 @@ for target in "${TARGETS[@]}"; do
   fi
 
   # Create staging directory
-  stage_name="ultra-metis-${VERSION}-${target}"
+  stage_name="cadre-${VERSION}-${target}"
   stage_dir="${DIST_DIR}/${stage_name}"
   mkdir -p "${stage_dir}"
 

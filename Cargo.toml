@@ -1,9 +1,9 @@
 [workspace]
 members = [
-    "crates/ultra-metis-core",
-    "crates/ultra-metis-store",
-    "crates/ultra-metis-cli",
-    "crates/ultra-metis-mcp",
+    "crates/cadre-core",
+    "crates/cadre-store",
+    "crates/cadre-cli",
+    "crates/cadre-mcp",
     "benchmarks/practical",
 ]
 resolver = "2"
@@ -12,7 +12,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-authors = ["Ultra-Metis Contributors"]
+authors = ["Cadre Contributors"]
 keywords = ["mcp", "documentation", "engineering", "ai"]
 categories = ["command-line-utilities", "development-tools"]
 

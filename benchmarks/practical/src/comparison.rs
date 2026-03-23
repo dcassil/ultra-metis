@@ -41,7 +41,7 @@ pub struct ComparisonResult {
     pub config: ComparisonConfig,
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub original_metis: SystemResult,
-    pub ultra_metis: SystemResult,
+    pub cadre: SystemResult,
     pub deltas: ComparisonDeltas,
 }
 
@@ -58,21 +58,21 @@ pub struct SystemResult {
     pub task_count: u32,
 }
 
-/// Computed deltas between the two systems (ultra_metis - original_metis).
+/// Computed deltas between the two systems (cadre - original_metis).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComparisonDeltas {
-    /// Positive = ultra-metis used more tokens.
+    /// Positive = cadre used more tokens.
     pub token_delta: i64,
     pub token_overhead_percent: f32,
-    /// Positive = ultra-metis took longer.
+    /// Positive = cadre took longer.
     pub time_delta_ms: i64,
-    /// Positive = ultra-metis scored higher on doc generation.
+    /// Positive = cadre scored higher on doc generation.
     pub doc_generation_delta: f32,
-    /// Positive = ultra-metis scored higher on decomposition.
+    /// Positive = cadre scored higher on decomposition.
     pub decomposition_delta: f32,
-    /// Positive = ultra-metis scored higher on build outcome.
+    /// Positive = cadre scored higher on build outcome.
     pub build_outcome_delta: f32,
-    /// Positive = ultra-metis scored higher on architecture conformance.
+    /// Positive = cadre scored higher on architecture conformance.
     pub architecture_delta: f32,
 }
 
@@ -122,7 +122,7 @@ impl ComparisonResult {
             config,
             timestamp: chrono::Utc::now(),
             original_metis: orig,
-            ultra_metis: ult,
+            cadre: ult,
             deltas,
         }
     }
@@ -171,7 +171,7 @@ impl ComparisonResult {
             config,
             timestamp: chrono::Utc::now(),
             original_metis: orig,
-            ultra_metis: ult,
+            cadre: ult,
             deltas,
         }
     }
@@ -186,7 +186,7 @@ impl ComparisonResult {
         let mut md = String::new();
         md.push_str(&format!(
             "# Benchmark Comparison: {} vs {}\n\n",
-            "Original Metis", "Ultra-Metis"
+            "Original Metis", "Cadre"
         ));
         md.push_str(&format!("**Mode**: {}\n", mode_label));
         md.push_str(&format!("**Scenario**: {}\n", self.config.scenario_id));
@@ -194,34 +194,34 @@ impl ComparisonResult {
         md.push_str(&format!("**Date**: {}\n\n", self.timestamp.format("%Y-%m-%d %H:%M UTC")));
 
         md.push_str("## Cost Metrics\n\n");
-        md.push_str("| Metric | Original Metis | Ultra-Metis | Delta |\n");
+        md.push_str("| Metric | Original Metis | Cadre | Delta |\n");
         md.push_str("|--------|---------------|-------------|-------|\n");
         md.push_str(&format!(
             "| Tokens | {} | {} | {:+} ({:+.1}%) |\n",
             self.original_metis.tokens_used,
-            self.ultra_metis.tokens_used,
+            self.cadre.tokens_used,
             self.deltas.token_delta,
             self.deltas.token_overhead_percent
         ));
         md.push_str(&format!(
             "| Time (ms) | {} | {} | {:+} |\n",
             self.original_metis.time_ms,
-            self.ultra_metis.time_ms,
+            self.cadre.time_ms,
             self.deltas.time_delta_ms
         ));
         md.push_str(&format!(
             "| Initiatives | {} | {} | |\n",
             self.original_metis.initiative_count,
-            self.ultra_metis.initiative_count,
+            self.cadre.initiative_count,
         ));
         md.push_str(&format!(
             "| Tasks | {} | {} | |\n\n",
-            self.original_metis.task_count, self.ultra_metis.task_count,
+            self.original_metis.task_count, self.cadre.task_count,
         ));
 
-        if self.original_metis.scores.is_some() && self.ultra_metis.scores.is_some() {
+        if self.original_metis.scores.is_some() && self.cadre.scores.is_some() {
             md.push_str("## Quality Scores\n\n");
-            md.push_str("| Track | Original Metis | Ultra-Metis | Delta |\n");
+            md.push_str("| Track | Original Metis | Cadre | Delta |\n");
             md.push_str("|-------|---------------|-------------|-------|\n");
             md.push_str(&format!(
                 "| Doc Generation | — | — | {:+.1} |\n",
@@ -411,7 +411,7 @@ mod tests {
         assert!(result.deltas.token_overhead_percent > 0.0);
         assert_eq!(result.deltas.time_delta_ms, -5000);
         assert_eq!(result.original_metis.initiative_count, 1);
-        assert_eq!(result.ultra_metis.task_count, 1);
+        assert_eq!(result.cadre.task_count, 1);
     }
 
     #[test]
@@ -464,7 +464,7 @@ mod tests {
         let md = result.to_markdown();
 
         assert!(md.contains("Original Metis"));
-        assert!(md.contains("Ultra-Metis"));
+        assert!(md.contains("Cadre"));
         assert!(md.contains("Constrained"));
         assert!(md.contains("Tokens"));
     }

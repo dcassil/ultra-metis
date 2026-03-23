@@ -6,8 +6,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// Invoke the ultra-metis CLI binary, returning stdout and elapsed ms.
-/// Mirrors the approach in benchmarks/run-ultra-metis-bench.sh.
+/// Invoke the cadre CLI binary, returning stdout and elapsed ms.
+/// Mirrors the approach in benchmarks/run-cadre-bench.sh.
 pub fn run_cli(binary: &Path, args: &[&str]) -> anyhow::Result<CliResult> {
     let start = std::time::Instant::now();
     let output = Command::new(binary).args(args).output()?;
@@ -57,17 +57,17 @@ impl CliResult {
     }
 }
 
-/// Resolve ultra-metis binary path. Checks ULTRA_METIS_BINARY env var first,
-/// then falls back to target/release/ultra-metis relative to cwd.
+/// Resolve cadre binary path. Checks ULTRA_METIS_BINARY env var first,
+/// then falls back to target/release/cadre relative to cwd.
 pub fn resolve_binary_path() -> PathBuf {
     if let Ok(path) = std::env::var("ULTRA_METIS_BINARY") {
         return PathBuf::from(path);
     }
-    let candidate = PathBuf::from("target/release/ultra-metis");
+    let candidate = PathBuf::from("target/release/cadre");
     if candidate.exists() {
         return candidate;
     }
-    PathBuf::from("ultra-metis")
+    PathBuf::from("cadre")
 }
 
 /// Extract a short code (e.g., "BENCH-V-0001") from CLI stdout.
@@ -359,7 +359,7 @@ pub fn default_fallback_ai_initiative() -> AiInitiative {
 
 /// Execute autonomous benchmark run (no validation gates).
 ///
-/// Initializes a temp ultra-metis project, runs the scenario through Claude API,
+/// Initializes a temp cadre project, runs the scenario through Claude API,
 /// and records real token counts and CLI timing.
 pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result<BenchmarkRun> {
     let start_time = std::time::Instant::now();

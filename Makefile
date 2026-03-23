@@ -8,24 +8,24 @@ build: build-mcp build-cli
 
 # Build the MCP server (used by Claude Code plugin)
 build-mcp:
-	cargo build --release -p ultra-metis-mcp
+	cargo build --release -p cadre-mcp
 
 # Build the CLI tool
 build-cli:
-	cargo build --release -p ultra-metis-cli
+	cargo build --release -p cadre-cli
 
 # Install binaries to PATH and validate plugin
 install: build install-binary
 	@echo "Binaries installed. Plugin structure validated."
-	@echo "The .mcp.json in this repo configures ultra-metis for local development."
+	@echo "The .mcp.json in this repo configures cadre for local development."
 	@echo "To use in other projects, add to ~/.claude/settings.json or project .mcp.json:"
-	@echo '  {"mcpServers":{"ultra-metis":{"command":"ultra-metis-mcp","args":[]}}}'
+	@echo '  {"mcpServers":{"cadre":{"command":"cadre-mcp","args":[]}}}'
 
 # Copy release binaries to INSTALL_DIR (default: /usr/local/bin)
 install-binary:
-	cp target/release/ultra-metis-mcp $(INSTALL_DIR)/ultra-metis-mcp
-	cp target/release/ultra-metis $(INSTALL_DIR)/ultra-metis
-	@echo "Installed ultra-metis-mcp and ultra-metis to $(INSTALL_DIR)"
+	cp target/release/cadre-mcp $(INSTALL_DIR)/cadre-mcp
+	cp target/release/cadre $(INSTALL_DIR)/cadre
+	@echo "Installed cadre-mcp and cadre to $(INSTALL_DIR)"
 
 # Run all tests
 test:
@@ -63,7 +63,7 @@ fmt-check:
 # Build release binaries for the current platform
 release-local: build
 	@echo "Release binaries built:"
-	@ls -lh target/release/ultra-metis target/release/ultra-metis-mcp
+	@ls -lh target/release/cadre target/release/cadre-mcp
 
 # Package release binaries into distributable archive
 package: release-local

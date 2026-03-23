@@ -33,7 +33,7 @@ pub struct McpComparisonResult {
     pub scenario_id: String,
     pub scenario_title: String,
     pub original_metis: McpToolRun,
-    pub ultra_metis_mcp: McpToolRun,
+    pub cadre_mcp: McpToolRun,
 }
 
 pub fn run_shared_tool_comparison(
@@ -65,7 +65,7 @@ pub fn run_shared_tool_comparison(
         scenario_id: scenario_id.to_string(),
         scenario_title: scenario_title.to_string(),
         original_metis: original,
-        ultra_metis_mcp: ultra,
+        cadre_mcp: ultra,
     })
 }
 
@@ -260,7 +260,7 @@ fn extract_short_code(text: &str, prefix: &str) -> Option<String> {
 fn system_name(system: &SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
-        SystemUnderTest::UltraMetisMcp => "ultra-metis-mcp",
+        SystemUnderTest::UltraMetisMcp => "cadre-mcp",
     }
 }
 
@@ -275,19 +275,19 @@ pub fn format_comparison_report(result: &McpComparisonResult) -> String {
     ));
 
     out.push_str("## Shared MCP Workflow\n\n");
-    out.push_str("| Operation | original-metis (ms) | ultra-metis-mcp (ms) | Winner |\n");
+    out.push_str("| Operation | original-metis (ms) | cadre-mcp (ms) | Winner |\n");
     out.push_str("|-----------|---------------------:|----------------------:|--------|\n");
 
     for (orig, ultra) in result
         .original_metis
         .operations
         .iter()
-        .zip(result.ultra_metis_mcp.operations.iter())
+        .zip(result.cadre_mcp.operations.iter())
     {
         let winner = if orig.duration_ms < ultra.duration_ms {
             "original-metis"
         } else if ultra.duration_ms < orig.duration_ms {
-            "ultra-metis-mcp"
+            "cadre-mcp"
         } else {
             "tie"
         };
@@ -303,8 +303,8 @@ pub fn format_comparison_report(result: &McpComparisonResult) -> String {
         result.original_metis.tools_available.join(", ")
     ));
     out.push_str(&format!(
-        "- ultra-metis-mcp shared tools: {}\n",
-        result.ultra_metis_mcp.tools_available.join(", ")
+        "- cadre-mcp shared tools: {}\n",
+        result.cadre_mcp.tools_available.join(", ")
     ));
 
     out
@@ -341,8 +341,8 @@ mod tests {
                     detail: "ok".to_string(),
                 }],
             },
-            ultra_metis_mcp: McpToolRun {
-                system: "ultra-metis-mcp".to_string(),
+            cadre_mcp: McpToolRun {
+                system: "cadre-mcp".to_string(),
                 tool_surface: "mcp-stdio".to_string(),
                 startup_ok: true,
                 tools_available: vec!["initialize_project".to_string()],
@@ -371,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn ultra_metis_uses_root_for_document_calls() {
+    fn cadre_uses_root_for_document_calls() {
         let root = Path::new("/tmp/example-project");
         assert_eq!(
             document_project_path(SystemUnderTest::UltraMetisMcp, root),

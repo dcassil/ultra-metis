@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MCP-vs-MCP Benchmark: Ultra-Metis vs Original Metis
+MCP-vs-MCP Benchmark: Cadre vs Original Metis
 Both servers tested over identical stdio MCP transport — apples-to-apples comparison.
 
 Scenarios 1-5: Speed, correctness, error handling
@@ -505,7 +505,7 @@ def run_scenario_6_template_quality(ultra_proc, ultra_path, orig_proc, orig_path
     print(f"  Original template: {len(orig_template)} chars")
 
     results = {}
-    for tool_name, template in [("ultra-metis", ultra_template), ("original-metis", orig_template)]:
+    for tool_name, template in [("cadre", ultra_template), ("original-metis", orig_template)]:
         start = time.perf_counter()
         per_module = []
         total_tokens = 0
@@ -556,11 +556,11 @@ def run_scenario_6_template_quality(ultra_proc, ultra_path, orig_proc, orig_path
 
 def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=None):
     lines = []
-    lines.append("# MCP Benchmark: Ultra-Metis vs Original Metis (Apples-to-Apples)")
+    lines.append("# MCP Benchmark: Cadre vs Original Metis (Apples-to-Apples)")
     lines.append("")
     lines.append(f"**Date**: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append("**Transport**: Both servers via stdio MCP (JSON-RPC 2.0, newline-delimited)")
-    lines.append(f"**Ultra-Metis**: Rust MCP server (server startup: {ultra_init_time:.0f}ms)")
+    lines.append(f"**Cadre**: Rust MCP server (server startup: {ultra_init_time:.0f}ms)")
     lines.append(f"**Original Metis**: TypeScript MCP server v1.1.0 (server startup: {orig_init_time:.0f}ms)")
     lines.append("")
 
@@ -573,13 +573,13 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
     speedup = total_orig / total_ultra if total_ultra > 0 else 0
 
     lines.append(f"Across **{op_count} operations** over identical MCP stdio transport, "
-                 f"ultra-metis completed in **{total_ultra:.0f}ms** "
+                 f"cadre completed in **{total_ultra:.0f}ms** "
                  f"vs original metis in **{total_orig:.0f}ms** — "
                  f"**{speedup:.1f}x {'faster' if speedup > 1 else 'slower'}**.")
     lines.append("")
     lines.append("Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio. "
-                 "The previous benchmark (REPORT.md) compared ultra-metis CLI vs original metis MCP, "
-                 "giving ultra-metis an unfair transport advantage (~200x). This benchmark isolates "
+                 "The previous benchmark (REPORT.md) compared cadre CLI vs original metis MCP, "
+                 "giving cadre an unfair transport advantage (~200x). This benchmark isolates "
                  "actual server performance by using identical transport for both.")
     lines.append("")
 
@@ -587,14 +587,14 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
     ultra_fails = sum(1 for s in scenarios for t in s.ultra_timings if not t.success and s.name != "Error Handling")
     orig_fails = sum(1 for s in scenarios for t in s.original_timings if not t.success and s.name != "Error Handling")
     if ultra_fails or orig_fails:
-        lines.append(f"**Failures** (non-error-handling): Ultra-Metis {ultra_fails}, Original Metis {orig_fails}")
+        lines.append(f"**Failures** (non-error-handling): Cadre {ultra_fails}, Original Metis {orig_fails}")
         lines.append("")
 
     # Per-scenario tables
     for scenario in scenarios:
         lines.append(f"## Scenario: {scenario.name}")
         lines.append("")
-        lines.append("| Operation | Ultra-Metis (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |")
+        lines.append("| Operation | Cadre (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |")
         lines.append("|-----------|:----------------:|:-------------------:|:-------:|:--------:|:-------:|")
 
         ultra_map = {t.operation: t for t in scenario.ultra_timings}
@@ -623,7 +623,7 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
     # Aggregate
     lines.append("## Aggregate Speed Summary")
     lines.append("")
-    lines.append("| Scenario | Ultra-Metis (ms) | Original Metis (ms) | Speedup |")
+    lines.append("| Scenario | Cadre (ms) | Original Metis (ms) | Speedup |")
     lines.append("|----------|:----------------:|:-------------------:|:-------:|")
     gu = go = 0
     for s in scenarios:
@@ -639,7 +639,7 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
     # Output size
     lines.append("## Output Size Comparison (Token Cost Proxy)")
     lines.append("")
-    lines.append("| Scenario | Ultra-Metis (bytes) | Original Metis (bytes) | Ratio |")
+    lines.append("| Scenario | Cadre (bytes) | Original Metis (bytes) | Ratio |")
     lines.append("|----------|:-------------------:|:----------------------:|:-----:|")
     for s in scenarios:
         su = sum(t.output_size for t in s.ultra_timings)
@@ -653,7 +653,7 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
     if err_scenario:
         lines.append("## Error Handling Details")
         lines.append("")
-        lines.append("| Test Case | Ultra-Metis | Original Metis |")
+        lines.append("| Test Case | Cadre | Original Metis |")
         lines.append("|-----------|:-----------:|:--------------:|")
         u_map = {t.operation: t for t in err_scenario.ultra_timings}
         o_map = {t.operation: t for t in err_scenario.original_timings}
@@ -667,7 +667,7 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
 
     # Template quality
     if quality_results:
-        u = quality_results.get("ultra-metis")
+        u = quality_results.get("cadre")
         o = quality_results.get("original-metis")
         if u and o:
             lines.append("## Scenario: Template Quality (AI Fill-In)")
@@ -676,7 +676,7 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
             lines.append("Claude Haiku to fill in for 3 module specs. Results measure how well the template ")
             lines.append("guides AI toward complete, placeholder-free content.")
             lines.append("")
-            lines.append("| Metric | Ultra-Metis | Original Metis | Delta |")
+            lines.append("| Metric | Cadre | Original Metis | Delta |")
             lines.append("|--------|:-----------:|:--------------:|:-----:|")
             lines.append(f"| Template size (chars) | {u.template_size} | {o.template_size} | {o.template_size - u.template_size:+d} |")
             lines.append(f"| Avg completeness | {u.avg_completeness:.0f}% | {o.avg_completeness:.0f}% | {u.avg_completeness - o.avg_completeness:+.0f}% |")
@@ -714,8 +714,8 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
     lines.append("- Fresh temp directories, no cached state")
     lines.append("- Short codes parsed from actual responses (not hardcoded)")
     lines.append("")
-    lines.append("**Key difference from REPORT.md**: Previous benchmark compared ultra-metis CLI (direct binary) "
-                 "vs original metis MCP (via Claude Code tool infrastructure). That gave ultra-metis ~200x advantage "
+    lines.append("**Key difference from REPORT.md**: Previous benchmark compared cadre CLI (direct binary) "
+                 "vs original metis MCP (via Claude Code tool infrastructure). That gave cadre ~200x advantage "
                  "from transport alone. This benchmark eliminates transport as a variable.")
     lines.append("")
     if quality_results:
@@ -730,10 +730,10 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
 
 def main():
     repo_root = Path(__file__).parent.parent
-    ultra_binary = repo_root / "target" / "release" / "ultra-metis-mcp"
+    ultra_binary = repo_root / "target" / "release" / "cadre-mcp"
 
     if not ultra_binary.exists():
-        print(f"ERROR: ultra-metis-mcp binary not found at {ultra_binary}", file=sys.stderr)
+        print(f"ERROR: cadre-mcp binary not found at {ultra_binary}", file=sys.stderr)
         sys.exit(1)
 
     has_claude = subprocess.run(["claude", "--version"], capture_output=True).returncode == 0
@@ -745,10 +745,10 @@ def main():
     # Original metis: init uses parent dir, all other ops use .metis path
     orig_metis_path = os.path.join(orig_tmp, ".metis")
 
-    ultra_st = BenchState("ultra-metis")
+    ultra_st = BenchState("cadre")
     orig_st = BenchState("original-metis")
 
-    print(f"Ultra-Metis project: {ultra_tmp}")
+    print(f"Cadre project: {ultra_tmp}")
     print(f"Original Metis project: {orig_tmp} (ops: {orig_metis_path})")
     print(f"Template quality: {'YES' if run_quality else 'SKIPPED'}")
     print()
@@ -757,7 +757,7 @@ def main():
     t0 = time.perf_counter()
     ultra_proc, _ = start_mcp_server([str(ultra_binary)])
     ultra_init_time = (time.perf_counter() - t0) * 1000
-    print(f"  Ultra-Metis: {ultra_init_time:.0f}ms")
+    print(f"  Cadre: {ultra_init_time:.0f}ms")
 
     t0 = time.perf_counter()
     orig_proc, _ = start_mcp_server(["metis", "mcp"])
@@ -769,7 +769,7 @@ def main():
     quality_results = None
 
     try:
-        # Scenario 1: Init uses parent dirs (servers create .ultra-metis / .metis inside)
+        # Scenario 1: Init uses parent dirs (servers create .cadre / .metis inside)
         # All other scenarios use the paths the servers expect for operations
         scenario_defs = [
             ("Project Bootstrap", run_scenario_1_init, ultra_tmp, orig_tmp),
@@ -802,7 +802,7 @@ def main():
             quality_results = run_scenario_6_template_quality(
                 ultra_proc, ultra_tmp, orig_proc, orig_metis_path, ultra_st, orig_st
             )
-            u = quality_results["ultra-metis"]
+            u = quality_results["cadre"]
             o = quality_results["original-metis"]
             print(f"  Ultra:  {u.avg_completeness:.0f}% completeness, {u.avg_placeholders:.1f} placeholders/doc")
             print(f"  Orig:   {o.avg_completeness:.0f}% completeness, {o.avg_placeholders:.1f} placeholders/doc")
@@ -821,7 +821,7 @@ def main():
     total_orig = sum(t.elapsed_ms for s in scenarios for t in s.original_timings)
     speedup = total_orig / total_ultra if total_ultra > 0.01 else 0
     print(f"\n{'='*60}")
-    print(f"RESULT: Ultra-Metis {total_ultra:.1f}ms vs Original Metis {total_orig:.1f}ms ({speedup:.1f}x)")
+    print(f"RESULT: Cadre {total_ultra:.1f}ms vs Original Metis {total_orig:.1f}ms ({speedup:.1f}x)")
     print(f"{'='*60}")
 
 

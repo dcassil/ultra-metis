@@ -1,26 +1,26 @@
-# MCP Benchmark: Ultra-Metis vs Original Metis (Apples-to-Apples)
+# MCP Benchmark: Cadre vs Original Metis (Apples-to-Apples)
 
 **Date**: 2026-03-17 23:04:56
 **Transport**: Both servers via stdio MCP (JSON-RPC 2.0, newline-delimited)
-**Ultra-Metis**: Rust MCP server (server startup: 883ms)
+**Cadre**: Rust MCP server (server startup: 883ms)
 **Original Metis**: TypeScript MCP server v1.1.0 (server startup: 224ms)
 
 ## Executive Summary
 
-Across **18 operations** over identical MCP stdio transport, ultra-metis completed in **10ms** vs original metis in **128ms** — **12.7x faster**.
+Across **18 operations** over identical MCP stdio transport, cadre completed in **10ms** vs original metis in **128ms** — **12.7x faster**.
 
-Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio. The previous benchmark (REPORT.md) compared ultra-metis CLI vs original metis MCP, giving ultra-metis an unfair transport advantage (~200x). This benchmark isolates actual server performance by using identical transport for both.
+Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio. The previous benchmark (REPORT.md) compared cadre CLI vs original metis MCP, giving cadre an unfair transport advantage (~200x). This benchmark isolates actual server performance by using identical transport for both.
 
 ## Scenario: Project Bootstrap
 
-| Operation | Ultra-Metis (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
+| Operation | Cadre (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
 |-----------|:----------------:|:-------------------:|:-------:|:--------:|:-------:|
 | init | 1.8 | 14.2 | 8.1x | Y | Y |
 | **Total** | **1.8** | **14.2** | **8.1x** | | |
 
 ## Scenario: Planning Workflow
 
-| Operation | Ultra-Metis (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
+| Operation | Cadre (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
 |-----------|:----------------:|:-------------------:|:-------:|:--------:|:-------:|
 | create_vision | 2.2 | 0.0 | - | Y | Y |
 | vision_to_review | 0.6 | 9.5 | 14.8x | Y | Y |
@@ -36,7 +36,7 @@ Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio.
 
 ## Scenario: Search and Query
 
-| Operation | Ultra-Metis (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
+| Operation | Cadre (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
 |-----------|:----------------:|:-------------------:|:-------:|:--------:|:-------:|
 | search_parser | 0.3 | 6.2 | 20.3x | Y | Y |
 | list_all | 0.3 | 5.6 | 19.2x | Y | Y |
@@ -45,14 +45,14 @@ Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio.
 
 ## Scenario: Document Edit
 
-| Operation | Ultra-Metis (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
+| Operation | Cadre (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
 |-----------|:----------------:|:-------------------:|:-------:|:--------:|:-------:|
 | edit_document | 0.2 | 5.5 | 30.1x | Y | Y |
 | **Total** | **0.2** | **5.5** | **30.1x** | | |
 
 ## Scenario: Error Handling
 
-| Operation | Ultra-Metis (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
+| Operation | Cadre (ms) | Original Metis (ms) | Speedup | Ultra OK | Orig OK |
 |-----------|:----------------:|:-------------------:|:-------:|:--------:|:-------:|
 | read_nonexistent | 0.0 | 7.4 | 211.9x | Y | Y |
 | create_bad_parent | 0.1 | 5.9 | 91.7x | Y | Y |
@@ -61,7 +61,7 @@ Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio.
 
 ## Aggregate Speed Summary
 
-| Scenario | Ultra-Metis (ms) | Original Metis (ms) | Speedup |
+| Scenario | Cadre (ms) | Original Metis (ms) | Speedup |
 |----------|:----------------:|:-------------------:|:-------:|
 | Project Bootstrap | 1.8 | 14.2 | 8.1x |
 | Planning Workflow | 7.4 | 72.2 | 9.8x |
@@ -72,7 +72,7 @@ Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio.
 
 ## Output Size Comparison (Token Cost Proxy)
 
-| Scenario | Ultra-Metis (bytes) | Original Metis (bytes) | Ratio |
+| Scenario | Cadre (bytes) | Original Metis (bytes) | Ratio |
 |----------|:-------------------:|:----------------------:|:-----:|
 | Project Bootstrap | 110 | 781 | 7.1x |
 | Planning Workflow | 1087 | 2155 | 2.0x |
@@ -82,7 +82,7 @@ Both servers communicate via the same newline-delimited JSON-RPC 2.0 over stdio.
 
 ## Error Handling Details
 
-| Test Case | Ultra-Metis | Original Metis |
+| Test Case | Cadre | Original Metis |
 |-----------|:-----------:|:--------------:|
 | read_nonexistent | CAUGHT | CAUGHT |
 | create_bad_parent | CAUGHT | CAUGHT |
@@ -94,7 +94,7 @@ Each tool's initiative template was read via MCP `read_document`, then sent to
 Claude Haiku to fill in for 3 module specs. Results measure how well the template 
 guides AI toward complete, placeholder-free content.
 
-| Metric | Ultra-Metis | Original Metis | Delta |
+| Metric | Cadre | Original Metis | Delta |
 |--------|:-----------:|:--------------:|:-----:|
 | Template size (chars) | 3400 | 3706 | +306 |
 | Avg completeness | 85% | 55% | +31% |
@@ -122,6 +122,6 @@ guides AI toward complete, placeholder-free content.
 - Fresh temp directories, no cached state
 - Short codes parsed from actual responses (not hardcoded)
 
-**Key difference from REPORT.md**: Previous benchmark compared ultra-metis CLI (direct binary) vs original metis MCP (via Claude Code tool infrastructure). That gave ultra-metis ~200x advantage from transport alone. This benchmark eliminates transport as a variable.
+**Key difference from REPORT.md**: Previous benchmark compared cadre CLI (direct binary) vs original metis MCP (via Claude Code tool infrastructure). That gave cadre ~200x advantage from transport alone. This benchmark eliminates transport as a variable.
 
 **Template quality**: Claude Haiku fills initiative templates for 3 module specs. Scored on section completeness and remaining placeholder count.

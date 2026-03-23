@@ -117,8 +117,8 @@ mod tests {
                         detail: "ok".to_string(),
                     }],
                 },
-                ultra_metis_mcp: McpToolRun {
-                    system: "ultra-metis-mcp".to_string(),
+                cadre_mcp: McpToolRun {
+                    system: "cadre-mcp".to_string(),
                     tool_surface: "mcp-stdio".to_string(),
                     startup_ok: true,
                     tools_available: vec![],

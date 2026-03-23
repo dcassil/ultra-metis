@@ -1,0 +1,27 @@
+[package]
+name = "cadre-store"
+version.workspace = true
+edition.workspace = true
+description = "File persistence layer for Cadre documents"
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+cadre-core = { path = "../cadre-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+toml = "0.8"
+walkdir = "2.0"
+gray_matter = "0.2"
+tree-sitter = { workspace = true }
+tree-sitter-rust = { workspace = true }
+glob = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true }
+tokio-test = { workspace = true }

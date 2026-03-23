@@ -1,7 +1,7 @@
 /// Document quality scorer for Metis initiative markdown files.
 ///
 /// Reads generated initiative docs and checks whether AI actually filled in
-/// the template vs left placeholder text. Used to compare ultra-metis vs
+/// the template vs left placeholder text. Used to compare cadre vs
 /// original metis template quality impact on AI output.
 use std::path::Path;
 

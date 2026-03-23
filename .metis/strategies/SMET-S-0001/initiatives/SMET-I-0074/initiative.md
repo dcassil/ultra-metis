@@ -4,14 +4,14 @@ level: initiative
 title: "Rename Ultra-Metis to Cadre: Namespace, Binaries, Plugin, and Project Directory"
 short_code: "SMET-I-0074"
 created_at: 2026-03-23T17:28:01.410740+00:00
-updated_at: 2026-03-23T17:28:01.410740+00:00
+updated_at: 2026-03-23T20:24:53.936024+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -22,117 +22,78 @@ initiative_id: rename-ultra-metis-to-cadre
 
 # Rename Ultra-Metis to Cadre: Namespace, Binaries, Plugin, and Project Directory Initiative
 
-*This template includes sections for various types of initiatives. Delete sections that don't apply to your specific use case.*
+## Context
 
-## Context **[REQUIRED]**
+ADR SMET-A-0001 decided to adopt superpowers execution patterns with Cadre as the persistent state backbone. "Cadre" stands for **Constrained AI Developer Really Awesome Engine**. Phase 0 of that ADR's implementation roadmap requires a complete namespace rename from "ultra-metis" to "cadre" before any integration work begins. All subsequent initiatives (SMET-I-0075 through SMET-I-0078) build on the Cadre namespace and are blocked until this rename is complete.
 
-{Describe the context and background for this initiative}
+The rename touches every layer: Rust crate names and imports, compiled binary names, Claude Code plugin directory and all commands/hooks/scripts/skills/agents, MCP server configuration, Makefile, and CLAUDE.md.
 
-## Goals & Non-Goals **[REQUIRED]**
+The existing `.metis/` folder in this repository is NOT renamed. `.cadre` applies only to newly initialized projects.
+
+## Goals & Non-Goals
 
 **Goals:**
-- {Primary objective 1}
-- {Primary objective 2}
+- Rename all four Rust crates: ultra-metis-core → cadre-core, ultra-metis-store → cadre-store, ultra-metis-mcp → cadre-mcp, ultra-metis-cli → cadre-cli
+- Rename crate directories under `crates/` to match
+- Update root Cargo.toml workspace members and all internal dependencies
+- Update all `use` statements, module paths, and string literals referencing old crate names
+- Rename binaries: ultra-metis-mcp → cadre-mcp, ultra-metis → cadre
+- Rename plugin directory: plugins/ultra-metis/ → plugins/cadre/
+- Rename all commands: /ultra-metis-ralph → /cadre-ralph, etc.
+- Update all MCP tool prefixes: mcp__ultra-metis__ → mcp__cadre__
+- Update .mcp.json, Makefile, CLAUDE.md
+- Set default project directory for new projects to `.cadre/`
+- Ensure `make build`, `make install`, `make test` all pass
 
 **Non-Goals:**
-- {What this initiative will not address}
+- Renaming existing `.metis/` directory in this repo
+- Migrating existing document data
+- Adding new features or changing functionality
+- Renaming the Git repository or changing GitHub remote URL
 
-## Requirements **[CONDITIONAL: Requirements-Heavy Initiative]**
+## Detailed Design
 
-{Delete if not a requirements-focused initiative}
+### Execution Order
+1. Rename crate directories via `git mv`
+2. Update all Cargo.toml files
+3. Update all Rust source files (use statements, string literals)
+4. Verify `cargo build` and `cargo test` pass
+5. Rename plugin directory and files
+6. Update all plugin file contents
+7. Update .mcp.json, Makefile, CLAUDE.md
+8. Update default project directory in init code
+9. Final sweep: `rg "ultra.metis"` to catch stragglers
 
-### User Requirements
-- **User Characteristics**: {Technical background, experience level, etc.}
-- **System Functionality**: {What users expect the system to do}
-- **User Interfaces**: {How users will interact with the system}
+## Alternatives Considered
 
-### System Requirements
-- **Functional Requirements**: {What the system should do - use unique identifiers}
-  - REQ-001: {Functional requirement 1}
-  - REQ-002: {Functional requirement 2}
-- **Non-Functional Requirements**: {How the system should behave}
-  - NFR-001: {Performance requirement}
-  - NFR-002: {Security requirement}
+1. **Gradual rename with compatibility aliases**: Rejected — pre-release project, clean cut is simpler
+2. **Rename plugin only, keep Rust crate names**: Rejected — permanent confusion between crate and product names
+3. **Defer rename until after integration work**: Rejected per ADR discussion decision #1
 
-## Use Cases **[CONDITIONAL: User-Facing Initiative]**
+## Implementation Plan
 
-{Delete if not user-facing}
+Single-phase initiative with linear execution: Rust crates → plugin → config/docs → validation sweep.
 
-### Use Case 1: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+## Acceptance Criteria
 
-### Use Case 2: {Use Case Name}
-- **Actor**: {Who performs this action}
-- **Scenario**: {Step-by-step interaction}
-- **Expected Outcome**: {What should happen}
+## Acceptance Criteria
 
-## Architecture **[CONDITIONAL: Technically Complex Initiative]**
+## Acceptance Criteria
 
-{Delete if not technically complex}
+## Acceptance Criteria
 
-### Overview
-{High-level architectural approach}
+## Acceptance Criteria
 
-### Component Diagrams
-{Describe or link to component diagrams}
+## Acceptance Criteria
 
-### Class Diagrams
-{Describe or link to class diagrams - for OOP systems}
+- All four crates compile under new names
+- `cadre-mcp` and `cadre` binaries produced by `make build`
+- `make test` passes with zero failures
+- All slash commands use `/cadre-*` naming
+- All MCP tool references use `mcp__cadre__` prefix
+- `rg "ultra.metis"` finds zero hits outside archival directories
 
-### Sequence Diagrams
-{Describe or link to sequence diagrams - for interaction flows}
+## Dependencies
 
-### Deployment Diagrams
-{Describe or link to deployment diagrams - for infrastructure}
-
-## Detailed Design **[REQUIRED]**
-
-{Technical approach and implementation details}
-
-## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
-
-{Delete if no UI components}
-
-### User Interface Mockups
-{Describe or link to UI mockups}
-
-### User Flows
-{Describe key user interaction flows}
-
-### Design System Integration
-{How this fits with existing design patterns}
-
-## Testing Strategy **[CONDITIONAL: Separate Testing Initiative]**
-
-{Delete if covered by separate testing initiative}
-
-### Unit Testing
-- **Strategy**: {Approach to unit testing}
-- **Coverage Target**: {Expected coverage percentage}
-- **Tools**: {Testing frameworks and tools}
-
-### Integration Testing
-- **Strategy**: {Approach to integration testing}
-- **Test Environment**: {Where integration tests run}
-- **Data Management**: {Test data strategy}
-
-### System Testing
-- **Strategy**: {End-to-end testing approach}
-- **User Acceptance**: {How UAT will be conducted}
-- **Performance Testing**: {Load and stress testing}
-
-### Test Selection
-{Criteria for determining what to test}
-
-### Bug Tracking
-{How defects will be managed and prioritized}
-
-## Alternatives Considered **[REQUIRED]**
-
-{Alternative approaches and why they were rejected}
-
-## Implementation Plan **[REQUIRED]**
-
-{Phases and timeline for execution}
+- **Blocked by**: Nothing
+- **Blocks**: SMET-I-0075, I-0076, I-0077, I-0078

@@ -1,10 +1,10 @@
 /// Tool Comparison Benchmark Runner
 ///
-/// Compares ultra-metis vs original metis template quality by asking Claude
+/// Compares cadre vs original metis template quality by asking Claude
 /// to fill each tool's initiative template, then scoring the results.
 ///
 /// Usage:
-///   ULTRA_METIS_BINARY=./target/release/ultra-metis \
+///   ULTRA_METIS_BINARY=./target/release/cadre \
 ///     cargo run -p practical-benchmark --bin run_tool_comparison -- \
 ///     --results-dir benchmarks/practical/results
 use std::path::PathBuf;
@@ -46,17 +46,17 @@ fn main() -> anyhow::Result<()> {
     std::fs::create_dir_all(&results_dir)?;
 
     println!("=== Tool Comparison Benchmark ===");
-    println!("ultra-metis vs original-metis template quality");
+    println!("cadre vs original-metis template quality");
     println!("Results: {}", results_dir.display());
     println!();
 
     let result = practical_benchmark::tool_comparison::run_comparison()?;
 
-    let u = &result.ultra_metis;
+    let u = &result.cadre;
     let o = &result.original_metis;
 
     println!(
-        "  ultra-metis    : {:.1}% completeness | {:.1} placeholders/doc | {} tokens",
+        "  cadre    : {:.1}% completeness | {:.1} placeholders/doc | {} tokens",
         u.avg_completeness_percent, u.avg_placeholder_count, u.tokens_used
     );
     println!(
@@ -65,7 +65,7 @@ fn main() -> anyhow::Result<()> {
     );
     println!();
     println!(
-        "  Completeness delta : {:+.1}% (ultra-metis - original-metis)",
+        "  Completeness delta : {:+.1}% (cadre - original-metis)",
         result.completeness_delta
     );
     println!(

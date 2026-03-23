@@ -427,7 +427,7 @@ mod tests {
                     },
                     CliTraceEvent {
                         label: "create".to_string(),
-                        command: "ultra-metis create".to_string(),
+                        command: "cadre create".to_string(),
                         exit_code: 0,
                         duration: Duration::from_secs(1),
                         approx_tokens: 50,

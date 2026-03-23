@@ -1,4 +1,4 @@
-/// Tool comparison benchmark: ultra-metis vs original metis template quality.
+/// Tool comparison benchmark: cadre vs original metis template quality.
 ///
 /// Measures how well AI fills in initiative documents created by each tool's
 /// template. Better templates guide AI toward more complete content.
@@ -23,16 +23,16 @@ pub struct ToolRunResult {
     pub time_elapsed: std::time::Duration,
 }
 
-/// Comparison of ultra-metis vs original metis template quality impact on AI output.
+/// Comparison of cadre vs original metis template quality impact on AI output.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolComparisonResult {
     pub timestamp: chrono::DateTime<Utc>,
-    pub ultra_metis: ToolRunResult,
+    pub cadre: ToolRunResult,
     pub original_metis: ToolRunResult,
-    /// ultra_metis.avg_completeness - original_metis.avg_completeness
-    /// Positive = ultra-metis templates produce more complete documents
+    /// cadre.avg_completeness - original_metis.avg_completeness
+    /// Positive = cadre templates produce more complete documents
     pub completeness_delta: f32,
-    /// original_metis.avg_placeholder_count - ultra_metis.avg_placeholder_count
+    /// original_metis.avg_placeholder_count - cadre.avg_placeholder_count
     /// Positive = original-metis templates leave more unfilled placeholders
     pub placeholder_delta: f32,
 }
@@ -59,8 +59,8 @@ const MODULES: &[(&str, &str)] = &[
     ),
 ];
 
-/// Get the blank initiative template from ultra-metis by creating a real project.
-fn get_ultra_metis_template() -> anyhow::Result<String> {
+/// Get the blank initiative template from cadre by creating a real project.
+fn get_cadre_template() -> anyhow::Result<String> {
     let binary = resolve_binary_path();
     let temp_dir = tempfile::tempdir()?;
     let proj = temp_dir.path().to_str().unwrap_or("/tmp/tcomp-ultra");
@@ -82,7 +82,7 @@ fn get_ultra_metis_template() -> anyhow::Result<String> {
     )?;
     let vision_code = extract_short_code(&v.stdout, "TC-V-");
     if vision_code.is_empty() {
-        anyhow::bail!("ultra-metis: could not extract vision short code");
+        anyhow::bail!("cadre: could not extract vision short code");
     }
 
     // Transition vision: draft → review → published
@@ -105,22 +105,22 @@ fn get_ultra_metis_template() -> anyhow::Result<String> {
     )?;
     let init_code = extract_short_code(&init.stdout, "TC-I-");
     if init_code.is_empty() {
-        anyhow::bail!("ultra-metis: could not extract initiative short code");
+        anyhow::bail!("cadre: could not extract initiative short code");
     }
 
-    // ultra-metis stores docs as .ultra-metis/docs/<SHORT_CODE>.md (flat structure)
+    // cadre stores docs as .cadre/docs/<SHORT_CODE>.md (flat structure)
     let doc_path = temp_dir
         .path()
-        .join(".ultra-metis")
+        .join(".cadre")
         .join("docs")
         .join(format!("{init_code}.md"));
     std::fs::read_to_string(&doc_path)
-        .with_context(|| format!("ultra-metis: could not read {:?}", doc_path))
+        .with_context(|| format!("cadre: could not read {:?}", doc_path))
 }
 
 /// Get the blank initiative template from original metis.
 ///
-/// Original metis CLI differences from ultra-metis:
+/// Original metis CLI differences from cadre:
 /// - No `--path` flag — must `cd` into project directory
 /// - Vision is created during `init` (no separate `create vision`)
 /// - Requires `--preset full` and a strategy before creating initiatives
@@ -344,13 +344,13 @@ fn score_template_runs(tool_name: &str, template: &str) -> anyhow::Result<ToolRu
 
 /// Run the full tool comparison benchmark.
 pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
-    tracing::info!("Starting tool comparison: ultra-metis vs original-metis");
+    tracing::info!("Starting tool comparison: cadre vs original-metis");
 
-    // Get ultra-metis template
-    tracing::info!("Extracting ultra-metis initiative template...");
+    // Get cadre template
+    tracing::info!("Extracting cadre initiative template...");
     let ultra_template =
-        get_ultra_metis_template().context("Failed to get ultra-metis template")?;
-    tracing::info!("ultra-metis template: {} chars", ultra_template.len());
+        get_cadre_template().context("Failed to get cadre template")?;
+    tracing::info!("cadre template: {} chars", ultra_template.len());
 
     // Get original-metis template
     tracing::info!("Extracting original-metis initiative template...");
@@ -359,8 +359,8 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
     tracing::info!("original-metis template: {} chars", orig_template.len());
 
     // Fill and score each template
-    tracing::info!("Filling ultra-metis templates with Claude...");
-    let ultra_result = score_template_runs("ultra-metis", &ultra_template)?;
+    tracing::info!("Filling cadre templates with Claude...");
+    let ultra_result = score_template_runs("cadre", &ultra_template)?;
 
     tracing::info!("Filling original-metis templates with Claude...");
     let orig_result = score_template_runs("original-metis", &orig_template)?;
@@ -371,7 +371,7 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
 
     Ok(ToolComparisonResult {
         timestamp: Utc::now(),
-        ultra_metis: ultra_result,
+        cadre: ultra_result,
         original_metis: orig_result,
         completeness_delta,
         placeholder_delta,
@@ -382,7 +382,7 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
 pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
     let mut out = String::new();
 
-    out.push_str("# Tool Comparison Report: ultra-metis vs original-metis\n\n");
+    out.push_str("# Tool Comparison Report: cadre vs original-metis\n\n");
     out.push_str(&format!(
         "**Date**: {}  \n**Scenario**: File Processing Toolkit (3 modules)\n\n",
         result.timestamp.format("%Y-%m-%d %H:%M:%S UTC"),
@@ -391,9 +391,9 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
     // Executive summary
     out.push_str("## Executive Summary\n\n");
     let (winner, loser) = if result.completeness_delta > 5.0 {
-        ("**ultra-metis** templates", "original-metis")
+        ("**cadre** templates", "original-metis")
     } else if result.completeness_delta < -5.0 {
-        ("**original-metis** templates", "ultra-metis")
+        ("**original-metis** templates", "cadre")
     } else {
         ("Both tool", "")
     };
@@ -404,7 +404,7 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
     };
     out.push_str(&format!("- {summary}\n"));
     out.push_str(&format!(
-        "- Completeness delta: **{:+.1}%** (ultra-metis − original-metis)\n",
+        "- Completeness delta: **{:+.1}%** (cadre − original-metis)\n",
         result.completeness_delta,
     ));
     out.push_str(&format!(
@@ -414,10 +414,10 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
 
     // Per-tool table
     out.push_str("## Per-Tool Results\n\n");
-    out.push_str("| Metric | ultra-metis | original-metis | Delta |\n");
+    out.push_str("| Metric | cadre | original-metis | Delta |\n");
     out.push_str("|--------|-------------|----------------|-------|\n");
 
-    let u = &result.ultra_metis;
+    let u = &result.cadre;
     let o = &result.original_metis;
     out.push_str(&format!(
         "| Templates tested | {} | {} | — |\n\
@@ -454,7 +454,7 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
         out.push_str("- Templates perform similarly — AI fills both equally well\n");
         out.push_str("- Template structure may not be the dominant factor in output quality\n");
     } else if result.completeness_delta > 0.0 {
-        out.push_str("- ultra-metis simpler templates reduce AI confusion about what to fill\n");
+        out.push_str("- cadre simpler templates reduce AI confusion about what to fill\n");
         out.push_str("- Fewer structural elements → more direct guidance toward content\n");
     } else {
         out.push_str(
@@ -474,7 +474,7 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
         ));
     } else if result.placeholder_delta < -1.0 {
         out.push_str(&format!(
-            "- ultra-metis templates leave {:.1} more unfilled placeholders on average\n",
+            "- cadre templates leave {:.1} more unfilled placeholders on average\n",
             -result.placeholder_delta,
         ));
     } else {
@@ -544,8 +544,8 @@ mod tests {
     fn test_tool_comparison_result_deltas() {
         let result = ToolComparisonResult {
             timestamp: Utc::now(),
-            ultra_metis: ToolRunResult {
-                tool_name: "ultra-metis".to_string(),
+            cadre: ToolRunResult {
+                tool_name: "cadre".to_string(),
                 templates_tested: 3,
                 avg_completeness_percent: 80.0,
                 avg_placeholder_count: 0.5,
@@ -572,7 +572,7 @@ mod tests {
         assert!(result.placeholder_delta > 0.0);
 
         let report = format_comparison_report(&result);
-        assert!(report.contains("ultra-metis"));
+        assert!(report.contains("cadre"));
         assert!(report.contains("original-metis"));
         assert!(report.contains("Executive Summary"));
         assert!(report.contains("Per-Tool Results"));

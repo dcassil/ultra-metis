@@ -4,7 +4,7 @@
 /// Toolkit scenario, then generates a side-by-side comparison report.
 ///
 /// Usage:
-///   ANTHROPIC_API_KEY=... ULTRA_METIS_BINARY=./target/release/ultra-metis \
+///   ANTHROPIC_API_KEY=... ULTRA_METIS_BINARY=./target/release/cadre \
 ///     cargo run -p practical-benchmark --bin run_benchmark -- --results-dir benchmarks/practical/results
 use std::path::PathBuf;
 

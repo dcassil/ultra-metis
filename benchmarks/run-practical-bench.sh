@@ -8,7 +8,7 @@
 #
 # Environment:
 #   ANTHROPIC_API_KEY     (required)
-#   ULTRA_METIS_BINARY    path to ultra-metis binary (default: target/release/ultra-metis)
+#   ULTRA_METIS_BINARY    path to cadre binary (default: target/release/cadre)
 
 set -euo pipefail
 
@@ -23,10 +23,10 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
 fi
 
 # Resolve binary path
-ULTRA="${ULTRA_METIS_BINARY:-${REPO_ROOT}/target/release/ultra-metis}"
+ULTRA="${ULTRA_METIS_BINARY:-${REPO_ROOT}/target/release/cadre}"
 if [ ! -x "${ULTRA}" ]; then
-    echo "Building ultra-metis binary..."
-    cargo build --release -p ultra-metis-cli 2>&1
+    echo "Building cadre binary..."
+    cargo build --release -p cadre-cli 2>&1
 fi
 
 echo "=== Practical Benchmark Suite ==="

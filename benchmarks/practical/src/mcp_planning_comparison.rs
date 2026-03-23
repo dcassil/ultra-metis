@@ -20,7 +20,7 @@ pub struct PlanningComparisonResult {
     pub scenario_title: String,
     pub generated_initiatives: Vec<PlannedInitiativeSummary>,
     pub original_metis: PlanningSystemResult,
-    pub ultra_metis_mcp: PlanningSystemResult,
+    pub cadre_mcp: PlanningSystemResult,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,7 +98,7 @@ pub async fn run_planning_comparison(
             })
             .collect(),
         original_metis: original,
-        ultra_metis_mcp: ultra,
+        cadre_mcp: ultra,
     })
 }
 
@@ -246,7 +246,7 @@ fn seed_vision(
                 }),
             )?;
             extract_short_code(&extract_text_content(&response), "PLAN-V-").ok_or_else(|| {
-                anyhow!("Failed to extract vision short code from ultra-metis response")
+                anyhow!("Failed to extract vision short code from cadre response")
             })
         }
     }
@@ -551,7 +551,7 @@ fn extract_short_code(text: &str, prefix: &str) -> Option<String> {
 fn system_name(system: SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
-        SystemUnderTest::UltraMetisMcp => "ultra-metis-mcp",
+        SystemUnderTest::UltraMetisMcp => "cadre-mcp",
     }
 }
 
@@ -570,22 +570,22 @@ pub fn format_planning_report(result: &PlanningComparisonResult) -> String {
         result.generated_initiatives.len()
     ));
     out.push_str("## System Results\n\n");
-    out.push_str("| Metric | original-metis | ultra-metis-mcp |\n");
+    out.push_str("| Metric | original-metis | cadre-mcp |\n");
     out.push_str("|--------|----------------|-----------------|\n");
     out.push_str(&format!(
         "| Initiative docs scored | {} | {} |\n| Total tokens | {} | {} |\n| Total time (ms) | {:.2} | {:.2} |\n| Avg completeness | {:.1}% | {:.1}% |\n| Avg placeholders/doc | {:.1} | {:.1} |\n| Avg task count | {:.1} | {:.1} |\n",
         result.original_metis.initiative_count,
-        result.ultra_metis_mcp.initiative_count,
+        result.cadre_mcp.initiative_count,
         result.original_metis.total_tokens,
-        result.ultra_metis_mcp.total_tokens,
+        result.cadre_mcp.total_tokens,
         result.original_metis.total_time_ms,
-        result.ultra_metis_mcp.total_time_ms,
+        result.cadre_mcp.total_time_ms,
         result.original_metis.avg_completeness_percent,
-        result.ultra_metis_mcp.avg_completeness_percent,
+        result.cadre_mcp.avg_completeness_percent,
         result.original_metis.avg_placeholder_count,
-        result.ultra_metis_mcp.avg_placeholder_count,
+        result.cadre_mcp.avg_placeholder_count,
         result.original_metis.avg_task_count,
-        result.ultra_metis_mcp.avg_task_count,
+        result.cadre_mcp.avg_task_count,
     ));
     out
 }
@@ -623,8 +623,8 @@ mod tests {
                 avg_task_count: 2.0,
                 docs: vec![],
             },
-            ultra_metis_mcp: PlanningSystemResult {
-                system: "ultra-metis-mcp".to_string(),
+            cadre_mcp: PlanningSystemResult {
+                system: "cadre-mcp".to_string(),
                 initiative_count: 1,
                 total_tokens: 11,
                 total_time_ms: 11.0,

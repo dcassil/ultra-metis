@@ -66,7 +66,7 @@ impl ExecutionAdapter for UltraMetisMcpAdapter {
 
     fn command(&self) -> ServerCommand {
         ServerCommand {
-            program: "ultra-metis-mcp".to_string(),
+            program: "cadre-mcp".to_string(),
             args: vec![],
         }
     }
@@ -291,7 +291,7 @@ fn wait_for_stdout(stdout: &BufReader<ChildStdout>, timeout: Duration) -> Result
 fn system_name(system: &SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
-        SystemUnderTest::UltraMetisMcp => "ultra-metis-mcp",
+        SystemUnderTest::UltraMetisMcp => "cadre-mcp",
     }
 }
 
@@ -335,10 +335,10 @@ mod tests {
     }
 
     #[test]
-    fn ultra_metis_adapter_command_is_stable() {
+    fn cadre_adapter_command_is_stable() {
         let adapter = UltraMetisMcpAdapter;
         let cmd = adapter.command();
-        assert_eq!(cmd.program, "ultra-metis-mcp");
+        assert_eq!(cmd.program, "cadre-mcp");
         assert!(cmd.args.is_empty());
     }
 

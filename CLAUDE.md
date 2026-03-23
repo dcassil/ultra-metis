@@ -1,4 +1,4 @@
-# Ultra-Metis Project Rules
+# Cadre Project Rules
 
 ## Metis Workflow (MANDATORY)
 
@@ -64,7 +64,7 @@ While working on any active task or initiative:
 - **Vision**: SMET-V-0001 — Super-Metis: Repo-Native AI Engineering Orchestration
 - **Metis path**: `/Users/danielcassil/projects/ultra-metis/.metis`
 - **Preset**: Streamlined (Vision → Initiative → Task)
-- **Crates location**: `crates/` at repo root (ultra-metis-core, ultra-metis-cli, ultra-metis-mcp, ultra-metis-store)
+- **Crates location**: `crates/` at repo root (cadre-core, cadre-cli, cadre-mcp, cadre-store)
 - **Workspace root**: `Cargo.toml` at repo root
 - **Language**: Rust
 
@@ -76,11 +76,11 @@ make install        # Build + copy to ~/.local/bin
 make test           # Run all workspace tests
 ```
 
-After `make install`, the `ultra-metis-mcp` and `ultra-metis` binaries are on PATH. The `.mcp.json` at the repo root configures Claude Code to use the MCP server for this project.
+After `make install`, the `cadre-mcp` and `cadre` binaries are on PATH. The `.mcp.json` at the repo root configures Claude Code to use the MCP server for this project.
 
 ## Code Standards
 
-- Follow existing patterns in `crates/ultra-metis-core/` codebase
+- Follow existing patterns in `crates/cadre-core/` codebase
 - Strong Rust typing — prefer compile-time guarantees
 - All durable state is repo-native (file-based, no external services)
 - Markdown + YAML frontmatter for document serialization

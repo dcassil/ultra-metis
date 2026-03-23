@@ -2,11 +2,11 @@
 
 **Date**: 2026-03-18
 **Status**: Design
-**Strategy**: SMET-S-0001 (Ultra-Metis Core Engine)
+**Strategy**: SMET-S-0001 (Cadre Core Engine)
 
 ## Problem
 
-Ultra-Metis has built the infrastructure for architecture management — ArchitectureCatalogEntry, ReferenceArchitecture, conformance checker, transition hooks, quality gates — but none of it is wired into the actual planning/work/verification lifecycle. Architecture exists as isolated types with no influence on how Stories are designed, how Tasks are executed, or how completion is verified.
+Cadre has built the infrastructure for architecture management — ArchitectureCatalogEntry, ReferenceArchitecture, conformance checker, transition hooks, quality gates — but none of it is wired into the actual planning/work/verification lifecycle. Architecture exists as isolated types with no influence on how Stories are designed, how Tasks are executed, or how completion is verified.
 
 ## Design Decisions
 
@@ -242,7 +242,7 @@ Story → completed phase
 ## Implementation Scope
 
 ### Initiative 1: Architecture Document Type
-- New domain type in ultra-metis-core
+- New domain type in cadre-core
 - Frontmatter template and content template
 - Serialization (from_file/to_file, from_content/to_content)
 - ChecklistItem struct and checklist templates per Story type
@@ -262,7 +262,7 @@ Story → completed phase
 - get_architecture_context tool
 - unlock_architecture tool
 - check_conformance tool
-- Wire into ultra-metis-mcp tool registry
+- Wire into cadre-mcp tool registry
 - Integration tests
 
 ## Risks

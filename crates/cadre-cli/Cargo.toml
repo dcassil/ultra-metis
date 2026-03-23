@@ -1,0 +1,18 @@
+[package]
+name = "cadre-cli"
+version.workspace = true
+edition.workspace = true
+description = "CLI for Cadre document management"
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "cadre"
+path = "src/main.rs"
+
+[dependencies]
+cadre-core = { path = "../cadre-core" }
+cadre-store = { path = "../cadre-store" }
+clap = { version = "4.0", features = ["derive"] }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
