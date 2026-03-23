@@ -4,7 +4,7 @@ level: task
 title: "Fix Metis transition_phase path resolution for documents under NULL strategy directory"
 short_code: "SMET-T-0156"
 created_at: 2026-03-23T17:11:10.244310+00:00
-updated_at: 2026-03-23T17:24:11.050355+00:00
+updated_at: 2026-03-23T20:41:34.458484+00:00
 parent: 
 blocked_by: []
 archived: false
@@ -12,7 +12,7 @@ archived: false
 tags:
   - "#task"
   - "#bug"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -63,6 +63,8 @@ The document was likely created before being assigned to strategy SMET-S-0001, o
 ### Key Files
 - `crates/ultra-metis-store/src/store.rs` — path resolution logic, `doc_path()` at line 262
 - The old Metis path resolution (hierarchical) vs new ultra-metis (flat `docs/` dir)
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
