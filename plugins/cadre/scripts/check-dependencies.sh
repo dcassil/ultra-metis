@@ -31,7 +31,7 @@ if [ "$RALPH_FOUND" = false ]; then
   ERRORS+=("ralph-loop plugin not installed. Run: claude plugin add ralph-loop@claude-plugins-official")
 fi
 
-# Check superpowers plugin
+# Check superpowers plugin (installed or vendored)
 SUPERPOWERS_FOUND=false
 for dir in ~/.claude/plugins/cache/*/superpowers/*/; do
   if [ -d "$dir" ] 2>/dev/null; then
@@ -47,8 +47,15 @@ if [ "$SUPERPOWERS_FOUND" = false ]; then
     fi
   done
 fi
+# Fall back to vendored copy
 if [ "$SUPERPOWERS_FOUND" = false ]; then
-  ERRORS+=("superpowers plugin not installed. Run: claude plugin add superpowers@claude-plugins-official")
+  VENDOR_DIR="$(cd "$(dirname "$0")/.." && pwd)/../../vendor/superpowers"
+  if [ -d "$VENDOR_DIR" ]; then
+    SUPERPOWERS_FOUND=true
+  fi
+fi
+if [ "$SUPERPOWERS_FOUND" = false ]; then
+  ERRORS+=("superpowers plugin not installed and no vendored copy found. Run: claude plugin add superpowers@claude-plugins-official")
 fi
 
 # Report errors

@@ -4,14 +4,14 @@ level: initiative
 title: "Subagent Awareness: SubagentStart Hook, Vendored Superpowers, and TodoWrite Replacement"
 short_code: "SMET-I-0075"
 created_at: 2026-03-23T17:28:02.729048+00:00
-updated_at: 2026-03-23T17:28:02.729048+00:00
+updated_at: 2026-03-23T20:59:55.486323+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
