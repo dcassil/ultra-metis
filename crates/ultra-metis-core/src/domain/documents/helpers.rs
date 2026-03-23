@@ -55,6 +55,18 @@ impl FrontmatterParser {
         }
     }
 
+    pub fn extract_float(
+        map: &std::collections::HashMap<String, gray_matter::Pod>,
+        key: &str,
+    ) -> Option<f64> {
+        match map.get(key) {
+            Some(gray_matter::Pod::Float(f)) => Some(*f),
+            Some(gray_matter::Pod::Integer(i)) => Some(*i as f64),
+            Some(gray_matter::Pod::String(s)) => s.parse::<f64>().ok(),
+            _ => None,
+        }
+    }
+
     pub fn extract_datetime(
         map: &std::collections::HashMap<String, gray_matter::Pod>,
         key: &str,

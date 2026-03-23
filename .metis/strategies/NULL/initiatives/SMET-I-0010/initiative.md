@@ -57,37 +57,24 @@ Ultra-Metis CLI currently supports document CRUD, phase transitions, search, arc
 
 ## Detailed Design
 
-### What to Reuse from `metis/`
-- The existing CLI framework (likely clap-based in Rust)
-- Command structure and argument patterns
-- Output formatting conventions
-- The existing command implementations as a base
-
-### What to Change from `metis/`
-- Extend `create` command to handle new document types
-- Extend `list` and `search` commands with new type filters
-- Update `transition` command for new phase flows
-- Improve help text with examples for each command
-
-### What is Net New
-- `super-metis quality capture` — capture a quality baseline
-- `super-metis quality compare` — compare two baselines
-- `super-metis quality gate` — check quality gate status
-- `super-metis quality validate` — record a validation result
-- `super-metis rules list` — list active engineering rules by scope
-- `super-metis rules propose` — create a rule change proposal
-- `super-metis notes fetch` — fetch notes by scope (repo/package/subsystem/path/symbol)
-- `super-metis notes create` — create a durable insight note
-- `super-metis notes score` — record feedback on a note
-- `super-metis notes inspect` — browse and filter notes
-- `super-metis trace` — trace document ancestry/descendants and cross-references
-- `super-metis execution list` — list execution records
-- `super-metis execution show` — show execution record details
-- `super-metis mode` — show or set autonomy mode (tight/mixed/autonomous)
-- `super-metis workflow list` — list available workflow templates
-- `super-metis init` — enhanced repo-aware initialization (SMET-I-0008)
+### New Commands
+- `ultra-metis quality capture` — capture a quality baseline
+- `ultra-metis quality compare` — compare two baselines
+- `ultra-metis quality gate` — check quality gate status
+- `ultra-metis quality validate` — record a validation result
+- `ultra-metis rules list` — list active engineering rules by scope
+- `ultra-metis rules propose` — create a rule change proposal
+- `ultra-metis notes fetch` — fetch notes by scope (repo/package/subsystem/path/symbol)
+- `ultra-metis notes create` — create a durable insight note
+- `ultra-metis notes score` — record feedback on a note
+- `ultra-metis notes inspect` — browse and filter notes
+- `ultra-metis trace` — trace document ancestry/descendants and cross-references
+- `ultra-metis execution list` — list execution records
+- `ultra-metis execution show` — show execution record details
+- `ultra-metis mode` — show or set autonomy mode (tight/mixed/autonomous)
+- `ultra-metis workflow list` — list available workflow templates
 - Improved `--help` with usage examples and workflow guides
-- Post-MVP: `super-metis lease acquire/release` — work lease operations
+- Post-MVP: `ultra-metis lease acquire/release` — work lease operations
 
 ## Alternatives Considered
 
@@ -128,10 +115,9 @@ Phase 8: Add bash/zsh shell completions
 
 ## Codebase Areas to Inspect
 
-- `metis/src/cli/` or `metis/src/commands/` — existing CLI commands
-- `metis/src/main.rs` — command routing
-- `metis/Cargo.toml` — CLI framework dependency (likely clap)
-- `metis/src/output/` or equivalent — output formatting
+- `crates/ultra-metis-cli/src/main.rs` — CLI command routing (clap derive)
+- `crates/ultra-metis-store/src/store.rs` — persistence API the CLI calls
+- `crates/ultra-metis-core/src/domain/` — domain types to expose as commands
 
 ## Suggested Tasks for Decomposition
 

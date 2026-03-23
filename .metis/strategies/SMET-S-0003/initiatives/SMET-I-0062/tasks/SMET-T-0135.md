@@ -4,16 +4,15 @@ level: task
 title: "Implement constrained and realistic comparison modes"
 short_code: "SMET-T-0135"
 created_at: 2026-03-18T17:41:38.530084+00:00
-updated_at: 2026-03-18T17:41:38.530084+00:00
+updated_at: 2026-03-20T16:53:48.387409+00:00
 parent: add-comparative-execution-modes
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -66,6 +65,10 @@ initiative_id: SMET-I-0062
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

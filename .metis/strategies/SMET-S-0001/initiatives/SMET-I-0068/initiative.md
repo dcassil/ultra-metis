@@ -4,14 +4,14 @@ level: initiative
 title: "Architecture Document Type and Domain Model"
 short_code: "SMET-I-0068"
 created_at: 2026-03-18T19:17:40.954879+00:00
-updated_at: 2026-03-18T19:17:40.954879+00:00
+updated_at: 2026-03-20T17:00:32.752335+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -123,6 +123,14 @@ Phase 5: Lock/unlock logic with validation
 Phase 6: Register `Architecture` variant in `DocumentType` enum with AR prefix and empty transitions
 Phase 7: Implement `find_children_by_type` query on document store
 Phase 8: Unit tests for all operations
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

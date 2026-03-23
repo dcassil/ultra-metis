@@ -43,6 +43,7 @@ pub mod gate_override;
 pub mod quality_gate_config;
 
 // Architecture types (lighter-weight, do not implement Document trait)
+pub mod architecture;
 pub mod architecture_catalog_entry;
 pub mod reference_architecture;
 

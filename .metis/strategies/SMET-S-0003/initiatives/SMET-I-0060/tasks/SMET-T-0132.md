@@ -4,16 +4,15 @@ level: task
 title: "Wire isolated workspace setup and scenario materialization into benchmark runs"
 short_code: "SMET-T-0132"
 created_at: 2026-03-18T17:41:18.477869+00:00
-updated_at: 2026-03-18T17:41:18.477869+00:00
+updated_at: 2026-03-20T16:48:22.333059+00:00
 parent: implement-agent-system-run-harness
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -66,6 +65,10 @@ initiative_id: SMET-I-0060
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

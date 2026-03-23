@@ -14,7 +14,8 @@
       "Read(//Users/danielcassil/projects/ultra-metis/**)",
       "Bash(*)",
       "Skill(metis:*)",
-      "mcp__plugin_ultra-metis_ultra-metis__search_documents"
+      "mcp__plugin_ultra-metis_ultra-metis__search_documents",
+      "mcp__plugin_ultra-metis_ultra-metis__list_documents"
     ]
   },
   "enableAllProjectMcpServers": true

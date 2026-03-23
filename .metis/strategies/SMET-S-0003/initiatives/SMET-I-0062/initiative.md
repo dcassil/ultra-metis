@@ -4,16 +4,15 @@ level: initiative
 title: "Add Comparative Execution Modes for Original Metis and Ultra-Metis"
 short_code: "SMET-I-0062"
 created_at: 2026-03-18T17:31:29.629094+00:00
-updated_at: 2026-03-18T17:31:29.629094+00:00
+updated_at: 2026-03-20T16:53:57.783381+00:00
 parent: benchmarking-and-evaluation
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
