@@ -1,7 +1,7 @@
 {
   "timestamp": "2026-03-18T04:52:02.182017Z",
-  "ultra_metis": {
-    "tool_name": "ultra-metis",
+  "cadre": {
+    "tool_name": "cadre",
     "templates_tested": 3,
     "avg_completeness_percent": 77.77778,
     "avg_placeholder_count": 8.333333,

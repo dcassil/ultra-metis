@@ -3,13 +3,13 @@
   "environment": {
     "platform": "darwin",
     "os_version": "Darwin 24.4.0",
-    "ultra_metis_binary": "super-metis/target/release/ultra-metis",
+    "cadre_binary": "cadre/target/release/cadre",
     "original_metis": "MCP plugin (mcp__plugin_metis_metis__*)"
   },
   "scenarios": {
     "scenario_1_init": {
       "name": "Project Bootstrap",
-      "ultra_metis": {
+      "cadre": {
         "time_ms": 38,
         "output_bytes": 75,
         "pass": true,
@@ -24,7 +24,7 @@
     },
     "scenario_2_planning_workflow": {
       "name": "Vision + Initiative + 3 Tasks",
-      "ultra_metis": {
+      "cadre": {
         "create_vision_ms": 44,
         "create_initiative_ms": 33,
         "create_task_1_ms": 37,
@@ -50,7 +50,7 @@
     },
     "scenario_3_phase_transitions": {
       "name": "Initiative through all 5 phase transitions",
-      "ultra_metis": {
+      "cadre": {
         "transition_1_ms": 42,
         "transition_2_ms": 35,
         "transition_3_ms": 40,
@@ -75,7 +75,7 @@
     },
     "scenario_4_search_query": {
       "name": "Search and List with 12 documents",
-      "ultra_metis": {
+      "cadre": {
         "search_database_ms": 43,
         "search_database_results": 2,
         "search_api_ms": 36,
@@ -100,7 +100,7 @@
     },
     "scenario_5_error_handling": {
       "name": "Invalid operations",
-      "ultra_metis": {
+      "cadre": {
         "read_nonexistent": {
           "time_ms": 43,
           "error_returned": true,
@@ -161,7 +161,7 @@
     },
     "scenario_6_read_document": {
       "name": "Read document content and quality",
-      "ultra_metis": {
+      "cadre": {
         "time_ms": 39,
         "output_bytes": 927,
         "template_quality_score": 3,

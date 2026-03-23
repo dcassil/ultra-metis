@@ -27,7 +27,7 @@ initiative_id: SMET-I-0038
 
 ## Objective
 
-Move `super-metis/Cargo.toml` (the workspace root) and `super-metis/Cargo.lock` to the repo root. Update the `[workspace]` members list to reflect that crates now live at `crates/<name>` instead of `crates/<name>`. Ensure `cargo metadata` resolves correctly from the repo root.
+Move `cadre/Cargo.toml` (the workspace root) and `cadre/Cargo.lock` to the repo root. Update the `[workspace]` members list to reflect that crates now live at `crates/<name>` instead of `crates/<name>`. Ensure `cargo metadata` resolves correctly from the repo root.
 
 ## Acceptance Criteria
 
@@ -35,19 +35,19 @@ Move `super-metis/Cargo.toml` (the workspace root) and `super-metis/Cargo.lock` 
 
 ## Acceptance Criteria
 
-- [ ] `Cargo.toml` exists at repo root (moved from `super-metis/Cargo.toml`)
-- [ ] `Cargo.lock` exists at repo root (moved from `super-metis/Cargo.lock`)
+- [ ] `Cargo.toml` exists at repo root (moved from `cadre/Cargo.toml`)
+- [ ] `Cargo.lock` exists at repo root (moved from `cadre/Cargo.lock`)
 - [ ] Workspace `[workspace] members` list updated from `crates/<name>` to `crates/<name>` (paths are now relative to repo root)
 - [ ] `cargo metadata --manifest-path Cargo.toml` runs without errors from repo root
-- [ ] No `Cargo.toml` or `Cargo.lock` remains in `super-metis/`
+- [ ] No `Cargo.toml` or `Cargo.lock` remains in `cadre/`
 
 ## Implementation Notes
 
 ### Technical Approach
-1. Copy `super-metis/Cargo.toml` to repo root
-2. Update the `[workspace] members` array — old entries like `"crates/ultra-metis-cli"` stay the same path string, but the root is now the repo root, so paths remain `"crates/<name>"`
-3. Copy `super-metis/Cargo.lock` to repo root
-4. Delete `super-metis/Cargo.toml` and `super-metis/Cargo.lock`
+1. Copy `cadre/Cargo.toml` to repo root
+2. Update the `[workspace] members` array — old entries like `"crates/cadre-cli"` stay the same path string, but the root is now the repo root, so paths remain `"crates/<name>"`
+3. Copy `cadre/Cargo.lock` to repo root
+4. Delete `cadre/Cargo.toml` and `cadre/Cargo.lock`
 5. Also check for any `[patch]` or `[replace]` sections that may reference old paths
 
 ### Dependencies
@@ -59,9 +59,9 @@ Move `super-metis/Cargo.toml` (the workspace root) and `super-metis/Cargo.lock` 
 ## Status Updates
 
 ### 2026-03-17
-- Created new Cargo.toml at repo root with updated members: crates/ultra-metis-core, crates/ultra-metis-store, crates/ultra-metis-cli, crates/ultra-metis-mcp
-- Copied super-metis/Cargo.lock to repo root
-- Removed super-metis/Cargo.toml and super-metis/Cargo.lock
+- Created new Cargo.toml at repo root with updated members: crates/cadre-core, crates/cadre-store, crates/cadre-cli, crates/cadre-mcp
+- Copied cadre/Cargo.lock to repo root
+- Removed cadre/Cargo.toml and cadre/Cargo.lock
 - `cargo metadata` from repo root resolves all 4 workspace members correctly
-- Workspace root confirmed as /Users/danielcassil/projects/ultra-metis
+- Workspace root confirmed as /Users/danielcassil/projects/cadre
 ✓ COMPLETE

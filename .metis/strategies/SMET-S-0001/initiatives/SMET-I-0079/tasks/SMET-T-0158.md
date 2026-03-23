@@ -35,7 +35,7 @@ Review each initiative under the former SMET-S-0002 (Remote AI Operations) strat
 | SMET-I-0042 | Notifications and Mobile Control | Likely minimal |
 | SMET-I-0043 | Session History, Audit, and Replay | Scope — audit must cover SDD execution records |
 | SMET-I-0044 | Policy and Safe Execution | Likely minimal |
-| SMET-I-0045 | Ultra-Metis Work and Notes Integration | Rename — ultra-metis refs become cadre |
+| SMET-I-0045 | Cadre Work and Notes Integration | Rename — cadre refs become cadre |
 | SMET-I-0046 | Operational Reliability and Multi-Session | Scope — multi-session means parallel subagents |
 
 ## Acceptance Criteria
@@ -63,7 +63,7 @@ All 8 initiatives under SMET-S-0002 reviewed against ADR SMET-A-0001. Each initi
 | SMET-I-0042 | Notifications and Mobile Control | Keep as-is (rename only) | #1 | Notifications are agnostic to execution model — only rename needed |
 | SMET-I-0043 | Session History, Audit, and Replay | Update scope | #1, #3, #6 | History must capture SDD execution structure (subagent boundaries, review verdicts); future architecture hook events noted |
 | SMET-I-0044 | Policy and Safe Execution | Update scope (minor) | #1, #2, #3, #4 | Policy must govern superpowers skill invocations (esp. worktrees); enforce per-subagent in orchestrated execution |
-| SMET-I-0045 | Ultra-Metis Work and Notes Integration | Update scope + rename | #1, #3, #6, #7 | Most rename-impacted — title and all MCP tool refs change; context loading must support per-subagent filtering; SubagentStart hook is the delivery mechanism |
+| SMET-I-0045 | Cadre Work and Notes Integration | Update scope + rename | #1, #3, #6, #7 | Most rename-impacted — title and all MCP tool refs change; context loading must support per-subagent filtering; SubagentStart hook is the delivery mechanism |
 | SMET-I-0046 | Operational Reliability and Multi-Session | Update scope | #1, #3, #4, #5 | Capacity model must consider subagent resource usage; worktree cleanup on failure; task claiming integration for concurrency |
 
 ### Summary

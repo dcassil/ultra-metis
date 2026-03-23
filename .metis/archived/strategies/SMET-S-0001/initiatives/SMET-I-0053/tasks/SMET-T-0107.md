@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate operations kernel and cognitive operations in Ultra-Metis. Document the 12 operation types (frame, acquire, model, locate, analyze, trace, assess, shape, decompose, create, validate, reassess), loop definitions, workflow templates, and execution model.
+Investigate operations kernel and cognitive operations in Cadre. Document the 12 operation types (frame, acquire, model, locate, analyze, trace, assess, shape, decompose, create, validate, reassess), loop definitions, workflow templates, and execution model.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -150,7 +150,7 @@ Investigate operations kernel and cognitive operations in Ultra-Metis. Document 
 
 #### Investigation Summary
 
-Completed comprehensive investigation of the Operations Kernel in Ultra-Metis codebase. All 12 cognitive operation types have been fully documented with specifications, along with loop definitions (11 reusable loops), workflow templates (9 work types with 5 implemented), and execution models.
+Completed comprehensive investigation of the Operations Kernel in Cadre codebase. All 12 cognitive operation types have been fully documented with specifications, along with loop definitions (11 reusable loops), workflow templates (9 work types with 5 implemented), and execution models.
 
 #### Key Findings
 
@@ -212,7 +212,7 @@ Not yet implemented: ArchitectureChange, BrownfieldEvaluation, Remediation, Gree
 
 #### Code Locations
 
-All operations kernel code in: `/Users/danielcassil/projects/ultra-metis/crates/ultra-metis-core/src/domain/operations/`
+All operations kernel code in: `/Users/danielcassil/projects/cadre/crates/cadre-core/src/domain/operations/`
 
 - `operation.rs` - 12 cognitive operations, OperationSpec, tool categories, escalation conditions
 - `loops.rs` - 11 reusable loops, LoopDefinition, entry/exit/escalation rules, iteration limits

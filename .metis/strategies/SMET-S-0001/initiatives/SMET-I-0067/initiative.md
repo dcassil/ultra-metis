@@ -1,7 +1,7 @@
 ---
-id: ultra-metis-plugin-execution
+id: cadre-plugin-execution
 level: initiative
-title: "Ultra-Metis Plugin: Execution Commands (Ralph and Decompose)"
+title: "Cadre Plugin: Execution Commands (Ralph and Decompose)"
 short_code: "SMET-I-0067"
 created_at: 2026-03-18T17:50:12.095727+00:00
 updated_at: 2026-03-18T18:48:48.369289+00:00
@@ -17,17 +17,17 @@ tags:
 exit_criteria_met: false
 estimated_complexity: M
 strategy_id: SMET-S-0001
-initiative_id: ultra-metis-plugin-execution
+initiative_id: cadre-plugin-execution
 ---
 
-# Ultra-Metis Plugin: Execution Commands (Ralph and Decompose)
+# Cadre Plugin: Execution Commands (Ralph and Decompose)
 
 ## Strategy Update (2026-03-18)
 
 **Revised approach**: Compose existing plugins instead of building custom infrastructure.
 - **ralph-loop plugin** (Anthropic official) — provides the iteration mechanism (stop hook, state file, max-iterations, completion promises)
 - **superpowers plugin** — provides execution methodology (TDD, debugging, verification, planning)
-- **ultra-metis commands** — thin deterministic wrappers that read documents via CLI, map story types to skills, construct prompts, and invoke ralph-loop
+- **cadre commands** — thin deterministic wrappers that read documents via CLI, map story types to skills, construct prompts, and invoke ralph-loop
 
 **Key principle**: Move as much as possible from AI reasoning to deterministic tools. Shell scripts read documents, map types to skills, and construct prompts. AI executes the work using explicitly-invoked skills.
 
@@ -35,8 +35,8 @@ initiative_id: ultra-metis-plugin-execution
 
 ## Context
 
-Ultra-metis needs execution commands that convert documents into actionable work loops. Rather than building custom loop infrastructure, we compose:
-- `ultra-metis` CLI for document reading (deterministic)
+Cadre needs execution commands that convert documents into actionable work loops. Rather than building custom loop infrastructure, we compose:
+- `cadre` CLI for document reading (deterministic)
 - ralph-loop plugin for iteration (deterministic stop hook + state file)
 - superpowers plugin for methodology (explicit skill invocation)
 
@@ -45,11 +45,11 @@ The commands are shell scripts + command .md files. Shell scripts handle all det
 ## Goals & Non-Goals
 
 **Goals:**
-- Create `/ultra-metis-ralph <short-code>` command for story/task execution via ralph-loop
-- Create `/ultra-metis-decompose <short-code>` command for epic decomposition
-- Create `/ultra-metis-ralph-epic <short-code>` command for multi-story execution
-- Create `/cancel-ultra-metis-ralph` command for canceling loops
-- Shell scripts read documents via `ultra-metis` CLI (deterministic)
+- Create `/cadre-ralph <short-code>` command for story/task execution via ralph-loop
+- Create `/cadre-decompose <short-code>` command for epic decomposition
+- Create `/cadre-ralph-epic <short-code>` command for multi-story execution
+- Create `/cancel-cadre-ralph` command for canceling loops
+- Shell scripts read documents via `cadre` CLI (deterministic)
 - Story type → superpowers skill mapping hardcoded in shell script (deterministic)
 - Direct invocation of ralph-loop setup script (not reimplemented)
 - Direct invocation of superpowers skills via Skill tool (not context-triggered)
@@ -65,15 +65,15 @@ The commands are shell scripts + command .md files. Shell scripts handle all det
 
 ### Plugin Directory Structure
 ```
-plugins/ultra-metis/
+plugins/cadre/
   commands/
-    ultra-metis-ralph.md          # Command: execute story/task
-    ultra-metis-decompose.md      # Command: decompose epic
-    ultra-metis-ralph-epic.md     # Command: execute all stories in epic
-    cancel-ultra-metis-ralph.md   # Command: cancel active loop
+    cadre-ralph.md          # Command: execute story/task
+    cadre-decompose.md      # Command: decompose epic
+    cadre-ralph-epic.md     # Command: execute all stories in epic
+    cancel-cadre-ralph.md   # Command: cancel active loop
   scripts/
-    setup-ultra-metis-ralph.sh    # Shell: read doc, map type→skills, build prompt, invoke ralph-loop
-    setup-ultra-metis-decompose.sh # Shell: read epic, build decomposition prompt
+    setup-cadre-ralph.sh    # Shell: read doc, map type→skills, build prompt, invoke ralph-loop
+    setup-cadre-decompose.sh # Shell: read epic, build decomposition prompt
     check-dependencies.sh         # Shell: verify ralph-loop + superpowers installed
 ```
 
@@ -94,43 +94,43 @@ Shell script maps `story_type` to required superpowers skills:
 
 For tasks (no story type): test-driven-development, verification-before-completion
 
-### `/ultra-metis-ralph <short-code>` Flow
+### `/cadre-ralph <short-code>` Flow
 
 **Shell script** (deterministic):
 1. Check ralph-loop + superpowers installed (`check-dependencies.sh`)
-2. `ultra-metis read <short-code> --json` → get document type, title, content, story_type, acceptance criteria
+2. `cadre read <short-code> --json` → get document type, title, content, story_type, acceptance criteria
 3. Validate document is a Story or Task (reject other types)
 4. Lookup story_type → required superpowers skills
 5. Build prompt including:
    - Document content and acceptance criteria
    - Explicit Skill tool invocations for each mapped skill
-   - Instructions to update progress via `mcp__ultra-metis__edit_document`
+   - Instructions to update progress via `mcp__cadre__edit_document`
    - Completion promise: "TASK COMPLETE"
-6. `ultra-metis transition <short-code>` → move to active phase
+6. `cadre transition <short-code>` → move to active phase
 7. Invoke ralph-loop setup script with constructed prompt + `--completion-promise "TASK COMPLETE"`
 
 **Command .md**: Bash execution block that runs the shell script, plus post-loop instructions to transition to completed.
 
-### `/ultra-metis-decompose <short-code>` Flow
+### `/cadre-decompose <short-code>` Flow
 
 **Shell script** (deterministic):
 1. Check superpowers installed
-2. `ultra-metis read <short-code> --json` → get epic content
+2. `cadre read <short-code> --json` → get epic content
 3. Validate document is an Epic
 4. Build prompt including:
    - Epic content, goals, acceptance criteria
-   - Explicit invocation of `ultra-metis:decomposition` skill
+   - Explicit invocation of `cadre:decomposition` skill
    - Explicit invocation of `superpowers:brainstorming` skill
-   - Instructions to create stories via `mcp__ultra-metis__create_document` with story_type
-   - Instructions to populate each story via `mcp__ultra-metis__edit_document`
+   - Instructions to create stories via `mcp__cadre__create_document` with story_type
+   - Instructions to populate each story via `mcp__cadre__edit_document`
    - Human review gate before creating stories
    - Completion promise: "DECOMPOSITION COMPLETE"
-5. `ultra-metis transition <short-code>` → move to decompose phase
+5. `cadre transition <short-code>` → move to decompose phase
 6. Invoke ralph-loop setup script with prompt + `--completion-promise "DECOMPOSITION COMPLETE"`
 
-### `/cancel-ultra-metis-ralph`
+### `/cancel-cadre-ralph`
 
-Delegates directly to `/cancel-ralph` from ralph-loop plugin. Additionally updates the active ultra-metis document with cancellation note.
+Delegates directly to `/cancel-ralph` from ralph-loop plugin. Additionally updates the active cadre document with cancellation note.
 
 ### Dependency Checking
 
@@ -167,34 +167,34 @@ fi
 - **superpowers plugin** (claude-plugins-official) — execution methodology
 - SMET-I-0064 (Skills) — decomposition guidance content
 - SMET-I-0066 (Hooks) — session start context
-- `ultra-metis` CLI must be installed and on PATH
+- `cadre` CLI must be installed and on PATH
 
 ## Implementation Plan
 
 1. Create `scripts/check-dependencies.sh` — verify required plugins
-2. Create `scripts/setup-ultra-metis-ralph.sh` — read doc, map type→skills, build prompt, invoke ralph-loop
-3. Create `commands/ultra-metis-ralph.md` — command wrapper
-4. Create `scripts/setup-ultra-metis-decompose.sh` — read epic, build decomposition prompt
-5. Create `commands/ultra-metis-decompose.md` — command wrapper
-6. Create `commands/ultra-metis-ralph-epic.md` — multi-story execution
-7. Create `commands/cancel-ultra-metis-ralph.md` — cancel wrapper
+2. Create `scripts/setup-cadre-ralph.sh` — read doc, map type→skills, build prompt, invoke ralph-loop
+3. Create `commands/cadre-ralph.md` — command wrapper
+4. Create `scripts/setup-cadre-decompose.sh` — read epic, build decomposition prompt
+5. Create `commands/cadre-decompose.md` — command wrapper
+6. Create `commands/cadre-ralph-epic.md` — multi-story execution
+7. Create `commands/cancel-cadre-ralph.md` — cancel wrapper
 8. Test with real documents end-to-end
 
 ## Progress
 
 ### 2026-03-18 — Commands and Scripts Created
-Created in `plugins/ultra-metis/`:
+Created in `plugins/cadre/`:
 
 **Scripts (deterministic):**
-- `scripts/check-dependencies.sh` — verifies ralph-loop, superpowers, and ultra-metis CLI installed
-- `scripts/setup-ultra-metis-ralph.sh` — reads doc via CLI, extracts story_type, maps to superpowers skills, builds prompt, creates ralph-loop state file
-- `scripts/setup-ultra-metis-decompose.sh` — reads epic via CLI, builds decomposition prompt with brainstorming + decomposition skills, creates ralph-loop state file
+- `scripts/check-dependencies.sh` — verifies ralph-loop, superpowers, and cadre CLI installed
+- `scripts/setup-cadre-ralph.sh` — reads doc via CLI, extracts story_type, maps to superpowers skills, builds prompt, creates ralph-loop state file
+- `scripts/setup-cadre-decompose.sh` — reads epic via CLI, builds decomposition prompt with brainstorming + decomposition skills, creates ralph-loop state file
 
 **Commands (.md wrappers):**
-- `commands/ultra-metis-ralph.md` — `/ultra-metis-ralph <SHORT_CODE>` for story/task execution
-- `commands/ultra-metis-decompose.md` — `/ultra-metis-decompose <SHORT_CODE>` for epic decomposition
-- `commands/ultra-metis-ralph-epic.md` — `/ultra-metis-ralph-epic <SHORT_CODE>` for sequential multi-story execution
-- `commands/cancel-ultra-metis-ralph.md` — delegates to `ralph-loop:cancel-ralph`
+- `commands/cadre-ralph.md` — `/cadre-ralph <SHORT_CODE>` for story/task execution
+- `commands/cadre-decompose.md` — `/cadre-decompose <SHORT_CODE>` for epic decomposition
+- `commands/cadre-ralph-epic.md` — `/cadre-ralph-epic <SHORT_CODE>` for sequential multi-story execution
+- `commands/cancel-cadre-ralph.md` — delegates to `ralph-loop:cancel-ralph`
 
 **Key architecture decisions:**
 - Shell scripts do ALL document reading, type→skill mapping, and prompt construction (deterministic)

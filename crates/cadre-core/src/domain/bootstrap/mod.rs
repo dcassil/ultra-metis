@@ -1,7 +1,7 @@
 //! Bootstrap module for repo-aware initialization.
 //!
 //! Provides scanning, detection, and orchestration for bootstrapping
-//! Ultra-Metis in a new or existing repository. All modules operate
+//! Cadre in a new or existing repository. All modules operate
 //! on file path lists -- no filesystem I/O in the domain layer.
 //!
 //! Components:

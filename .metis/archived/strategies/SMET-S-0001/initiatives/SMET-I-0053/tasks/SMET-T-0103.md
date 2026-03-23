@@ -73,7 +73,7 @@ Investigate governance and rules systems in both platforms. Document rule config
 
 ## Acceptance Criteria
 
-- [x] Governance architecture documented for Ultra-Metis (RulesConfig, protection layers, scope hierarchy)
+- [x] Governance architecture documented for Cadre (RulesConfig, protection layers, scope hierarchy)
 - [x] Rule enforcement mechanisms documented
 - [x] Metis governance capabilities assessed (what exists, what doesn't)
 - [x] Gap analysis completed

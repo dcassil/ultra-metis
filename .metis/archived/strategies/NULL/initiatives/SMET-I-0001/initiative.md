@@ -24,7 +24,7 @@ initiative_id: rework-metis-core-domain-model-for
 
 ## Context
 
-The current Metis domain model is built around a general-purpose project management hierarchy (Vision → Strategy → Initiative → Task) with ADRs as a separate concept. For Super-Metis, the core domain model must be reworked to center on software engineering in a monorepo context, where the primary concerns are product definition, design-linked implementation, engineering execution, and quality governance.
+The current Metis domain model is built around a general-purpose project management hierarchy (Vision → Strategy → Initiative → Task) with ADRs as a separate concept. For Cadre, the core domain model must be reworked to center on software engineering in a monorepo context, where the primary concerns are product definition, design-linked implementation, engineering execution, and quality governance.
 
 This initiative is foundational — nearly every other initiative depends on the domain model being reworked first. The existing Metis Rust codebase already has well-structured domain types, document storage, and serialization. The goal is to evolve these, not replace them.
 
@@ -40,7 +40,7 @@ This initiative directly serves:
 ## Goals & Non-Goals
 
 **Goals:**
-- Refactor the core domain types to support the richer Super-Metis document hierarchy (Product Doc, Epic, Story, Task, Design Context, Rules Config, Analysis Baseline, etc.)
+- Refactor the core domain types to support the richer Cadre document hierarchy (Product Doc, Epic, Story, Task, Design Context, Rules Config, Analysis Baseline, etc.)
 - Preserve the file-based, markdown+frontmatter storage model
 - Maintain backward compatibility with existing document serialization where possible
 - Define clear relationships and hierarchy rules between all new document types
@@ -86,7 +86,7 @@ This initiative directly serves:
 ## Implementation Plan
 
 Phase 1: Audit existing domain types in `metis/` and map them to target types
-Phase 2: Define new Rust types and traits for all Super-Metis document types
+Phase 2: Define new Rust types and traits for all Cadre document types
 Phase 3: Implement serialization/deserialization for new types
 Phase 4: Update hierarchy validation and parent-child rules
 Phase 5: Update SQLite schema and indexing for new types

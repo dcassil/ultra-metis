@@ -24,14 +24,14 @@ initiative_id: build-release-and-distribution
 
 ## Context
 
-Ultra-metis is now structured as a monorepo with multiple distinct components that serve very different deployment targets and user installation workflows:
+Cadre is now structured as a monorepo with multiple distinct components that serve very different deployment targets and user installation workflows:
 
 | Component | Location | What it is | Where it goes |
 |-----------|----------|------------|---------------|
-| **ultra-metis-mcp** | `crates/ultra-metis-mcp/` | MCP server binary | Needs to be runnable by Claude Code via `.mcp.json` |
-| **ultra-metis-cli** | `crates/ultra-metis-cli/` | CLI tool | Installed on user's PATH for terminal use |
-| **ultra-metis-core** | `crates/ultra-metis-core/` | Shared Rust library | Compiled into binaries (not distributed standalone) |
-| **ultra-metis-store** | `crates/ultra-metis-store/` | Persistence layer | Compiled into binaries (not distributed standalone) |
+| **cadre-mcp** | `crates/cadre-mcp/` | MCP server binary | Needs to be runnable by Claude Code via `.mcp.json` |
+| **cadre-cli** | `crates/cadre-cli/` | CLI tool | Installed on user's PATH for terminal use |
+| **cadre-core** | `crates/cadre-core/` | Shared Rust library | Compiled into binaries (not distributed standalone) |
+| **cadre-store** | `crates/cadre-store/` | Persistence layer | Compiled into binaries (not distributed standalone) |
 | **plugin.json** | `plugin.json` | Claude Code plugin manifest | Must be in a directory Claude Code can reference as a plugin |
 | **control-web** | `apps/control-web/` (future) | Next.js dashboard | Deployed to a web server (Cloudflare, Vercel, etc.) |
 | **control-api** | `apps/control-api/` (future) | API gateway | Deployed as a server |
@@ -54,7 +54,7 @@ A separate initiative ([[SMET-I-0058]]) has been created to handle the immediate
 - CI/CD pipeline for automated cross-platform release builds (GitHub Actions)
 - GitHub Releases with pre-built binaries for macOS (x86_64, aarch64), Linux (x86_64, aarch64), Windows (x64)
 - Homebrew tap for macOS CLI distribution
-- npm package wrapper for `npx ultra-metis` style usage (future)
+- npm package wrapper for `npx cadre` style usage (future)
 - Plugin marketplace / registry publishing (when available)
 - Monorepo build orchestration tooling (just, cargo-make, or similar)
 - CLI distribution strategy (`cargo install`, homebrew, GitHub releases)
@@ -100,14 +100,14 @@ Target the same platforms the original Metis supported, plus macOS x86_64:
 | `aarch64-unknown-linux-gnu` | `ubuntu-22.04` | Linux ARM (cross-compile via `cross`) |
 | `x86_64-pc-windows-msvc` | `windows-latest` | Windows |
 
-Each release produces two binaries per platform: `ultra-metis` (CLI) and `ultra-metis-mcp` (MCP server).
+Each release produces two binaries per platform: `cadre` (CLI) and `cadre-mcp` (MCP server).
 
 **4. Release Artifact Packaging**
 Each platform's artifacts are packaged as:
 - Tarball (`.tar.gz`) for macOS/Linux: contains both binaries + LICENSE + README
 - Zip (`.zip`) for Windows: contains both binaries + LICENSE + README
 - SHA256 checksums file for verification
-- Naming convention: `ultra-metis-{version}-{target-triple}.tar.gz`
+- Naming convention: `cadre-{version}-{target-triple}.tar.gz`
 
 **5. GitHub Releases as Primary Distribution**
 GitHub Releases serve as the canonical artifact store. All other distribution channels pull from here:
@@ -116,15 +116,15 @@ GitHub Releases serve as the canonical artifact store. All other distribution ch
 - Draft releases for review before publishing
 
 **6. Homebrew Tap for macOS**
-Create a separate `homebrew-ultra-metis` tap repository with a formula that:
+Create a separate `homebrew-cadre` tap repository with a formula that:
 - Downloads the pre-built macOS binary from GitHub Releases
-- Installs both `ultra-metis` and `ultra-metis-mcp` to the Homebrew prefix
+- Installs both `cadre` and `cadre-mcp` to the Homebrew prefix
 - Auto-updated by a GitHub Action on release publish
 
 **7. npm Wrapper Package (Future)**
-An npm package (`ultra-metis`) that:
+An npm package (`cadre`) that:
 - Downloads the appropriate platform binary on `postinstall`
-- Provides `npx ultra-metis` usage
+- Provides `npx cadre` usage
 - Enables Claude Code plugin installation via npm
 - This is lower priority and can be a later task
 
@@ -169,7 +169,7 @@ Release flow:
 
 ## Alternatives Considered
 
-**1. Cargo-only distribution (`cargo install ultra-metis`)**
+**1. Cargo-only distribution (`cargo install cadre`)**
 - Pros: Simple, standard Rust ecosystem, no binary hosting needed
 - Cons: Requires Rust toolchain on user's machine, slow initial compile (5-10 min), can't distribute MCP server to non-Rust users
 - Decision: Rejected as primary channel, but will support `cargo install` from crates.io post-v1
@@ -205,10 +205,10 @@ Release flow:
 
 1. **CI Workflow** — Create `.github/workflows/ci.yml` with test, clippy, and fmt checks running on every PR/push to main. Include Rust caching.
 2. **Release Versioning with release-please** — Configure release-please GitHub Action for automated version bumps, changelog generation, and tag creation from conventional commits.
-3. **Cross-Platform Release Build Workflow** — Create `.github/workflows/release.yml` with build matrix for all 5 target platforms, producing both `ultra-metis` and `ultra-metis-mcp` binaries.
+3. **Cross-Platform Release Build Workflow** — Create `.github/workflows/release.yml` with build matrix for all 5 target platforms, producing both `cadre` and `cadre-mcp` binaries.
 4. **Release Artifact Packaging** — Build a `scripts/package.sh` script that creates distributable archives (tar.gz/zip) with binaries, LICENSE, README, and SHA256 checksums. Integrate into release workflow.
 5. **Makefile Enhancements** — Extend the existing Makefile with `ci`, `release-local`, and `package` targets for local developer workflows.
-6. **Homebrew Tap** — Create `homebrew-ultra-metis` tap repository with a formula for macOS distribution. Add a release workflow job to auto-update the formula on new releases.
+6. **Homebrew Tap** — Create `homebrew-cadre` tap repository with a formula for macOS distribution. Add a release workflow job to auto-update the formula on new releases.
 
 ### Dependencies Between Tasks
 - CI Workflow (SMET-T-0139) is independent and can be done first
@@ -234,9 +234,9 @@ Release flow:
 **Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename)
 
 All 6 tasks completed. The rename (SMET-I-0074) will change:
-- Binary names in CI/release workflows: `ultra-metis` → `cadre`, `ultra-metis-mcp` → `cadre-mcp`
-- Artifact naming: `ultra-metis-{version}-{target}.tar.gz` → `cadre-{version}-{target}.tar.gz`
-- Homebrew tap: `homebrew-ultra-metis` → `homebrew-cadre`
+- Binary names in CI/release workflows: `cadre` → `cadre`, `cadre-mcp` → `cadre-mcp`
+- Artifact naming: `cadre-{version}-{target}.tar.gz` → `cadre-{version}-{target}.tar.gz`
+- Homebrew tap: `homebrew-cadre` → `homebrew-cadre`
 - Makefile targets reference new binary names
 
 These are mechanical updates applied during the rename initiative.

@@ -1,7 +1,7 @@
 ---
 id: document-types-complete-coverage
 level: task
-title: "Document Types: Complete Coverage Analysis (Metis & Ultra-Metis)"
+title: "Document Types: Complete Coverage Analysis (Metis & Cadre)"
 short_code: "SMET-T-0097"
 created_at: 2026-03-17T22:06:28.303879+00:00
 updated_at: 2026-03-17T22:20:43.758435+00:00
@@ -19,7 +19,7 @@ strategy_id: SMET-S-0001
 initiative_id: SMET-I-0053
 ---
 
-# Document Types: Complete Coverage Analysis (Metis & Ultra-Metis)
+# Document Types: Complete Coverage Analysis (Metis & Cadre)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,11 +29,11 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Comprehensively investigate and compare all document types defined in both original Metis and Ultra-Metis systems. Map each document type's phase definitions, validation rules, serialization, templates, and hierarchy constraints. Create detailed comparison grids for each document type showing design differences and feature gaps.
+Comprehensively investigate and compare all document types defined in both original Metis and Cadre systems. Map each document type's phase definitions, validation rules, serialization, templates, and hierarchy constraints. Create detailed comparison grids for each document type showing design differences and feature gaps.
 
 Document Types to Investigate:
 - **Metis**: Vision, Strategy, Initiative, Task, Backlog, ADR, Specification
-- **Ultra-Metis**: Vision, Initiative, Task, Epic, Story, DesignContext, ProductDoc, Specification
+- **Cadre**: Vision, Initiative, Task, Epic, Story, DesignContext, ProductDoc, Specification
 
 ## Acceptance Criteria
 
@@ -43,7 +43,7 @@ Document Types to Investigate:
 
 ## Acceptance Criteria
 
-- [x] Comparison grid created for each document type showing Metis vs Ultra-Metis side-by-side
+- [x] Comparison grid created for each document type showing Metis vs Cadre side-by-side
 - [x] For each document type: phase definitions, transitions, validation rules documented
 - [x] Template system examined: template content, rendering context, structure compared
 - [x] Hierarchy constraints documented for each document type
@@ -83,7 +83,7 @@ Document Types to Investigate:
 5. **Feature Comparison Matrix** —  For each document type, document:
    - Feature exists in both systems
    - Only exists in Metis
-   - Only exists in Ultra-Metis
+   - Only exists in Cadre
    - Design differences where feature exists in both
    - Robustness assessment (which implementation is stronger)
 
@@ -105,31 +105,31 @@ Document Types to Investigate:
 
 1. ✓ **Document Type Coverage** — Investigated all document types in both systems:
    - Metis: Vision, Strategy, Initiative, Task, Backlog, ADR, Specification (7 types)
-   - Ultra-Metis: Vision, Initiative, Task, Epic, Story, DesignContext, ProductDoc, Specification, ADR (9 types)
+   - Cadre: Vision, Initiative, Task, Epic, Story, DesignContext, ProductDoc, Specification, ADR (9 types)
 
 2. ✓ **Phase Definition Comparison** — Documented all phase models:
    - Vision: Draft → Review → Published (both systems, identical)
    - Initiative: Discovery → Design → Ready → Decompose → Active → Completed (both systems, identical)
    - Task: Backlog → Todo → Active → Completed + Blocked state (both systems, identical phases)
    - ADR: Draft → Discussion → Decided → Superseded (both systems, identical)
-   - Strategy: Shaping → Design → Ready → Active → Completed (Metis only, missing in Ultra-Metis)
+   - Strategy: Shaping → Design → Ready → Active → Completed (Metis only, missing in Cadre)
 
 3. ✓ **Template System Comparison** — Examined template structure:
    - Metis: Markdown + YAML frontmatter (implicit)
-   - Ultra-Metis: Explicit Tera template system with schema versioning
-   - Ultra-Metis: DocumentCore pattern for all types, explicit template rendering
+   - Cadre: Explicit Tera template system with schema versioning
+   - Cadre: DocumentCore pattern for all types, explicit template rendering
 
 4. ✓ **Hierarchy Constraints** — Documented parent/child relationships:
    - Vision: Root-level (no parent)
    - Initiative: Parent to Tasks, child to Vision/Strategy/Epic
-   - Epic: Parent to Stories (Ultra-Metis only)
-   - Story: Parent to Tasks (Ultra-Metis only)
+   - Epic: Parent to Stories (Cadre only)
+   - Story: Parent to Tasks (Cadre only)
    - Task: Must have parent (Initiative/Epic/Story)
 
 5. ✓ **Serialization Differences** — Documented storage approaches:
    - Both use markdown + YAML frontmatter
-   - Ultra-Metis: Schema versioning (schema_version field)
-   - Ultra-Metis: DocumentId derived from title slug
+   - Cadre: Schema versioning (schema_version field)
+   - Cadre: DocumentId derived from title slug
    - Metis: Implicit serialization patterns
 
 **Key Findings Added to SMET-I-0053:**
@@ -141,14 +141,14 @@ Document Types to Investigate:
 
 | Gap | Priority | Impact | Complexity |
 |-----|----------|--------|-----------|
-| **Strategy Missing in Ultra-Metis** | HIGH | Blocks large-scale program coordination | Large (XL) |
+| **Strategy Missing in Cadre** | HIGH | Blocks large-scale program coordination | Large (XL) |
 | **Ralph Loop Equivalent** | HIGH | Autonomous task execution differs | Large (L) |
 | **Epic/Story Enhancements** | MEDIUM | Organizational richer structure, no equivalent in Metis | Medium (M) |
 
 **Assessment Summary:**
 - **Core Coverage**: 91% equivalent (10/11 types comparable)
 - **Phase Models**: 100% identical for equivalent types
-- **Design Quality**: Ultra-Metis slightly better (explicit schema, stronger typing)
+- **Design Quality**: Cadre slightly better (explicit schema, stronger typing)
 - **Robustness**: Comparable for matching types
 - **Missing Capability**: Strategy document type is critical gap
 

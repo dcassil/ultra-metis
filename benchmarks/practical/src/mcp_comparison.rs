@@ -1,6 +1,6 @@
 use crate::mcp_adapter::{
     expected_shared_tool_names, ExecutionAdapter, McpSession, OriginalMetisAdapter,
-    SystemUnderTest, UltraMetisMcpAdapter,
+    SystemUnderTest, CadreMcpAdapter,
 };
 use anyhow::{Context, Result};
 use chrono::Utc;
@@ -44,7 +44,7 @@ pub fn run_shared_tool_comparison(
     let orig_dir = tempfile::tempdir().context("Failed to create original tempdir")?;
 
     let ultra = run_tool_workflow(
-        &UltraMetisMcpAdapter,
+        &CadreMcpAdapter,
         ultra_dir.path(),
         "BENCH",
         "File Processing Toolkit",
@@ -117,7 +117,7 @@ fn run_tool_workflow<A: ExecutionAdapter>(
             });
             "BENCH-V-0001".to_string()
         }
-        SystemUnderTest::UltraMetisMcp => {
+        SystemUnderTest::CadreMcp => {
             record_call(
                 &mut session,
                 &mut operations,
@@ -198,7 +198,7 @@ fn run_tool_workflow<A: ExecutionAdapter>(
 fn document_project_path(system: SystemUnderTest, root: &Path) -> String {
     match system {
         SystemUnderTest::OriginalMetis => root.join(".metis").display().to_string(),
-        SystemUnderTest::UltraMetisMcp => root.display().to_string(),
+        SystemUnderTest::CadreMcp => root.display().to_string(),
     }
 }
 
@@ -260,7 +260,7 @@ fn extract_short_code(text: &str, prefix: &str) -> Option<String> {
 fn system_name(system: &SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
-        SystemUnderTest::UltraMetisMcp => "cadre-mcp",
+        SystemUnderTest::CadreMcp => "cadre-mcp",
     }
 }
 
@@ -374,7 +374,7 @@ mod tests {
     fn cadre_uses_root_for_document_calls() {
         let root = Path::new("/tmp/example-project");
         assert_eq!(
-            document_project_path(SystemUnderTest::UltraMetisMcp, root),
+            document_project_path(SystemUnderTest::CadreMcp, root),
             "/tmp/example-project"
         );
     }

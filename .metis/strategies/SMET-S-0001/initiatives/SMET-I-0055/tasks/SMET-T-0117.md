@@ -35,7 +35,7 @@ Implement a new `reassign_parent` MCP tool that moves tasks between initiatives 
 
 ## Acceptance Criteria
 
-- [ ] `reassign_parent` method added to DocumentStore in `crates/ultra-metis-store/src/store.rs`
+- [ ] `reassign_parent` method added to DocumentStore in `crates/cadre-store/src/store.rs`
 - [ ] Tool validates only tasks can be reassigned (rejects initiatives/visions/ADRs)
 - [ ] Can move a task from one initiative to another (validates target initiative is in decompose/active phase)
 - [ ] Can move a task to backlog with required category (bug/feature/tech-debt)
@@ -43,7 +43,7 @@ Implement a new `reassign_parent` MCP tool that moves tasks between initiatives 
 - [ ] Updates parent_id in task YAML frontmatter
 - [ ] Moves task file from old parent directory to new parent directory
 - [ ] Detects and reports file path conflicts at destination
-- [ ] Tool registered in MCP tool definitions (`crates/ultra-metis-mcp/src/tools.rs`)
+- [ ] Tool registered in MCP tool definitions (`crates/cadre-mcp/src/tools.rs`)
 - [ ] JSON schema includes: project_path, short_code, new_parent_id (optional), backlog_category (optional)
 - [ ] Unit tests for: type validation, parent phase validation, file conflict detection, successful moves
 - [ ] Integration tests for: initiative-to-initiative, initiative-to-backlog, backlog-to-initiative workflows
@@ -62,9 +62,9 @@ Implement a new `reassign_parent` MCP tool that moves tasks between initiatives 
 9. Return success message with old/new parent info
 
 ### Key Files
-- `crates/ultra-metis-store/src/store.rs` - DocumentStore: add reassign_parent method
-- `crates/ultra-metis-mcp/src/tools.rs` - Tool definition and dispatch
-- `crates/ultra-metis-store/src/error.rs` - Add error variants if needed
+- `crates/cadre-store/src/store.rs` - DocumentStore: add reassign_parent method
+- `crates/cadre-mcp/src/tools.rs` - Tool definition and dispatch
+- `crates/cadre-store/src/error.rs` - Add error variants if needed
 
 ### Dependencies
 - None (uses existing DocumentStore infrastructure)

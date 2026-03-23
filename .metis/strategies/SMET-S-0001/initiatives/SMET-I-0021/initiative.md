@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: baseline-capture-comparison-and
 ---
 
@@ -45,7 +45,7 @@ Split from the original SMET-I-0005 (now archived). Domain types for AnalysisBas
 **Non-Goals:**
 - Quality gate enforcement and phase transition blocking — covered by SMET-I-0022
 - Remediation loops when quality degrades — covered by SMET-I-0006
-- Running static analysis tools — Super-Metis captures results, it doesn't run tools
+- Running static analysis tools — Cadre captures results, it doesn't run tools
 - Defining what "good quality" means — thresholds are configurable per-project
 
 ## Detailed Design

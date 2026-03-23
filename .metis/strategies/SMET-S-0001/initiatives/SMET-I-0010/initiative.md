@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: extend-cli-support-for-the
 ---
 
@@ -36,7 +36,7 @@ initiative_id: extend-cli-support-for-the
 
 ## Context
 
-Ultra-Metis CLI currently supports document CRUD, phase transitions, search, archive, reassign, validate, and status (completed in SMET-I-0056). The richer domain model (quality baselines, rules, notes, traceability, architecture catalog) is built in ultra-metis-core but not accessible from the command line. Humans need CLI access to inspect and manage these artifacts.
+Cadre CLI currently supports document CRUD, phase transitions, search, archive, reassign, validate, and status (completed in SMET-I-0056). The richer domain model (quality baselines, rules, notes, traceability, architecture catalog) is built in cadre-core but not accessible from the command line. Humans need CLI access to inspect and manage these artifacts.
 
 ## Goals & Non-Goals
 
@@ -58,28 +58,28 @@ Ultra-Metis CLI currently supports document CRUD, phase transitions, search, arc
 ## Detailed Design
 
 ### New Commands
-- `ultra-metis quality capture` — capture a quality baseline
-- `ultra-metis quality compare` — compare two baselines
-- `ultra-metis quality gate` — check quality gate status
-- `ultra-metis quality validate` — record a validation result
-- `ultra-metis rules list` — list active engineering rules by scope
-- `ultra-metis rules propose` — create a rule change proposal
-- `ultra-metis notes fetch` — fetch notes by scope (repo/package/subsystem/path/symbol)
-- `ultra-metis notes create` — create a durable insight note
-- `ultra-metis notes score` — record feedback on a note
-- `ultra-metis notes inspect` — browse and filter notes
-- `ultra-metis trace` — trace document ancestry/descendants and cross-references
-- `ultra-metis execution list` — list execution records
-- `ultra-metis execution show` — show execution record details
-- `ultra-metis mode` — show or set autonomy mode (tight/mixed/autonomous)
-- `ultra-metis workflow list` — list available workflow templates
+- `cadre quality capture` — capture a quality baseline
+- `cadre quality compare` — compare two baselines
+- `cadre quality gate` — check quality gate status
+- `cadre quality validate` — record a validation result
+- `cadre rules list` — list active engineering rules by scope
+- `cadre rules propose` — create a rule change proposal
+- `cadre notes fetch` — fetch notes by scope (repo/package/subsystem/path/symbol)
+- `cadre notes create` — create a durable insight note
+- `cadre notes score` — record feedback on a note
+- `cadre notes inspect` — browse and filter notes
+- `cadre trace` — trace document ancestry/descendants and cross-references
+- `cadre execution list` — list execution records
+- `cadre execution show` — show execution record details
+- `cadre mode` — show or set autonomy mode (tight/mixed/autonomous)
+- `cadre workflow list` — list available workflow templates
 - Improved `--help` with usage examples and workflow guides
-- Post-MVP: `ultra-metis lease acquire/release` — work lease operations
+- Post-MVP: `cadre lease acquire/release` — work lease operations
 
 ## Alternatives Considered
 
 1. **Wrap MCP tools as CLI**: Rejected because CLI needs different UX patterns (formatted output, interactive prompts) than MCP tools.
-2. **Single monolithic command with subcommands for everything**: This is the approach — `super-metis` as the root command with organized subcommand groups.
+2. **Single monolithic command with subcommands for everything**: This is the approach — `cadre` as the root command with organized subcommand groups.
 3. **Separate CLIs for different concern areas**: Rejected because a single CLI is easier to discover and learn.
 
 ## Progress (2026-03-23)
@@ -132,15 +132,15 @@ Phase 8: Add bash/zsh shell completions
 
 ## Codebase Areas to Inspect
 
-- `crates/ultra-metis-cli/src/main.rs` — CLI command routing (clap derive)
-- `crates/ultra-metis-store/src/store.rs` — persistence API the CLI calls
-- `crates/ultra-metis-core/src/domain/` — domain types to expose as commands
+- `crates/cadre-cli/src/main.rs` — CLI command routing (clap derive)
+- `crates/cadre-store/src/store.rs` — persistence API the CLI calls
+- `crates/cadre-core/src/domain/` — domain types to expose as commands
 
 ## Cadre ADR Alignment (SMET-A-0001)
 
 **Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename)
 
-ADR point 1 (rename): CLI binary changes from `ultra-metis` to `cadre`. All subcommands change: `ultra-metis quality` → `cadre quality`, etc. Crate path changes: `crates/ultra-metis-cli/` → `crates/cadre-cli/`. The 14 subcommands already merged will be renamed mechanically by SMET-I-0074.
+ADR point 1 (rename): CLI binary changes from `cadre` to `cadre`. All subcommands change: `cadre quality` → `cadre quality`, etc. Crate path changes: `crates/cadre-cli/` → `crates/cadre-cli/`. The 14 subcommands already merged will be renamed mechanically by SMET-I-0074.
 
 Remaining work (`--json` output, help improvements, architecture catalog browsing) is unaffected by other ADR decisions and should proceed after the rename.
 

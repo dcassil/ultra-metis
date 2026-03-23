@@ -35,8 +35,8 @@ Add a `reassign` CLI command that mirrors the MCP `reassign_parent` tool added i
 
 ## Acceptance Criteria
 
-- [ ] `ultra-metis reassign <short-code> --parent <id>` moves task to new parent
-- [ ] `ultra-metis reassign <short-code> --backlog <category>` moves task to backlog
+- [ ] `cadre reassign <short-code> --parent <id>` moves task to new parent
+- [ ] `cadre reassign <short-code> --backlog <category>` moves task to backlog
 - [ ] Validates task type, parent phase, and parent type (same rules as MCP)
 - [ ] Prints success message with old/new parent
 - [ ] Error messages use user_message() for consistency
@@ -51,7 +51,7 @@ Add a `reassign` CLI command that mirrors the MCP `reassign_parent` tool added i
 4. Simple — just wiring the existing store method to a CLI command
 
 ### Key Files
-- `crates/ultra-metis-cli/src/main.rs` — add Reassign command
+- `crates/cadre-cli/src/main.rs` — add Reassign command
 
 ## Status Updates
 

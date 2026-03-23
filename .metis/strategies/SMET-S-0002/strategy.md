@@ -1,7 +1,7 @@
 ---
-id: ultra-metis-remote-ai-operations
+id: cadre-remote-ai-operations
 level: strategy
-title: "Ultra-Metis Remote AI Operations Layer"
+title: "Cadre Remote AI Operations Layer"
 short_code: "SMET-S-0002"
 created_at: 2026-03-17T19:51:13.777599+00:00
 updated_at: 2026-03-17T19:51:13.777599+00:00
@@ -17,11 +17,11 @@ tags:
 exit_criteria_met: false
 risk_level: high
 stakeholders: []
-strategy_id: ultra-metis-remote-ai-operations
+strategy_id: cadre-remote-ai-operations
 initiative_id: NULL
 ---
 
-# Ultra-Metis Remote AI Operations Layer Strategy
+# Cadre Remote AI Operations Layer Strategy
 
 *This template includes sections for various types of strategic documents. Delete sections that don't apply to your specific use case.*
 
@@ -29,14 +29,14 @@ initiative_id: NULL
 
 AI coding sessions today are locked to the machine where the developer is sitting. There is no way to start a session remotely, monitor its progress from a phone, respond to approval requests without being at your desk, or manage multiple AI agents running in parallel across different machines and repos. When a session needs a decision, the user has no way to know without polling a terminal.
 
-Ultra-Metis needs a remote AI operations layer: a system that lets users register local machines, launch AI sessions on those machines, monitor live progress from any device, respond to prompts and approvals from mobile, and capture durable session history, outputs, and artifacts — all connected back into Ultra-Metis tasks, notes, and architecture guidance.
+Cadre needs a remote AI operations layer: a system that lets users register local machines, launch AI sessions on those machines, monitor live progress from any device, respond to prompts and approvals from mobile, and capture durable session history, outputs, and artifacts — all connected back into Cadre tasks, notes, and architecture guidance.
 
 ## Components
 
 This strategy covers three tightly-coupled components that together deliver the remote operations capability:
 
 - **Control Dashboard** (`apps/control-web/`): The user-facing web app (Next.js). Shows machines, sessions, live output, approvals, notifications, history, and artifacts. Mobile-first design.
-- **Control Service** (`apps/control-api/`): The hosted coordination layer. Authenticates users and machines, manages session lifecycle, routes commands, ingests events, persists state and audit trail, enforces policy, triggers notifications, and connects sessions to Ultra-Metis records.
+- **Control Service** (`apps/control-api/`): The hosted coordination layer. Authenticates users and machines, manages session lifecycle, routes commands, ingests events, persists state and audit trail, enforces policy, triggers notifications, and connects sessions to Cadre records.
 - **Machine Runner** (`apps/machine-runner/`): The local execution daemon running near the code. Connects to the control service, advertises repos and capabilities, starts/stops local AI sessions, captures output and prompts, enforces local policy, and returns structured updates and artifacts.
 
 ## User Requirements
@@ -52,7 +52,7 @@ This strategy covers three tightly-coupled components that together deliver the 
 ### B. Session Lifecycle
 - Start AI sessions against a selected machine and repo with task title, instructions, and optional context
 - Choose session autonomy level (normal approvals, stricter approvals, more autonomous)
-- Attach an Ultra-Metis task, story, or initiative to a new session
+- Attach an Cadre task, story, or initiative to a new session
 - Preload notes, architecture guidance, or constraints into session context
 - See session state (starting, running, waiting, paused, completed, failed, stopped)
 - Stop, pause, resume, and force-end sessions
@@ -84,7 +84,7 @@ This strategy covers three tightly-coupled components that together deliver the 
 - Final session summary: what was attempted, completed, and remains
 - List of files, notes, or outputs produced
 - Structured output capture: milestones as distinct events, not buried in terminal text
-- Export or link session results into Ultra-Metis workflow records
+- Export or link session results into Cadre workflow records
 
 ### H. Policy and Safety
 - Machine- and repo-level policy controls limiting what remote sessions can do
@@ -93,8 +93,8 @@ This strategy covers three tightly-coupled components that together deliver the 
 - All sensitive actions logged with initiator and timestamp
 - Remote actions flow through validated API calls; machines enforce local restrictions independently
 
-### I. Ultra-Metis Integration
-- Launch sessions from Ultra-Metis stories, tasks, or initiatives
+### I. Cadre Integration
+- Launch sessions from Cadre stories, tasks, or initiatives
 - Session context includes project, repo area, and linked work item
 - Completed session results flow back into the related work item
 - Relevant notes fetched at session start; note helpfulness scored at session end
@@ -122,7 +122,7 @@ This strategy covers three tightly-coupled components that together deliver the 
 - User can respond to an approval request from mobile in under 3 taps
 - Push notifications delivered within 30 seconds of session events
 - Session history persists and is queryable after the session ends
-- Session results link back to Ultra-Metis work items
+- Session results link back to Cadre work items
 - Policy violations are surfaced and logged, never silently bypassed
 - Dashboard is fully usable on mobile
 
@@ -175,7 +175,7 @@ All three components depend on SMET-I-0038 (monorepo restructure) which creates 
 4. **Notifications and Mobile Control** — push delivery, inbox, mobile-first UX, notification routing
 5. **Session History, Audit, and Replay** — event timeline, search/filter, audit trail, chronological replay
 6. **Policy and Safe Execution** — machine/repo policy model, violation surfacing, action logging, isolation guarantees
-7. **Ultra-Metis Work and Notes Integration** — work item linkage, note fetch/score, architecture awareness, result handoff
+7. **Cadre Work and Notes Integration** — work item linkage, note fetch/score, architecture awareness, result handoff
 8. **Operational Reliability and Multi-Session Management** — concurrency, capacity visibility, disconnection detection, resilience, administration
 
 ## Scope
@@ -186,11 +186,11 @@ All three components depend on SMET-I-0038 (monorepo restructure) which creates 
 - `apps/machine-runner/` — local execution daemon
 - All 8 epic initiatives and their user stories (A–K above)
 - Shared data models: machine, repo, session, prompt/approval, event/timeline, artifact, policy, notification, task linkage, note feedback
-- Ultra-Metis integration (work item linkage, note fetch/score, architecture guidance awareness)
+- Cadre integration (work item linkage, note fetch/score, architecture guidance awareness)
 - Mobile-first responsive design for dashboard
 
 **Out of Scope:**
-- Ultra-Metis core engine capabilities — see SMET-S-0001
+- Cadre core engine capabilities — see SMET-S-0001
 - Native mobile apps (web-responsive is sufficient for MVP)
 - Self-hosted Control Service infrastructure (cloud-hosted only for MVP)
 - Advanced analytics or ML on session data
@@ -218,7 +218,7 @@ All three components depend on SMET-I-0038 (monorepo restructure) which creates 
 4. Live Monitoring and Intervention — builds on running sessions
 5. Session History, Audit, and Replay — builds on session event model
 6. Notifications and Mobile Control — builds on session events and state
-7. Ultra-Metis Work and Notes Integration — builds on session model and core engine (SMET-S-0001)
+7. Cadre Work and Notes Integration — builds on session model and core engine (SMET-S-0001)
 8. Operational Reliability and Multi-Session Management — cross-cutting; can overlap with 3–7
 
 ## Change Log

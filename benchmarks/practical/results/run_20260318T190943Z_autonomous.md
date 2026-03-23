@@ -292,17 +292,17 @@ Metrics: 0 input tokens, 0 output tokens, 20.04s
 ## Steps Taken
 
 1. **workspace_init**  
-Command: `target/release/ultra-metis init --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --prefix BENCH`  
+Command: `target/release/cadre init --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --prefix BENCH`  
 Exit code: `0`  
 Duration: 0.02s  
 Approx tokens: 28
 Stdout excerpt:
 ```text
-Initialized Ultra-Metis project at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 with prefix BENCH
+Initialized Cadre project at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 with prefix BENCH
 ```
 
 2. **seed_vision**  
-Command: `target/release/ultra-metis create --type vision --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 File Processing Toolkit`  
+Command: `target/release/cadre create --type vision --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 File Processing Toolkit`  
 Exit code: `0`  
 Duration: 0.01s  
 Approx tokens: 13
@@ -312,7 +312,7 @@ Created BENCH-V-0001 (vision: File Processing Toolkit)
 ```
 
 3. **seed_initiative_parse**  
-Command: `target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --parent BENCH-V-0001 Parse Module`  
+Command: `target/release/cadre create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --parent BENCH-V-0001 Parse Module`  
 Exit code: `0`  
 Duration: 0.01s  
 Approx tokens: 12
@@ -322,7 +322,7 @@ Created BENCH-I-0002 (initiative: Parse Module)
 ```
 
 4. **seed_initiative_transform**  
-Command: `target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --parent BENCH-V-0001 Transform Module`  
+Command: `target/release/cadre create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --parent BENCH-V-0001 Transform Module`  
 Exit code: `0`  
 Duration: 0.01s  
 Approx tokens: 13
@@ -332,7 +332,7 @@ Created BENCH-I-0003 (initiative: Transform Module)
 ```
 
 5. **materialize_output-module**  
-Command: `target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --parent BENCH-V-0001 Output Module`  
+Command: `target/release/cadre create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpsbNpr8 --parent BENCH-V-0001 Output Module`  
 Exit code: `0`  
 Duration: 0.02s  
 Approx tokens: 12
@@ -351,7 +351,7 @@ Created BENCH-I-0004 (initiative: Output Module)
 
 ## Documents Created
 
-- **Parse Module** (`.ultra-metis/docs/BENCH-I-0002.md`, BENCH-I-0002)
+- **Parse Module** (`.cadre/docs/BENCH-I-0002.md`, BENCH-I-0002)
 ```text
 ---
 id: parse-module
@@ -366,7 +366,7 @@ archived: false
 tags:
   - "#phase/discovery"
 ```
-- **Transform Module** (`.ultra-metis/docs/BENCH-I-0003.md`, BENCH-I-0003)
+- **Transform Module** (`.cadre/docs/BENCH-I-0003.md`, BENCH-I-0003)
 ```text
 ---
 id: transform-module
@@ -381,7 +381,7 @@ archived: false
 tags:
   - "#phase/discovery"
 ```
-- **Output Module** (`.ultra-metis/docs/BENCH-I-0004.md`, BENCH-I-0004)
+- **Output Module** (`.cadre/docs/BENCH-I-0004.md`, BENCH-I-0004)
 ```text
 ---
 id: output-module
@@ -396,7 +396,7 @@ archived: false
 tags:
   - "#phase/discovery"
 ```
-- **File Processing Toolkit** (`.ultra-metis/docs/BENCH-V-0001.md`, BENCH-V-0001)
+- **File Processing Toolkit** (`.cadre/docs/BENCH-V-0001.md`, BENCH-V-0001)
 ```text
 ---
 id: file-processing-toolkit

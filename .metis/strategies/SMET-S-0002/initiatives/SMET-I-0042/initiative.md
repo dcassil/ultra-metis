@@ -111,7 +111,7 @@ Events that generate notifications:
 **Recommendation: Keep as-is (rename only)**
 
 Relevant ADR decision points:
-- **#1 Rename**: References to "Ultra-Metis" become "Cadre" in notification text, dashboard branding, and API documentation.
+- **#1 Rename**: References to "Cadre" become "Cadre" in notification text, dashboard branding, and API documentation.
 
 No changes needed for: #2, #3, #4, #5, #6, #7. Notifications and mobile control are UI/delivery concerns that are agnostic to the execution model. Whether a session uses a ralph loop or SDD-style subagent dispatch, the notification triggers (approval needed, session failed, session completed) remain the same.
 

@@ -23,7 +23,7 @@ initiative_id: SMET-I-0068
 
 ## Objective
 
-Add the `Architecture` variant to the `DocumentType` enum in `crates/ultra-metis-core/src/domain/documents/types.rs` so the type system recognizes Architecture as a first-class document type. This includes short_code_prefix ("AR"), valid_transitions_from (empty — Architecture documents are always Published), phase_sequence (vec![Phase::Published]), is_governance_type (true), and Display/FromStr implementations for "architecture".
+Add the `Architecture` variant to the `DocumentType` enum in `crates/cadre-core/src/domain/documents/types.rs` so the type system recognizes Architecture as a first-class document type. This includes short_code_prefix ("AR"), valid_transitions_from (empty — Architecture documents are always Published), phase_sequence (vec![Phase::Published]), is_governance_type (true), and Display/FromStr implementations for "architecture".
 
 ## Acceptance Criteria
 
@@ -50,7 +50,7 @@ Add the `Architecture` variant to the `DocumentType` enum in `crates/ultra-metis
 - No dependencies on other tasks
 
 ### File
-`crates/ultra-metis-core/src/domain/documents/types.rs`
+`crates/cadre-core/src/domain/documents/types.rs`
 
 ## Status Updates
 

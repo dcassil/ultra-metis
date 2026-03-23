@@ -35,7 +35,7 @@ pub struct RunManifest {
 impl Default for RunManifest {
     fn default() -> Self {
         Self {
-            system_under_test: SystemUnderTest::UltraMetis,
+            system_under_test: SystemUnderTest::Cadre,
             tool_surface: ToolSurface::Cli,
             model_id: "claude-haiku-4-5-20251001".to_string(),
             token_budget: 500_000,
@@ -50,7 +50,7 @@ impl Default for RunManifest {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SystemUnderTest {
     OriginalMetis,
-    UltraMetis,
+    Cadre,
 }
 
 /// Which tool interface the system used.

@@ -238,7 +238,7 @@ mod tests {
             run_id: uuid::Uuid::new_v4().to_string(),
             timestamp: chrono::Utc::now(),
             scenario_id: "test-scenario".to_string(),
-            system_under_test: SystemUnderTest::UltraMetis,
+            system_under_test: SystemUnderTest::Cadre,
             execution_mode: ExecutionMode::Autonomous,
             tool_surface: ToolSurface::Cli,
             model_id: "claude-haiku-4-5-20251001".to_string(),

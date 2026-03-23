@@ -35,8 +35,8 @@ Add a `validate` CLI command that checks document integrity — frontmatter corr
 
 ## Acceptance Criteria
 
-- [ ] `ultra-metis validate <short-code>` validates a single document
-- [ ] `ultra-metis validate --all` validates all documents in the project
+- [ ] `cadre validate <short-code>` validates a single document
+- [ ] `cadre validate --all` validates all documents in the project
 - [ ] Checks: frontmatter parses correctly (required fields present)
 - [ ] Checks: phase tag is valid for the document type
 - [ ] Checks: parent_id references an existing document of valid type
@@ -61,8 +61,8 @@ Add a `validate` CLI command that checks document integrity — frontmatter corr
 6. Formatted table output to stdout
 
 ### Key Files
-- `crates/ultra-metis-store/src/store.rs` — add validate methods
-- `crates/ultra-metis-cli/src/main.rs` — add Validate command
+- `crates/cadre-store/src/store.rs` — add validate methods
+- `crates/cadre-cli/src/main.rs` — add Validate command
 
 ## Status Updates
 

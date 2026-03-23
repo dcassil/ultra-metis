@@ -63,19 +63,19 @@
     "cli_events": [
       {
         "label": "workspace_init",
-        "command": "target/release/ultra-metis init --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --prefix BENCH",
+        "command": "target/release/cadre init --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --prefix BENCH",
         "exit_code": 0,
         "duration": {
           "secs": 0,
           "nanos": 9408208
         },
         "approx_tokens": 28,
-        "stdout_excerpt": "Initialized Ultra-Metis project at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp with prefix BENCH",
+        "stdout_excerpt": "Initialized Cadre project at /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp with prefix BENCH",
         "stderr_excerpt": ""
       },
       {
         "label": "seed_vision",
-        "command": "target/release/ultra-metis create --type vision --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp File Processing Toolkit",
+        "command": "target/release/cadre create --type vision --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp File Processing Toolkit",
         "exit_code": 0,
         "duration": {
           "secs": 0,
@@ -87,7 +87,7 @@
       },
       {
         "label": "seed_initiative_parse",
-        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Parse Module",
+        "command": "target/release/cadre create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Parse Module",
         "exit_code": 0,
         "duration": {
           "secs": 0,
@@ -99,7 +99,7 @@
       },
       {
         "label": "seed_initiative_transform",
-        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Transform Module",
+        "command": "target/release/cadre create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Transform Module",
         "exit_code": 0,
         "duration": {
           "secs": 0,
@@ -111,7 +111,7 @@
       },
       {
         "label": "materialize_output-module",
-        "command": "target/release/ultra-metis create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Output Module",
+        "command": "target/release/cadre create --type initiative --path /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpbN3lWp --parent BENCH-V-0001 Output Module",
         "exit_code": 0,
         "duration": {
           "secs": 0,
@@ -126,25 +126,25 @@
   "artifacts": {
     "documents": [
       {
-        "path": ".ultra-metis/docs/BENCH-I-0002.md",
+        "path": ".cadre/docs/BENCH-I-0002.md",
         "title": "Parse Module",
         "short_code": "BENCH-I-0002",
         "excerpt": "---\nid: parse-module\nlevel: initiative\ntitle: \"Parse Module\"\nshort_code: \"BENCH-I-0002\"\ncreated_at: 2026-03-18T19:09:43.151436+00:00\nupdated_at: 2026-03-18T19:09:43.151436+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
       },
       {
-        "path": ".ultra-metis/docs/BENCH-I-0003.md",
+        "path": ".cadre/docs/BENCH-I-0003.md",
         "title": "Transform Module",
         "short_code": "BENCH-I-0003",
         "excerpt": "---\nid: transform-module\nlevel: initiative\ntitle: \"Transform Module\"\nshort_code: \"BENCH-I-0003\"\ncreated_at: 2026-03-18T19:09:43.163100+00:00\nupdated_at: 2026-03-18T19:09:43.163100+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
       },
       {
-        "path": ".ultra-metis/docs/BENCH-I-0004.md",
+        "path": ".cadre/docs/BENCH-I-0004.md",
         "title": "Output Module",
         "short_code": "BENCH-I-0004",
         "excerpt": "---\nid: output-module\nlevel: initiative\ntitle: \"Output Module\"\nshort_code: \"BENCH-I-0004\"\ncreated_at: 2026-03-18T19:10:03.265980+00:00\nupdated_at: 2026-03-18T19:10:03.265980+00:00\nparent_id: BENCH-V-0001\nblocked_by:\narchived: false\ntags:\n  - \"#phase/discovery\""
       },
       {
-        "path": ".ultra-metis/docs/BENCH-V-0001.md",
+        "path": ".cadre/docs/BENCH-V-0001.md",
         "title": "File Processing Toolkit",
         "short_code": "BENCH-V-0001",
         "excerpt": "---\nid: file-processing-toolkit\nlevel: vision\ntitle: \"File Processing Toolkit\"\nshort_code: \"BENCH-V-0001\"\ncreated_at: 2026-03-18T19:09:43.136925+00:00\nupdated_at: 2026-03-18T19:09:43.136925+00:00\narchived: false\ntags:\n  - \"#phase/draft\"\nexit_criteria_met: false\nschema_version: 1"

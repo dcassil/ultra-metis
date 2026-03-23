@@ -90,8 +90,8 @@ This task creates a comprehensive test suite that verifies all new tools work co
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/tools.rs` — Add `#[cfg(test)]` module with integration tests
-- Alternatively, create `crates/ultra-metis-mcp/tests/integration_tests.rs` for a separate test binary
+- `crates/cadre-mcp/src/tools.rs` — Add `#[cfg(test)]` module with integration tests
+- Alternatively, create `crates/cadre-mcp/tests/integration_tests.rs` for a separate test binary
 
 ## Dependencies
 
@@ -106,7 +106,7 @@ This task creates a comprehensive test suite that verifies all new tools work co
 - [ ] At least 30 integration tests covering all new tool handlers
 - [ ] Tests cover success paths, error paths, and edge cases for every new tool
 - [ ] Tests exercise the full stack through `call_tool()` dispatch
-- [ ] All tests pass with `cargo test` in the ultra-metis-mcp crate
+- [ ] All tests pass with `cargo test` in the cadre-mcp crate
 - [ ] Test helpers are reusable for future tool test additions
 - [ ] Tests are isolated (each creates its own temp project, no shared state)
 

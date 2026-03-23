@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: strengthen-workflow-states
 ---
 
@@ -24,7 +24,7 @@ initiative_id: strengthen-workflow-states
 
 ## Context
 
-Metis already has a solid forward-only phase transition model with exit criteria validation. Super-Metis needs to strengthen this foundation with richer transition semantics: pre-transition hooks (quality gates, rule checks), post-transition side effects (notifications, child document creation), transition audit trails, and full traceability from any document to its ancestors and descendants.
+Metis already has a solid forward-only phase transition model with exit criteria validation. Cadre needs to strengthen this foundation with richer transition semantics: pre-transition hooks (quality gates, rule checks), post-transition side effects (notifications, child document creation), transition audit trails, and full traceability from any document to its ancestors and descendants.
 
 This initiative is the workflow backbone that other initiatives depend on for enforcement behavior.
 

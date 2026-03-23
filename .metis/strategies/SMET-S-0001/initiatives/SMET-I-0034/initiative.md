@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: local-installation-and-end-to-end
 ---
 
@@ -24,7 +24,7 @@ initiative_id: local-installation-and-end-to-end
 
 ## Context
 
-Ultra-metis has a complete core domain library (736+ tests, 12 domain modules), but it's not yet usable as an installed tool. To replace or coexist with the existing metis plugin, ultra-metis needs:
+Cadre has a complete core domain library (736+ tests, 12 domain modules), but it's not yet usable as an installed tool. To replace or coexist with the existing metis plugin, cadre needs:
 - An MCP server that exposes core functionality as tools (like the existing metis MCP server)
 - A CLI binary for direct command-line usage
 - Plugin manifest and configuration so Claude Code can discover and load it
@@ -35,9 +35,9 @@ This initiative depends on SMET-I-0033 (namespace rename) being completed first 
 ## Goals & Non-Goals
 
 **Goals:**
-- Build an MCP server binary crate (`ultra-metis-mcp`) that exposes core operations as MCP tools
+- Build an MCP server binary crate (`cadre-mcp`) that exposes core operations as MCP tools
 - Implement MCP tools matching the existing metis plugin surface: initialize_project, list_documents, read_document, create_document, edit_document, transition_phase, search_documents, archive_document, reassign_parent
-- Build a CLI binary crate (`ultra-metis-cli`) for command-line access to the same operations
+- Build a CLI binary crate (`cadre-cli`) for command-line access to the same operations
 - Create a Claude Code plugin manifest (`plugin.json`) so it can be installed as a plugin
 - Create `.mcp.json` configuration for MCP server registration
 - End-to-end test: initialize a project, create vision → initiative → task, transition phases, verify file-based persistence
@@ -53,38 +53,38 @@ This initiative depends on SMET-I-0033 (namespace rename) being completed first 
 
 ### Crate Structure
 ```
-ultra-metis/
+cadre/
   Cargo.toml (workspace)
   crates/
-    ultra-metis-core/    (existing — domain types and logic)
-    ultra-metis-mcp/     (new — MCP server binary)
-    ultra-metis-cli/     (new — CLI binary)
+    cadre-core/    (existing — domain types and logic)
+    cadre-mcp/     (new — MCP server binary)
+    cadre-cli/     (new — CLI binary)
 ```
 
-### MCP Server (`ultra-metis-mcp`)
+### MCP Server (`cadre-mcp`)
 - Uses `rmcp` or equivalent Rust MCP SDK
 - Exposes each operation as an MCP tool with JSON schema parameter validation
-- File-based persistence: reads/writes markdown+frontmatter documents in `.ultra-metis/` directory
+- File-based persistence: reads/writes markdown+frontmatter documents in `.cadre/` directory
 - Runs as stdio transport (Claude Code spawns it)
 
-### CLI (`ultra-metis-cli`)
-- `ultra-metis init` — initialize a project
-- `ultra-metis list` — list documents
-- `ultra-metis read <short-code>` — read a document
-- `ultra-metis create <type> <title>` — create a document
-- `ultra-metis transition <short-code>` — advance phase
-- `ultra-metis edit <short-code>` — edit document content
+### CLI (`cadre-cli`)
+- `cadre init` — initialize a project
+- `cadre list` — list documents
+- `cadre read <short-code>` — read a document
+- `cadre create <type> <title>` — create a document
+- `cadre transition <short-code>` — advance phase
+- `cadre edit <short-code>` — edit document content
 - Uses `clap` for argument parsing
 
 ### Plugin Manifest
 - `plugin.json` with MCP server configuration
 - `.mcp.json` for Claude Code auto-discovery
-- Registers as `ultra-metis` (not `metis`) to avoid conflicts
+- Registers as `cadre` (not `metis`) to avoid conflicts
 
 ### File Persistence Layer
-- Documents stored as markdown+frontmatter in `.ultra-metis/` project directory
-- Short code counter in `.ultra-metis/config.toml`
-- Directory structure mirrors existing metis convention but under `.ultra-metis/`
+- Documents stored as markdown+frontmatter in `.cadre/` project directory
+- Short code counter in `.cadre/config.toml`
+- Directory structure mirrors existing metis convention but under `.cadre/`
 
 ## Alternatives Considered
 
@@ -94,7 +94,7 @@ ultra-metis/
 
 ## Implementation Plan
 
-Phase 1: Build file persistence layer (read/write documents to `.ultra-metis/`)
+Phase 1: Build file persistence layer (read/write documents to `.cadre/`)
 Phase 2: Build MCP server with core tools
 Phase 3: Build CLI with core commands
 Phase 4: Create plugin manifest and installation config

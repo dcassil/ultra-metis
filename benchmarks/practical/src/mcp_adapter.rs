@@ -16,7 +16,7 @@ const MCP_REQUEST_OVERALL_TIMEOUT: Duration = Duration::from_secs(30);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SystemUnderTest {
     OriginalMetis,
-    UltraMetisMcp,
+    CadreMcp,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -57,11 +57,11 @@ impl ExecutionAdapter for OriginalMetisAdapter {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct UltraMetisMcpAdapter;
+pub struct CadreMcpAdapter;
 
-impl ExecutionAdapter for UltraMetisMcpAdapter {
+impl ExecutionAdapter for CadreMcpAdapter {
     fn system_under_test(&self) -> SystemUnderTest {
-        SystemUnderTest::UltraMetisMcp
+        SystemUnderTest::CadreMcp
     }
 
     fn command(&self) -> ServerCommand {
@@ -155,7 +155,7 @@ impl McpSession {
 
         self.send_notification("notifications/initialized", None)?;
 
-        if matches!(self.system, SystemUnderTest::UltraMetisMcp) {
+        if matches!(self.system, SystemUnderTest::CadreMcp) {
             let _ = self.try_read_response();
         }
 
@@ -291,7 +291,7 @@ fn wait_for_stdout(stdout: &BufReader<ChildStdout>, timeout: Duration) -> Result
 fn system_name(system: &SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
-        SystemUnderTest::UltraMetisMcp => "cadre-mcp",
+        SystemUnderTest::CadreMcp => "cadre-mcp",
     }
 }
 
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn cadre_adapter_command_is_stable() {
-        let adapter = UltraMetisMcpAdapter;
+        let adapter = CadreMcpAdapter;
         let cmd = adapter.command();
         assert_eq!(cmd.program, "cadre-mcp");
         assert!(cmd.args.is_empty());

@@ -44,7 +44,7 @@ Add parent document existence and hierarchy validation to `create_document` in t
 ## Implementation Notes
 
 ### Technical Approach
-1. In `ultra-metis-store/src/store.rs` `create_document` method, before writing the file:
+1. In `cadre-store/src/store.rs` `create_document` method, before writing the file:
    - If `parent_id` is provided, call `read_document` (or check file existence) to verify the parent exists
    - Call `HierarchyValidator::validate_parent(child_type, parent_type)` to enforce hierarchy rules
 2. Map `DocumentValidationError::InvalidParent` and `InvalidHierarchy` to appropriate `StoreError::Validation`

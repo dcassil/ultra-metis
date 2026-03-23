@@ -1,6 +1,6 @@
 //! Gates, Escalation, and Autonomy Model.
 //!
-//! This module defines the governance framework for Ultra-Metis:
+//! This module defines the governance framework for Cadre:
 //!
 //! - **Gates** (`gates`): Typed checkpoints that control workflow progression,
 //!   with configurable evidence requirements and failure behaviors.

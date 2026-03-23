@@ -61,8 +61,8 @@ While working on any active task or initiative:
 
 ## Project Context
 
-- **Vision**: SMET-V-0001 — Super-Metis: Repo-Native AI Engineering Orchestration
-- **Metis path**: `/Users/danielcassil/projects/ultra-metis/.metis`
+- **Vision**: SMET-V-0001 — Cadre: Repo-Native AI Engineering Orchestration
+- **Metis path**: `/Users/danielcassil/projects/cadre/.metis`
 - **Preset**: Streamlined (Vision → Initiative → Task)
 - **Crates location**: `crates/` at repo root (cadre-core, cadre-cli, cadre-mcp, cadre-store)
 - **Workspace root**: `Cargo.toml` at repo root

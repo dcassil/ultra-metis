@@ -25,14 +25,14 @@ initiative_id: SMET-I-0074
 [[SMET-I-0074]]
 
 ## Objective
-Rename all 8 Rust crate directories from `ultra-metis-*` to `cadre-*` using `git mv`, update the root Cargo.toml workspace members, update all individual crate Cargo.toml package names and internal dependencies, and update all Rust source files (`use` statements, string literals, module paths). Verify `cargo build` and `cargo test` pass afterward.
+Rename all 8 Rust crate directories from `cadre-*` to `cadre-*` using `git mv`, update the root Cargo.toml workspace members, update all individual crate Cargo.toml package names and internal dependencies, and update all Rust source files (`use` statements, string literals, module paths). Verify `cargo build` and `cargo test` pass afterward.
 
 ## Scope
-- 8 crate directories: ultra-metis-core, ultra-metis-store, ultra-metis-mcp, ultra-metis-cli, ultra-metis-agents, ultra-metis-events, ultra-metis-notes, ultra-metis-policy
+- 8 crate directories: cadre-core, cadre-store, cadre-mcp, cadre-cli, cadre-agents, cadre-events, cadre-notes, cadre-policy
 - Root Cargo.toml workspace members
 - All crate Cargo.toml files (package names, dependency references)
-- All .rs files with `use ultra_metis_*` or string literals containing "ultra-metis" or "ultra_metis"
-- Benchmarks under benchmarks/practical/ that reference ultra-metis crates
+- All .rs files with `use cadre_*` or string literals containing "cadre" or "cadre"
+- Benchmarks under benchmarks/practical/ that reference cadre crates
 
 ## Acceptance Criteria
 
@@ -48,9 +48,9 @@ Rename all 8 Rust crate directories from `ultra-metis-*` to `cadre-*` using `git
 
 ## Implementation Notes
 1. `git mv` each crate directory
-2. Find/replace in all Cargo.toml: `ultra-metis` → `cadre`
-3. Find/replace in all .rs: `ultra_metis` → `cadre` (underscore form)
-4. Find/replace string literals: `"ultra-metis` → `"cadre`
+2. Find/replace in all Cargo.toml: `cadre` → `cadre`
+3. Find/replace in all .rs: `cadre` → `cadre` (underscore form)
+4. Find/replace string literals: `"cadre` → `"cadre`
 5. Build and test
 
 ## Status Updates

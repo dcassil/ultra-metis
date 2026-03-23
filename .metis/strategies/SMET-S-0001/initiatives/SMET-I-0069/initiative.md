@@ -24,7 +24,7 @@ initiative_id: architecture-lifecycle-hooks-for
 
 ## Context
 
-Ultra-Metis has a transition hook system (pre/post hooks with priorities, filtering, blocking capability) and an Architecture document type (SMET-I-0068). This initiative wires them together: registering three hooks that inject architecture context into the planning/work/verification lifecycle.
+Cadre has a transition hook system (pre/post hooks with priorities, filtering, blocking capability) and an Architecture document type (SMET-I-0068). This initiative wires them together: registering three hooks that inject architecture context into the planning/work/verification lifecycle.
 
 These hooks make architecture a living participant in the work lifecycle rather than an isolated reference document.
 

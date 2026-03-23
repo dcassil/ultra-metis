@@ -1,4 +1,4 @@
-//! Error types for SuperMetis operations
+//! Error types for Cadre operations
 
 use thiserror::Error;
 

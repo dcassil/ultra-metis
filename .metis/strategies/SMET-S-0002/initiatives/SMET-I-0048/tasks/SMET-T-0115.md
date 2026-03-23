@@ -46,8 +46,8 @@ Run the complete benchmark scenario end-to-end for the first time: both the auto
 ## Implementation Notes
 
 ### Execution Steps
-1. Build the release binary: `cargo build --release -p ultra-metis-cli`
-2. Run autonomous path: `ULTRA_METIS_BINARY=target/release/ultra-metis ./benchmarks/run-practical-bench.sh --mode autonomous`
+1. Build the release binary: `cargo build --release -p cadre-cli`
+2. Run autonomous path: `CADRE_BINARY=target/release/cadre ./benchmarks/run-practical-bench.sh --mode autonomous`
 3. Review autonomous results — note what mistakes AI made
 4. Run validated path: `./benchmarks/run-practical-bench.sh --mode validated`
 5. Compare results and generate report
@@ -73,7 +73,7 @@ The test scenario is working correctly if:
 
 ### Session complete
 - Created `benchmarks/practical/src/bin/run_benchmark.rs` — full CLI binary with `--mode autonomous|validated|both`, `--results-dir`, `--scenario` flags
-- Updated `benchmarks/run-practical-bench.sh` — now fully wired: builds binary if needed, passes `ULTRA_METIS_BINARY` env var, invokes the Rust binary
+- Updated `benchmarks/run-practical-bench.sh` — now fully wired: builds binary if needed, passes `CADRE_BINARY` env var, invokes the Rust binary
 - Binary verified to reach Claude API correctly (scenario files load, temp project initializes via CLI, prompt builds and sends to API)
 - All 34 unit tests + 3 integration tests pass
 
@@ -84,9 +84,9 @@ ANTHROPIC_API_KEY=<your-key> ./benchmarks/run-practical-bench.sh --mode both
 
 Or with explicit binary path:
 ```bash
-cargo build --release -p ultra-metis-cli
+cargo build --release -p cadre-cli
 ANTHROPIC_API_KEY=<your-key> \
-  ULTRA_METIS_BINARY=./target/release/ultra-metis \
+  CADRE_BINARY=./target/release/cadre \
   ./benchmarks/run-practical-bench.sh --mode both
 ```
 

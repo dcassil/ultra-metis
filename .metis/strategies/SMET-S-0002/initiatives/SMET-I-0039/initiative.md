@@ -111,7 +111,7 @@ This is the foundational initiative for the Remote AI Operations Layer (SMET-S-0
 **Recommendation: Update scope**
 
 Relevant ADR decision points:
-- **#1 Rename**: All references to "Ultra-Metis" in this initiative become "Cadre." The Machine Runner daemon runs in a Cadre-managed project, not an ultra-metis project. API paths, config keys, and documentation references must use the Cadre namespace.
+- **#1 Rename**: All references to "Cadre" in this initiative become "Cadre." The Machine Runner daemon runs in a Cadre-managed project, not an cadre project. API paths, config keys, and documentation references must use the Cadre namespace.
 - **#3 SDD-style execution**: The Machine Runner must support the new execution model where a session may spawn multiple fresh subagents per task (not just a single long-running process). The process supervisor in the runner needs to handle orchestrated multi-subagent sessions, not just a single AI process. Session start commands may include subagent dispatch configuration.
 - **#7 SubagentStart hook**: The Machine Runner must ensure the SubagentStart hook is active in the execution environment so that any subagents spawned during a remote session receive Cadre project context. The runner's environment setup should verify hook availability.
 

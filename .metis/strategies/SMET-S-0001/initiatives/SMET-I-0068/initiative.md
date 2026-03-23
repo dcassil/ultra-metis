@@ -24,7 +24,7 @@ initiative_id: architecture-document-type-and
 
 ## Context
 
-Ultra-Metis needs a new `Architecture` document type that captures architecture context and a structured checklist for Stories. When a Story enters its design phase, the system creates an Architecture document as a child of the Story, populated with the relevant slice of the project's ReferenceArchitecture and type-appropriate checklist questions.
+Cadre needs a new `Architecture` document type that captures architecture context and a structured checklist for Stories. When a Story enters its design phase, the system creates an Architecture document as a child of the Story, populated with the relevant slice of the project's ReferenceArchitecture and type-appropriate checklist questions.
 
 The existing ArchitectureCatalogEntry and ReferenceArchitecture types provide the source data. This initiative creates the new document type that bridges architecture knowledge into the planning lifecycle.
 
@@ -33,7 +33,7 @@ Design spec: `docs/superpowers/specs/2026-03-18-architecture-in-work-lifecycle-d
 ## Goals & Non-Goals
 
 **Goals:**
-- Implement the `Architecture` domain type in `ultra-metis-core` following existing document patterns
+- Implement the `Architecture` domain type in `cadre-core` following existing document patterns
 - Define `ChecklistItem` struct with question, answer, and story type relevance
 - Implement checklist templates for all Story types (feature, bugfix, refactor, migration, architecture-change, investigation, remediation, setup)
 - Implement lock/unlock semantics with audit trail (actor, timestamp, reason)
@@ -136,7 +136,7 @@ Phase 8: Unit tests for all operations
 
 ## Acceptance Criteria
 
-- [ ] Architecture struct with all specified fields exists in ultra-metis-core
+- [ ] Architecture struct with all specified fields exists in cadre-core
 - [ ] ChecklistItem and UnlockRecord structs are defined
 - [ ] Checklist templates exist for all 8 Story types
 - [ ] Lock/unlock semantics work correctly with audit trail
@@ -147,6 +147,6 @@ Phase 8: Unit tests for all operations
 
 ## Risks / Dependencies
 
-- Depends on existing DocumentCore, StoryType, and serialization patterns in ultra-metis-core
+- Depends on existing DocumentCore, StoryType, and serialization patterns in cadre-core
 - Must coordinate with SMET-I-0069 on the interface for creating Architecture documents from hooks
 - Checklist template quality directly affects planning value — templates should be reviewed after initial implementation

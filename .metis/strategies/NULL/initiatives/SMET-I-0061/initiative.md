@@ -88,7 +88,7 @@ Examples of deterministic checks:
 
 ## Alternatives Considered
 
-Relying mainly on an LLM judge would be faster to implement, but the score would drift over time and be difficult to trust. Purely deterministic scoring can miss nuance, but it provides the stable regression signal needed to tune Ultra-Metis. A deterministic-first approach with optional qualitative review is the right balance.
+Relying mainly on an LLM judge would be faster to implement, but the score would drift over time and be difficult to trust. Purely deterministic scoring can miss nuance, but it provides the stable regression signal needed to tune Cadre. A deterministic-first approach with optional qualitative review is the right balance.
 
 ## Implementation Plan
 

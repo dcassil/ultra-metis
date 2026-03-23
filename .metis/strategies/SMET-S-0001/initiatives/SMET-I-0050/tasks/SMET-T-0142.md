@@ -40,7 +40,7 @@ Create a `scripts/package.sh` script that takes the raw binaries produced by the
 - [ ] For each platform's binaries, creates a distributable archive:
   - `.tar.gz` for macOS and Linux targets
   - `.zip` for Windows targets
-- [ ] Archive naming follows: `ultra-metis-{version}-{target-triple}.{ext}`
+- [ ] Archive naming follows: `cadre-{version}-{target-triple}.{ext}`
 - [ ] Each archive contains a top-level directory with: both binaries, LICENSE, README.md
 - [ ] A `SHA256SUMS.txt` file is generated containing checksums for all archives
 - [ ] All output goes to a `dist/` directory (created if it doesn't exist)
@@ -58,7 +58,7 @@ Create a `scripts/package.sh` script that takes the raw binaries produced by the
 The script iterates over a fixed list of 5 target triples. For each target:
 
 1. **Locate binaries**: Look in `binaries-{target}/` directory (where GitHub Actions `download-artifact` places them). Handle Windows `.exe` suffix.
-2. **Create staging directory**: `dist/ultra-metis-{version}-{target}/` containing both binaries + LICENSE + README.md
+2. **Create staging directory**: `dist/cadre-{version}-{target}/` containing both binaries + LICENSE + README.md
 3. **Set permissions**: `chmod +x` on macOS/Linux binaries
 4. **Create archive**: `tar -czf` for macOS/Linux, `zip -r` for Windows
 5. **Clean staging**: Remove the staging directory after archiving
@@ -68,11 +68,11 @@ After all archives are created, generate `SHA256SUMS.txt` with checksums for all
 ### Output Structure
 ```
 dist/
-  ultra-metis-v0.2.0-aarch64-apple-darwin.tar.gz
-  ultra-metis-v0.2.0-x86_64-apple-darwin.tar.gz
-  ultra-metis-v0.2.0-x86_64-unknown-linux-gnu.tar.gz
-  ultra-metis-v0.2.0-aarch64-unknown-linux-gnu.tar.gz
-  ultra-metis-v0.2.0-x86_64-pc-windows-msvc.zip
+  cadre-v0.2.0-aarch64-apple-darwin.tar.gz
+  cadre-v0.2.0-x86_64-apple-darwin.tar.gz
+  cadre-v0.2.0-x86_64-unknown-linux-gnu.tar.gz
+  cadre-v0.2.0-aarch64-unknown-linux-gnu.tar.gz
+  cadre-v0.2.0-x86_64-pc-windows-msvc.zip
   SHA256SUMS.txt
 ```
 
@@ -88,7 +88,7 @@ dist/
 
 ### Verification
 - Run locally after `make build`: `bash scripts/package.sh v0.0.0-test` (will package for current platform only in local mode)
-- Verify archive contents: `tar -tzf dist/ultra-metis-v0.0.0-test-aarch64-apple-darwin.tar.gz`
+- Verify archive contents: `tar -tzf dist/cadre-v0.0.0-test-aarch64-apple-darwin.tar.gz`
 - Verify checksums: `cd dist && shasum -a 256 -c SHA256SUMS.txt`
 - Verify the script fails gracefully when binaries are missing (clear error message, non-zero exit)
 

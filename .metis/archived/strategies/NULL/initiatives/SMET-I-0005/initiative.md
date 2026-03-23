@@ -26,7 +26,7 @@ initiative_id: add-static-analysis-baselines
 
 Code quality in a monorepo degrades gradually unless actively measured and enforced. Linters, type checkers, and static analysis tools produce results, but those results are typically ephemeral — run once and discarded. There's no durable record of quality over time, no way to detect regression trends, and no structured mechanism to block work when quality drops below acceptable thresholds.
 
-Super-Metis should introduce Analysis Baselines as durable artifacts that capture point-in-time quality snapshots, Quality Records that track changes over time, and Quality Gates that can block workflow transitions when thresholds are violated.
+Cadre should introduce Analysis Baselines as durable artifacts that capture point-in-time quality snapshots, Quality Records that track changes over time, and Quality Gates that can block workflow transitions when thresholds are violated.
 
 ## Governing Commitments
 
@@ -49,7 +49,7 @@ This initiative directly serves:
 - Derive analysis expectations from the Reference Architecture pattern so that architecture enforcement is part of the quality baseline, not a separate concern
 
 **Non-Goals:**
-- Running static analysis tools — Super-Metis captures and tracks results, it doesn't run the tools
+- Running static analysis tools — Cadre captures and tracks results, it doesn't run the tools
 - Defining what "good quality" means for every project — thresholds are configurable per-project
 - Real-time code quality monitoring — this is snapshot-based, not continuous
 

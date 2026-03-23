@@ -24,11 +24,11 @@ initiative_id: planning-data-views-in-control
 
 ## Context
 
-The Remote AI Operations Control Dashboard (SMET-I-0039 through I-0046) provides session management, machine monitoring, and approval workflows. However, it has no visibility into ultra-metis planning data — the documents, hierarchies, quality signals, and traceability chains that define what work is being done and why.
+The Remote AI Operations Control Dashboard (SMET-I-0039 through I-0046) provides session management, machine monitoring, and approval workflows. However, it has no visibility into cadre planning data — the documents, hierarchies, quality signals, and traceability chains that define what work is being done and why.
 
 Users managing AI sessions remotely need to see the planning context alongside session activity: which task is this session working on, what's the parent story/epic, what quality gates apply, what rules are active. Without planning data views, the dashboard shows *how sessions run* but not *what they're building toward*.
 
-This initiative adds planning data pages to the Control Dashboard, making ultra-metis documents, hierarchy, quality, and traceability visible in the same web app where users manage sessions.
+This initiative adds planning data pages to the Control Dashboard, making cadre documents, hierarchy, quality, and traceability visible in the same web app where users manage sessions.
 
 Derived from the archived SMET-I-0011 (GUI for Stronger Model), reframed as pages within the Control Dashboard rather than a standalone application.
 
@@ -36,12 +36,12 @@ Derived from the archived SMET-I-0011 (GUI for Stronger Model), reframed as page
 
 **Goals:**
 - Hierarchy tree view: interactive tree showing ProductDoc → Epic → Story → Task with expand/collapse, click-to-navigate
-- Document list and detail views for all ultra-metis document types, with type filtering and search
+- Document list and detail views for all cadre document types, with type filtering and search
 - Traceability view: visualize ancestry, descendants, and cross-reference links between documents
 - Quality dashboard: baseline comparison display, quality trend indicators, gate pass/fail status per document
 - Rule browser: searchable, filterable list of active engineering rules by scope
 - Work item context panel: when viewing a session, show the linked task/story/epic with its planning context
-- All views read from the ultra-metis MCP API — the dashboard is a view layer, not a separate data store
+- All views read from the cadre MCP API — the dashboard is a view layer, not a separate data store
 
 **Non-Goals:**
 - Editing documents from the dashboard (CLI and MCP tools handle mutations)
@@ -53,7 +53,7 @@ Derived from the archived SMET-I-0011 (GUI for Stronger Model), reframed as page
 ## Detailed Design
 
 ### Data Source
-All planning views query the ultra-metis MCP server (or a REST wrapper around it). The dashboard makes read-only calls:
+All planning views query the cadre MCP server (or a REST wrapper around it). The dashboard makes read-only calls:
 - `list_documents` — document list with filtering
 - `read_document` — document detail with full content
 - `search_documents` — full-text search
@@ -115,7 +115,7 @@ All planning views query the ultra-metis MCP server (or a REST wrapper around it
 
 **Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename + execution model)
 
-ADR point 1 (rename): All references to `ultra-metis` in this initiative become `cadre`. MCP API calls change prefix to `mcp__cadre__`.
+ADR point 1 (rename): All references to `cadre` in this initiative become `cadre`. MCP API calls change prefix to `mcp__cadre__`.
 
 ADR point 3 (SDD execution): The dashboard should display SDD-style execution data — per-task subagent dispatches, review pass/fail results, model selection choices, token usage per task — not just ralph loop iterations. The "Session ↔ Work Item" integration should show the orchestrator→implementer→reviewer agent chain, not just a single session.
 

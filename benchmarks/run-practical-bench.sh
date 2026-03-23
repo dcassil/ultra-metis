@@ -8,7 +8,7 @@
 #
 # Environment:
 #   ANTHROPIC_API_KEY     (required)
-#   ULTRA_METIS_BINARY    path to cadre binary (default: target/release/cadre)
+#   CADRE_BINARY    path to cadre binary (default: target/release/cadre)
 
 set -euo pipefail
 
@@ -23,7 +23,7 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
 fi
 
 # Resolve binary path
-ULTRA="${ULTRA_METIS_BINARY:-${REPO_ROOT}/target/release/cadre}"
+ULTRA="${CADRE_BINARY:-${REPO_ROOT}/target/release/cadre}"
 if [ ! -x "${ULTRA}" ]; then
     echo "Building cadre binary..."
     cargo build --release -p cadre-cli 2>&1
@@ -38,7 +38,7 @@ echo ""
 
 # Run benchmark via the Rust binary
 cd "${REPO_ROOT}"
-ULTRA_METIS_BINARY="${ULTRA}" \
+CADRE_BINARY="${ULTRA}" \
     cargo run -q -p practical-benchmark --bin run_benchmark -- \
         --results-dir "${RESULTS_DIR}" \
         --scenario "${SCENARIO_DIR}" \

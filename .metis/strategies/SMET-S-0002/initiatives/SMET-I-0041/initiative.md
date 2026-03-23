@@ -121,7 +121,7 @@ All session activity is represented as a stream of typed events. Event types:
 **Recommendation: Update scope (minor)**
 
 Relevant ADR decision points:
-- **#1 Rename**: References to "Ultra-Metis" become "Cadre" in event types, API documentation, and dashboard labels.
+- **#1 Rename**: References to "Cadre" become "Cadre" in event types, API documentation, and dashboard labels.
 - **#3 SDD-style execution**: The event model should accommodate events from orchestrated multi-subagent sessions. When the execution uses SDD-style dispatch, the monitoring system will see events from multiple subagents within a single session. Event types should include subagent identity (which task's subagent produced this output). The two-stage review events (spec compliance + code quality) should surface as distinct event types so users can monitor review outcomes.
 - **#7 SubagentStart hook**: Monitoring should be able to observe that the SubagentStart hook fired for each subagent, confirming Cadre context injection. This is an informational event, not a blocking concern.
 

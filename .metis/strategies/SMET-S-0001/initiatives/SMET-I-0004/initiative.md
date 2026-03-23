@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: add-protected-engineering-rules
 ---
 
@@ -26,7 +26,7 @@ initiative_id: add-protected-engineering-rules
 
 AI agents and developers working in a monorepo need guardrails — coding standards, architectural constraints, dependency rules, testing requirements. Today these are typically expressed as linter configs, CLAUDE.md files, or informal conventions that can be casually overridden or ignored.
 
-Super-Metis should introduce a Rules Config document type that stores protected engineering rules as durable, versioned artifacts. Rules should not be modifiable through casual edits — changes should require explicit proposals and approval, similar to how ADRs work but specifically for engineering governance.
+Cadre should introduce a Rules Config document type that stores protected engineering rules as durable, versioned artifacts. Rules should not be modifiable through casual edits — changes should require explicit proposals and approval, similar to how ADRs work but specifically for engineering governance.
 
 ## Governing Commitments
 
@@ -47,11 +47,11 @@ This initiative directly serves:
 - Support rule categories typed by purpose: behavioral, architectural, operational, information-handling, decision-making, validation/quality, approval/escalation, execution-safety
 - Support architecture-derived rule seeding: when a Reference Architecture is selected, automatically generate a starter set of rules from the architecture pattern's seed data (folder structure rules, dependency direction rules, naming conventions, module boundary rules, testing placement rules)
 - Make rules queryable so agents and tools can check them programmatically
-- For MVP, runtime rule enforcement may be partially delegated to existing enforcement plugins and hooks. The durable value of Super-Metis is the persisted, governed rule model and traceability, not necessarily the first implementation of every enforcement mechanism.
+- For MVP, runtime rule enforcement may be partially delegated to existing enforcement plugins and hooks. The durable value of Cadre is the persisted, governed rule model and traceability, not necessarily the first implementation of every enforcement mechanism.
 
 **Non-Goals:**
 - Implementing lint rule enforcement at the code level (that's the linter's job)
-- Auto-fixing code to match rules (that's tooling beyond Super-Metis scope)
+- Auto-fixing code to match rules (that's tooling beyond Cadre scope)
 - Building a full policy engine — this is structured documentation with protection, not runtime enforcement
 
 ## Detailed Design

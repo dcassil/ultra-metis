@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: architecture-catalog-domain-types
 ---
 
@@ -24,7 +24,7 @@ initiative_id: architecture-catalog-domain-types
 
 ## Context
 
-Super-Metis gives every repo a persisted reference architecture that drives rules, structure, and analysis. This requires two domain types: ArchitectureCatalogEntry (reusable architecture patterns) and ReferenceArchitecture (the selected/derived architecture for a specific repo). These types are the bridge between architecture knowledge and enforcement — the ReferenceArchitecture seeds RulesConfig and sets AnalysisBaseline expectations.
+Cadre gives every repo a persisted reference architecture that drives rules, structure, and analysis. This requires two domain types: ArchitectureCatalogEntry (reusable architecture patterns) and ReferenceArchitecture (the selected/derived architecture for a specific repo). These types are the bridge between architecture knowledge and enforcement — the ReferenceArchitecture seeds RulesConfig and sets AnalysisBaseline expectations.
 
 This initiative depends on SMET-I-0018 (Core Planning Hierarchy) for the base domain model, and has a soft dependency on SMET-I-0019 (Governance Types) for the RulesConfig/AnalysisBaseline linkage — though the reference fields can be implemented before those types fully land. Split out from the original SMET-I-0001 (now archived) as a focused vertical slice.
 
@@ -62,7 +62,7 @@ This initiative depends on SMET-I-0018 (Core Planning Hierarchy) for the base do
   - Quality: expected analysis tool config, baseline thresholds
   - Seeding: rules seed data (what RulesConfig entries to create), analysis expectations (what AnalysisBaseline entries to create)
 - Stored as markdown+frontmatter documents in a `catalog/` directory
-- Can be bundled with Super-Metis or user-defined
+- Can be bundled with Cadre or user-defined
 
 ### ReferenceArchitecture
 - Represents the architecture selected or derived for a specific repo

@@ -1,7 +1,7 @@
 ---
 id: add-comparative-execution-modes
 level: initiative
-title: "Add Comparative Execution Modes for Original Metis and Ultra-Metis"
+title: "Add Comparative Execution Modes for Original Metis and Cadre"
 short_code: "SMET-I-0062"
 created_at: 2026-03-18T17:31:29.629094+00:00
 updated_at: 2026-03-20T16:53:57.783381+00:00
@@ -21,22 +21,22 @@ strategy_id: SMET-S-0003
 initiative_id: add-comparative-execution-modes
 ---
 
-# Add Comparative Execution Modes for Original Metis and Ultra-Metis Initiative
+# Add Comparative Execution Modes for Original Metis and Cadre Initiative
 
 ## Context
 
-The benchmark must compare original Metis and Ultra-Metis fairly. Previous comparisons in the repo have mixed transport layers, compared CLI to MCP, or measured tool latency without measuring the full quality of the agent outcome. This initiative creates explicit execution modes so the benchmark can support both strict apples-to-apples comparison and realistic workflow comparison without confusing the two.
+The benchmark must compare original Metis and Cadre fairly. Previous comparisons in the repo have mixed transport layers, compared CLI to MCP, or measured tool latency without measuring the full quality of the agent outcome. This initiative creates explicit execution modes so the benchmark can support both strict apples-to-apples comparison and realistic workflow comparison without confusing the two.
 
 ## Goals & Non-Goals
 
 **Goals:**
-- Add benchmark modes that compare original Metis and Ultra-Metis on the same scenario pack.
+- Add benchmark modes that compare original Metis and Cadre on the same scenario pack.
 - Define the fairness rules for model, budget, stopping conditions, and allowed tools.
 - Support both constrained and realistic comparison styles.
 - Make the comparison output explain what differed, not just who “won.”
 
 **Non-Goals:**
-- Pretending original Metis and Ultra-Metis have identical workflow affordances
+- Pretending original Metis and Cadre have identical workflow affordances
 - Benchmarking every host application or every model family immediately
 - Reducing everything to transport-level timing
 
@@ -67,7 +67,7 @@ This avoids the common failure modes:
 
 Each benchmark run should include:
 
-- `system_under_test`: original-metis or ultra-metis
+- `system_under_test`: original-metis or cadre
 - `execution_mode`: constrained or realistic
 - `tool_surface`: CLI, MCP, plugin workflow, or mixed
 - `model_config`: model name and budget
@@ -88,7 +88,7 @@ A single comparison mode would be simpler, but it would either over-constrain th
 ## Implementation Plan
 
 1. Define comparison mode semantics and fairness rules.
-2. Add execution adapters for original Metis and Ultra-Metis.
+2. Add execution adapters for original Metis and Cadre.
 3. Ensure both adapters emit the same normalized run schema.
 4. Add comparison reporting that separates constrained and realistic outcomes.
 5. Validate the comparison flow on the initial canonical scenario pack before expanding coverage.

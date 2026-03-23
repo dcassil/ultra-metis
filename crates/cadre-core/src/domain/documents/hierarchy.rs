@@ -2,7 +2,7 @@ use super::types::DocumentType;
 
 /// Hierarchy validation for document type relationships.
 ///
-/// Ultra-Metis hierarchy:
+/// Cadre hierarchy:
 ///   ProductDoc (top-level, no parent)
 ///     └── Epic (parent: ProductDoc)
 ///           └── Story (parent: Epic)

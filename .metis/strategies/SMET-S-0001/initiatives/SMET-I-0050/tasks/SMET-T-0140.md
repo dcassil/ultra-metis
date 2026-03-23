@@ -52,7 +52,7 @@ Set up Google's [release-please](https://github.com/googleapis/release-please) G
 
 2. **`release-please-config.json`** — Configuration file at repo root:
    - `release-type`: `"rust"` (understands Cargo.toml version fields)
-   - Single package at `"."` with component name `"ultra-metis"`
+   - Single package at `"."` with component name `"cadre"`
    - `bump-minor-pre-major: true` and `bump-patch-for-minor-pre-major: true` to prevent rapid version inflation while pre-1.0
 
 3. **`.release-please-manifest.json`** — Version tracking file: `{ ".": "0.1.0" }` (matches current workspace version in Cargo.toml)
@@ -82,4 +82,4 @@ None — this task is independent, but SMET-T-0141 depends on the tags this crea
 
 ## Status Updates
 
-- **2026-03-20**: Created `.github/workflows/release-please.yml` using `googleapis/release-please-action@v4` triggered on push to main. Exposes `release_created`, `tag_name`, and `version` outputs for downstream workflows. Created `release-please-config.json` with `rust` release type, `ultra-metis` component, and pre-1.0 bump settings. Created `.release-please-manifest.json` tracking version 0.1.0. Configured `extra-files` to keep all crate Cargo.toml versions in sync. All acceptance criteria met.
+- **2026-03-20**: Created `.github/workflows/release-please.yml` using `googleapis/release-please-action@v4` triggered on push to main. Exposes `release_created`, `tag_name`, and `version` outputs for downstream workflows. Created `release-please-config.json` with `rust` release type, `cadre` component, and pre-1.0 bump settings. Created `.release-please-manifest.json` tracking version 0.1.0. Configured `extra-files` to keep all crate Cargo.toml versions in sync. All acceptance criteria met.

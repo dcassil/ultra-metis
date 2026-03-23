@@ -37,7 +37,7 @@ Create the full monorepo directory structure at the repo root, with all required
 
 - [ ] Top-level dirs created: `apps/`, `crates/`, `packages/`, `infra/`, `docs/`, `scripts/`, `tests/`
 - [ ] `apps/` subdirs: `control-web/`, `control-api/`, `machine-runner/`
-- [ ] `crates/` subdirs: `ultra-metis-agents/`, `ultra-metis-events/`, `ultra-metis-notes/`, `ultra-metis-policy/` (placeholders for future crates)
+- [ ] `crates/` subdirs: `cadre-agents/`, `cadre-events/`, `cadre-notes/`, `cadre-policy/` (placeholders for future crates)
 - [ ] `packages/` subdirs: `shared-contracts/`, `ui/`, `config/`
 - [ ] `infra/` subdirs: `docker/`, `k8s/`, `cloudflare/`, `tailscale/`
 - [ ] `docs/` subdirs: `architecture/`, `product/`, `operations/`
@@ -47,7 +47,7 @@ Create the full monorepo directory structure at the repo root, with all required
 ## Implementation Notes
 
 ### Technical Approach
-Use `mkdir -p` to create all directories, then `touch .gitkeep` in each empty placeholder directory. The existing `super-metis/` and `metis/` directories are untouched — those are handled in later tasks.
+Use `mkdir -p` to create all directories, then `touch .gitkeep` in each empty placeholder directory. The existing `cadre/` and `metis/` directories are untouched — those are handled in later tasks.
 
 ### Dependencies
 None — this is the first task and has no dependencies.
@@ -57,7 +57,7 @@ None — this is the first task and has no dependencies.
 ### 2026-03-17
 Created all top-level monorepo directories and .gitkeep placeholders:
 - `apps/`: control-web, control-api, machine-runner
-- `crates/`: ultra-metis-agents, ultra-metis-events, ultra-metis-notes, ultra-metis-policy (placeholders)
+- `crates/`: cadre-agents, cadre-events, cadre-notes, cadre-policy (placeholders)
 - `packages/`: shared-contracts, ui, config
 - `infra/`: docker, k8s, cloudflare, tailscale
 - `docs/`: architecture, product, operations

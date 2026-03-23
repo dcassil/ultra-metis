@@ -24,7 +24,7 @@ initiative_id: monorepo-restructure-reorganize
 
 ## Context
 
-Ultra-metis is expanding from a single Rust workspace (`super-metis/`) into a full monorepo with web apps, shared TypeScript packages, infrastructure configs, and documentation. The current flat structure with `super-metis/` at the root won't scale as we add `control-web` (Next.js dashboard), `control-api` (API gateway), `machine-runner` (local daemon), and additional shared packages.
+Cadre is expanding from a single Rust workspace (`cadre/`) into a full monorepo with web apps, shared TypeScript packages, infrastructure configs, and documentation. The current flat structure with `cadre/` at the root won't scale as we add `control-web` (Next.js dashboard), `control-api` (API gateway), `machine-runner` (local daemon), and additional shared packages.
 
 The `metis/` directory (old reference implementation) is being retired and should not be used.
 
@@ -32,8 +32,8 @@ The `metis/` directory (old reference implementation) is being retired and shoul
 
 **Goals:**
 - Restructure the repo into the target monorepo layout: `apps/`, `crates/`, `packages/`, `infra/`, `docs/`, `scripts/`, `tests/`
-- Move existing Rust crates from `super-metis/crates/` into top-level `crates/`
-- Rename `super-metis-core` to `ultra-metis-core` for naming consistency
+- Move existing Rust crates from `cadre/crates/` into top-level `crates/`
+- Rename `cadre-core` to `cadre-core` for naming consistency
 - Create placeholder directories for future components (apps, packages, infra, etc.)
 - Preserve the Cargo workspace — update all paths in Cargo.toml files
 - Ensure the project compiles and all tests pass after the move
@@ -47,16 +47,16 @@ The `metis/` directory (old reference implementation) is being retired and shoul
 ## Current State
 
 ```
-ultra-metis/
+cadre/
   metis/                        # old reference impl (retiring)
-  super-metis/
+  cadre/
     Cargo.toml                  # workspace root
     Cargo.lock
     crates/
-      super-metis-core/         # domain logic (needs rename to ultra-metis-core)
-      ultra-metis-cli/           # CLI
-      ultra-metis-mcp/           # MCP integration
-      ultra-metis-store/         # persistence
+      cadre-core/         # domain logic (needs rename to cadre-core)
+      cadre-cli/           # CLI
+      cadre-mcp/           # MCP integration
+      cadre-store/         # persistence
     target/
   .metis/                       # Metis project data (stays)
 ```
@@ -64,20 +64,20 @@ ultra-metis/
 ## Target State
 
 ```
-ultra-metis/
+cadre/
   apps/
     control-web/                # (empty — future Next.js dashboard)
     control-api/                # (empty — future API gateway)
     machine-runner/             # (empty — future local daemon)
   crates/
-    ultra-metis-core/           # moved + renamed from super-metis-core
-    ultra-metis-store/          # moved from super-metis/crates/
-    ultra-metis-cli/            # moved from super-metis/crates/
-    ultra-metis-mcp/            # moved from super-metis/crates/
-    ultra-metis-agents/         # (empty — future)
-    ultra-metis-events/         # (empty — future)
-    ultra-metis-notes/          # (empty — future)
-    ultra-metis-policy/         # (empty — future)
+    cadre-core/           # moved + renamed from cadre-core
+    cadre-store/          # moved from cadre/crates/
+    cadre-cli/            # moved from cadre/crates/
+    cadre-mcp/            # moved from cadre/crates/
+    cadre-agents/         # (empty — future)
+    cadre-events/         # (empty — future)
+    cadre-notes/          # (empty — future)
+    cadre-policy/         # (empty — future)
   packages/
     shared-contracts/           # (empty — future ts schemas)
     ui/                         # (empty — future shared UI kit)
@@ -93,7 +93,7 @@ ultra-metis/
     operations/
   scripts/
   tests/
-  Cargo.toml                   # workspace root (moved up from super-metis/)
+  Cargo.toml                   # workspace root (moved up from cadre/)
   Cargo.lock
   .metis/                      # unchanged
 ```
@@ -105,25 +105,25 @@ ultra-metis/
 - Create placeholder `.gitkeep` files in empty future directories
 
 ### Phase 2: Move Rust crates
-- Move `super-metis/crates/*` to `crates/`
-- Rename `super-metis-core` to `ultra-metis-core`
+- Move `cadre/crates/*` to `crates/`
+- Rename `cadre-core` to `cadre-core`
 - Update all internal `Cargo.toml` dependency paths and package names
-- Move `super-metis/Cargo.toml` and `super-metis/Cargo.lock` to repo root
+- Move `cadre/Cargo.toml` and `cadre/Cargo.lock` to repo root
 - Update workspace member paths
 
 ### Phase 3: Update references
 - Update any hardcoded paths in source code
 - Update `.mcp.json`, `plugin.json`, or other config files
-- Update imports that reference the old `super-metis-core` package name
+- Update imports that reference the old `cadre-core` package name
 
 ### Phase 4: Clean up
-- Remove empty `super-metis/` directory
+- Remove empty `cadre/` directory
 - Remove `metis/` reference directory
 - Verify `cargo build` and `cargo test` pass
 
 ## Alternatives Considered
 
-1. **Keep super-metis/ as a nested workspace** — rejected because it adds unnecessary nesting and the "super-metis" naming is being retired in favor of "ultra-metis"
+1. **Keep cadre/ as a nested workspace** — rejected because it adds unnecessary nesting and the "cadre" naming is being retired in favor of "cadre"
 2. **Use a JS monorepo tool (turborepo/nx) from the start** — rejected as premature; we can add this when we actually have JS/TS packages to manage
 3. **Incremental moves (one crate at a time)** — rejected because a single atomic restructure is cleaner and avoids a prolonged mixed state
 
@@ -134,14 +134,14 @@ ultra-metis/
 3. Update Cargo workspace and dependency paths
 4. Update all config files and source references
 5. Verify build + tests
-6. Remove old directories (super-metis/, metis/)
+6. Remove old directories (cadre/, metis/)
 7. Final verification and commit
 
 ## Decomposition Summary
 
 Initiative fully decomposed into 5 tasks:
 - SMET-T-0091: Create monorepo directory scaffold (complete with details)
-- SMET-T-0092: Move Rust crates and rename to ultra-metis-* (needs detailed AC and implementation notes)
+- SMET-T-0092: Move Rust crates and rename to cadre-* (needs detailed AC and implementation notes)
 - SMET-T-0093: Move Cargo workspace root and update members (needs detailed AC and implementation notes)
 - SMET-T-0094: Update config files and source references (needs detailed AC and implementation notes)
 - SMET-T-0095: Verify build/tests and remove old directories (needs detailed AC and implementation notes)
@@ -152,9 +152,9 @@ Tasks are ready for human review and population of remaining details before exec
 
 All 5 tasks completed successfully:
 - SMET-T-0091 ✓ Directory scaffold created (apps/, crates/, packages/, infra/, docs/, scripts/, tests/ with .gitkeep)
-- SMET-T-0092 ✓ Crates moved to crates/, stale path ../super-metis-core fixed in ultra-metis-store
+- SMET-T-0092 ✓ Crates moved to crates/, stale path ../cadre-core fixed in cadre-store
 - SMET-T-0093 ✓ Cargo.toml/Cargo.lock moved to repo root, workspace members updated
-- SMET-T-0094 ✓ .mcp.json, plugin.json, CLAUDE.md all updated — no stale super-metis references remain
-- SMET-T-0095 ✓ 789 tests pass, super-metis/ and metis/ removed, benchmarks/tests moved to repo root
+- SMET-T-0094 ✓ .mcp.json, plugin.json, CLAUDE.md all updated — no stale cadre references remain
+- SMET-T-0095 ✓ 789 tests pass, cadre/ and metis/ removed, benchmarks/tests moved to repo root
 
 Final repo layout matches target state. cargo build and cargo test both pass cleanly.

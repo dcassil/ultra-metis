@@ -1,7 +1,7 @@
 ---
-id: rename-ultra-metis-to-cadre
+id: rename-cadre-to-cadre
 level: initiative
-title: "Rename Ultra-Metis to Cadre: Namespace, Binaries, Plugin, and Project Directory"
+title: "Rename Cadre to Cadre: Namespace, Binaries, Plugin, and Project Directory"
 short_code: "SMET-I-0074"
 created_at: 2026-03-23T17:28:01.410740+00:00
 updated_at: 2026-03-23T20:24:53.936024+00:00
@@ -17,14 +17,14 @@ tags:
 exit_criteria_met: false
 estimated_complexity: M
 strategy_id: SMET-S-0001
-initiative_id: rename-ultra-metis-to-cadre
+initiative_id: rename-cadre-to-cadre
 ---
 
-# Rename Ultra-Metis to Cadre: Namespace, Binaries, Plugin, and Project Directory Initiative
+# Rename Cadre to Cadre: Namespace, Binaries, Plugin, and Project Directory Initiative
 
 ## Context
 
-ADR SMET-A-0001 decided to adopt superpowers execution patterns with Cadre as the persistent state backbone. "Cadre" stands for **Constrained AI Developer Really Awesome Engine**. Phase 0 of that ADR's implementation roadmap requires a complete namespace rename from "ultra-metis" to "cadre" before any integration work begins. All subsequent initiatives (SMET-I-0075 through SMET-I-0078) build on the Cadre namespace and are blocked until this rename is complete.
+ADR SMET-A-0001 decided to adopt superpowers execution patterns with Cadre as the persistent state backbone. "Cadre" stands for **Constrained AI Developer Really Awesome Engine**. Phase 0 of that ADR's implementation roadmap requires a complete namespace rename from "cadre" to "cadre" before any integration work begins. All subsequent initiatives (SMET-I-0075 through SMET-I-0078) build on the Cadre namespace and are blocked until this rename is complete.
 
 The rename touches every layer: Rust crate names and imports, compiled binary names, Claude Code plugin directory and all commands/hooks/scripts/skills/agents, MCP server configuration, Makefile, and CLAUDE.md.
 
@@ -33,14 +33,14 @@ The existing `.metis/` folder in this repository is NOT renamed. `.cadre` applie
 ## Goals & Non-Goals
 
 **Goals:**
-- Rename all four Rust crates: ultra-metis-core → cadre-core, ultra-metis-store → cadre-store, ultra-metis-mcp → cadre-mcp, ultra-metis-cli → cadre-cli
+- Rename all four Rust crates: cadre-core → cadre-core, cadre-store → cadre-store, cadre-mcp → cadre-mcp, cadre-cli → cadre-cli
 - Rename crate directories under `crates/` to match
 - Update root Cargo.toml workspace members and all internal dependencies
 - Update all `use` statements, module paths, and string literals referencing old crate names
-- Rename binaries: ultra-metis-mcp → cadre-mcp, ultra-metis → cadre
-- Rename plugin directory: plugins/ultra-metis/ → plugins/cadre/
-- Rename all commands: /ultra-metis-ralph → /cadre-ralph, etc.
-- Update all MCP tool prefixes: mcp__ultra-metis__ → mcp__cadre__
+- Rename binaries: cadre-mcp → cadre-mcp, cadre → cadre
+- Rename plugin directory: plugins/cadre/ → plugins/cadre/
+- Rename all commands: /cadre-ralph → /cadre-ralph, etc.
+- Update all MCP tool prefixes: mcp__cadre__ → mcp__cadre__
 - Update .mcp.json, Makefile, CLAUDE.md
 - Set default project directory for new projects to `.cadre/`
 - Ensure `make build`, `make install`, `make test` all pass
@@ -62,7 +62,7 @@ The existing `.metis/` folder in this repository is NOT renamed. `.cadre` applie
 6. Update all plugin file contents
 7. Update .mcp.json, Makefile, CLAUDE.md
 8. Update default project directory in init code
-9. Final sweep: `rg "ultra.metis"` to catch stragglers
+9. Final sweep: `rg "cadre"` to catch stragglers
 
 ## Alternatives Considered
 
@@ -91,7 +91,7 @@ Single-phase initiative with linear execution: Rust crates → plugin → config
 - `make test` passes with zero failures
 - All slash commands use `/cadre-*` naming
 - All MCP tool references use `mcp__cadre__` prefix
-- `rg "ultra.metis"` finds zero hits outside archival directories
+- `rg "cadre"` finds zero hits outside archival directories
 
 ## Dependencies
 

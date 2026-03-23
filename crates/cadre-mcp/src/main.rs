@@ -1,6 +1,6 @@
-//! Ultra-Metis MCP Server
+//! Cadre MCP Server
 //!
-//! A Model Context Protocol server that exposes Ultra-Metis document
+//! A Model Context Protocol server that exposes Cadre document
 //! management operations as tools. Communicates via JSON-RPC 2.0 over stdio.
 
 mod protocol;

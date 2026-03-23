@@ -1,7 +1,7 @@
 ---
-id: ultra-metis-work-and-notes
+id: cadre-work-and-notes
 level: initiative
-title: "Ultra-Metis Work and Notes Integration"
+title: "Cadre Work and Notes Integration"
 short_code: "SMET-I-0045"
 created_at: 2026-03-17T19:56:57.459764+00:00
 updated_at: 2026-03-17T19:56:57.459764+00:00
@@ -17,14 +17,14 @@ tags:
 exit_criteria_met: false
 estimated_complexity: M
 strategy_id: SMET-S-0002
-initiative_id: ultra-metis-work-and-notes
+initiative_id: cadre-work-and-notes
 ---
 
-# Ultra-Metis Work and Notes Integration Initiative
+# Cadre Work and Notes Integration Initiative
 
 ## Context
 
-Remote AI sessions should not be disconnected execution islands — they should be first-class participants in the Ultra-Metis planning and memory system. This initiative connects the Control Service and Machine Runner back into Ultra-Metis: sessions can be launched from work items, execution context is enriched with relevant notes and architecture guidance, session results flow back into the linked work item, and the note system is updated based on session findings.
+Remote AI sessions should not be disconnected execution islands — they should be first-class participants in the Cadre planning and memory system. This initiative connects the Control Service and Machine Runner back into Cadre: sessions can be launched from work items, execution context is enriched with relevant notes and architecture guidance, session results flow back into the linked work item, and the note system is updated based on session findings.
 
 This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops). It requires the core engine's note system (SMET-I-0030) and execution records (SMET-I-0031) to be functional.
 
@@ -35,7 +35,7 @@ This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops
 ## Goals & Non-Goals
 
 **Goals:**
-- Session start flow includes a work item selector: attach an Ultra-Metis task, story, or initiative
+- Session start flow includes a work item selector: attach an Cadre task, story, or initiative
 - Session context enriched at start with relevant notes from the core engine note system
 - Session context includes applicable architecture guidance and repo rules
 - Machine Runner loads notes and architecture context into the AI session at startup
@@ -54,27 +54,27 @@ This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops
 ## Detailed Design
 
 ### Work Item Linkage
-- Session creation API accepts optional `work_item_id` (Ultra-Metis short code: task, story, or initiative)
+- Session creation API accepts optional `work_item_id` (Cadre short code: task, story, or initiative)
 - Control Service stores the link; session detail view shows linked work item with title and short code
-- On session completion: Control Service calls Ultra-Metis MCP to append session outcome to the linked work item's progress section
+- On session completion: Control Service calls Cadre MCP to append session outcome to the linked work item's progress section
 
 ### Note and Architecture Context Loading (Machine Runner)
-- On session start, Machine Runner calls Ultra-Metis MCP `fetch_notes` for the session's repo area
+- On session start, Machine Runner calls Cadre MCP `fetch_notes` for the session's repo area
 - Fetched notes injected into AI session context as a CLAUDE.md append or initial context message
-- Architecture guidance (reference architecture for the repo) fetched from Ultra-Metis and included
+- Architecture guidance (reference architecture for the repo) fetched from Cadre and included
 - Relevant rules fetched and included as constraints in the initial session context
 
 ### Note Feedback Recording
 - Machine Runner tracks which notes were referenced during the session (via session trace analysis or explicit AI signals)
 - At session end, emits `NoteFeedback` events: `{note_id, feedback: helpful|meh|harmful}`
-- Control Service forwards feedback to Ultra-Metis MCP `score_note` for each note
+- Control Service forwards feedback to Cadre MCP `score_note` for each note
 - Feedback is advisory — it informs the note system's self-pruning (SMET-I-0030 logic)
 
 ### Note Proposals
 - During session, AI may emit structured note proposals (e.g., "I discovered X about module Y")
 - Machine Runner captures these as `NoteProposal` events
 - Control Service stores proposals; dashboard shows them in a "Proposed Notes" section on session detail
-- User can accept (creates note via Ultra-Metis MCP) or dismiss each proposal
+- User can accept (creates note via Cadre MCP) or dismiss each proposal
 
 ### Dashboard — Integration Views
 - Session start: work item search/select field (search by title or short code)
@@ -86,7 +86,7 @@ This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops
 
 ### Work Item Scoping
 - Work item linkage (`session.work_item_id`) is implicitly user-scoped because sessions are user-scoped
-- The work item selector in the dashboard searches Ultra-Metis documents — those are already repo/project scoped; no additional user filtering needed at the linkage layer
+- The work item selector in the dashboard searches Cadre documents — those are already repo/project scoped; no additional user filtering needed at the linkage layer
 
 ### Note Proposals and Feedback
 - `note_proposals` table: `user_id` foreign key — proposals belong to the session owner
@@ -108,7 +108,7 @@ This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops
 **Recommendation: Update scope + rename**
 
 Relevant ADR decision points:
-- **#1 Rename**: This is the most rename-impacted initiative. The title itself is "Ultra-Metis Work and Notes Integration" and should become "Cadre Work and Notes Integration." All references to Ultra-Metis MCP, Ultra-Metis short codes, Ultra-Metis records, and Ultra-Metis workflow become Cadre equivalents. The MCP tool names change (e.g., `ultra-metis:fetch_notes` becomes `cadre:fetch_notes` or equivalent post-rename).
+- **#1 Rename**: This is the most rename-impacted initiative. The title itself is "Cadre Work and Notes Integration" and should become "Cadre Work and Notes Integration." All references to Cadre MCP, Cadre short codes, Cadre records, and Cadre workflow become Cadre equivalents. The MCP tool names change (e.g., `cadre:fetch_notes` becomes `cadre:fetch_notes` or equivalent post-rename).
 - **#3 SDD-style execution**: Context loading at session start must account for orchestrated execution. When using SDD-style dispatch, the orchestrator curates context per subagent — notes and architecture guidance may need to be filtered per-task rather than loaded once for the whole session. The note feedback mechanism should attribute feedback at the task/subagent level, not just the session level.
 - **#6 Architecture hooks**: When architecture lifecycle hooks are active (Phase 4), this initiative's architecture guidance injection becomes richer — not just static guidance text but active conformance checking during execution. This is a future enhancement but the design should leave room for it.
 - **#7 SubagentStart hook**: The SubagentStart hook is directly relevant here — it is the mechanism that injects Cadre context (including notes, architecture guidance, and work item awareness) into subagents. This initiative's "context loading" feature and the SubagentStart hook are complementary: the hook provides baseline Cadre awareness, while this initiative provides task-specific notes and architecture context.
@@ -118,11 +118,11 @@ No changes needed for: #2 (superpowers is a peer dependency but doesn't affect w
 ## Implementation Plan
 
 1. Add `work_item_id` field to session creation API and storage
-2. Implement result handoff: on session complete, call Ultra-Metis MCP to update linked work item
-3. Implement note fetching in Machine Runner at session start (call Ultra-Metis MCP)
+2. Implement result handoff: on session complete, call Cadre MCP to update linked work item
+3. Implement note fetching in Machine Runner at session start (call Cadre MCP)
 4. Implement context injection: notes + architecture + rules prepended to session context
 5. Implement note feedback event capture and emission from Machine Runner
-6. Implement note feedback forwarding to Ultra-Metis MCP from Control Service
+6. Implement note feedback forwarding to Cadre MCP from Control Service
 7. Implement note proposal capture from session events
 8. Build work item selector in session start flow (dashboard)
 9. Build "Proposed Notes" tab in session detail

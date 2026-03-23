@@ -26,22 +26,22 @@ initiative_id: ralph-loop-implement-autonomous
 
 **This initiative is substantially complete.** The ralph loop execution framework already exists as plugin commands with shell script setup:
 
-- `/ultra-metis-ralph` — single-task execution command (`plugins/ultra-metis/commands/ultra-metis-ralph.md`)
-- `/ultra-metis-decompose` — initiative decomposition command (`plugins/ultra-metis/commands/ultra-metis-decompose.md`)
-- `/cancel-ultra-metis-ralph` — cancel active loop (`plugins/ultra-metis/commands/cancel-ultra-metis-ralph.md`)
+- `/cadre-ralph` — single-task execution command (`plugins/cadre/commands/cadre-ralph.md`)
+- `/cadre-decompose` — initiative decomposition command (`plugins/cadre/commands/cadre-decompose.md`)
+- `/cancel-cadre-ralph` — cancel active loop (`plugins/cadre/commands/cancel-cadre-ralph.md`)
 - Setup scripts map story types to superpowers skills (feature→brainstorming+TDD+verification, bugfix→systematic-debugging, etc.)
 
-All commands use ultra-metis MCP tools for state management.
+All commands use cadre MCP tools for state management.
 
 ## Remaining Work
 
 The following enhancements could improve the current implementation but are not blocking:
 
-1. **Story-level execution** — Current commands target tasks and initiatives. The ultra-metis hierarchy (Epic → Story → Task) may benefit from a `/ultra-metis-ralph-story` command that orchestrates tasks within a Story context, surfacing the Architecture document context (see SMET-I-0069).
+1. **Story-level execution** — Current commands target tasks and initiatives. The cadre hierarchy (Epic → Story → Task) may benefit from a `/cadre-ralph-story` command that orchestrates tasks within a Story context, surfacing the Architecture document context (see SMET-I-0069).
 
 2. **Architecture-aware execution** — When SMET-I-0069 lands, ralph loop task execution should consume the architecture context snapshot that gets appended to tasks on activation. No code change needed in ralph itself — the context will be in the task document.
 
-3. **Epic-level orchestration** — A `/ultra-metis-ralph-epic` command that discovers child Stories and executes them in dependency order. Lower priority.
+3. **Epic-level orchestration** — A `/cadre-ralph-epic` command that discovers child Stories and executes them in dependency order. Lower priority.
 
 ## Context
 

@@ -32,7 +32,7 @@ Wire up the two new architecture types into the broader type system: add Documen
 ## Acceptance Criteria
 
 - [ ] DocumentType enum: add ArchitectureCatalogEntry and ReferenceArchitecture variants with short code prefixes (AC, RA)
-- [ ] DocumentType methods updated: FromStr, Display, is_super_metis_type, short_code_prefix, phase sequences
+- [ ] DocumentType methods updated: FromStr, Display, is_cadre_type, short_code_prefix, phase sequences
 - [ ] documents/mod.rs: add module declarations for both types
 - [ ] lib.rs: export both types and any new supporting enums (ArchitectureStatus, ArchitectureSource, LayerDefinition, ModuleBoundary)
 - [ ] Comprehensive tests: type creation, round-trip serialization, field validation, catalog-linked vs derived modes, governance linkage

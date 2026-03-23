@@ -24,9 +24,9 @@ initiative_id: add-orchestrator-and-runner
 
 ## Context
 
-Super-Metis should support two execution modes: single-agent mode (one agent works on one story at a time) and orchestrated mode (a coordinator agent assigns stories to multiple worker agents running in parallel). Metis currently has a "Ralph" loop concept for single-task execution, but no multi-agent orchestration.
+Cadre should support two execution modes: single-agent mode (one agent works on one story at a time) and orchestrated mode (a coordinator agent assigns stories to multiple worker agents running in parallel). Metis currently has a "Ralph" loop concept for single-task execution, but no multi-agent orchestration.
 
-The orchestrator is the component that reads the planning hierarchy, identifies ready work, acquires leases, dispatches work to runner agents, monitors progress, and handles completion/failure. This is the "execution engine" of Super-Metis.
+The orchestrator is the component that reads the planning hierarchy, identifies ready work, acquires leases, dispatches work to runner agents, monitors progress, and handles completion/failure. This is the "execution engine" of Cadre.
 
 ## Governing Commitments
 
@@ -49,14 +49,14 @@ This initiative directly serves:
 
 **Non-Goals:**
 - Distributed orchestration across multiple machines — this is single-machine, local execution
-- Building a general-purpose task scheduler — this is specifically for Super-Metis story execution
+- Building a general-purpose task scheduler — this is specifically for Cadre story execution
 - Replacing the existing Metis Ralph loop — extend and evolve it
 
 ## Detailed Design
 
 ### What to Reuse from `metis/`
 - The existing Ralph loop concept as the foundation for single-agent runner mode
-- MCP tool access patterns (runners interact with Super-Metis through MCP)
+- MCP tool access patterns (runners interact with Cadre through MCP)
 - Document reading and context gathering patterns
 - Phase transition commands
 

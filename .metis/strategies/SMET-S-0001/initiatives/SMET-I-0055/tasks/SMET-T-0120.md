@@ -35,9 +35,9 @@ Implement a new `index_code` MCP tool that uses tree-sitter to extract source co
 
 ## Acceptance Criteria
 
-- [ ] tree-sitter and tree-sitter-rust added as dependencies to ultra-metis-core or new crate
+- [ ] tree-sitter and tree-sitter-rust added as dependencies to cadre-core or new crate
 - [ ] Symbol extraction works for Rust: functions, structs, traits, enums, impl blocks, type aliases
-- [ ] Extracted symbols stored in `.ultra-metis/code-index.json` (file-based, no SQLite)
+- [ ] Extracted symbols stored in `.cadre/code-index.json` (file-based, no SQLite)
 - [ ] Each symbol record includes: name, kind, file_path, line_number, signature
 - [ ] `index_code` tool accepts: project_path, patterns (glob list), languages (optional)
 - [ ] Tool returns count of indexed files and symbols
@@ -54,14 +54,14 @@ Implement a new `index_code` MCP tool that uses tree-sitter to extract source co
 2. Create `CodeIndexer` struct that walks source files matching glob patterns
 3. For each file, parse with tree-sitter and extract named symbols via tree queries
 4. Rust query targets: `function_item`, `struct_item`, `trait_item`, `enum_item`, `impl_item`, `type_item`
-5. Store index as JSON in `.ultra-metis/code-index.json`
+5. Store index as JSON in `.cadre/code-index.json`
 6. Provide `search_symbols(name_pattern, kind_filter)` query method
 7. Register as MCP tool with schema in tools.rs
 
 ### Key Files
-- `crates/ultra-metis-core/src/code_index/` - New module for indexing logic
-- `crates/ultra-metis-store/src/store.rs` - Store integration
-- `crates/ultra-metis-mcp/src/tools.rs` - Tool registration
+- `crates/cadre-core/src/code_index/` - New module for indexing logic
+- `crates/cadre-store/src/store.rs` - Store integration
+- `crates/cadre-mcp/src/tools.rs` - Tool registration
 - `Cargo.toml` (workspace) - New dependencies
 
 ### Dependencies

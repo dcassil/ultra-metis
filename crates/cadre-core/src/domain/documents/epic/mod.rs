@@ -9,7 +9,7 @@ use std::path::Path;
 use tera::{Context, Tera};
 
 /// An Epic document groups related stories under a ProductDoc.
-/// Replaces Initiative in the new Ultra-Metis hierarchy.
+/// Replaces Initiative in the new Cadre hierarchy.
 /// Phases: Discovery → Design → Ready → Decompose → Active → Completed
 #[derive(Debug)]
 pub struct Epic {

@@ -39,8 +39,8 @@
       }
     ]
   },
-  "ultra_metis_mcp": {
-    "system": "ultra-metis-mcp",
+  "cadre_mcp": {
+    "system": "cadre-mcp",
     "initiative_count": 1,
     "total_tokens": 0,
     "total_time_ms": 65352.22508199999,

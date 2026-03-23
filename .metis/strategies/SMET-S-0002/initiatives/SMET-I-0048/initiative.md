@@ -24,11 +24,11 @@ initiative_id: practical-benchmark-ai-execution
 
 ## Context
 
-Current benchmarks (SMET-I-0035, SMET-I-0036, SMET-I-0037) test whether Super-Metis generates valid documents and system correctness. This initiative extends benchmarking to measure the **real-world value proposition**: how well can an AI use Super-Metis docs to successfully build complex systems, recognize scope gaps, and execute complete workflows?
+Current benchmarks (SMET-I-0035, SMET-I-0036, SMET-I-0037) test whether Cadre generates valid documents and system correctness. This initiative extends benchmarking to measure the **real-world value proposition**: how well can an AI use Cadre docs to successfully build complex systems, recognize scope gaps, and execute complete workflows?
 
 We need two parallel benchmark setups:
-1. **System benchmark** — Does Super-Metis itself work? (existing tests)
-2. **Practical benchmark** — Does Super-Metis help AI succeed in the wild? (this initiative)
+1. **System benchmark** — Does Cadre itself work? (existing tests)
+2. **Practical benchmark** — Does Cadre help AI succeed in the wild? (this initiative)
 
 ## Goals & Non-Goals
 
@@ -155,7 +155,7 @@ Comparison metrics:
 
 ### Tool Comparison Implementation Complete (2026-03-17)
 
-Added ultra-metis vs original metis template quality comparison benchmark:
+Added cadre vs original metis template quality comparison benchmark:
 - `benchmarks/practical/src/doc_quality.rs` — Markdown document quality scorer (placeholder detection, section fill analysis, completeness %)
 - `benchmarks/practical/src/tool_comparison.rs` — Runs same 3-module scenario through each tool's template, asks Claude to fill each, scores results
 - `benchmarks/practical/src/bin/run_tool_comparison.rs` — Binary entry point
@@ -177,7 +177,7 @@ Initial implementation committed (b1411f6). All phases of the plan executed:
 ### Decomposed (2026-03-17)
 
 4 tasks created covering all remaining work:
-- **SMET-T-0112**: Wire runners to live ultra-metis CLI + Claude API
+- **SMET-T-0112**: Wire runners to live cadre CLI + Claude API
 - **SMET-T-0113**: Implement validation gate scorer (blocked on T-0112)
 - **SMET-T-0114**: Results persistence + comparison report generator
 - **SMET-T-0115**: Execute first full benchmark runs (blocked on T-0112, T-0113, T-0114)

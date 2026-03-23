@@ -27,7 +27,7 @@ initiative_id: SMET-I-0050
 
 ## Objective
 
-Create a GitHub Actions workflow (`.github/workflows/release.yml`) that triggers when release-please creates a git tag, builds both `ultra-metis` (CLI) and `ultra-metis-mcp` (MCP server) binaries for all 5 target platforms, packages them into distributable archives, and uploads them as GitHub Release assets. This is the core build pipeline that produces all distributable artifacts.
+Create a GitHub Actions workflow (`.github/workflows/release.yml`) that triggers when release-please creates a git tag, builds both `cadre` (CLI) and `cadre-mcp` (MCP server) binaries for all 5 target platforms, packages them into distributable archives, and uploads them as GitHub Release assets. This is the core build pipeline that produces all distributable artifacts.
 
 ## Acceptance Criteria
 
@@ -42,7 +42,7 @@ Create a GitHub Actions workflow (`.github/workflows/release.yml`) that triggers
   - `x86_64-unknown-linux-gnu` (Linux x86_64)
   - `aarch64-unknown-linux-gnu` (Linux ARM64)
   - `x86_64-pc-windows-msvc` (Windows x64)
-- [ ] Both `ultra-metis` and `ultra-metis-mcp` binaries are built for each platform
+- [ ] Both `cadre` and `cadre-mcp` binaries are built for each platform
 - [ ] macOS cross-compilation between ARM64 and x86_64 works correctly
 - [ ] Linux ARM64 uses `cross` for cross-compilation from x86_64 runner
 - [ ] Rust caching via `Swatinem/rust-cache@v2` is configured with per-target cache keys
@@ -75,7 +75,7 @@ Each build job:
 2. Installs Rust stable with target (`dtolnay/rust-toolchain@stable`)
 3. Configures Rust cache (`Swatinem/rust-cache@v2` with `key: release-${{ matrix.target }}`)
 4. Installs `cross` if needed (Linux ARM64 only)
-5. Builds both `-p ultra-metis-cli` and `-p ultra-metis-mcp` with `--release --target`
+5. Builds both `-p cadre-cli` and `-p cadre-mcp` with `--release --target`
 6. Uploads raw binaries as workflow artifacts (`actions/upload-artifact@v4`)
 
 **Phase 2 — Package and Release (single job, runs after all builds):**
@@ -92,8 +92,8 @@ Each build job:
 ### Binary Names by Platform
 | Target | CLI Binary | MCP Binary |
 |--------|-----------|------------|
-| macOS/Linux | `ultra-metis` | `ultra-metis-mcp` |
-| Windows | `ultra-metis.exe` | `ultra-metis-mcp.exe` |
+| macOS/Linux | `cadre` | `cadre-mcp` |
+| Windows | `cadre.exe` | `cadre-mcp.exe` |
 
 ### Dependencies
 - SMET-T-0140 (release-please creates the tags that trigger this workflow)
@@ -108,7 +108,7 @@ Each build job:
 - Create a test tag (`v0.0.0-test`) to trigger the workflow without affecting real releases
 - Verify all 5 platform builds succeed in the Actions UI
 - Verify artifacts are correctly uploaded to the GitHub Release
-- Download binaries on available platforms and smoke-test: `./ultra-metis --version`
+- Download binaries on available platforms and smoke-test: `./cadre --version`
 
 ### Estimated Effort
 3-5 days

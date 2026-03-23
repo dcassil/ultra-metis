@@ -66,8 +66,8 @@ Add missing parameters to three existing tools: `replace_all` for edit_document,
 4. All changes are additive — existing tool calls without new params work identically
 
 ### Key Files
-- `crates/ultra-metis-store/src/store.rs` - edit_document, transition_phase, create_document methods
-- `crates/ultra-metis-mcp/src/tools.rs` - Tool schemas and dispatch
+- `crates/cadre-store/src/store.rs` - edit_document, transition_phase, create_document methods
+- `crates/cadre-mcp/src/tools.rs` - Tool schemas and dispatch
 
 ### Dependencies
 - None

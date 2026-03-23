@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: gates-escalation-and-autonomy-model
 ---
 
@@ -24,7 +24,7 @@ initiative_id: gates-escalation-and-autonomy-model
 
 ## Context
 
-Super-Metis needs explicit control points (gates) where work must meet criteria before proceeding, clear escalation triggers for when the system should involve humans, and configurable autonomy modes that determine how much human oversight is required. This is essential for building trust — the system should be predictable about when it will stop and ask, when it will proceed, and when it will refuse.
+Cadre needs explicit control points (gates) where work must meet criteria before proceeding, clear escalation triggers for when the system should involve humans, and configurable autonomy modes that determine how much human oversight is required. This is essential for building trust — the system should be predictable about when it will stop and ask, when it will proceed, and when it will refuse.
 
 The same framework must support tight collaboration (early adoption, risky work), mixed mode (default), and autonomous mode (mature repos with strong rules and validations).
 

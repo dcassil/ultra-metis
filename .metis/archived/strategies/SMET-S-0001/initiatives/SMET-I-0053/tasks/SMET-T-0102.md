@@ -147,7 +147,7 @@ Document CLI architecture in both systems. Compare command structure, subcommand
 
 CLI architecture investigation completed. Both systems analyzed and compared:
 
-**Ultra-Metis CLI**: 8 commands, 264 lines, synchronous, minimal
+**Cadre CLI**: 8 commands, 264 lines, synchronous, minimal
 **Original Metis CLI**: 12 commands, modular, async/tokio, feature-rich
 
 Seven detailed comparison grids (F1-F7) generated and added to SMET-I-0053 section F:
@@ -159,4 +159,4 @@ Seven detailed comparison grids (F1-F7) generated and added to SMET-I-0053 secti
 - F6: Document Type & Phase Support
 - F7: Operational Workflows & Integration
 
-Key finding: Metis 50% more complete, Ultra-Metis simpler. Critical gaps: validation, config, MCP, sync.
+Key finding: Metis 50% more complete, Cadre simpler. Critical gaps: validation, config, MCP, sync.

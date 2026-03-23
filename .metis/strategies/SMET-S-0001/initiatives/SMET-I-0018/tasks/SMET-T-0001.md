@@ -1,7 +1,7 @@
 ---
-id: set-up-super-metis-cargo-workspace
+id: set-up-cadre-cargo-workspace
 level: task
-title: "Set up super-metis Cargo workspace and copy core crate structure"
+title: "Set up cadre Cargo workspace and copy core crate structure"
 short_code: "SMET-T-0001"
 created_at: 2026-03-16T20:34:06.031684+00:00
 updated_at: 2026-03-16T20:35:19.332660+00:00
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: SMET-I-0018
 ---
 
-# Set up super-metis Cargo workspace and copy core crate structure
+# Set up cadre Cargo workspace and copy core crate structure
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

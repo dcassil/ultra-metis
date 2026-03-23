@@ -11,13 +11,14 @@
       "WebFetch(domain:www.claudemcp.com)",
       "Read(//Users/danielcassil/.claude/plugins/**)",
       "Read(//Users/danielcassil/.claude/**)",
-      "Read(//Users/danielcassil/projects/ultra-metis/**)",
+      "Read(//Users/danielcassil/projects/cadre/**)",
       "Bash(*)",
       "Skill(metis:*)",
-      "mcp__plugin_ultra-metis_ultra-metis__search_documents",
-      "mcp__plugin_ultra-metis_ultra-metis__list_documents",
+      "mcp__plugin_cadre_cadre__search_documents",
+      "mcp__plugin_cadre_cadre__list_documents",
       "mcp__plugin_figma_figma__whoami",
-      "mcp__plugin_figma_figma__get_design_context"
+      "mcp__plugin_figma_figma__get_design_context",
+      "mcp__plugin_cadre_cadre__list_documents"
     ]
   },
   "enableAllProjectMcpServers": true

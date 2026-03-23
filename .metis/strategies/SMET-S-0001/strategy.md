@@ -1,7 +1,7 @@
 ---
-id: ultra-metis-core-engine-repo
+id: cadre-core-engine-repo
 level: strategy
-title: "Ultra-Metis Core Engine: Repo-Native AI Engineering OS"
+title: "Cadre Core Engine: Repo-Native AI Engineering OS"
 short_code: "SMET-S-0001"
 created_at: 2026-03-17T19:51:13.185787+00:00
 updated_at: 2026-03-17T19:51:13.185787+00:00
@@ -17,11 +17,11 @@ tags:
 exit_criteria_met: false
 risk_level: medium
 stakeholders: []
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: NULL
 ---
 
-# Ultra-Metis Core Engine: Repo-Native AI Engineering OS Strategy
+# Cadre Core Engine: Repo-Native AI Engineering OS Strategy
 
 *This template includes sections for various types of strategic documents. Delete sections that don't apply to your specific use case.*
 
@@ -43,7 +43,7 @@ The original Metis system provides a solid document management foundation (Visio
 - Engineering rules are enforced with layered scopes and require explicit change proposals
 - Durable insight notes fetch, score, prune, and archive across sessions
 - Execution records provide a complete audit spine for every meaningful work run
-- All original Metis capabilities preserved; migration path from Metis to Super-Metis exists
+- All original Metis capabilities preserved; migration path from Metis to Cadre exists
 - All tests pass; benchmark suite shows parity or improvement over original Metis
 
 ## Solution Approach
@@ -69,7 +69,7 @@ Build on top of the original Metis foundation (file-based docs, SQLite indexing,
 ## Scope
 
 **In Scope:**
-- All Rust crate development in `crates/ultra-metis-core/`, `ultra-metis-store/`, `ultra-metis-mcp/`, `ultra-metis-cli/`
+- All Rust crate development in `crates/cadre-core/`, `cadre-store/`, `cadre-mcp/`, `cadre-cli/`
 - All 15 MVP feature areas as described in SMET-V-0001
 - Protected engineering rules with layered scopes and change proposal workflow
 - Remediation and investigation loops for quality degradation
@@ -82,7 +82,7 @@ Build on top of the original Metis foundation (file-based docs, SQLite indexing,
 - Quality baselines, gates, and comparison tooling
 - Template registry and context-aware rendering
 - Migration path from original Metis document formats
-- Namespace standardization (ultra-metis-*)
+- Namespace standardization (cadre-*)
 - Monorepo directory restructure (apps/, crates/, packages/, infra/, docs/)
 - Local installation and end-to-end working setup
 - MCP and CLI extensions for all new capabilities

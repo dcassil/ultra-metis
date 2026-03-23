@@ -36,7 +36,7 @@ With machines registered (SMET-I-0039), the next foundational piece is the sessi
 - Session creation API: start a session against a machine/repo with title, instructions, context
 - Session state machine: starting → running → waiting → paused → completed/failed/stopped
 - Session autonomy level selection at creation time (normal, stricter, more autonomous)
-- Attach an Ultra-Metis work item (task/story/initiative) to a new session
+- Attach an Cadre work item (task/story/initiative) to a new session
 - Optional context preloading: notes, architecture guidance, constraints
 - Machine Runner can start, supervise, and stop local AI processes
 - Session control API: stop, pause, resume, force-end
@@ -112,7 +112,7 @@ States: `starting → running → waiting_for_input → paused → completed | f
 **Recommendation: Update scope**
 
 Relevant ADR decision points:
-- **#1 Rename**: All references to "Ultra-Metis" become "Cadre." Session creation API, work item linkage, and documentation use Cadre namespace.
+- **#1 Rename**: All references to "Cadre" become "Cadre." Session creation API, work item linkage, and documentation use Cadre namespace.
 - **#3 SDD-style execution**: This is the most impacted initiative. The session model must account for the fact that a session may internally use SDD-style fresh-subagent-per-task dispatch (via `/cadre-execute`), not just a single long-running AI process. The session state machine needs to accommodate orchestrated execution where the top-level process is a dispatcher spawning subagents. The Machine Runner's process supervisor must handle this pattern. Session state events should distinguish orchestrator-level state from individual subagent states.
 - **#5 Simple task claiming**: When multiple remote sessions target the same repo, the simple file-based task claiming mechanism (`.cadre/claims/`) prevents duplicate work. The session creation flow should check for existing claims on the target work item.
 - **#7 SubagentStart hook**: Sessions started remotely must have the SubagentStart hook active so all subagents within that session inherit Cadre context. The session start flow should verify hook availability as a prerequisite.

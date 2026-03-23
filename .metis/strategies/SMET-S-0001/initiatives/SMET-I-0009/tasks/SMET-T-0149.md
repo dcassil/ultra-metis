@@ -23,7 +23,7 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-The traceability system (`crates/ultra-metis-core/src/domain/documents/cross_reference/`) provides typed relationships between documents (ParentChild, Governs, References, DerivedFrom, Supersedes, ConflictsWith, Validates, Blocks, ApprovedBy) and a `TraceabilityIndex` that supports graph queries: ancestors, descendants, siblings, outgoing/incoming relationships by type, and general involvement queries.
+The traceability system (`crates/cadre-core/src/domain/documents/cross_reference/`) provides typed relationships between documents (ParentChild, Governs, References, DerivedFrom, Supersedes, ConflictsWith, Validates, Blocks, ApprovedBy) and a `TraceabilityIndex` that supports graph queries: ancestors, descendants, siblings, outgoing/incoming relationships by type, and general involvement queries.
 
 Agents need MCP tools to:
 - Create cross-references between documents to build the traceability graph
@@ -66,7 +66,7 @@ Agents need MCP tools to:
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/tools.rs` — New tool definitions and handlers
+- `crates/cadre-mcp/src/tools.rs` — New tool definitions and handlers
 
 ## Dependencies
 

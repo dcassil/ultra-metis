@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: durable-insight-note-system
 ---
 
@@ -24,7 +24,7 @@ initiative_id: durable-insight-note-system
 
 ## Context
 
-AI agents and developers accumulate local knowledge during work — hotspot warnings, misleading naming patterns, recurring bug signatures, validation hints, subsystem gotchas. Today this knowledge lives in chat context and is lost between sessions. Super-Metis needs a lightweight, self-pruning repo memory layer that captures this reusable local insight without becoming a transcript archive or a second documentation platform.
+AI agents and developers accumulate local knowledge during work — hotspot warnings, misleading naming patterns, recurring bug signatures, validation hints, subsystem gotchas. Today this knowledge lives in chat context and is lost between sessions. Cadre needs a lightweight, self-pruning repo memory layer that captures this reusable local insight without becoming a transcript archive or a second documentation platform.
 
 This is a first-class design concept in the product spec. Notes are the "B" category in the internal cognition vs durable persistence model: durable lightweight insight that sits between ephemeral reasoning and formal governed records.
 
@@ -109,7 +109,7 @@ DurableInsightNote {
 - At task wrap-up: score fetched notes, propose new notes, propose note updates, flag risky conflicts for review
 
 ### Storage
-- Stored as markdown+frontmatter in `.super-metis/memory/notes/`
+- Stored as markdown+frontmatter in `.cadre/memory/notes/`
 - Indexed in SQLite for scope-based queries
 - Queryable by scope, category, tag, status
 

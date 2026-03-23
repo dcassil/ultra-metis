@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate architecture catalog and pattern selection system in Ultra-Metis. Document catalog structure, entry format, greenfield/brownfield selection flows, pattern matching algorithms, and reference architecture storage.
+Investigate architecture catalog and pattern selection system in Cadre. Document catalog structure, entry format, greenfield/brownfield selection flows, pattern matching algorithms, and reference architecture storage.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -159,21 +159,21 @@ Investigate architecture catalog and pattern selection system in Ultra-Metis. Do
 **Key Findings**:
 
 - **Metis Strengths**: Broad pattern guidance (greenfield, brownfield, tech-debt, incidents, anti-patterns). Language-agnostic. Human-friendly skill interface.
-- **Ultra-Metis Strengths**: Typed ArchitectureCatalogEntry structs. Programmatic CatalogQuery + CatalogQueryEngine. Formal StructureAnalyzer → PatternMatcher pipeline with 40/40/20 weighted scoring.
-- **Critical Gap**: Original Metis lacks formal brownfield detection system. Ultra-Metis implements this for JavaScript only.
-- **Future Direction**: Extend Ultra-Metis to Rust, Python, Go using same ArchitectureCatalogEntry model. Integrate Metis' broader pattern guidance.
+- **Cadre Strengths**: Typed ArchitectureCatalogEntry structs. Programmatic CatalogQuery + CatalogQueryEngine. Formal StructureAnalyzer → PatternMatcher pipeline with 40/40/20 weighted scoring.
+- **Critical Gap**: Original Metis lacks formal brownfield detection system. Cadre implements this for JavaScript only.
+- **Future Direction**: Extend Cadre to Rust, Python, Go using same ArchitectureCatalogEntry model. Integrate Metis' broader pattern guidance.
 
 **Code Modules Investigated**:
 
-- `crates/ultra-metis-core/src/domain/catalog/mod.rs` - Catalog module architecture
-- `crates/ultra-metis-core/src/domain/catalog/builtin_entries.rs` - 5 JS project types with 30+ validation tests
-- `crates/ultra-metis-core/src/domain/catalog/selection_flow.rs` - SelectionFlow (discover → select → create), SelectionOption, TailoringOptions
-- `crates/ultra-metis-core/src/domain/catalog/query_engine.rs` - CatalogQuery builder and CatalogQueryEngine with filters
-- `crates/ultra-metis-core/src/domain/catalog/brownfield_evaluator/pattern_matcher.rs` - PatternMatcher with PatternMatchScore, MatchResult, 8 validation tests
+- `crates/cadre-core/src/domain/catalog/mod.rs` - Catalog module architecture
+- `crates/cadre-core/src/domain/catalog/builtin_entries.rs` - 5 JS project types with 30+ validation tests
+- `crates/cadre-core/src/domain/catalog/selection_flow.rs` - SelectionFlow (discover → select → create), SelectionOption, TailoringOptions
+- `crates/cadre-core/src/domain/catalog/query_engine.rs` - CatalogQuery builder and CatalogQueryEngine with filters
+- `crates/cadre-core/src/domain/catalog/brownfield_evaluator/pattern_matcher.rs` - PatternMatcher with PatternMatchScore, MatchResult, 8 validation tests
 
 **Recommendations**:
 
-1. Extend Ultra-Metis catalog to Rust, Python, Go (medium effort, high value)
-2. Integrate Metis' tech-debt and incident-response patterns into Ultra-Metis
+1. Extend Cadre catalog to Rust, Python, Go (medium effort, high value)
+2. Integrate Metis' tech-debt and incident-response patterns into Cadre
 3. Create brownfield analysis baselines for common JavaScript patterns
 4. Document custom catalog loader for org-specific patterns

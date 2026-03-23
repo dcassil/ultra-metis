@@ -1,10 +1,10 @@
-Ultra-Metis
+Cadre
 
-Ultra-Metis is built on top of Metis. Metis by itself is already an incredibly powerful foundation for durable project memory, structured planning, and AI-assisted software work. This project is an attempt to extend that foundation into a more complete repo-native engineering operating system; some of these additions may prove valuable, some may need refinement, and part of the goal is to find out what actually works in practice.
+Cadre is built on top of Metis. Metis by itself is already an incredibly powerful foundation for durable project memory, structured planning, and AI-assisted software work. This project is an attempt to extend that foundation into a more complete repo-native engineering operating system; some of these additions may prove valuable, some may need refinement, and part of the goal is to find out what actually works in practice.
 
-What Ultra-Metis is trying to add
+What Cadre is trying to add
 
-Ultra-Metis is aimed at software teams and AI agents working inside a single repo or monorepo, where planning, architecture, rules, quality, and execution all need to stay connected.
+Cadre is aimed at software teams and AI agents working inside a single repo or monorepo, where planning, architecture, rules, quality, and execution all need to stay connected.
 
 The main direction is:
 
@@ -42,7 +42,7 @@ So it gives you a stable architectural source of truth: more explicit than triba
 
 Expanded Planning Hierarchy
 
-Ultra-Metis expands planning beyond Metis’s core hierarchy so product intent, larger capabilities, implementation slices, and execution work are more clearly separated.
+Cadre expands planning beyond Metis’s core hierarchy so product intent, larger capabilities, implementation slices, and execution work are more clearly separated.
 
 At a high level, it works like this:
 
@@ -162,7 +162,7 @@ So it gives you controlled autonomy: more flexible than all-or-nothing approval,
 
 Internal Reasoning vs Durable Persistence
 
-Ultra-Metis tries to make a stronger distinction between what should stay internal to the model and what is worth promoting into durable repo memory.
+Cadre tries to make a stronger distinction between what should stay internal to the model and what is worth promoting into durable repo memory.
 
 At a high level, it works like this:
 
@@ -182,7 +182,7 @@ So it gives you cleaner durable memory: more useful than dumping transcripts, mo
 
 Brownfield Architecture Evaluation
 
-Ultra-Metis adds a more explicit brownfield model so existing repos can be brought under governance without pretending they started clean.
+Cadre adds a more explicit brownfield model so existing repos can be brought under governance without pretending they started clean.
 
 At a high level, it works like this:
 
@@ -202,7 +202,7 @@ So it gives you a practical brownfield path: more honest than assuming every rep
 
 Static-Tool-First Execution
 
-Ultra-Metis aims to lean harder into deterministic tools wherever possible, using AI more for orchestration, interpretation, synthesis, and durable recording.
+Cadre aims to lean harder into deterministic tools wherever possible, using AI more for orchestration, interpretation, synthesis, and durable recording.
 
 At a high level, it works like this:
 
@@ -222,7 +222,7 @@ So it gives you more grounded execution: less dependent on unsupported reasoning
 
 Monorepo Direction
 
-Ultra-Metis is intended to grow toward better monorepo support than a single flat project model allows.
+Cadre is intended to grow toward better monorepo support than a single flat project model allows.
 
 At a high level, it works like this:
 
@@ -242,4 +242,4 @@ So it gives you a path toward real monorepo governance: more flexible than prete
 
 Direction
 
-Ultra-Metis is based on the belief that Metis already provides something genuinely strong: durable project memory, structured work management, and a foundation for AI-assisted engineering. The goal here is to build on that strength, add the layers that seem missing for governed software delivery, and test whether those additions actually make the system more useful in real repos.
+Cadre is based on the belief that Metis already provides something genuinely strong: durable project memory, structured work management, and a foundation for AI-assisted engineering. The goal here is to build on that strength, add the layers that seem missing for governed software delivery, and test whether those additions actually make the system more useful in real repos.

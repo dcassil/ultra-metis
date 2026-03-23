@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate and compare the plugin architectures of original Metis and Ultra-Metis. Map skills, agents, commands, and hooks infrastructure. Document how components are structured, registered, triggered, and integrated. Identify gaps in plugin capabilities between the two systems.
+Investigate and compare the plugin architectures of original Metis and Cadre. Map skills, agents, commands, and hooks infrastructure. Document how components are structured, registered, triggered, and integrated. Identify gaps in plugin capabilities between the two systems.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -74,7 +74,7 @@ Investigate and compare the plugin architectures of original Metis and Ultra-Met
 ## Acceptance Criteria
 
 - [x] Metis plugin architecture documented: skills, agents, commands, hooks structure and integration
-- [x] Ultra-Metis plugin architecture documented: equivalent capabilities and design approach
+- [x] Cadre plugin architecture documented: equivalent capabilities and design approach
 - [x] Comparison grid created showing feature parity and gaps
 - [x] File/module mappings documented for all components
 - [x] Gap analysis completed identifying missing capabilities
@@ -149,62 +149,62 @@ Investigate and compare the plugin architectures of original Metis and Ultra-Met
 
 #### What Was Investigated
 
-Performed comprehensive examination of plugin architectures in both original Metis and Ultra-Metis codebases, focusing on:
+Performed comprehensive examination of plugin architectures in both original Metis and Cadre codebases, focusing on:
 
 1. **Original Metis Plugin System**
-   - Reference location: `/Users/danielcassil/projects/ultra-metis/reference - original metis/plugins/metis/`
+   - Reference location: `/Users/danielcassil/projects/cadre/reference - original metis/plugins/metis/`
    - Examined: Plugin manifest, MCP configuration, hook definitions, skill structure, agent design, command structure
    - Key files analyzed: `.claude-plugin/plugin.json`, `.mcp.json`, `hooks/hooks.json`, skills directory structure, agents directory
 
-2. **Ultra-Metis Plugin Architecture**
-   - Core location: `crates/ultra-metis-core/src/domain/`
-   - MCP location: `crates/ultra-metis-mcp/src/`
-   - CLI location: `crates/ultra-metis-cli/src/`
+2. **Cadre Plugin Architecture**
+   - Core location: `crates/cadre-core/src/domain/`
+   - MCP location: `crates/cadre-mcp/src/`
+   - CLI location: `crates/cadre-cli/src/`
    - Key files analyzed: `transitions/hooks.rs`, `transitions/registry.rs`, `transitions/enforcer.rs`, `protocol.rs`, `tools.rs`, `main.rs`
 
 #### Key Findings
 
 **Plugin Architecture Differences:**
 - **Metis**: Distributed markdown + shell script plugin system, declarative JSON-based hooks, skill-based methodology guidance
-- **Ultra-Metis**: Rust-native type-safe system with explicit registration, transition-focused hooks, no agents/skills implemented yet
+- **Cadre**: Rust-native type-safe system with explicit registration, transition-focused hooks, no agents/skills implemented yet
 
 **Specific Component Comparisons:**
 
 1. **Skills System**
    - Metis: 5 skills (document-selection, decomposition, phase-transitions, project-patterns, code-index)
-   - Ultra-Metis: Not implemented (gap identified as Medium priority)
+   - Cadre: Not implemented (gap identified as Medium priority)
 
 2. **Agents System**
    - Metis: flight-levels agent for methodology guidance
-   - Ultra-Metis: Placeholder only (gap identified as High priority)
+   - Cadre: Placeholder only (gap identified as High priority)
 
 3. **Commands (Ralph Loops)**
    - Metis: /metis-ralph, /metis-decompose, /cancel-metis-ralph for autonomous task execution
-   - Ultra-Metis: Not implemented (gap identified as High priority)
+   - Cadre: Not implemented (gap identified as High priority)
 
 4. **Hook System**
    - Metis: General-purpose hooks (SessionStart, PreCompact, PostToolUse, Stop)
-   - Ultra-Metis: Transition-specific hooks with type-safe filtering, priority ordering, blocking/warning semantics
+   - Cadre: Transition-specific hooks with type-safe filtering, priority ordering, blocking/warning semantics
 
 5. **MCP Tools**
    - Metis: 8 tools (list, search, read, create, edit, transition, archive, reassign_parent)
-   - Ultra-Metis: 8 tools (init, list, search, read, create, edit, transition, archive)
+   - Cadre: 8 tools (init, list, search, read, create, edit, transition, archive)
 
 6. **CLI Architecture**
    - Both: Equivalent command structure and coverage
-   - Ultra-Metis: Better design (clap framework)
+   - Cadre: Better design (clap framework)
 
 #### Gap Analysis Summary
 
-**Missing in Ultra-Metis (High Priority):**
+**Missing in Cadre (High Priority):**
 - Agent system (flight-levels equivalent)
 - Ralph loop autonomous execution (state management, stop hook integration)
 
-**Missing in Ultra-Metis (Medium Priority):**
+**Missing in Cadre (Medium Priority):**
 - Skills system (4 methodology guidance skills)
 - General-purpose hooks (SessionStart, PreCompact, PostToolUse)
 
-**Where Ultra-Metis Is Stronger:**
+**Where Cadre Is Stronger:**
 - Type-safe hook system with explicit filtering and priorities
 - Blocking vs warning semantics in pre-transition checks
 - Priority-ordered hook execution (SYSTEM → GATE → USER → ADVISORY)
@@ -212,19 +212,19 @@ Performed comprehensive examination of plugin architectures in both original Met
 #### Architecture Philosophy Insights
 
 - **Metis**: Flexible, lightweight, script-based plugin ecosystem designed for rapid iteration
-- **Ultra-Metis**: Type-safe, explicit, Rust-native architecture with compile-time guarantees
+- **Cadre**: Type-safe, explicit, Rust-native architecture with compile-time guarantees
 
 #### Findings Documented
 
 All findings have been recorded in SMET-I-0053 initiative document under section "#### B. Plugin Architecture & Extensibility" with:
 - Detailed comparison grids for each component (B1-B7)
 - Original Metis implementations documented with locations
-- Ultra-Metis implementations documented with architecture details
+- Cadre implementations documented with architecture details
 - Gap analysis for each area
 - Priority and impact assessment
 
 #### Critical Business Insights
 
-1. **Autonomous Execution Gap**: Ultra-Metis lacks Ralph loop capability - critical for AI-in-the-loop workflows
-2. **User Guidance Gap**: No agents/skills in Ultra-Metis - reduces discoverability and methodology adoption
-3. **Architectural Trade-off**: Ultra-Metis chose type safety over flexibility; Metis chose flexibility for rapid adaptation
+1. **Autonomous Execution Gap**: Cadre lacks Ralph loop capability - critical for AI-in-the-loop workflows
+2. **User Guidance Gap**: No agents/skills in Cadre - reduces discoverability and methodology adoption
+3. **Architectural Trade-off**: Cadre chose type safety over flexibility; Metis chose flexibility for rapid adaptation

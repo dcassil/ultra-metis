@@ -115,7 +115,7 @@ Tasks 1 and 2 are parallelizable. Task 3 depends on both.
 | I-0042 | Notifications and Mobile Control | discovery | Update scope (rename) | 1 | Annotated. Rename only |
 | I-0043 | Session History, Audit, and Replay | discovery | Update scope | 1,3 | Annotated. Audit covers SDD records |
 | I-0044 | Policy and Safe Execution | discovery | Update scope | 1,3 | Annotated. Policies cover subagent dispatch |
-| I-0045 | Ultra-Metis Work and Notes Integration | discovery | Update scope | 1,3 | Annotated. Rename + execution model |
+| I-0045 | Cadre Work and Notes Integration | discovery | Update scope | 1,3 | Annotated. Rename + execution model |
 | I-0046 | Operational Reliability | discovery | Update scope | 1,3 | Annotated. Multi-session = parallel subagents |
 
 ### Dependency Graph Verification

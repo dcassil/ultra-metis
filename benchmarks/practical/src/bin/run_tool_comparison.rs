@@ -4,7 +4,7 @@
 /// to fill each tool's initiative template, then scoring the results.
 ///
 /// Usage:
-///   ULTRA_METIS_BINARY=./target/release/cadre \
+///   CADRE_BINARY=./target/release/cadre \
 ///     cargo run -p practical-benchmark --bin run_tool_comparison -- \
 ///     --results-dir benchmarks/practical/results
 use std::path::PathBuf;

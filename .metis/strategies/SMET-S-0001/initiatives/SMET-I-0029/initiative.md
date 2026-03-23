@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: cognitive-operation-kernel-and
 ---
 
@@ -24,7 +24,7 @@ initiative_id: cognitive-operation-kernel-and
 
 ## Context
 
-Super-Metis's central design idea is that all higher-level workflows are composed from a fixed set of reusable engineering operations, not from brittle one-off workflow scripts. This avoids hardcoding separate large flows for every task type while still allowing structured execution.
+Cadre's central design idea is that all higher-level workflows are composed from a fixed set of reusable engineering operations, not from brittle one-off workflow scripts. This avoids hardcoding separate large flows for every task type while still allowing structured execution.
 
 The cognitive operation kernel defines 12 universal operations. These operations compose into reusable loops, and a "workflow" is simply a predefined composition of loops with entry conditions, required artifacts, required validations, escalation rules, and completion rules. This is the central abstraction of the entire system.
 

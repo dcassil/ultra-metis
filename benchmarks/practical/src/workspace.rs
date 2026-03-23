@@ -238,9 +238,9 @@ mod tests {
         std::fs::write(temp.path().join("v.md"), "# Vision").unwrap();
         let pack = LoadedScenarioPack::load(temp.path()).unwrap();
 
-        let manifest = default_manifest(&pack, SystemUnderTest::UltraMetis);
+        let manifest = default_manifest(&pack, SystemUnderTest::Cadre);
         assert_eq!(manifest.token_budget, 100_000);
         assert_eq!(manifest.time_budget_secs, 120);
-        assert_eq!(manifest.system_under_test, SystemUnderTest::UltraMetis);
+        assert_eq!(manifest.system_under_test, SystemUnderTest::Cadre);
     }
 }

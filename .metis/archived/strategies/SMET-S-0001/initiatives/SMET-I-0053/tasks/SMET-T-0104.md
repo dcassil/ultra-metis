@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate quality system implementation in Ultra-Metis. Document quality gates, baseline capture and comparison, conformance checking, and quality records. Assess what quality system capabilities exist in original Metis and identify gaps.
+Investigate quality system implementation in Cadre. Document quality gates, baseline capture and comparison, conformance checking, and quality records. Assess what quality system capabilities exist in original Metis and identify gaps.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -77,7 +77,7 @@ Investigate quality system implementation in Ultra-Metis. Document quality gates
 - [x] Baseline capture and comparison mechanisms documented
 - [x] Conformance checking engine documented
 - [x] Quality records structure and generation documented
-- [x] Gap analysis comparing Metis vs Ultra-Metis quality capabilities
+- [x] Gap analysis comparing Metis vs Cadre quality capabilities
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

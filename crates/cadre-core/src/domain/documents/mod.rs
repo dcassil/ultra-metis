@@ -7,7 +7,7 @@ pub mod metadata;
 pub mod traits;
 pub mod types;
 
-// New Ultra-Metis planning types
+// New Cadre planning types
 pub mod design_context;
 pub mod epic;
 pub mod product_doc;

@@ -25,15 +25,15 @@ initiative_id: SMET-I-0074
 [[SMET-I-0074]]
 
 ## Objective
-Update all project-level config files to reference the new Cadre naming. This includes the root .mcp.json (binary name and plugin path), Makefile (binary targets, install paths), CLAUDE.md (crate names, binary names, plugin references), and the default project directory constant in Rust init code (`.cadre/` instead of `.ultra-metis/`). Also update benchmarks scripts referencing ultra-metis.
+Update all project-level config files to reference the new Cadre naming. This includes the root .mcp.json (binary name and plugin path), Makefile (binary targets, install paths), CLAUDE.md (crate names, binary names, plugin references), and the default project directory constant in Rust init code (`.cadre/` instead of `.cadre/`). Also update benchmarks scripts referencing cadre.
 
 ## Scope
 - Root .mcp.json: binary path and plugin directory references
-- Makefile: all ultra-metis binary targets → cadre
+- Makefile: all cadre binary targets → cadre
 - CLAUDE.md: crate names, build instructions, plugin references
 - Rust init code: default project directory `.cadre/`
-- benchmarks/run-ultra-metis-bench.sh → rename and update
-- Any other top-level files referencing ultra-metis
+- benchmarks/run-cadre-bench.sh → rename and update
+- Any other top-level files referencing cadre
 
 ## Acceptance Criteria
 

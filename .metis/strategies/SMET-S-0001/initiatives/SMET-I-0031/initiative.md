@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: execution-records-audit-spine-and
 ---
 
@@ -24,7 +24,7 @@ initiative_id: execution-records-audit-spine-and
 
 ## Context
 
-Every meaningful work run in Super-Metis should emit a durable ExecutionRecord that links intent to outcome. This is the audit spine of the system — without it, there's no way to answer "what happened, why, and with what evidence?" for any piece of work. Additionally, all durable objects need to be cross-linkable and queryable through a typed relationship index.
+Every meaningful work run in Cadre should emit a durable ExecutionRecord that links intent to outcome. This is the audit spine of the system — without it, there's no way to answer "what happened, why, and with what evidence?" for any piece of work. Additionally, all durable objects need to be cross-linkable and queryable through a typed relationship index.
 
 The product spec identifies ExecutionRecord as a core execution/traceability artifact alongside TransitionRecord, DecisionRecord, and the CrossReference index. Together they form the traceability backbone.
 
@@ -115,7 +115,7 @@ DecisionRecord {
 - Queries supported: ancestors, descendants, siblings, governed-by, references, conflicts
 
 ### Storage
-- Records stored in `.super-metis/execution/` subdirectories (runs/, transitions/, decisions/, trace-index/)
+- Records stored in `.cadre/execution/` subdirectories (runs/, transitions/, decisions/, trace-index/)
 - Markdown+frontmatter format consistent with all other artifacts
 - SQLite index for relationship graph and temporal queries
 

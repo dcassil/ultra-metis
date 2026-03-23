@@ -27,7 +27,7 @@ initiative_id: SMET-I-0037
 
 ## Objective
 
-Write automated tests that verify the structural quality and completeness of ultra-metis document templates. After the rewrites in SMET-T-0088, these tests ensure no template regresses to placeholder-only content and that all templates meet minimum quality standards: required sections present, conditional sections marked, rendering success.
+Write automated tests that verify the structural quality and completeness of cadre document templates. After the rewrites in SMET-T-0088, these tests ensure no template regresses to placeholder-only content and that all templates meet minimum quality standards: required sections present, conditional sections marked, rendering success.
 
 The goal is to make "template quality" a measurable, testable property — not just a benchmark judgment.
 
@@ -37,7 +37,7 @@ The goal is to make "template quality" a measurable, testable property — not j
 
 ## Acceptance Criteria
 
-- [ ] A `template_quality` test module exists in `super-metis-core` (or `ultra-metis-store`)
+- [ ] A `template_quality` test module exists in `cadre-core` (or `cadre-store`)
 - [ ] Tests verify all 4 templates (vision, initiative, task, ADR) render without errors
 - [ ] Tests assert each template has the required sections (by checking for required headings)
 - [ ] Tests assert that conditional sections contain explicit deletion markers (`DELETE` or `CONDITIONAL`)
@@ -136,14 +136,14 @@ mod template_quality_tests {
 
 ### Files to Create/Modify
 
-- Add tests to: `super-metis/crates/super-metis-core/src/templates.rs` or a new `src/templates/quality_tests.rs`
+- Add tests to: `cadre/crates/cadre-core/src/templates.rs` or a new `src/templates/quality_tests.rs`
 - May need to expose `TemplateRegistry::render()` and `TemplateContext` if not already public in tests
 
 ### Testing Plan
 
 1. Write failing tests first (they should fail against current templates)
 2. Confirm tests pass after SMET-T-0088 rewrites are applied
-3. Run `cargo test -p super-metis-core` to verify
+3. Run `cargo test -p cadre-core` to verify
 
 ### Dependencies
 

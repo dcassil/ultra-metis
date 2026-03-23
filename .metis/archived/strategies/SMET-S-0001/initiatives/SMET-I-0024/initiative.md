@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: S
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: git-worktree-isolation-for-leased
 ---
 

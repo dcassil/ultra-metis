@@ -1,6 +1,6 @@
 //! Built-in architecture catalog entries for JavaScript/TypeScript projects.
 //!
-//! These entries ship with the Ultra-Metis binary and represent curated,
+//! These entries ship with the Cadre binary and represent curated,
 //! known-good architecture patterns for common JS/TS project types.
 
 use crate::domain::documents::architecture_catalog_entry::ArchitectureCatalogEntry;

@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: improve-templates-and-generated
 ---
 
@@ -24,7 +24,7 @@ initiative_id: improve-templates-and-generated
 
 ## Context
 
-Metis uses templates to generate initial document content when new documents are created. The current templates are generic and include many conditional sections that users must manually clean up. Super-Metis introduces many new document types, each needing purpose-built templates that guide users (and agents) toward producing high-quality planning artifacts.
+Metis uses templates to generate initial document content when new documents are created. The current templates are generic and include many conditional sections that users must manually clean up. Cadre introduces many new document types, each needing purpose-built templates that guide users (and agents) toward producing high-quality planning artifacts.
 
 Good templates are critical for AI agents — they need clear structure and guidance to produce useful documents, not generic placeholders.
 
@@ -39,7 +39,7 @@ This initiative directly serves:
 ## Goals & Non-Goals
 
 **Goals:**
-- Create purpose-built artifact templates for all new Super-Metis document types: ProductDoc, DesignContext, Epic, Story (with type variants), Task, RulesConfig, AnalysisBaseline, QualityRecord, ValidationRecord, RemediationRecord, DesignChangeProposal, ArchitectureInvestigation, RuleChangeProposal, ArchitectureCatalogEntry, ReferenceArchitecture, ApprovalRecord, ValidationPolicy, OwnershipMap, ConstraintRecord, ExecutionRecord, TransitionRecord, DecisionRecord, DurableInsightNote
+- Create purpose-built artifact templates for all new Cadre document types: ProductDoc, DesignContext, Epic, Story (with type variants), Task, RulesConfig, AnalysisBaseline, QualityRecord, ValidationRecord, RemediationRecord, DesignChangeProposal, ArchitectureInvestigation, RuleChangeProposal, ArchitectureCatalogEntry, ReferenceArchitecture, ApprovalRecord, ValidationPolicy, OwnershipMap, ConstraintRecord, ExecutionRecord, TransitionRecord, DecisionRecord, DurableInsightNote
 - Create workflow templates for common work types: bugfix, feature slice, refactor, migration, architecture change, brownfield evaluation, remediation, investigation, greenfield bootstrap. Workflow templates define which cognitive operation loops to run, in what order, with what entry/exit conditions (coordinate with SMET-I-0029).
 - Make templates context-aware: pre-populate fields based on parent documents, project context, and architecture scope
 - Remove generic conditional sections — each template should be specific to its document type
@@ -101,7 +101,7 @@ Phase 6: Test templates with both human and agent workflows
 
 ## Acceptance Criteria
 
-- Every Super-Metis document type has a purpose-built template
+- Every Cadre document type has a purpose-built template
 - Templates include clear guidance for each section
 - No generic conditional sections — each template is specific
 - Context-aware rendering correctly pre-populates from parent documents

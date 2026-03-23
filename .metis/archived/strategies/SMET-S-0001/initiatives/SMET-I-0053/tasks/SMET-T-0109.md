@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate durable memory and insight notes system in Ultra-Metis. Document note structure, categorization, scoring system, prune candidates detection, conflict detection, and integration with task workflows.
+Investigate durable memory and insight notes system in Cadre. Document note structure, categorization, scoring system, prune candidates detection, conflict detection, and integration with task workflows.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -144,11 +144,11 @@ Investigate durable memory and insight notes system in Ultra-Metis. Document not
 
 ### Investigation Complete - March 17, 2026
 
-**Comprehensive analysis of Ultra-Metis DurableInsightNote system completed.** Investigated module location:
-`/Users/danielcassil/projects/ultra-metis/crates/ultra-metis-core/src/domain/documents/durable_insight_note/mod.rs`
+**Comprehensive analysis of Cadre DurableInsightNote system completed.** Investigated module location:
+`/Users/danielcassil/projects/cadre/crates/cadre-core/src/domain/documents/durable_insight_note/mod.rs`
 
 **Findings Summary**:
-- Ultra-Metis implements complete durable memory system; Original Metis has no equivalent
+- Cadre implements complete durable memory system; Original Metis has no equivalent
 - 7 comprehensive comparison grids (M1-M7) created covering all aspects:
   - M1: System Overview & Capabilities (7 dimensions)
   - M2: Note Structure & Content Model (7 fields)
@@ -161,7 +161,7 @@ Investigate durable memory and insight notes system in Ultra-Metis. Document not
 **Key Capability Gaps**:
 - Priority: CRITICAL (entirely missing from original Metis)
 - Complexity: XL (sophisticated multi-subsystem design)
-- Ultra-Metis robustness: Significantly better (typed enums, FromStr parsing, state machine validation)
+- Cadre robustness: Significantly better (typed enums, FromStr parsing, state machine validation)
 
 **Architectural Insights**:
 - Bidirectional integration: fetch notes at task start, record feedback at wrap-up

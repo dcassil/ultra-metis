@@ -16,19 +16,19 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: XL
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: future-monorepo-root-orchestration
 ---
 
 # Future: Monorepo-Root Orchestration and Multi-Architecture Support
 
-> **STATUS: BACKLOG / NON-MVP** — This initiative captures a future direction that should NOT be implemented until the core Super-Metis system is working. It is included in planning to ensure the MVP architecture does not preclude this future capability.
+> **STATUS: BACKLOG / NON-MVP** — This initiative captures a future direction that should NOT be implemented until the core Cadre system is working. It is included in planning to ensure the MVP architecture does not preclude this future capability.
 
 ## Context
 
-The MVP of Super-Metis assumes initialization at the level of a single project or package — one repo, one architecture pattern, one set of rules, one planning hierarchy. But many real engineering teams work in monorepos where a single repository root contains multiple packages, apps, services, and libraries, each potentially requiring a different architecture pattern.
+The MVP of Cadre assumes initialization at the level of a single project or package — one repo, one architecture pattern, one set of rules, one planning hierarchy. But many real engineering teams work in monorepos where a single repository root contains multiple packages, apps, services, and libraries, each potentially requiring a different architecture pattern.
 
-When Super-Metis is initialized at the root of a monorepo, the system should eventually understand that:
+When Cadre is initialized at the root of a monorepo, the system should eventually understand that:
 - There are multiple packages/apps/services within the repo
 - Different packages may need different architecture patterns (e.g., the `web` package uses `javascript/react-app` while the `server` package uses `javascript/server`)
 - Some concerns (product definition, shared design context, shared rules) belong at the root/shared level
@@ -38,7 +38,7 @@ When Super-Metis is initialized at the root of a monorepo, the system should eve
 ## Why It Matters
 
 Without monorepo-root awareness, teams must either:
-- Initialize Super-Metis separately in each package (losing cross-package coordination)
+- Initialize Cadre separately in each package (losing cross-package coordination)
 - Initialize at the root and pretend the whole monorepo has one architecture (which is wrong)
 
 Neither is satisfactory. The future system should support a hierarchical workspace model that reflects how monorepos actually work.
@@ -56,8 +56,8 @@ This initiative directly serves (in future):
 ## Goals & Non-Goals
 
 **Goals (future):**
-- Detect that Super-Metis is being initialized at a monorepo root (as opposed to within a single package)
-- Support a two-level workspace model: root-level Super-Metis + package-level Super-Metis workspaces
+- Detect that Cadre is being initialized at a monorepo root (as opposed to within a single package)
+- Support a two-level workspace model: root-level Cadre + package-level Cadre workspaces
 - Root level holds: shared product doc, shared design context, shared rules, cross-package coordination
 - Package level holds: package-specific architecture (each package has its own Reference Architecture), package-specific rules, package-specific initiative/task breakdowns
 - Support cross-package feature planning: a feature request at the root can be decomposed into package-level work items in the relevant packages
@@ -67,7 +67,7 @@ This initiative directly serves (in future):
 - Building this in the MVP — this is explicitly post-MVP
 - Supporting arbitrary nesting depth (root → package is sufficient; no root → group → package → subpackage)
 - Distributed monorepo support (multiple repos linked together)
-- Package-level autonomy (all packages share the same Super-Metis installation, just different workspaces within it)
+- Package-level autonomy (all packages share the same Cadre installation, just different workspaces within it)
 
 ## Detailed Design
 
@@ -75,24 +75,24 @@ This initiative directly serves (in future):
 
 ```
 monorepo-root/
-  .super-metis/              ← root-level workspace
+  .cadre/              ← root-level workspace
     product-doc.md           ← shared product definition
     design-context/          ← shared design references
     rules/                   ← shared/root-level rules
     initiatives/             ← cross-package coordination initiatives
   packages/
     web/
-      .super-metis/          ← package-level workspace
+      .cadre/          ← package-level workspace
         reference-arch.md    ← javascript/react-app
         rules/               ← web-specific rules (inherits from root)
         initiatives/         ← web-specific work
     server/
-      .super-metis/          ← package-level workspace
+      .cadre/          ← package-level workspace
         reference-arch.md    ← javascript/server
         rules/               ← server-specific rules (inherits from root)
         initiatives/         ← server-specific work
     shared-ui/
-      .super-metis/          ← package-level workspace
+      .cadre/          ← package-level workspace
         reference-arch.md    ← javascript/component-lib
         ...
 ```
@@ -121,7 +121,7 @@ monorepo-root/
 
 ## Example Future Workflow
 
-1. User runs `super-metis init` at monorepo root
+1. User runs `cadre init` at monorepo root
 2. System detects monorepo structure (Turborepo with `packages/web`, `packages/server`, `packages/shared-ui`)
 3. System creates root-level workspace with shared Product Doc
 4. System offers to initialize package-level workspaces for each detected package
@@ -136,13 +136,13 @@ monorepo-root/
 ## Alternatives Considered
 
 1. **Single flat workspace for entire monorepo**: Rejected because it forces one architecture on diverse packages and loses package-level specificity.
-2. **Completely independent Super-Metis installations per package**: Rejected because it loses cross-package coordination, shared rules, and unified product context.
+2. **Completely independent Cadre installations per package**: Rejected because it loses cross-package coordination, shared rules, and unified product context.
 3. **Build this in the MVP**: Rejected because the complexity is substantial and the single-project model must work first.
 
 ## Implementation Plan
 
 This is future/backlog work. Implementation should not begin until:
-- Core Super-Metis is working for single-project repos
+- Core Cadre is working for single-project repos
 - Architecture Catalog (SMET-I-0016) is complete
 - Rules inheritance (SMET-I-0004) is working
 - Orchestrator (SMET-I-0013) is working
@@ -167,7 +167,7 @@ When the time comes, likely phases:
 
 ## Risks / Dependencies
 
-- Depends on all core Super-Metis initiatives being complete first
+- Depends on all core Cadre initiatives being complete first
 - The workspace data model must be designed carefully to avoid tight coupling between root and packages
 - Cross-package feature decomposition requires sophisticated understanding of package responsibilities
 - Performance: root-level queries that aggregate across many packages must remain fast

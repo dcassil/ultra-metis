@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate execution traceability and audit systems in Ultra-Metis. Document execution records structure, tool entry tracking, validation recording, decision recording, transition audit trails, and cross-reference indexing.
+Investigate execution traceability and audit systems in Cadre. Document execution records structure, tool entry tracking, validation recording, decision recording, transition audit trails, and cross-reference indexing.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 

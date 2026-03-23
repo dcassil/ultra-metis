@@ -62,8 +62,8 @@
       }
     ]
   },
-  "ultra_metis_mcp": {
-    "system": "ultra-metis-mcp",
+  "cadre_mcp": {
+    "system": "cadre-mcp",
     "tool_surface": "mcp-stdio",
     "startup_ok": true,
     "tools_available": [
@@ -84,7 +84,7 @@
         "ok": true,
         "duration_ms": 3.70125,
         "output_size": 243,
-        "detail": "## Project Initialized\n\n| Field | Value |\n| ----- | ----- |\n| Path | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpt0gtG6 |\n| Prefix | BENCH |\n| Docs Dir | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpt0gtG6/.ultra-metis/docs/ |"
+        "detail": "## Project Initialized\n\n| Field | Value |\n| ----- | ----- |\n| Path | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpt0gtG6 |\n| Prefix | BENCH |\n| Docs Dir | /var/folders/89/m2y2jh5s5278yknk94vztqs40000gn/T/.tmpt0gtG6/.cadre/docs/ |"
       },
       {
         "operation": "create_vision",

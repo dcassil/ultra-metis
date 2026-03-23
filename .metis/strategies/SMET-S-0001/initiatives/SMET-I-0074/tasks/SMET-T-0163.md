@@ -25,14 +25,14 @@ initiative_id: SMET-I-0074
 [[SMET-I-0074]]
 
 ## Objective
-Run a comprehensive validation sweep to confirm the rename is complete. Search for any remaining "ultra-metis" or "ultra_metis" references (excluding .metis/ archival content and .claude/worktrees/). Run `make build`, `make install`, and `make test` to verify everything compiles, installs, and passes tests. Fix any stragglers found.
+Run a comprehensive validation sweep to confirm the rename is complete. Search for any remaining "cadre" or "cadre" references (excluding .metis/ archival content and .claude/worktrees/). Run `make build`, `make install`, and `make test` to verify everything compiles, installs, and passes tests. Fix any stragglers found.
 
 ## Acceptance Criteria
 
 ## Acceptance Criteria
 
 ## Acceptance Criteria
-- [ ] `rg "ultra.metis"` returns zero hits outside .metis/ and .claude/worktrees/
+- [ ] `rg "cadre"` returns zero hits outside .metis/ and .claude/worktrees/
 - [ ] `make build` succeeds — produces cadre-mcp and cadre binaries
 - [ ] `make install` copies binaries to ~/.local/bin
 - [ ] `make test` passes with zero failures

@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: build-repo-aware-setup-and
 ---
 
@@ -24,9 +24,9 @@ initiative_id: build-repo-aware-setup-and
 
 ## Context
 
-When Super-Metis is initialized in a new repo, it should understand the repo's structure — what languages are used, what build tools exist, what the directory layout looks like, where packages/apps/libraries live. This context informs everything from template generation to quality gate configuration to rule suggestions.
+When Cadre is initialized in a new repo, it should understand the repo's structure — what languages are used, what build tools exist, what the directory layout looks like, where packages/apps/libraries live. This context informs everything from template generation to quality gate configuration to rule suggestions.
 
-Current Metis initialization creates a generic workspace. Super-Metis should create a workspace that's aware of the software project it's managing.
+Current Metis initialization creates a generic workspace. Cadre should create a workspace that's aware of the software project it's managing.
 
 ## Governing Commitments
 
@@ -53,7 +53,7 @@ This initiative directly serves:
 - Support common monorepo patterns: Turborepo, Nx, Cargo workspaces, pnpm workspaces
 
 **Non-Goals:**
-- Supporting non-software projects — Super-Metis is purpose-built for software repos
+- Supporting non-software projects — Cadre is purpose-built for software repos
 - Auto-generating all planning artifacts — bootstrap gets you started, humans refine
 - Deep framework-specific knowledge (e.g., understanding Next.js routing conventions)
 - Forcing architecture rewrites on brownfield repos — the system recommends but the user always decides. If they decline a recommended architecture, the current structure is recorded as-is

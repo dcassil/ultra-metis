@@ -27,19 +27,19 @@ initiative_id: NULL
 
 ### The Problem
 
-Ultra-Metis (being renamed to **Cadre** — "Constrained AI Developer Really Awesome Engine") needs an execution architecture that supports parallel multi-agent workflows with quality enforcement. The current architecture has fundamental limitations:
+Cadre (being renamed to **Cadre** — "Constrained AI Developer Really Awesome Engine") needs an execution architecture that supports parallel multi-agent workflows with quality enforcement. The current architecture has fundamental limitations:
 
 1. **Single long-running ralph loop** — All task execution happens in one session. Context pollution accumulates over iterations. No isolation between tasks. No review gates between tasks.
 
 2. **No subagent awareness** — When Claude spawns subagents (via the Agent tool), those subagents have zero knowledge of Cadre's work management system. They don't know about documents, phases, MCP tools, or workflow rules. They operate as if Cadre doesn't exist.
 
-3. **No parallel execution** — The `/ultra-metis-ralph-epic` command processes stories sequentially. Independent stories that could run concurrently are serialized, wasting time.
+3. **No parallel execution** — The `/cadre-ralph-epic` command processes stories sequentially. Independent stories that could run concurrently are serialized, wasting time.
 
 4. **No automated review** — Work quality depends entirely on the executing agent's discipline. There are no automated review checkpoints between tasks.
 
 ### The Comparison
 
-A deep comparative analysis of ultra-metis vs the superpowers plugin (v5.0.5) revealed that the two plugins are naturally complementary, not competitive:
+A deep comparative analysis of cadre vs the superpowers plugin (v5.0.5) revealed that the two plugins are naturally complementary, not competitive:
 
 **Superpowers is a better executor.** Its subagent-driven-development (SDD) skill dispatches a fresh agent per task with precisely curated context, runs two-stage review (spec compliance + code quality) between tasks, supports model selection guidance (cheap models for mechanical work, capable for judgment), and uses git worktrees for isolation.
 
@@ -49,7 +49,7 @@ Neither plugin can do what the other does well. The question is how to combine t
 
 ### Key Findings from Audit
 
-| Facet | Cadre (Ultra-Metis) | Superpowers |
+| Facet | Cadre (Cadre) | Superpowers |
 |-------|---------------------|-------------|
 | Work tracking | Persistent documents (Vision/Strategy/Initiative/Task), repo-native, survives sessions | Ephemeral TodoWrite, dies with session |
 | Task execution | Single ralph loop, context pollutes over time | Fresh subagent per task, isolated context |
@@ -183,7 +183,7 @@ Option A is chosen because:
 ### Neutral
 
 - Ralph loop continues to exist for single-task iteration — no migration required
-- Existing commands (`/ultra-metis-ralph`, `/ultra-metis-decompose`) will be renamed to Cadre namespace but functionality is preserved
+- Existing commands (`/cadre-ralph`, `/cadre-decompose`) will be renamed to Cadre namespace but functionality is preserved
 - The MCP server interface is unchanged — this decision affects plugin-level orchestration only
 
 ## Discussion Decisions (2026-03-23)
@@ -191,7 +191,7 @@ Option A is chosen because:
 The following points were raised and resolved during discussion:
 
 ### 1. Rename Timing — Separate, Done First
-The namespace rename (ultra-metis → cadre, `.metis` → `.cadre` for new projects) is its own initiative executed before any integration work. All subsequent work builds on the Cadre namespace from the start. The existing `.metis` folder in this project is NOT renamed — Cadre will be initialized independently as `.cadre`, tested in parallel, then docs migrated via script once proven.
+The namespace rename (cadre → cadre, `.metis` → `.cadre` for new projects) is its own initiative executed before any integration work. All subsequent work builds on the Cadre namespace from the start. The existing `.metis` folder in this project is NOT renamed — Cadre will be initialized independently as `.cadre`, tested in parallel, then docs migrated via script once proven.
 
 ### 2. Ralph Loop Coexistence — A/B Testable
 Both execution models coexist and are A/B testable:
@@ -226,7 +226,7 @@ A/B testing: run the same initiative with each mode, compare defects caught, tot
 ## Implementation Roadmap
 
 ### Phase 0: Rename (Prerequisite)
-- Rename plugin namespace from ultra-metis to cadre
+- Rename plugin namespace from cadre to cadre
 - Rename MCP server binary and CLI binary
 - New projects use `.cadre/` directory (NOT renaming existing `.metis` folders)
 - Update all plugin files: commands, hooks, scripts, skills, agents
@@ -257,7 +257,7 @@ A/B testing: run the same initiative with each mode, compare defects caught, tot
 
 ## Related Documents
 
-- SMET-I-0067: Ultra-Metis Plugin: Execution Commands (Ralph and Decompose) — completed, basis for current execution model
+- SMET-I-0067: Cadre Plugin: Execution Commands (Ralph and Decompose) — completed, basis for current execution model
 - SMET-I-0069: Architecture Lifecycle Hooks — planned, Phase 4 dependency
 - SMET-I-0073: Session-Scoped Ralph Loop State — completed, fixes cross-session interference
 - SMET-I-0023: Work Leasing and Ownership — deferred, future enhancement for Phase 3

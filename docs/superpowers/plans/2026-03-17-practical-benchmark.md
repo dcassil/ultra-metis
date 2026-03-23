@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a benchmark system that measures how well AI executes Super-Metis workflows end-to-end, comparing autonomous execution vs validation-gated execution to quantify the ROI of quality gates.
+**Goal:** Build a benchmark system that measures how well AI executes Cadre workflows end-to-end, comparing autonomous execution vs validation-gated execution to quantify the ROI of quality gates.
 
 **Architecture:**
 - **Scenario Layer** — Define File Processing Toolkit as vision + 2 initiative summaries (test inputs), with all edge cases and specs
@@ -1144,7 +1144,7 @@ chmod +x benchmarks/run-practical-bench.sh
 ```markdown
 # Practical Benchmark: File Processing Toolkit
 
-This benchmark measures how well AI executes Super-Metis workflows end-to-end, comparing autonomous execution vs validation-gated execution.
+This benchmark measures how well AI executes Cadre workflows end-to-end, comparing autonomous execution vs validation-gated execution.
 
 ## Scenario
 

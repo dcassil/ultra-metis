@@ -46,7 +46,7 @@ Deliverables:
 ## Acceptance Criteria
 
 - [x] Comparison grid template created with structure for all 18 investigation phases
-- [x] Comparison grid includes: Original Metis location/design/features, Ultra-Metis location/design/features, Assessment (robustness/completeness/quality), Gap Analysis, Priority/Impact
+- [x] Comparison grid includes: Original Metis location/design/features, Cadre location/design/features, Assessment (robustness/completeness/quality), Gap Analysis, Priority/Impact
 - [x] Master findings index created showing all areas and their investigation status
 - [x] Methodology documentation clarifies how findings should be recorded for consistency
 - [x] Progress tracking template allows marking tasks complete as they're processed
@@ -62,10 +62,10 @@ Deliverables:
    - Original Metis Location (files/modules)
    - Original Metis Design (key abstractions, patterns)
    - Original Metis Features
-   - Ultra-Metis Location (files/modules)
-   - Ultra-Metis Design (key abstractions, patterns)
-   - Ultra-Metis Features
-   - Coverage Status (Both/Only Metis/Only Ultra-Metis/Neither)
+   - Cadre Location (files/modules)
+   - Cadre Design (key abstractions, patterns)
+   - Cadre Features
+   - Coverage Status (Both/Only Metis/Only Cadre/Neither)
    - Assessment (robustness/completeness/quality)
    - Gap Analysis
    - Priority/Impact (Critical/High/Medium/Low, XS-XL effort)
@@ -113,9 +113,9 @@ Deliverables:
 **Completed:**
 1. ✓ Created comprehensive comparison grid template with standardized format:
    - Original Metis Implementation section (Location, Design Pattern, Key Abstractions, Features, Notes)
-   - Ultra-Metis Implementation section (same structure for consistency)
+   - Cadre Implementation section (same structure for consistency)
    - Comparison Assessment (Coverage, Robustness, Completeness, Design Quality)
-   - Gap Analysis (Missing in Ultra-Metis, Missing in Metis, Closest Analogous Pattern)
+   - Gap Analysis (Missing in Cadre, Missing in Metis, Closest Analogous Pattern)
    - Priority & Impact (Importance for Feature Parity, Implementation Complexity, Business Impact)
 
 2. ✓ Created Master Findings Index organized by 15 functional areas:
@@ -136,7 +136,7 @@ Deliverables:
    - O. Synthesis & Gap Analysis (SMET-T-0111)
 
 3. ✓ Created detailed Comparison Scoring Guide:
-   - Robustness Scale (Metis / Ultra-Metis / Comparable / Not Applicable)
+   - Robustness Scale (Metis / Cadre / Comparable / Not Applicable)
    - Completeness Scale (with rationale)
    - Design Quality Scale (with rationale)
 

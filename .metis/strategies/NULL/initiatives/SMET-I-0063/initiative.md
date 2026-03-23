@@ -25,7 +25,7 @@ initiative_id: produce-reporting-trend-tracking
 
 ## Context
 
-Even a good benchmark loses value if the results stay trapped in one-off markdown notes or isolated JSON files. To make the benchmark useful for tuning Ultra-Metis, the repo needs a reporting layer that turns raw benchmark runs into understandable comparisons and a regression workflow that shows when quality, cost, or architecture alignment moved in the wrong direction.
+Even a good benchmark loses value if the results stay trapped in one-off markdown notes or isolated JSON files. To make the benchmark useful for tuning Cadre, the repo needs a reporting layer that turns raw benchmark runs into understandable comparisons and a regression workflow that shows when quality, cost, or architecture alignment moved in the wrong direction.
 
 ## Goals & Non-Goals
 
@@ -33,7 +33,7 @@ Even a good benchmark loses value if the results stay trapped in one-off markdow
 - Produce concise reports for individual benchmark runs and side-by-side comparisons.
 - Preserve historical benchmark results so trends can be reviewed over time.
 - Highlight regressions in quality, cost, or completeness early.
-- Keep reporting neutral so neither original Metis nor Ultra-Metis grades itself.
+- Keep reporting neutral so neither original Metis nor Cadre grades itself.
 
 **Non-Goals:**
 - Building a dashboard product in the first pass
@@ -95,4 +95,4 @@ Keeping only raw JSON is easy to implement, but it makes the benchmark hard to u
 2. Add markdown report generation for single runs and pairwise comparisons.
 3. Add baseline selection and regression highlighting rules.
 4. Record history in a simple append-friendly format for trend analysis.
-5. Document how to use the benchmark outputs to tune Ultra-Metis over time.
+5. Document how to use the benchmark outputs to tune Cadre over time.

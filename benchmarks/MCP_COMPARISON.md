@@ -113,7 +113,7 @@ guides AI toward complete, placeholder-free content.
 
 ### Template Quality Verdict
 
-**Ultra-metis** templates yield 31% higher completeness scores.
+**Cadre** templates yield 31% higher completeness scores.
 
 ## Methodology
 

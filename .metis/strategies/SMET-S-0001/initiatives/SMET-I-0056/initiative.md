@@ -24,7 +24,7 @@ initiative_id: cli-architecture-add-missing
 
 ## Context
 
-Ultra-Metis CLI has 8 subcommands (init, list, read, create, edit, transition, search, archive). The MCP layer now has 10 tools including `reassign_parent` and `index_code` (added in SMET-I-0055), plus enhanced parameters (replace_all, force, document_type filter, limit, include_archived). The CLI needs to catch up with:
+Cadre CLI has 8 subcommands (init, list, read, create, edit, transition, search, archive). The MCP layer now has 10 tools including `reassign_parent` and `index_code` (added in SMET-I-0055), plus enhanced parameters (replace_all, force, document_type filter, limit, include_archived). The CLI needs to catch up with:
 
 1. **Missing commands** — `validate`, `status`, and `reassign` have no CLI equivalents
 2. **Parameter gaps** — MCP has replace_all, force, type/limit filters but CLI doesn't expose them

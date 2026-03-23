@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Synthesize all findings from individual investigation tasks into a comprehensive comparison matrix. Create prioritized list of missing capabilities in Ultra-Metis, identify areas where Ultra-Metis exceeds Metis, document architectural lessons learned, and produce integration/migration recommendations.
+Synthesize all findings from individual investigation tasks into a comprehensive comparison matrix. Create prioritized list of missing capabilities in Cadre, identify areas where Cadre exceeds Metis, document architectural lessons learned, and produce integration/migration recommendations.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -68,8 +68,8 @@ Synthesize all findings from individual investigation tasks into a comprehensive
 ## Acceptance Criteria
 
 - [x] Comprehensive comparison matrix created aggregating all investigation findings
-- [x] Prioritized list of missing capabilities in Ultra-Metis with implementation effort estimates
-- [x] List of capabilities where Ultra-Metis exceeds original Metis
+- [x] Prioritized list of missing capabilities in Cadre with implementation effort estimates
+- [x] List of capabilities where Cadre exceeds original Metis
 - [x] Architectural lessons and design pattern insights documented
 - [x] Integration and migration recommendations provided
 
@@ -150,16 +150,16 @@ Synthesize all findings from individual investigation tasks into a comprehensive
    - Hooks System (partial)
    - Ralph Loop Execution (Metis only, CRITICAL)
    - Skills/Agents (Metis only, HIGH)
-   - Operations Kernel (Ultra-Metis only)
-   - Governance & Rules (Ultra-Metis only)
-   - Quality System (Ultra-Metis only)
+   - Operations Kernel (Cadre only)
+   - Governance & Rules (Cadre only)
+   - Quality System (Cadre only)
 
 2. ✓ **Prioritized Gap List** - Three CRITICAL gaps identified with implementation complexity estimates:
    - Ralph Loop Autonomous Execution (L - 1-2 weeks) - BLOCKING autonomous workflows
    - Plugin System Gaps (3-4 weeks total) - Agent/Skills missing
    - Strategy Document Type (XL - 2+ weeks) - Missing Metis feature
 
-3. ✓ **Areas Where Ultra-Metis Exceeds Metis** - Eight major advantage areas documented:
+3. ✓ **Areas Where Cadre Exceeds Metis** - Eight major advantage areas documented:
    - Type Safety & Compile-Time Guarantees
    - Design Quality Improvements (clap, priority hooks, DocumentCore, Tera templates)
    - Document Type Enhancements (Epic, Story with type classification)
@@ -171,7 +171,7 @@ Synthesize all findings from individual investigation tasks into a comprehensive
    - Durable Memory & Insight Notes (scoring, conflict detection, pruning)
 
 4. ✓ **Architectural Lessons Learned** - Five key design pattern insights:
-   - Document Serialization: Ultra-Metis schema versioning should be standard practice
+   - Document Serialization: Cadre schema versioning should be standard practice
    - Hierarchy: Three-level (Epic/Story/Task) better than two-level
    - Phase Models: Identical for equivalent types except Strategy
    - Hook Systems: Hybrid approach optimal (transition hooks for safety, general hooks for extensibility)

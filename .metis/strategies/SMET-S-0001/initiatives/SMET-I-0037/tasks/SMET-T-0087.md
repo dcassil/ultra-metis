@@ -39,7 +39,7 @@ Research findings are known; they need to be organized and recorded so the rewri
 
 - [ ] The gap analysis is written into the SMET-I-0037 initiative document under a `## Gap Analysis` section
 - [ ] For each document type (vision, initiative, task, ADR), the analysis lists:
-  - Current ultra-metis template sections and their weaknesses
+  - Current cadre template sections and their weaknesses
   - Corresponding original metis patterns that work better
   - Specific improvements needed (with concrete examples of better guidance text)
 - [ ] Each identified gap is ranked by impact (high/medium/low) on output quality
@@ -59,26 +59,26 @@ Research findings are known; they need to be organized and recorded so the rewri
 - Checkbox enforcement for risk/dependency categories so nothing is missed
 - "Status Updates: To be added during implementation" as a living-document signal
 
-**Ultra-Metis Template Weaknesses (by document type):**
+**Cadre Template Weaknesses (by document type):**
 
-*Vision (`super-metis/crates/super-metis-core/src/domain/documents/vision/content.md`)*:
+*Vision (`cadre/crates/cadre-core/src/domain/documents/vision/content.md`)*:
 - 6 sections, all with single-line placeholders like `{Why this vision exists and what problem it solves}`
 - No format guidance, no examples, no conditional markers
 - Missing: measurable success criteria format, stakeholder table, time horizon scaffolding
 
-*Initiative (`super-metis/crates/super-metis-core/src/domain/documents/initiative/content.md`)*:
+*Initiative (`cadre/crates/cadre-core/src/domain/documents/initiative/content.md`)*:
 - "Detailed Design" section labeled as "High-level" (contradictory)
 - No conditional sections for optional fields (risk table, dependencies, alternatives)
 - Missing: complexity estimate guidance, phase timeline template, acceptance criteria format, link to parent vision
 
-*Task (`super-metis/crates/super-metis-core/src/domain/documents/task/content.md`)*:
+*Task (`cadre/crates/cadre-core/src/domain/documents/task/content.md`)*:
 - Only 3 sections: Description, Approach, Progress
 - No Acceptance Criteria section
 - No Implementation Notes section
 - No Dependencies, Risk, or Status Updates sections
 - A task template with only 3 placeholder lines is the weakest relative to metis
 
-*ADR (`super-metis/crates/super-metis-core/src/domain/documents/adr/content.md`)*:
+*ADR (`cadre/crates/cadre-core/src/domain/documents/adr/content.md`)*:
 - Missing: consequences section, alternatives table format, decision status marker
 - No guidance on how to write a decision statement vs. a solution description
 
@@ -104,7 +104,7 @@ Research findings are known; they need to be organized and recorded so the rewri
 ## Status Updates
 
 ### 2026-03-17
-- Read both ultra-metis and original metis domain/documents templates (4 types each)
+- Read both cadre and original metis domain/documents templates (4 types each)
 - Discovered original metis uses `domain/documents/` templates (not `templates/`), which are significantly richer
 - Key findings: Task template is most critical gap (missing Acceptance Criteria + Status Updates), all templates missing [REQUIRED]/[CONDITIONAL] markers, Vision/Initiative/ADR missing conditional sections
 - Wrote full gap analysis into SMET-I-0037 under `## Gap Analysis` section with per-type analysis, specific improvements, and impact ranking table

@@ -26,7 +26,7 @@ initiative_id: session-history-audit-and-replay
 
 After sessions complete, users need to understand what happened: what was attempted, what decisions were made, what user interventions occurred, and what the outcome was. This requires durable session history with a chronological event stream, structured result records, and search/filter capabilities across past sessions.
 
-This initiative is also the audit trail for the system — every approval, intervention, and outcome must be queryable so that AI work is explainable and reviewable after the fact. The session history is also the mechanism for linking execution back into Ultra-Metis work items.
+This initiative is also the audit trail for the system — every approval, intervention, and outcome must be queryable so that AI work is explainable and reviewable after the fact. The session history is also the mechanism for linking execution back into Cadre work items.
 
 **Pre-requisites**: SMET-I-0038, SMET-I-0039, SMET-I-0040, SMET-I-0041 (events generated during monitoring become the history).
 
@@ -48,7 +48,7 @@ This initiative is also the audit trail for the system — every approval, inter
 
 **Non-Goals:**
 - Real-time output streaming (SMET-I-0041 — history is the persisted record of what monitoring captured)
-- Exporting session results to Ultra-Metis work items (SMET-I-0045)
+- Exporting session results to Cadre work items (SMET-I-0045)
 - Cross-session analytics or trend analysis (post-MVP)
 
 ## Detailed Design
@@ -99,7 +99,7 @@ This initiative is also the audit trail for the system — every approval, inter
 **Recommendation: Update scope**
 
 Relevant ADR decision points:
-- **#1 Rename**: All references to "Ultra-Metis" become "Cadre." The title references "Ultra-Metis work items" which becomes "Cadre work items."
+- **#1 Rename**: All references to "Cadre" become "Cadre." The title references "Cadre work items" which becomes "Cadre work items."
 - **#3 SDD-style execution**: Session history must capture the full SDD execution structure: which subagents were dispatched, what task each handled, and the two-stage review results (spec compliance + code quality). The replay view should show subagent boundaries so reviewers can see per-task execution rather than a single undifferentiated stream. Execution records from the orchestrator (dispatch order, model selection, review verdicts) are first-class audit data.
 - **#6 Architecture hooks**: When architecture lifecycle hooks (SMET-I-0069) are wired into execution (ADR Phase 4), conformance check results should be captured in the session history as auditable events. This is a future dependency but should be noted in the event schema design now.
 

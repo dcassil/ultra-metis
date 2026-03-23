@@ -1,7 +1,7 @@
 //! Core cognitive operation types.
 //!
 //! Defines the 12 universal cognitive operations that form the kernel of
-//! Ultra-Metis's workflow composition system.
+//! Cadre's workflow composition system.
 
 use serde::{Deserialize, Serialize};
 use std::fmt;

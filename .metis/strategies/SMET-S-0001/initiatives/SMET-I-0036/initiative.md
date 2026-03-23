@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: investigate-and-strengthen-error
 ---
 
@@ -24,9 +24,9 @@ initiative_id: investigate-and-strengthen-error
 
 ## Context
 
-The SMET-I-0035 benchmark revealed that the original metis plugin catches 4/4 error scenarios while ultra-metis only catches 2/4. The two known bugs (SMET-T-0078 orphan parents, SMET-T-0079 terminal phase transitions) account for the gap, but fixing those two bugs alone isn't sufficient — we need a systematic audit of ALL error paths to find other gaps we haven't discovered yet.
+The SMET-I-0035 benchmark revealed that the original metis plugin catches 4/4 error scenarios while cadre only catches 2/4. The two known bugs (SMET-T-0078 orphan parents, SMET-T-0079 terminal phase transitions) account for the gap, but fixing those two bugs alone isn't sufficient — we need a systematic audit of ALL error paths to find other gaps we haven't discovered yet.
 
-The original metis plugin (TypeScript) has mature error handling built over multiple iterations. Ultra-metis (Rust) has strong type-level guarantees in the core library but the store/MCP/CLI layers were built quickly and likely have additional gaps in validation, error messaging, and edge case handling.
+The original metis plugin (TypeScript) has mature error handling built over multiple iterations. Cadre (Rust) has strong type-level guarantees in the core library but the store/MCP/CLI layers were built quickly and likely have additional gaps in validation, error messaging, and edge case handling.
 
 ### Known Gaps from Benchmarks
 1. **Parent validation**: Creating documents with non-existent parents succeeds (SMET-T-0078)
@@ -37,16 +37,16 @@ The original metis plugin (TypeScript) has mature error handling built over mult
 
 **Goals:**
 - Catalog every error path in the original metis plugin's MCP server (what does it validate, when does it error, what messages does it return)
-- Catalog every error path in ultra-metis store/MCP/CLI layers
-- Produce a gap analysis: what does metis catch that ultra-metis doesn't
-- Fix all identified gaps in ultra-metis
+- Catalog every error path in cadre store/MCP/CLI layers
+- Produce a gap analysis: what does metis catch that cadre doesn't
+- Fix all identified gaps in cadre
 - Add a comprehensive negative-path test suite (invalid inputs, edge cases, constraint violations)
-- Ensure ultra-metis error messages are as good or better than metis (actionable, specific, suggest fixes)
+- Ensure cadre error messages are as good or better than metis (actionable, specific, suggest fixes)
 - Re-run benchmark Scenario 6 (Error Handling) and achieve 4/4 or better
 
 **Non-Goals:**
 - Changing the core domain library error types (those are already well-typed with `DocumentValidationError`)
-- Adding error handling for features metis doesn't have (ultra-metis-only features)
+- Adding error handling for features metis doesn't have (cadre-only features)
 - Internationalization of error messages
 
 ## Detailed Design
@@ -56,17 +56,17 @@ The original metis plugin (TypeScript) has mature error handling built over mult
 - For each MCP tool, catalog: what validations run, what error messages return, what edge cases are handled
 - Document in a matrix: Operation × Validation × Error Message
 
-### Phase 2: Audit Ultra-Metis Error Handling
-- Walk through each `ultra-metis-store` operation and each MCP tool handler
+### Phase 2: Audit Cadre Error Handling
+- Walk through each `cadre-store` operation and each MCP tool handler
 - For each, catalog: what validations exist, what's missing compared to metis
-- Identify gaps: validations metis does that ultra-metis doesn't
+- Identify gaps: validations metis does that cadre doesn't
 
 ### Phase 3: Gap Analysis and Prioritization
 - Produce a ranked list of missing validations
 - Categorize: data integrity (HIGH), user experience (MEDIUM), edge case (LOW)
 
 ### Phase 4: Fix Gaps
-- Implement missing validations in `ultra-metis-store`
+- Implement missing validations in `cadre-store`
 - Ensure MCP server and CLI surface errors clearly
 - Add unit tests for every new error path
 
@@ -89,7 +89,7 @@ The original metis plugin (TypeScript) has mature error handling built over mult
 ## Implementation Plan
 
 Phase 1: Audit original metis error paths (read source, build matrix)
-Phase 2: Audit ultra-metis error paths (same matrix format)
+Phase 2: Audit cadre error paths (same matrix format)
 Phase 3: Gap analysis and fix prioritization
 Phase 4: Implement fixes (includes SMET-T-0078 and SMET-T-0079)
 Phase 5: Build negative-path test suite

@@ -115,7 +115,7 @@ This is a cross-cutting initiative that builds on all the foundational epics and
 **Recommendation: Update scope**
 
 Relevant ADR decision points:
-- **#1 Rename**: References to "Ultra-Metis" become "Cadre" in administration settings and dashboard labels.
+- **#1 Rename**: References to "Cadre" become "Cadre" in administration settings and dashboard labels.
 - **#3 SDD-style execution**: Multi-session management must account for the fact that a single "session" using SDD-style execution may internally spawn multiple subagents, each consuming resources. The capacity model (`max_concurrent_sessions`) should consider whether it counts top-level sessions or total active subagents. Recommendation: count top-level sessions for simplicity in MVP, but track subagent count as metadata for capacity planning.
 - **#4 Git worktree delegation**: When parallel sessions on the same machine target the same repo, worktree isolation (delegated to superpowers) prevents conflicts. The operational reliability layer should be aware that worktrees may exist and handle cleanup on session failure or machine disconnection.
 - **#5 Simple task claiming**: With multiple concurrent sessions, simple file-based task claiming (`.cadre/claims/`) is the mechanism that prevents two sessions from working on the same task. This initiative's concurrency management should integrate with the claiming mechanism — session start should check claims, and session cleanup should release claims.

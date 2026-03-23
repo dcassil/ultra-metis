@@ -23,7 +23,7 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-The MCP server currently has no system prompt — there is no `prompts/` directory and no prompt-related code in `protocol.rs`. Agents using the ultra-metis MCP tools have no built-in guidance on:
+The MCP server currently has no system prompt — there is no `prompts/` directory and no prompt-related code in `protocol.rs`. Agents using the cadre MCP tools have no built-in guidance on:
 - What tools are available and when to use them
 - How tool parameters map to domain concepts
 - The expected workflow for common operations (setup, quality capture, rule queries, etc.)
@@ -61,15 +61,15 @@ A comprehensive system prompt will dramatically improve agent usability by provi
 
 ### Technical Implementation
 
-- Add a `prompts/` directory under `crates/ultra-metis-mcp/src/` (or a `system_prompt.rs` module)
+- Add a `prompts/` directory under `crates/cadre-mcp/src/` (or a `system_prompt.rs` module)
 - Implement MCP `prompts/list` and `prompts/get` protocol handlers in `protocol.rs`
 - The system prompt should be a static string compiled into the binary
 - Keep the prompt under 4000 tokens to avoid bloating context windows
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/protocol.rs` — Add prompt protocol handlers
-- `crates/ultra-metis-mcp/src/` — New module for system prompt content (system_prompt.rs or prompts/)
+- `crates/cadre-mcp/src/protocol.rs` — Add prompt protocol handlers
+- `crates/cadre-mcp/src/` — New module for system prompt content (system_prompt.rs or prompts/)
 
 ## Dependencies
 

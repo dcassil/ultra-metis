@@ -42,7 +42,7 @@ Add document_type, limit, and include_archived filtering parameters to the searc
 - [ ] search_documents accepts optional `include_archived` parameter (boolean, defaults to false)
 - [ ] When include_archived is true, archived documents are included in results
 - [ ] All parameters are optional — existing calls without them still work identically
-- [ ] MCP tool schema updated in `crates/ultra-metis-mcp/src/tools.rs`
+- [ ] MCP tool schema updated in `crates/cadre-mcp/src/tools.rs`
 - [ ] Unit tests for: type filter only, limit only, include_archived, combined filters
 - [ ] All existing search tests still pass
 
@@ -58,8 +58,8 @@ Add document_type, limit, and include_archived filtering parameters to the searc
 7. Parse new parameters from JSON arguments in tool dispatch
 
 ### Key Files
-- `crates/ultra-metis-store/src/store.rs` - search_documents method
-- `crates/ultra-metis-mcp/src/tools.rs` - Tool schema and dispatch
+- `crates/cadre-store/src/store.rs` - search_documents method
+- `crates/cadre-mcp/src/tools.rs` - Tool schema and dispatch
 
 ### Dependencies
 - None

@@ -24,7 +24,7 @@ initiative_id: NULL
 
 ## Objective
 
-The `ultra-metis-store` `create_document` operation accepts any string as `parent_id` without verifying the parent document actually exists. This means you can create a task under `FAKE-I-9999` and it silently succeeds, creating an orphaned document with a broken hierarchy. The store layer must validate that the parent document exists before creating a child document.
+The `cadre-store` `create_document` operation accepts any string as `parent_id` without verifying the parent document actually exists. This means you can create a task under `FAKE-I-9999` and it silently succeeds, creating an orphaned document with a broken hierarchy. The store layer must validate that the parent document exists before creating a child document.
 
 ## Backlog Item Details
 
@@ -37,8 +37,8 @@ The `ultra-metis-store` `create_document` operation accepts any string as `paren
 ### Impact Assessment
 - **Affected Users**: All users creating child documents (tasks under initiatives, etc.)
 - **Reproduction Steps**:
-  1. Initialize a project with `ultra-metis-cli init /tmp/test`
-  2. Run `ultra-metis-cli create /tmp/test task "My Task" --parent NONEXISTENT-I-9999`
+  1. Initialize a project with `cadre-cli init /tmp/test`
+  2. Run `cadre-cli create /tmp/test task "My Task" --parent NONEXISTENT-I-9999`
   3. Observe: task is created successfully with no error
 - **Expected vs Actual**:
   - **Expected**: Error returned: "Parent document NONEXISTENT-I-9999 not found"
@@ -63,14 +63,14 @@ The `ultra-metis-store` `create_document` operation accepts any string as `paren
 ## Implementation Notes
 
 ### Technical Approach
-- In `ultra-metis-store/src/lib.rs` (or wherever `DocumentStore::create_document` is implemented):
+- In `cadre-store/src/lib.rs` (or wherever `DocumentStore::create_document` is implemented):
   1. If `parent_id` is `Some(id)`, call `self.read_document(&id)` first
   2. If read returns not-found, return `Err("Parent document {id} not found")`
   3. If read succeeds, proceed with creation as normal
 - The MCP server and CLI already propagate store errors, so this should surface automatically
 
 ### Dependencies
-- `ultra-metis-store` crate
+- `cadre-store` crate
 
 ## Status Updates
 

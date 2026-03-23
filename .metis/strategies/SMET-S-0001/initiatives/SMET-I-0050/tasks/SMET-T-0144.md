@@ -27,7 +27,7 @@ initiative_id: SMET-I-0050
 
 ## Objective
 
-Create a Homebrew tap repository (`homebrew-ultra-metis`) with a formula that allows macOS users to install ultra-metis via `brew install <org>/ultra-metis/ultra-metis`. Add a job to the release workflow that automatically updates the formula with new version numbers and checksums when a new release is published to GitHub Releases.
+Create a Homebrew tap repository (`homebrew-cadre`) with a formula that allows macOS users to install cadre via `brew install <org>/cadre/cadre`. Add a job to the release workflow that automatically updates the formula with new version numbers and checksums when a new release is published to GitHub Releases.
 
 ## Acceptance Criteria
 
@@ -35,13 +35,13 @@ Create a Homebrew tap repository (`homebrew-ultra-metis`) with a formula that al
 
 ## Acceptance Criteria
 
-- [ ] A `homebrew-ultra-metis` repository exists on GitHub (same org as ultra-metis)
-- [ ] `Formula/ultra-metis.rb` contains a valid Homebrew formula that:
+- [ ] A `homebrew-cadre` repository exists on GitHub (same org as cadre)
+- [ ] `Formula/cadre.rb` contains a valid Homebrew formula that:
   - Downloads the correct macOS binary (ARM64 or Intel) from GitHub Releases
-  - Installs both `ultra-metis` and `ultra-metis-mcp` binaries to the Homebrew prefix
-  - Includes a `test` block that runs `ultra-metis --version`
-- [ ] `brew tap <org>/ultra-metis && brew install ultra-metis` works on macOS ARM64
-- [ ] `brew tap <org>/ultra-metis && brew install ultra-metis` works on macOS Intel
+  - Installs both `cadre` and `cadre-mcp` binaries to the Homebrew prefix
+  - Includes a `test` block that runs `cadre --version`
+- [ ] `brew tap <org>/cadre && brew install cadre` works on macOS ARM64
+- [ ] `brew tap <org>/cadre && brew install cadre` works on macOS Intel
 - [ ] The release workflow (SMET-T-0141) includes a job that auto-updates the formula after release publish:
   - Updates `version` field
   - Updates download URLs
@@ -52,20 +52,20 @@ Create a Homebrew tap repository (`homebrew-ultra-metis`) with a formula that al
 ## Implementation Notes
 
 ### Repositories Involved
-1. **`homebrew-ultra-metis`** (new repo to create) — Contains the Homebrew formula
-2. **`ultra-metis`** (existing) — Release workflow gets a new `update-homebrew` job
+1. **`homebrew-cadre`** (new repo to create) — Contains the Homebrew formula
+2. **`cadre`** (existing) — Release workflow gets a new `update-homebrew` job
 
 ### Technical Approach
 
-**Homebrew Formula (`Formula/ultra-metis.rb`):**
+**Homebrew Formula (`Formula/cadre.rb`):**
 - Uses Homebrew's `on_macos` block with `Hardware::CPU.arm?` to select the correct binary archive for the user's CPU architecture
 - Downloads pre-built binary tarball from GitHub Releases (not build-from-source)
-- Installs both `ultra-metis` (CLI) and `ultra-metis-mcp` (MCP server) to the Homebrew bin directory
-- Test block verifies `ultra-metis --version` outputs the expected version string
+- Installs both `cadre` (CLI) and `cadre-mcp` (MCP server) to the Homebrew bin directory
+- Test block verifies `cadre --version` outputs the expected version string
 
 **Auto-Update Job (added to `.github/workflows/release.yml`):**
 The `update-homebrew` job runs after the `package` job completes:
-1. Checks out the `homebrew-ultra-metis` repo using a PAT (`HOMEBREW_TAP_TOKEN`)
+1. Checks out the `homebrew-cadre` repo using a PAT (`HOMEBREW_TAP_TOKEN`)
 2. Downloads `SHA256SUMS.txt` from the just-published GitHub Release
 3. Extracts the ARM64 and x86_64 macOS checksums
 4. Updates the formula file with `sed`: version, ARM64 SHA256, x86_64 SHA256
@@ -78,10 +78,10 @@ The `update-homebrew` job runs after the `package` job completes:
 - **Architecture detection**: Homebrew's `Hardware::CPU.arm?` handles ARM64 vs Intel selection automatically — no user configuration needed.
 
 ### Setup Requirements (Manual Steps)
-1. Create the `homebrew-ultra-metis` GitHub repository (public)
-2. Add initial `Formula/ultra-metis.rb` with placeholder values
+1. Create the `homebrew-cadre` GitHub repository (public)
+2. Add initial `Formula/cadre.rb` with placeholder values
 3. Create a GitHub PAT (classic) with `repo` scope
-4. Add the PAT as `HOMEBREW_TAP_TOKEN` secret in the ultra-metis repo settings
+4. Add the PAT as `HOMEBREW_TAP_TOKEN` secret in the cadre repo settings
 5. Add the `update-homebrew` job to `release.yml`
 
 ### Dependencies
@@ -95,10 +95,10 @@ The `update-homebrew` job runs after the `package` job completes:
 - If the archive naming convention changes, the formula download URLs break — keep naming stable
 
 ### Verification
-- After first release: `brew tap <org>/ultra-metis && brew install ultra-metis`
-- Run `ultra-metis --version` and verify it prints the correct version
-- Run `which ultra-metis-mcp` and verify it's installed alongside the CLI
-- After second release: `brew upgrade ultra-metis` and verify version bump
+- After first release: `brew tap <org>/cadre && brew install cadre`
+- Run `cadre --version` and verify it prints the correct version
+- Run `which cadre-mcp` and verify it's installed alongside the CLI
+- After second release: `brew upgrade cadre` and verify version bump
 - Verify the auto-update job ran and the formula in the tap repo was updated
 
 ### Estimated Effort
@@ -106,4 +106,4 @@ The `update-homebrew` job runs after the `package` job completes:
 
 ## Status Updates
 
-- **2026-03-20**: Created `homebrew/ultra-metis.rb` template formula with ARM64/x86_64 macOS detection via `Hardware::CPU.arm?`, downloads pre-built binary tarballs from GitHub Releases, installs both `ultra-metis` and `ultra-metis-mcp` binaries. Added `update-homebrew` job to `.github/workflows/release.yml` that runs after the package job: downloads SHA256SUMS.txt, extracts macOS checksums, checks out the `dcassil/homebrew-ultra-metis` tap repo using `HOMEBREW_TAP_TOKEN` secret, updates version and SHA256 hashes in the formula with sed, commits and pushes. Manual setup still needed: create `homebrew-ultra-metis` repo on GitHub, add PAT as `HOMEBREW_TAP_TOKEN` secret, copy formula to tap repo's `Formula/` directory. All acceptance criteria met.
+- **2026-03-20**: Created `homebrew/cadre.rb` template formula with ARM64/x86_64 macOS detection via `Hardware::CPU.arm?`, downloads pre-built binary tarballs from GitHub Releases, installs both `cadre` and `cadre-mcp` binaries. Added `update-homebrew` job to `.github/workflows/release.yml` that runs after the package job: downloads SHA256SUMS.txt, extracts macOS checksums, checks out the `dcassil/homebrew-cadre` tap repo using `HOMEBREW_TAP_TOKEN` secret, updates version and SHA256 hashes in the formula with sed, commits and pushes. Manual setup still needed: create `homebrew-cadre` repo on GitHub, add PAT as `HOMEBREW_TAP_TOKEN` secret, copy formula to tap repo's `Formula/` directory. All acceptance criteria met.

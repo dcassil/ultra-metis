@@ -26,7 +26,7 @@ initiative_id: persistence-search-parent-child
 
 **Heavily scaled down from original XL scope.** Most of the original scope is either implemented or unnecessary:
 
-- `index_code` MCP tool exists with tree-sitter (Rust, JS, Python, Go) — stores to `.ultra-metis/code-index.json`
+- `index_code` MCP tool exists with tree-sitter (Rust, JS, Python, Go) — stores to `.cadre/code-index.json`
 - `search_documents` has all needed parameters (document_type, limit, include_archived)
 - `reassign_parent` tool works for task reorganization
 - Claude Code Grep/Glob handles codebase search — no need to duplicate

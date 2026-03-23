@@ -23,7 +23,7 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-The Durable Insight Note system (`crates/ultra-metis-core/src/domain/documents/durable_insight_note/`) provides lightweight, scoped, self-pruning repo memory. Notes capture reusable local knowledge (hotspot warnings, recurring failures, misleading names, validation hints, subsystem quirks). They have a rich lifecycle: creation, scope-based fetching, feedback scoring (helpful/meh/harmful), prune candidate detection, human review flagging, and archival.
+The Durable Insight Note system (`crates/cadre-core/src/domain/documents/durable_insight_note/`) provides lightweight, scoped, self-pruning repo memory. Notes capture reusable local knowledge (hotspot warnings, recurring failures, misleading names, validation hints, subsystem quirks). They have a rich lifecycle: creation, scope-based fetching, feedback scoring (helpful/meh/harmful), prune candidate detection, human review flagging, and archival.
 
 Agents need MCP tools to:
 - Create new insight notes when they discover reusable knowledge during work
@@ -68,7 +68,7 @@ Agents need MCP tools to:
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/tools.rs` — New tool definitions and handlers
+- `crates/cadre-mcp/src/tools.rs` — New tool definitions and handlers
 
 ## Dependencies
 

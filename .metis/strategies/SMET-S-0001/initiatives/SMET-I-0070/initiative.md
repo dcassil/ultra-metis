@@ -37,7 +37,7 @@ Depends on: SMET-I-0068 (Architecture document type), SMET-I-0069 (lifecycle hoo
 - Implement `get_architecture_context` MCP tool — reads Architecture document for a Story or Task, walking the hierarchy for Tasks
 - Implement `unlock_architecture` MCP tool — unlocks an Architecture document for editing with required reason
 - Implement `check_conformance` MCP tool — runs conformance check on demand, returns score + violations
-- Wire all three tools into the ultra-metis-mcp tool registry
+- Wire all three tools into the cadre-mcp tool registry
 - Integration tests for each tool
 
 **Non-Goals:**
@@ -110,10 +110,10 @@ Depends on: SMET-I-0068 (Architecture document type), SMET-I-0069 (lifecycle hoo
 
 ### Tool Registration
 
-All tools registered in `crates/ultra-metis-mcp/src/tools.rs` following the existing pattern for `create_document`, `read_document`, etc. Each tool gets:
+All tools registered in `crates/cadre-mcp/src/tools.rs` following the existing pattern for `create_document`, `read_document`, etc. Each tool gets:
 - Name and description for MCP discovery
 - Input schema (JSON Schema for parameters)
-- Handler function that calls into ultra-metis-core
+- Handler function that calls into cadre-core
 
 ## Alternatives Considered
 
@@ -143,7 +143,7 @@ Phase 5: Integration tests
 
 - Depends on SMET-I-0068 for the Architecture document type
 - Depends on SMET-I-0069 for hooks that create Architecture documents (tools need documents to operate on)
-- MCP tool schema must be compatible with existing tool patterns in ultra-metis-mcp
+- MCP tool schema must be compatible with existing tool patterns in cadre-mcp
 
 ## Cadre ADR Alignment (SMET-A-0001)
 
@@ -151,4 +151,4 @@ Phase 5: Integration tests
 
 ADR point 6: This initiative is now a dependency of SMET-I-0078 (Quality Integration, Phase 4). The MCP tools here are the agent-facing interface consumed during `/cadre-execute` review stages.
 
-ADR point 1 (rename): Tool names change — `mcp__ultra-metis__get_architecture_context` → `mcp__cadre__get_architecture_context`, etc. Crate path: `crates/ultra-metis-mcp/` → `crates/cadre-mcp/`. Applied by I-0074.
+ADR point 1 (rename): Tool names change — `mcp__cadre__get_architecture_context` → `mcp__cadre__get_architecture_context`, etc. Crate path: `crates/cadre-mcp/` → `crates/cadre-mcp/`. Applied by I-0074.

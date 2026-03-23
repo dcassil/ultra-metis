@@ -38,9 +38,9 @@ Fix the `shared_tool_surface_smoke_test` in `benchmarks/practical/src/mcp_adapte
 
 `benchmarks/practical/src/mcp_adapter.rs:334` — `shared_tool_surface_smoke_test`:
 
-1. **Spawns real processes**: Calls `adapter.start()` which runs `Command::new("metis")` and `Command::new("ultra-metis-mcp")` as child processes with piped stdin/stdout
+1. **Spawns real processes**: Calls `adapter.start()` which runs `Command::new("metis")` and `Command::new("cadre-mcp")` as child processes with piped stdin/stdout
 2. **No overall timeout on `send_request`**: The `send_request()` method (line 188-196) has an infinite `loop` that reads responses until it finds a matching ID. The per-line `read_next_json_line` has a 15s timeout, but if the server keeps sending non-matching output, the loop never terminates.
-3. **Binaries may not exist**: If `metis` or `ultra-metis-mcp` aren't on PATH, the process may spawn but never produce valid JSON-RPC output, causing the read loop to block.
+3. **Binaries may not exist**: If `metis` or `cadre-mcp` aren't on PATH, the process may spawn but never produce valid JSON-RPC output, causing the read loop to block.
 4. **Resource contention**: When running alongside 850+ other tests in `cargo test`, spawning server processes competes for resources.
 
 ### Key File

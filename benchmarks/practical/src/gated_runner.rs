@@ -13,7 +13,7 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
     let run_id = uuid::Uuid::new_v4().to_string();
     let mut phases = vec![];
     let mut trace = RunTrace::default();
-    let manifest = workspace::default_manifest(scenario, SystemUnderTest::UltraMetis);
+    let manifest = workspace::default_manifest(scenario, SystemUnderTest::Cadre);
 
     tracing::info!("Starting validated run with gates: {}", run_id);
 

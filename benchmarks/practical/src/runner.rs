@@ -57,10 +57,10 @@ impl CliResult {
     }
 }
 
-/// Resolve cadre binary path. Checks ULTRA_METIS_BINARY env var first,
+/// Resolve cadre binary path. Checks CADRE_BINARY env var first,
 /// then falls back to target/release/cadre relative to cwd.
 pub fn resolve_binary_path() -> PathBuf {
-    if let Ok(path) = std::env::var("ULTRA_METIS_BINARY") {
+    if let Ok(path) = std::env::var("CADRE_BINARY") {
         return PathBuf::from(path);
     }
     let candidate = PathBuf::from("target/release/cadre");
@@ -366,7 +366,7 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     let run_id = uuid::Uuid::new_v4().to_string();
     let mut phases = vec![];
     let mut trace = RunTrace::default();
-    let manifest = workspace::default_manifest(scenario, SystemUnderTest::UltraMetis);
+    let manifest = workspace::default_manifest(scenario, SystemUnderTest::Cadre);
 
     tracing::info!("Starting autonomous run: {}", run_id);
 

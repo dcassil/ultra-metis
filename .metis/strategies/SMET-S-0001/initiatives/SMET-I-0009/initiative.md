@@ -24,7 +24,7 @@ initiative_id: extend-mcp-tools-for-the-stronger
 
 ## Strategy Update (2026-03-18)
 
-**Revised approach**: Rescoped from "expose everything" to "expose what agents actually need." Many domain types are already built in ultra-metis-core but have no MCP tool access. Priority is making completed work usable through static MCP tools, not adding new domain concepts.
+**Revised approach**: Rescoped from "expose everything" to "expose what agents actually need." Many domain types are already built in cadre-core but have no MCP tool access. Priority is making completed work usable through static MCP tools, not adding new domain concepts.
 
 **Key decisions:**
 - Focus on exposing existing completed domain types (quality, rules, notes, traceability) as read/query MCP tools
@@ -36,7 +36,7 @@ initiative_id: extend-mcp-tools-for-the-stronger
 
 ## Context
 
-Ultra-Metis has built extensive domain types in ultra-metis-core (quality baselines, rules, notes, traceability records, architecture catalog, operations kernel) but most are only accessible through code. The MCP server currently exposes document CRUD, phase transitions, search, archive, reassign, and index_code. Agents need MCP tool access to query and operate on the richer domain model.
+Cadre has built extensive domain types in cadre-core (quality baselines, rules, notes, traceability records, architecture catalog, operations kernel) but most are only accessible through code. The MCP server currently exposes document CRUD, phase transitions, search, archive, reassign, and index_code. Agents need MCP tool access to query and operate on the richer domain model.
 
 The existing tool set (completed in SMET-I-0055) covers core document operations. This initiative adds the next tier: tools that expose the governance, quality, and knowledge layers.
 
@@ -72,7 +72,7 @@ Phase 3: Implement rule management tools
 Phase 4: Implement lease management tools
 Phase 5: Implement traceability query tools
 Phase 6: Implement investigation and design tools
-Phase 7: Rewrite system prompt with complete Super-Metis documentation
+Phase 7: Rewrite system prompt with complete Cadre documentation
 Phase 8: Integration test all tools end-to-end
 
 ## Acceptance Criteria
@@ -99,11 +99,11 @@ Phase 8: Integration test all tools end-to-end
 
 ## Codebase Areas to Inspect
 
-- `crates/ultra-metis-mcp/src/` — MCP server, protocol, and tool implementations
-- `crates/ultra-metis-mcp/src/tools.rs` — tool definitions and dispatch
-- `crates/ultra-metis-mcp/src/protocol.rs` — JSON-RPC message routing
-- `crates/ultra-metis-core/src/domain/` — domain types to expose as tools
-- `crates/ultra-metis-store/src/store.rs` — persistence layer the tools call
+- `crates/cadre-mcp/src/` — MCP server, protocol, and tool implementations
+- `crates/cadre-mcp/src/tools.rs` — tool definitions and dispatch
+- `crates/cadre-mcp/src/protocol.rs` — JSON-RPC message routing
+- `crates/cadre-core/src/domain/` — domain types to expose as tools
+- `crates/cadre-store/src/store.rs` — persistence layer the tools call
 
 ## Task Breakdown (Decomposed 2026-03-20)
 
@@ -150,9 +150,9 @@ New tools: 18 (4 quality + 3 rules + 4 notes + 4 traceability + 4 architecture -
 
 **Audit date**: 2026-03-23 | **Recommendation**: Update scope (rename)
 
-All 8 tasks under this initiative are completed. The rename from ultra-metis to Cadre (SMET-I-0074) will change:
-- MCP tool prefix: `mcp__ultra-metis__` → `mcp__cadre__`
-- Crate paths: `crates/ultra-metis-mcp/` → `crates/cadre-mcp/`
-- Binary name: `ultra-metis-mcp` → `cadre-mcp`
+All 8 tasks under this initiative are completed. The rename from cadre to Cadre (SMET-I-0074) will change:
+- MCP tool prefix: `mcp__cadre__` → `mcp__cadre__`
+- Crate paths: `crates/cadre-mcp/` → `crates/cadre-mcp/`
+- Binary name: `cadre-mcp` → `cadre-mcp`
 
 These are mechanical name changes applied by the rename initiative. No scope or functionality changes needed here.

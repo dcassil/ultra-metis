@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate Ralph Loop implementation in Metis: state management, iteration logic, completion signals, and autonomous execution patterns. Compare with Ultra-Metis execution approach. Document how loops are controlled, how completion promises work, and how iteration counts/depth are managed.
+Investigate Ralph Loop implementation in Metis: state management, iteration logic, completion signals, and autonomous execution patterns. Compare with Cadre execution approach. Document how loops are controlled, how completion promises work, and how iteration counts/depth are managed.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -76,7 +76,7 @@ Investigate Ralph Loop implementation in Metis: state management, iteration logi
 - [x] Ralph Loop state management (.claude/metis-ralph.local.md) documented
 - [x] Iteration logic and loop control mechanisms documented
 - [x] Completion promise mechanism documented
-- [x] Ultra-Metis execution patterns and equivalent mechanisms documented
+- [x] Cadre execution patterns and equivalent mechanisms documented
 - [x] Comparison and gap analysis completed
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
@@ -146,7 +146,7 @@ Investigate Ralph Loop implementation in Metis: state management, iteration logi
 
 **Investigation Completed**: 2026-03-17
 
-Comprehensive analysis of Ralph Loop implementation in original Metis vs. Ultra-Metis execution patterns completed. All comparison grids (C1-C6) populated in SMET-I-0053 section C with findings across six critical dimensions:
+Comprehensive analysis of Ralph Loop implementation in original Metis vs. Cadre execution patterns completed. All comparison grids (C1-C6) populated in SMET-I-0053 section C with findings across six critical dimensions:
 
 **Grids Created:**
 1. **C1: Loop Execution Modes** — Mode differences (single/multi-task, verification, setup)
@@ -158,15 +158,15 @@ Comprehensive analysis of Ralph Loop implementation in original Metis vs. Ultra-
 
 **Key Findings:**
 - Metis uses explicit loop state file (.claude/metis-ralph-active.yaml) with iteration counter and max_iterations bounds
-- Ultra-Metis uses implicit state via document phases with no separate loop abstraction
-- Metis has formal promise mechanism (`<promise>...`) for readiness signaling; Ultra-Metis lacks this
-- Metis supports built-in multi-task orchestration (/metis-ralph-tasks, /metis-ralph-initiative); Ultra-Metis requires manual wrapping
+- Cadre uses implicit state via document phases with no separate loop abstraction
+- Metis has formal promise mechanism (`<promise>...`) for readiness signaling; Cadre lacks this
+- Metis supports built-in multi-task orchestration (/metis-ralph-tasks, /metis-ralph-initiative); Cadre requires manual wrapping
 - Both track progress in "Status Updates" section, but Metis adds separate loop metadata
-- Task phase differences: Metis starts tasks in "todo"; Ultra-Metis starts in "backlog" with explicit promotion
-- Ultra-Metis has no max-iterations safety feature; relies on agent discipline
+- Task phase differences: Metis starts tasks in "todo"; Cadre starts in "backlog" with explicit promotion
+- Cadre has no max-iterations safety feature; relies on agent discipline
 
 **Critical Gaps Identified (6):**
-1. No explicit Ralph Loop command in Ultra-Metis
+1. No explicit Ralph Loop command in Cadre
 2. No iteration tracking/counter
 3. No promise mechanism
 4. No multi-task orchestration commands

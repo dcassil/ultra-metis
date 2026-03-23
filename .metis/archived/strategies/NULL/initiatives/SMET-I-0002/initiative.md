@@ -26,7 +26,7 @@ initiative_id: evolve-planning-hierarchy-beyond
 
 Metis currently uses a flight-levels inspired hierarchy: Vision → Strategy → Initiative → Task (with Strategy being optional depending on preset). This works for general project management but is too flat for software engineering in a monorepo.
 
-Super-Metis needs a richer hierarchy that connects product intent through design to implementation: Product Doc → Epic → Story → Task, with cross-cutting governance artifacts (Design Context, Rules Config, Analysis Baselines) that can be referenced from any level.
+Cadre needs a richer hierarchy that connects product intent through design to implementation: Product Doc → Epic → Story → Task, with cross-cutting governance artifacts (Design Context, Rules Config, Analysis Baselines) that can be referenced from any level.
 
 This initiative defines the new hierarchy semantics, phase flows, and transition rules. It works closely with SMET-I-0001 (domain model) which provides the types, and SMET-I-0007 (workflow states) which strengthens enforcement.
 
@@ -42,7 +42,7 @@ This initiative directly serves:
 ## Goals & Non-Goals
 
 **Goals:**
-- Define the complete planning hierarchy for Super-Metis
+- Define the complete planning hierarchy for Cadre
 - Specify phase flows and valid transitions for each new document type
 - Define parent-child rules and cross-reference semantics
 - Ensure the hierarchy supports both human and AI-driven planning workflows

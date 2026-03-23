@@ -23,7 +23,7 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-The architecture catalog (`crates/ultra-metis-core/src/domain/catalog/`) provides built-in reference architectures for different language/project-type combinations (currently JavaScript: server, react-app, component-lib, cli-tool, node-util). The `CatalogQueryEngine` supports querying by language, project type, and phase, plus listing available languages and project types. The `BrownfieldEvaluator` can analyze existing repos against catalog entries.
+The architecture catalog (`crates/cadre-core/src/domain/catalog/`) provides built-in reference architectures for different language/project-type combinations (currently JavaScript: server, react-app, component-lib, cli-tool, node-util). The `CatalogQueryEngine` supports querying by language, project type, and phase, plus listing available languages and project types. The `BrownfieldEvaluator` can analyze existing repos against catalog entries.
 
 Agents need MCP tools to:
 - Browse available architecture catalog entries by language and project type
@@ -65,7 +65,7 @@ Agents need MCP tools to:
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/tools.rs` — New tool definitions and handlers
+- `crates/cadre-mcp/src/tools.rs` — New tool definitions and handlers
 
 ## Dependencies
 

@@ -58,8 +58,8 @@ Upgrade all MCP tool output from minimal strings to rich markdown formatting wit
 3. Keep raw data available (formatting is presentation layer only)
 
 ### Key Files
-- `crates/ultra-metis-mcp/src/tools.rs` - Tool output generation
-- `crates/ultra-metis-mcp/src/format.rs` - New formatting module (or inline in tools.rs)
+- `crates/cadre-mcp/src/tools.rs` - Tool output generation
+- `crates/cadre-mcp/src/format.rs` - New formatting module (or inline in tools.rs)
 
 ### Dependencies
 - Depends on all other tasks completing first (format new tools too)

@@ -1,7 +1,7 @@
 ---
-id: rewrite-ultra-metis-templates-to
+id: rewrite-cadre-templates-to
 level: task
-title: "Rewrite ultra-metis templates to match or exceed original metis quality"
+title: "Rewrite cadre templates to match or exceed original metis quality"
 short_code: "SMET-T-0088"
 created_at: 2026-03-17T20:15:51.669+00:00
 updated_at: 2026-03-17T20:26:47.979286+00:00
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: SMET-I-0037
 ---
 
-# Rewrite ultra-metis templates to match or exceed original metis quality
+# Rewrite cadre templates to match or exceed original metis quality
 
 ## Parent Initiative
 
@@ -27,9 +27,9 @@ initiative_id: SMET-I-0037
 
 ## Objective
 
-Rewrite all 4 ultra-metis document templates (vision, initiative, task, ADR) based on the gap analysis from SMET-T-0087. The rewrites should incorporate the patterns from the original metis plugin that make templates effective: conditional sections, explicit deletion markers, inline examples, format guidance, and required-vs-optional markers.
+Rewrite all 4 cadre document templates (vision, initiative, task, ADR) based on the gap analysis from SMET-T-0087. The rewrites should incorporate the patterns from the original metis plugin that make templates effective: conditional sections, explicit deletion markers, inline examples, format guidance, and required-vs-optional markers.
 
-The benchmark scored ultra-metis template quality at 3/5 vs metis at 5/5. After this rewrite, re-running the benchmark should score 5/5.
+The benchmark scored cadre template quality at 3/5 vs metis at 5/5. After this rewrite, re-running the benchmark should score 5/5.
 
 ## Acceptance Criteria
 
@@ -68,14 +68,14 @@ The benchmark scored ultra-metis template quality at 3/5 vs metis at 5/5. After 
 
 Templates live in:
 ```
-super-metis/crates/super-metis-core/src/domain/documents/
+cadre/crates/cadre-core/src/domain/documents/
 ├── vision/content.md
 ├── initiative/content.md
 ├── task/content.md
 └── adr/content.md
 ```
 
-Each `content.md` is a Tera template rendered by `TemplateRegistry` in `super-metis-core`. The rendering context includes:
+Each `content.md` is a Tera template rendered by `TemplateRegistry` in `cadre-core`. The rendering context includes:
 - `title` — document title
 - `project_name` — project name from config
 - `parent_title` / `parent_short_code` — if parent document exists
@@ -124,15 +124,15 @@ _No updates yet._
 
 ### Files to Modify
 
-- `super-metis/crates/super-metis-core/src/domain/documents/vision/content.md`
-- `super-metis/crates/super-metis-core/src/domain/documents/initiative/content.md`
-- `super-metis/crates/super-metis-core/src/domain/documents/task/content.md`
-- `super-metis/crates/super-metis-core/src/domain/documents/adr/content.md`
+- `cadre/crates/cadre-core/src/domain/documents/vision/content.md`
+- `cadre/crates/cadre-core/src/domain/documents/initiative/content.md`
+- `cadre/crates/cadre-core/src/domain/documents/task/content.md`
+- `cadre/crates/cadre-core/src/domain/documents/adr/content.md`
 
 ### Testing Plan
 
 After each template rewrite:
-1. Run `cargo test -p super-metis-core` to verify no rendering regressions
+1. Run `cargo test -p cadre-core` to verify no rendering regressions
 2. Initialize a test project and create each document type to see the rendered template
 3. Verify conditional sections are clearly marked for deletion
 
@@ -156,5 +156,5 @@ After each template rewrite:
   - **initiative/content.md**: Added [REQUIRED]/[CONDITIONAL] markers, opening disclaimer, parent link via Tera conditional, conditional sections (Requirements, Use Cases, Architecture, Testing Strategy), fixed Detailed Design placeholder, added Status Updates
   - **task/content.md**: Full rewrite — 3 sections → 7+ sections: Parent Initiative (conditional Tera), Objective, Backlog Item Details (conditional with type/priority checklists), Acceptance Criteria with checkbox format, Implementation Notes with sub-sections (Technical Approach, Files to Modify, Dependencies, Risk table), Status Updates with example
   - **adr/content.md**: Added [REQUIRED] markers, split Consequences into Positive/Negative/Neutral, added Rationale section, added Alternatives Analysis table (conditional), added Review Schedule (conditional), updated Status with options
-- Ran `cargo test -p ultra-metis-core`: all tests pass, no regressions
+- Ran `cargo test -p cadre-core`: all tests pass, no regressions
 - All acceptance criteria met

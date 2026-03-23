@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: core-planning-hierarchy-domain
 ---
 
@@ -24,7 +24,7 @@ initiative_id: core-planning-hierarchy-domain
 
 ## Context
 
-The current Metis domain model uses a general-purpose project management hierarchy (Vision → Strategy → Initiative → Task) with ADRs as a separate concept. Super-Metis replaces this with an engineering-oriented hierarchy centered on product definition and design-linked implementation: ProductDoc → Epic → Story → Task, with DesignContext as a first-class cross-cutting artifact.
+The current Metis domain model uses a general-purpose project management hierarchy (Vision → Strategy → Initiative → Task) with ADRs as a separate concept. Cadre replaces this with an engineering-oriented hierarchy centered on product definition and design-linked implementation: ProductDoc → Epic → Story → Task, with DesignContext as a first-class cross-cutting artifact.
 
 This initiative is the foundational vertical slice — it reworks the core `DocumentType` enum, introduces the new planning types, rewires hierarchy validation, and lands storage support for all of it. Other domain-model initiatives (SMET-I-0019 governance types, SMET-I-0020 architecture catalog types) depend on this being done first.
 

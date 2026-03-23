@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Investigate bootstrap and repository detection capabilities in Ultra-Metis. Document language detection, build tool identification, package manager detection, monorepo detection, and dev tool discovery. Compare with bootstrap capabilities in Metis.
+Investigate bootstrap and repository detection capabilities in Cadre. Document language detection, build tool identification, package manager detection, monorepo detection, and dev tool discovery. Compare with bootstrap capabilities in Metis.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -149,23 +149,23 @@ Investigate bootstrap and repository detection capabilities in Ultra-Metis. Docu
 
 ### Investigation Findings
 
-Completed comprehensive analysis of bootstrap and repository detection capabilities in Ultra-Metis vs original Metis. Created 8 detailed comparison grids (J1-J8) documenting:
+Completed comprehensive analysis of bootstrap and repository detection capabilities in Cadre vs original Metis. Created 8 detailed comparison grids (J1-J8) documenting:
 
-1. **Language Detection (J1)**: Ultra-Metis supports 23+ languages with statistical ranking; Original Metis only detects Metis workspaces
-2. **Build Tools (J2)**: Ultra-Metis detects 14 build systems; Original Metis has no explicit detection
-3. **Package Managers (J3)**: Ultra-Metis identifies 11 package managers with ecosystem-specific detection; Original Metis is workspace-agnostic
-4. **Monorepo Detection (J4)**: Ultra-Metis detects 9 monorepo patterns with package discovery/classification; Original Metis lacks this capability
-5. **Dev Tools (J5)**: Ultra-Metis discovers 30+ development tools across 7 categories; Original Metis has implicit tool integration only
-6. **Project Type Inference (J6)**: Ultra-Metis infers 7 project archetypes; Original Metis treats all projects uniformly
-7. **Brownfield Detection (J7)**: Ultra-Metis classifies projects as brownfield/greenfield; Original Metis has no maturity classification
-8. **Bootstrap Orchestration (J8)**: Ultra-Metis provides end-to-end automated analysis; Original Metis requires manual configuration
+1. **Language Detection (J1)**: Cadre supports 23+ languages with statistical ranking; Original Metis only detects Metis workspaces
+2. **Build Tools (J2)**: Cadre detects 14 build systems; Original Metis has no explicit detection
+3. **Package Managers (J3)**: Cadre identifies 11 package managers with ecosystem-specific detection; Original Metis is workspace-agnostic
+4. **Monorepo Detection (J4)**: Cadre detects 9 monorepo patterns with package discovery/classification; Original Metis lacks this capability
+5. **Dev Tools (J5)**: Cadre discovers 30+ development tools across 7 categories; Original Metis has implicit tool integration only
+6. **Project Type Inference (J6)**: Cadre infers 7 project archetypes; Original Metis treats all projects uniformly
+7. **Brownfield Detection (J7)**: Cadre classifies projects as brownfield/greenfield; Original Metis has no maturity classification
+8. **Bootstrap Orchestration (J8)**: Cadre provides end-to-end automated analysis; Original Metis requires manual configuration
 
 ### Key Findings Summary
 
-- **Ultra-Metis Strengths**: Comprehensive polyglot support, automated project discovery, intelligent recommendations, structured output, extensive test coverage
+- **Cadre Strengths**: Comprehensive polyglot support, automated project discovery, intelligent recommendations, structured output, extensive test coverage
 - **Original Metis Strengths**: Focused workspace detection, proven reliability for Metis projects
-- **Gap Analysis**: Ultra-Metis covers 8 distinct detection/analysis dimensions that original Metis lacks entirely
-- **Architecture Quality**: Ultra-Metis uses pure functions on path lists (no I/O in domain layer), enabling easier testing and composition
+- **Gap Analysis**: Cadre covers 8 distinct detection/analysis dimensions that original Metis lacks entirely
+- **Architecture Quality**: Cadre uses pure functions on path lists (no I/O in domain layer), enabling easier testing and composition
 
 ### Acceptance Criteria Met
 

@@ -27,7 +27,7 @@ initiative_id: SMET-I-0038
 
 ## Objective
 
-Update all non-Rust config and source files that contain hardcoded references to old paths (`super-metis/`, `super-metis-core`) or the old directory structure. This includes `.mcp.json`, `plugin.json`, `CLAUDE.md`, and any Rust source files that use `super-metis-core` as a package name in `use` statements or feature flags.
+Update all non-Rust config and source files that contain hardcoded references to old paths (`cadre/`, `cadre-core`) or the old directory structure. This includes `.mcp.json`, `plugin.json`, `CLAUDE.md`, and any Rust source files that use `cadre-core` as a package name in `use` statements or feature flags.
 
 ## Acceptance Criteria
 
@@ -35,20 +35,20 @@ Update all non-Rust config and source files that contain hardcoded references to
 
 ## Acceptance Criteria
 
-- [ ] `.mcp.json` updated — any paths referencing `super-metis/` updated to new locations
+- [ ] `.mcp.json` updated — any paths referencing `cadre/` updated to new locations
 - [ ] `plugin.json` (if present) updated for new paths
-- [ ] `CLAUDE.md` updated — references to `super-metis/` paths corrected
-- [ ] All Rust source files with `use super_metis_core::` updated to `use ultra_metis_core::`
-- [ ] No remaining references to `super-metis-core` or `super_metis_core` in any `.rs` files
-- [ ] No remaining references to `super-metis/` paths in non-Rust config files (grep clean)
+- [ ] `CLAUDE.md` updated — references to `cadre/` paths corrected
+- [ ] All Rust source files with `use cadre_core::` updated to `use cadre_core::`
+- [ ] No remaining references to `cadre-core` or `cadre_core` in any `.rs` files
+- [ ] No remaining references to `cadre/` paths in non-Rust config files (grep clean)
 
 ## Implementation Notes
 
 ### Technical Approach
-1. `grep -r "super.metis" --include="*.json" --include="*.md" --include="*.toml" .` to find all references (excluding `.metis/` and `target/`)
-2. Update `.mcp.json` if it references binary paths like `super-metis/target/...` or `super-metis/Cargo.toml`
-3. Update `CLAUDE.md` — the **Metis path** and **Build target** sections reference `super-metis/`
-4. `grep -r "super_metis_core" --include="*.rs" .` to find Rust use statements and update to `ultra_metis_core`
+1. `grep -r "cadre" --include="*.json" --include="*.md" --include="*.toml" .` to find all references (excluding `.metis/` and `target/`)
+2. Update `.mcp.json` if it references binary paths like `cadre/target/...` or `cadre/Cargo.toml`
+3. Update `CLAUDE.md` — the **Metis path** and **Build target** sections reference `cadre/`
+4. `grep -r "cadre_core" --include="*.rs" .` to find Rust use statements and update to `cadre_core`
 5. Check `scripts/` or any shell scripts for hardcoded paths
 
 ### Dependencies
@@ -59,8 +59,8 @@ Update all non-Rust config and source files that contain hardcoded references to
 ### Completed (2026-03-17)
 
 ✓ Updated CLAUDE.md project context section to reference new crate locations
-✓ Updated super-metis/.mcp.json manifest path from super-metis/Cargo.toml to Cargo.toml
-✓ Updated super-metis/plugin.json manifest path to ${pluginDir}/../Cargo.toml (points to repo root)
-✓ Updated run-ultra-metis-bench.sh build instructions comment
-✓ Verified no remaining references to "super-metis-core" or "super_metis_core" in .rs files
+✓ Updated cadre/.mcp.json manifest path from cadre/Cargo.toml to Cargo.toml
+✓ Updated cadre/plugin.json manifest path to ${pluginDir}/../Cargo.toml (points to repo root)
+✓ Updated run-cadre-bench.sh build instructions comment
+✓ Verified no remaining references to "cadre-core" or "cadre_core" in .rs files
 ✓ All configuration files now point to correct workspace locations

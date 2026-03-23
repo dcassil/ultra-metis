@@ -1,17 +1,17 @@
-# Tool Comparison Report: ultra-metis vs original-metis
+# Tool Comparison Report: cadre vs original-metis
 
 **Date**: 2026-03-18 01:32:15 UTC  
 **Scenario**: File Processing Toolkit (3 modules)
 
 ## Executive Summary
 
-- **ultra-metis** templates produce more complete initiative documents than original-metis
-- Completeness delta: **+22.2%** (ultra-metis − original-metis)
+- **cadre** templates produce more complete initiative documents than original-metis
+- Completeness delta: **+22.2%** (cadre − original-metis)
 - Placeholder reduction: **-6.0** placeholders/doc (original − ultra)
 
 ## Per-Tool Results
 
-| Metric | ultra-metis | original-metis | Delta |
+| Metric | cadre | original-metis | Delta |
 |--------|-------------|----------------|-------|
 | Templates tested | 3 | 3 | — |
 | Avg completeness | 66.7% | 44.4% | +22.2% |
@@ -23,6 +23,6 @@
 
 ## Interpretation
 
-- ultra-metis simpler templates reduce AI confusion about what to fill
+- cadre simpler templates reduce AI confusion about what to fill
 - Fewer structural elements → more direct guidance toward content
-- ultra-metis templates leave 6.0 more unfilled placeholders on average
+- cadre templates leave 6.0 more unfilled placeholders on average

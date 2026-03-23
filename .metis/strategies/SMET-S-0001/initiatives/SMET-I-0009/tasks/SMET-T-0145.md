@@ -23,7 +23,7 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-The `AnyDocument` enum in `crates/ultra-metis-store/src/store.rs` currently only supports Vision, Initiative, and Task. The `DocumentStore::parse_document()` method returns `Err` for all other document types (Epic, Story, Adr, ProductDoc, DesignContext, Specification, and all governance/architecture types). Similarly, `create_document()` only handles Vision, Initiative, and Task creation.
+The `AnyDocument` enum in `crates/cadre-store/src/store.rs` currently only supports Vision, Initiative, and Task. The `DocumentStore::parse_document()` method returns `Err` for all other document types (Epic, Story, Adr, ProductDoc, DesignContext, Specification, and all governance/architecture types). Similarly, `create_document()` only handles Vision, Initiative, and Task creation.
 
 Before any new MCP tools can work, the store must be able to read, write, list, and transition governance document types. This is the foundational task that unblocks all other tasks in this initiative.
 
@@ -58,10 +58,10 @@ Before any new MCP tools can work, the store must be able to read, write, list, 
 
 ## Files to Modify
 
-- `crates/ultra-metis-store/src/store.rs` — Primary changes: AnyDocument enum, parse_document, create_document, detect_type_from_content
-- `crates/ultra-metis-core/src/domain/documents/types.rs` — May need new DocumentType variants or short_code_prefix mappings
-- `crates/ultra-metis-core/src/domain/documents/hierarchy.rs` — Hierarchy validation for new types
-- `crates/ultra-metis-core/src/lib.rs` — Ensure governance types are exported
+- `crates/cadre-store/src/store.rs` — Primary changes: AnyDocument enum, parse_document, create_document, detect_type_from_content
+- `crates/cadre-core/src/domain/documents/types.rs` — May need new DocumentType variants or short_code_prefix mappings
+- `crates/cadre-core/src/domain/documents/hierarchy.rs` — Hierarchy validation for new types
+- `crates/cadre-core/src/lib.rs` — Ensure governance types are exported
 
 ## Acceptance Criteria
 

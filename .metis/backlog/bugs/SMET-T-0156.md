@@ -61,8 +61,8 @@ It needs to read AND write the document. The write path is constructed from fron
 The document was likely created before being assigned to strategy SMET-S-0001, or was created with no parent and later had `parent: SMET-S-0001` added to its frontmatter without physically moving the file.
 
 ### Key Files
-- `crates/ultra-metis-store/src/store.rs` — path resolution logic, `doc_path()` at line 262
-- The old Metis path resolution (hierarchical) vs new ultra-metis (flat `docs/` dir)
+- `crates/cadre-store/src/store.rs` — path resolution logic, `doc_path()` at line 262
+- The old Metis path resolution (hierarchical) vs new cadre (flat `docs/` dir)
 
 ## Acceptance Criteria
 

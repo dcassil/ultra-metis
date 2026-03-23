@@ -27,7 +27,7 @@ initiative_id: SMET-I-0036
 
 ## Objective
 
-Re-run the SMET-I-0035 benchmark Scenario 6 (Error Handling) against ultra-metis after all fixes are in place. Verify that ultra-metis catches at least 4/4 error scenarios (matching original metis). Compare error message quality between the two implementations and document any remaining differences.
+Re-run the SMET-I-0035 benchmark Scenario 6 (Error Handling) against cadre after all fixes are in place. Verify that cadre catches at least 4/4 error scenarios (matching original metis). Compare error message quality between the two implementations and document any remaining differences.
 
 ## Acceptance Criteria
 
@@ -35,8 +35,8 @@ Re-run the SMET-I-0035 benchmark Scenario 6 (Error Handling) against ultra-metis
 
 ## Acceptance Criteria
 
-- [ ] Benchmark Scenario 6 (Error Handling) re-run against ultra-metis achieves 4/4 error catches
-- [ ] Error message quality comparison documented: side-by-side of original metis vs ultra-metis for each error scenario
+- [ ] Benchmark Scenario 6 (Error Handling) re-run against cadre achieves 4/4 error catches
+- [ ] Error message quality comparison documented: side-by-side of original metis vs cadre for each error scenario
 - [ ] Any remaining gaps identified and documented (as new tasks if needed)
 - [ ] Results recorded in this task's status updates
 
@@ -44,7 +44,7 @@ Re-run the SMET-I-0035 benchmark Scenario 6 (Error Handling) against ultra-metis
 
 ### Technical Approach
 1. Review the SMET-I-0035 benchmark methodology for Scenario 6
-2. Build and install the updated ultra-metis binary
+2. Build and install the updated cadre binary
 3. Re-run the 4 error scenarios:
    - Creating document with non-existent parent
    - Invalid phase transition (terminal phase)

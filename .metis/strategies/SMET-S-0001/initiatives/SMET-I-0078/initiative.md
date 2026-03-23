@@ -24,7 +24,7 @@ initiative_id: quality-integration-architecture
 
 ## Context
 
-Phase 4 of ADR SMET-A-0001. The building blocks exist in ultra-metis-core (Architecture document type, conformance checker, gate engine, baseline services) but nothing connects them to the execution lifecycle. This initiative wires architecture hooks into transitions and quality baselines into the review flow.
+Phase 4 of ADR SMET-A-0001. The building blocks exist in cadre-core (Architecture document type, conformance checker, gate engine, baseline services) but nothing connects them to the execution lifecycle. This initiative wires architecture hooks into transitions and quality baselines into the review flow.
 
 ## Goals & Non-Goals
 

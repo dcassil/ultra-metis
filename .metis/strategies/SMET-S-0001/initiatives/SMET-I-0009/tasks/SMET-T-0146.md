@@ -23,7 +23,7 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-Ultra-Metis has complete quality infrastructure in `crates/ultra-metis-core/src/domain/quality/`: baseline capture (`BaselineCaptureService`), baseline comparison (`BaselineComparisonEngine`), conformance checking (`ArchitectureConformanceChecker`), and tool output parsers. However, none of this is accessible via MCP tools. Agents need to be able to:
+Cadre has complete quality infrastructure in `crates/cadre-core/src/domain/quality/`: baseline capture (`BaselineCaptureService`), baseline comparison (`BaselineComparisonEngine`), conformance checking (`ArchitectureConformanceChecker`), and tool output parsers. However, none of this is accessible via MCP tools. Agents need to be able to:
 
 - Capture tool output into durable AnalysisBaseline documents
 - List and read existing baselines
@@ -66,8 +66,8 @@ Ultra-Metis has complete quality infrastructure in `crates/ultra-metis-core/src/
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/tools.rs` — New tool definitions and handler functions
-- `crates/ultra-metis-mcp/Cargo.toml` — May need dependency on quality module types
+- `crates/cadre-mcp/src/tools.rs` — New tool definitions and handler functions
+- `crates/cadre-mcp/Cargo.toml` — May need dependency on quality module types
 
 ## Dependencies
 
@@ -201,7 +201,7 @@ Ultra-Metis has complete quality infrastructure in `crates/ultra-metis-core/src/
 
 ### 2026-03-20: Completed
 - Added 4 quality MCP tools: capture_quality_baseline, compare_quality_baselines, list_quality_records, check_architecture_conformance
-- Added ultra-metis-core and glob as MCP crate dependencies
+- Added cadre-core and glob as MCP crate dependencies
 - capture_quality_baseline uses existing parsers (eslint, clippy, tsc, coverage) and BaselineCaptureService
 - All tools follow existing patterns with structured markdown output
 - All tests pass (738 core + 58 store + 0 MCP)

@@ -102,7 +102,7 @@ impl ComparisonResult {
         };
 
         let ult = SystemResult {
-            system: SystemUnderTest::UltraMetis,
+            system: SystemUnderTest::Cadre,
             tool_surface: ultra.manifest.tool_surface.clone(),
             run_id: ultra.run_id.clone(),
             tokens_used: ultra.total_metrics.total_tokens,
@@ -151,7 +151,7 @@ impl ComparisonResult {
         };
 
         let ult = SystemResult {
-            system: SystemUnderTest::UltraMetis,
+            system: SystemUnderTest::Cadre,
             tool_surface: ultra.manifest.tool_surface.clone(),
             run_id: ultra.run_id.clone(),
             tokens_used: ultra.total_metrics.total_tokens,
@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn test_comparison_from_runs() {
         let original = make_run(SystemUnderTest::OriginalMetis, 9000, 30000);
-        let ultra = make_run(SystemUnderTest::UltraMetis, 10000, 25000);
+        let ultra = make_run(SystemUnderTest::Cadre, 10000, 25000);
         let config = ComparisonConfig::default();
 
         let result = ComparisonResult::from_runs(config, &original, &ultra);
@@ -417,7 +417,7 @@ mod tests {
     #[test]
     fn test_comparison_with_scores() {
         let original = make_run(SystemUnderTest::OriginalMetis, 9000, 30000);
-        let ultra = make_run(SystemUnderTest::UltraMetis, 10000, 25000);
+        let ultra = make_run(SystemUnderTest::Cadre, 10000, 25000);
         let orig_scores = make_score(60.0, 50.0, 70.0);
         let ultra_scores = make_score(80.0, 75.0, 85.0);
 
@@ -437,7 +437,7 @@ mod tests {
     #[test]
     fn test_constrained_fairness_validation() {
         let run_a = make_run(SystemUnderTest::OriginalMetis, 9000, 30000);
-        let run_b = make_run(SystemUnderTest::UltraMetis, 10000, 25000);
+        let run_b = make_run(SystemUnderTest::Cadre, 10000, 25000);
 
         let issues = validate_constrained_fairness(&run_a, &run_b);
         assert!(issues.is_empty(), "Same config should have no fairness issues");
@@ -446,7 +446,7 @@ mod tests {
     #[test]
     fn test_constrained_fairness_catches_model_mismatch() {
         let run_a = make_run(SystemUnderTest::OriginalMetis, 9000, 30000);
-        let mut run_b = make_run(SystemUnderTest::UltraMetis, 10000, 25000);
+        let mut run_b = make_run(SystemUnderTest::Cadre, 10000, 25000);
         run_b.manifest.model_id = "claude-sonnet-4-6".to_string();
 
         let issues = validate_constrained_fairness(&run_a, &run_b);
@@ -457,7 +457,7 @@ mod tests {
     #[test]
     fn test_markdown_report_generation() {
         let original = make_run(SystemUnderTest::OriginalMetis, 9000, 30000);
-        let ultra = make_run(SystemUnderTest::UltraMetis, 10000, 25000);
+        let ultra = make_run(SystemUnderTest::Cadre, 10000, 25000);
         let config = ComparisonConfig::default();
 
         let result = ComparisonResult::from_runs(config, &original, &ultra);

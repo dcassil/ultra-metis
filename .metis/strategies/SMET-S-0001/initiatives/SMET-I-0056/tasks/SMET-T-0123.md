@@ -35,7 +35,7 @@ Add a `status` CLI command that shows a dashboard of active work — initiatives
 
 ## Acceptance Criteria
 
-- [ ] `ultra-metis status` shows dashboard of active work
+- [ ] `cadre status` shows dashboard of active work
 - [ ] Lists active initiatives with phase and child task counts
 - [ ] Lists active tasks grouped by parent initiative
 - [ ] Shows summary: total docs, counts by type, counts by phase
@@ -56,7 +56,7 @@ Add a `status` CLI command that shows a dashboard of active work — initiatives
 5. Add `Status` variant to CLI Commands enum
 
 ### Key Files
-- `crates/ultra-metis-cli/src/main.rs` — add Status command
+- `crates/cadre-cli/src/main.rs` — add Status command
 
 ## Status Updates
 

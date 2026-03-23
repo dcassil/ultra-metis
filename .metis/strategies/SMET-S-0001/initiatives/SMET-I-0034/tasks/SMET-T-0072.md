@@ -1,7 +1,7 @@
 ---
 id: build-mcp-server-binary-ultra
 level: task
-title: "Build MCP server binary (ultra-metis-mcp)"
+title: "Build MCP server binary (cadre-mcp)"
 short_code: "SMET-T-0072"
 created_at: 2026-03-17T03:08:34.149653+00:00
 updated_at: 2026-03-17T03:13:48.171238+00:00
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: SMET-I-0034
 ---
 
-# Build MCP server binary (ultra-metis-mcp)
+# Build MCP server binary (cadre-mcp)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

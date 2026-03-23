@@ -35,7 +35,7 @@ Build a comprehensive negative-path test suite that exercises every invalid oper
 
 ## Acceptance Criteria
 
-- [ ] Test module `tests/negative_path_tests.rs` (or similar) exists in `ultra-metis-store`
+- [ ] Test module `tests/negative_path_tests.rs` (or similar) exists in `cadre-store`
 - [ ] Tests cover every `StoreError` variant with at least one test case each
 - [ ] Tests cover per-operation invalid inputs:
   - `create_document`: non-existent parent, wrong parent type, empty title, disabled doc type
@@ -52,7 +52,7 @@ Build a comprehensive negative-path test suite that exercises every invalid oper
 ## Implementation Notes
 
 ### Technical Approach
-1. Create a test module with a helper that sets up a temporary `.ultra-metis` workspace
+1. Create a test module with a helper that sets up a temporary `.cadre` workspace
 2. Organize tests by operation (one `#[cfg(test)] mod` per operation)
 3. Each test: set up precondition → call operation with invalid input → assert specific error variant and message content
 4. Use `assert_matches!` or pattern matching on `StoreError` variants for precise assertions

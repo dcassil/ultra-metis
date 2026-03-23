@@ -26,7 +26,7 @@ initiative_id: add-first-class-design-aware
 
 In real software development, design decisions — UI mockups, component patterns, approved visual standards — directly influence implementation. Current Metis has no concept of design artifacts or design references. Developers and AI agents working from Metis plans have no structured way to reference approved designs or ensure implementation matches design intent.
 
-Super-Metis should make design a first-class concern: design references should be linkable to epics and stories, design context documents should be durable planning artifacts, and design change proposals should go through a structured workflow.
+Cadre should make design a first-class concern: design references should be linkable to epics and stories, design context documents should be durable planning artifacts, and design change proposals should go through a structured workflow.
 
 ## Governing Commitments
 
@@ -45,7 +45,7 @@ This initiative directly serves:
 - Support references to external design tools (Figma, Storybook, etc.) as well as repo-local design artifacts
 
 **Non-Goals:**
-- Building a design tool — Super-Metis references designs, it doesn't create them
+- Building a design tool — Cadre references designs, it doesn't create them
 - Rendering design mockups in the GUI (though links should be clickable)
 - Enforcing pixel-perfect design compliance at the code level
 

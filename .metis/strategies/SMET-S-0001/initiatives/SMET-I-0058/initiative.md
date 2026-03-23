@@ -24,13 +24,13 @@ initiative_id: claude-code-plugin-installation
 
 ## Context
 
-Ultra-metis has a working MCP server (`ultra-metis-mcp`) and CLI (`ultra-metis`), but neither can be easily installed as a Claude Code plugin today. The current `plugin.json` uses `cargo run` to launch the MCP server, which:
+Cadre has a working MCP server (`cadre-mcp`) and CLI (`cadre`), but neither can be easily installed as a Claude Code plugin today. The current `plugin.json` uses `cargo run` to launch the MCP server, which:
 
 - **Requires Rust toolchain** on the user's machine
 - **Slow startup** — cargo checks for recompilation on every launch
 - **Only works from repo directory** — paths are relative to the workspace
 
-This initiative handles the immediate work to make ultra-metis installable via `claude plugin add` for local development and dogfooding. Broader cross-platform distribution, CI/CD, and marketplace publishing are tracked in [[SMET-I-0050]].
+This initiative handles the immediate work to make cadre installable via `claude plugin add` for local development and dogfooding. Broader cross-platform distribution, CI/CD, and marketplace publishing are tracked in [[SMET-I-0050]].
 
 ## Current State
 
@@ -38,21 +38,21 @@ This initiative handles the immediate work to make ultra-metis installable via `
 ```json
 {
   "mcpServers": {
-    "ultra-metis": {
+    "cadre": {
       "command": "cargo",
-      "args": ["run", "--manifest-path", "${pluginDir}/Cargo.toml", "-p", "ultra-metis-mcp", "--release", "--"]
+      "args": ["run", "--manifest-path", "${pluginDir}/Cargo.toml", "-p", "cadre-mcp", "--release", "--"]
     }
   }
 }
 ```
 
-**Binary exists**: `target/release/ultra-metis-mcp` (8.1 MB, macOS arm64) — already built, just not referenced.
+**Binary exists**: `target/release/cadre-mcp` (8.1 MB, macOS arm64) — already built, just not referenced.
 
 ## Goals & Non-Goals
 
 **Goals:**
 - Update `plugin.json` to reference the pre-built binary instead of `cargo run`
-- Make the plugin installable via `claude plugin add /path/to/ultra-metis`
+- Make the plugin installable via `claude plugin add /path/to/cadre`
 - Provide a build script or Makefile target to rebuild the binary
 - Ensure the MCP server starts fast and works reliably from the plugin directory
 - Document the local install process
@@ -66,7 +66,7 @@ This initiative handles the immediate work to make ultra-metis installable via `
 ## Detailed Design
 
 ### 1. Build release binary
-Run `cargo build --release -p ultra-metis-mcp` to produce `target/release/ultra-metis-mcp`.
+Run `cargo build --release -p cadre-mcp` to produce `target/release/cadre-mcp`.
 
 ### 2. Update plugin.json
 Change MCP server command from `cargo run` to the built binary. Use `${pluginDir}` to keep it portable within the plugin directory:
@@ -74,8 +74,8 @@ Change MCP server command from `cargo run` to the built binary. Use `${pluginDir
 ```json
 {
   "mcpServers": {
-    "ultra-metis": {
-      "command": "${pluginDir}/target/release/ultra-metis-mcp",
+    "cadre": {
+      "command": "${pluginDir}/target/release/cadre-mcp",
       "args": [],
       "env": {}
     }

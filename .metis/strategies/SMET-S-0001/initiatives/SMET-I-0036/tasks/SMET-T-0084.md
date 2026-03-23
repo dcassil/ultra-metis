@@ -27,7 +27,7 @@ initiative_id: SMET-I-0036
 
 ## Objective
 
-Audit and improve error messages across all ultra-metis operations to be actionable, specific, and suggest fixes — matching or exceeding the original metis quality. The original metis maps errors to user-friendly messages with suggestions (e.g., "Document not found. Use list_documents to see available documents."). Ultra-metis currently passes through raw error strings from the store layer.
+Audit and improve error messages across all cadre operations to be actionable, specific, and suggest fixes — matching or exceeding the original metis quality. The original metis maps errors to user-friendly messages with suggestions (e.g., "Document not found. Use list_documents to see available documents."). Cadre currently passes through raw error strings from the store layer.
 
 ## Acceptance Criteria
 

@@ -1,7 +1,7 @@
 ---
 id: build-file-persistence-layer-ultra
 level: task
-title: "Build file persistence layer (ultra-metis-store)"
+title: "Build file persistence layer (cadre-store)"
 short_code: "SMET-T-0071"
 created_at: 2026-03-17T03:08:33.537829+00:00
 updated_at: 2026-03-17T03:11:32.693455+00:00
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: SMET-I-0034
 ---
 
-# Build file persistence layer (ultra-metis-store)
+# Build file persistence layer (cadre-store)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

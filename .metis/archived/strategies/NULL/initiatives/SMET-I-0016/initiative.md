@@ -26,7 +26,7 @@ initiative_id: architecture-catalog-and-reference
 
 Today, when an AI agent sets up a new project or works within an existing repo, it improvises the repo structure — folder layout, module boundaries, dependency direction, naming conventions, testing placement. This means every repo ends up with a slightly different, ad-hoc architecture that nobody explicitly chose and that drifts over time.
 
-Super-Metis should move repos from improvised architecture to intentional architecture. This means:
+Cadre should move repos from improvised architecture to intentional architecture. This means:
 1. A curated catalog of known-good architecture patterns organized by language and project type
 2. A selection flow during setup that suggests strong options, explains tradeoffs, and lets the user choose
 3. A brownfield evaluation flow for existing repos that matches current structure to a catalog pattern or derives a stable reference
@@ -69,7 +69,7 @@ This initiative directly serves:
 **Non-Goals:**
 - Building an exhaustive catalog of every possible architecture style — start curated and small
 - Forcing architecture rewrites on brownfield repos — the system recommends but the user always decides. If the existing architecture is poor, the system explains the problems and suggests a catalog alternative, but the user can decline and keep their current structure
-- Runtime architecture enforcement (e.g., import checking at build time) — Super-Metis defines and tracks the architecture; linters/build tools enforce it
+- Runtime architecture enforcement (e.g., import checking at build time) — Cadre defines and tracks the architecture; linters/build tools enforce it
 - Supporting every language from day one — start with JavaScript/TypeScript, expand later
 - Monorepo-root multi-architecture support — that's a future concern (see SMET-I-0017)
 
@@ -103,7 +103,7 @@ This initiative directly serves:
   - `anti_patterns`: Common mistakes and what to do instead
   - `rules_seed_data`: Structured data that can be used to auto-generate Rules Config documents
   - `analysis_expectations`: Structured data that defines what quality checks and boundary enforcement should look for
-- **Catalog storage**: Shipped as built-in documents within Super-Metis (not per-project — they're system-level reference data)
+- **Catalog storage**: Shipped as built-in documents within Cadre (not per-project — they're system-level reference data)
 - **Catalog extensibility**: Projects can add custom catalog entries for their own patterns
 
 #### Initial Catalog Entries (JavaScript/TypeScript)
@@ -114,7 +114,7 @@ This initiative directly serves:
 - `javascript/node-util`: Utility/library package. Flat or domain-grouped source. Comprehensive unit tests. Clean public API.
 
 #### Architecture Selection Flow
-- Triggered during Super-Metis initialization (SMET-I-0008)
+- Triggered during Cadre initialization (SMET-I-0008)
 - After language/project type detection, query the catalog for matching patterns
 - Present a small set (typically 1-3) of matching patterns with use case descriptions and tradeoffs
 - User selects one (or can skip to derive from existing structure)
@@ -144,7 +144,7 @@ This initiative directly serves:
   - The user always has final say — the system recommends but does not force
 
 #### Reference Architecture Artifact
-- Per-repo document persisted in the `.metis` (or `.super-metis`) directory
+- Per-repo document persisted in the `.metis` (or `.cadre`) directory
 - Links to the source catalog entry (if selected or matched), or marked as "derived" if created from brownfield analysis
 - Contains the canonical architecture definition for THIS repo:
   - folder structure
@@ -166,7 +166,7 @@ This initiative directly serves:
 2. **Use CLAUDE.md or .cursorrules for architecture**: Rejected because these have no structured format, no protection, no versioning, and can't be queried programmatically.
 3. **Build a massive catalog from day one**: Rejected — start curated and small (5 JS/TS patterns), expand based on actual usage.
 4. **Only support greenfield repos**: Rejected because most real repos are brownfield. Evaluation and matching is essential.
-5. **Store catalog externally (npm package, remote API)**: Rejected — must be repo-native. Built-in catalog ships with Super-Metis; custom entries are repo-local.
+5. **Store catalog externally (npm package, remote API)**: Rejected — must be repo-native. Built-in catalog ships with Cadre; custom entries are repo-local.
 6. **Generate architecture from AI each time**: Rejected — the whole point is that architecture should be stable and intentional, not regenerated.
 
 ## Implementation Plan

@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: brownfield-architecture-evaluation
 ---
 
@@ -24,7 +24,7 @@ initiative_id: brownfield-architecture-evaluation
 
 ## Context
 
-Most real repos are brownfield — they have existing code with an existing (often implicit) architecture. When Super-Metis initializes in a brownfield repo, it needs to analyze the current structure, assess its quality, and either match it to a catalog pattern or derive a stable reference from it.
+Most real repos are brownfield — they have existing code with an existing (often implicit) architecture. When Cadre initializes in a brownfield repo, it needs to analyze the current structure, assess its quality, and either match it to a catalog pattern or derive a stable reference from it.
 
 This is the analysis and matching counterpart to the greenfield selection flow (SMET-I-0027). The goal: every brownfield repo ends up with a persisted Reference Architecture, whether matched, derived, or recommended.
 

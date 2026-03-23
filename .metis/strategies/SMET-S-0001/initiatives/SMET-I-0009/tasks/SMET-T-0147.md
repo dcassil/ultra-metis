@@ -23,9 +23,9 @@ initiative_id: SMET-I-0009
 
 ## Context
 
-The rule system in ultra-metis-core provides `RulesConfig` documents with scope hierarchy (Platform > Organization > Repository > Package > Component > Task), protection levels, and a `RuleQueryEngine` for filtering. Agents need MCP tools to query applicable rules by scope, category, and protection level so they can understand what engineering rules govern their current work.
+The rule system in cadre-core provides `RulesConfig` documents with scope hierarchy (Platform > Organization > Repository > Package > Component > Task), protection levels, and a `RuleQueryEngine` for filtering. Agents need MCP tools to query applicable rules by scope, category, and protection level so they can understand what engineering rules govern their current work.
 
-The existing `RuleQueryEngine` (`crates/ultra-metis-core/src/domain/rules/query.rs`) already supports scope-inheritance-aware queries, filtered queries by category/protection/architecture-ref, and protected rule enumeration. This task wraps that engine in MCP tools.
+The existing `RuleQueryEngine` (`crates/cadre-core/src/domain/rules/query.rs`) already supports scope-inheritance-aware queries, filtered queries by category/protection/architecture-ref, and protected rule enumeration. This task wraps that engine in MCP tools.
 
 ## Implementation Plan
 
@@ -57,7 +57,7 @@ The existing `RuleQueryEngine` (`crates/ultra-metis-core/src/domain/rules/query.
 
 ## Files to Modify
 
-- `crates/ultra-metis-mcp/src/tools.rs` — New tool definitions and handlers
+- `crates/cadre-mcp/src/tools.rs` — New tool definitions and handlers
 
 ## Dependencies
 

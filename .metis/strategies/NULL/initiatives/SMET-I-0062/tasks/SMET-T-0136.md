@@ -1,7 +1,7 @@
 ---
 id: add-adapters-for-original-metis
 level: task
-title: "Add adapters for original Metis and ultra-metis-mcp execution paths"
+title: "Add adapters for original Metis and cadre-mcp execution paths"
 short_code: "SMET-T-0136"
 created_at: 2026-03-18T17:41:41.700102+00:00
 updated_at: 2026-03-20T16:53:57.118278+00:00
@@ -20,7 +20,7 @@ strategy_id: SMET-S-0003
 initiative_id: SMET-I-0062
 ---
 
-# Add adapters for original Metis and ultra-metis-mcp execution paths
+# Add adapters for original Metis and cadre-mcp execution paths
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

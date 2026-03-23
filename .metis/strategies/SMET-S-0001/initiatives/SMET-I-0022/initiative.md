@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: quality-gates-and-phase-transition
 ---
 
@@ -46,7 +46,7 @@ Split from the original SMET-I-0005 (now archived).
 - Capturing baselines or comparing them — covered by SMET-I-0021
 - Remediation workflows when gates fail — covered by SMET-I-0006
 - UI for quality gate status — covered by SMET-I-0011
-- Running analysis tools — Super-Metis checks results, doesn't run tools
+- Running analysis tools — Cadre checks results, doesn't run tools
 
 ## Detailed Design
 

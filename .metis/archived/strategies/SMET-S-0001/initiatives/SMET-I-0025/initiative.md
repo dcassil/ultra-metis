@@ -16,17 +16,17 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: single-agent-runner-with-context
 ---
 
 # Single-Agent Runner with Context Enrichment
 
-> **STATUS: POST-MVP / DEFERRED** — The product spec defers a full internal single-agent runner to later phases. For MVP, existing structured-execution plugins (Ralph loop, etc.) should be leveraged, with Super-Metis enriching those runs with durable repo-native context and capturing results. The system's MVP role is to assemble correct context, retrieve relevant architecture/rules/notes/history, require validations, and store outputs — not to own the execution engine itself.
+> **STATUS: POST-MVP / DEFERRED** — The product spec defers a full internal single-agent runner to later phases. For MVP, existing structured-execution plugins (Ralph loop, etc.) should be leveraged, with Cadre enriching those runs with durable repo-native context and capturing results. The system's MVP role is to assemble correct context, retrieve relevant architecture/rules/notes/history, require validations, and store outputs — not to own the execution engine itself.
 
 ## Context
 
-Metis has a "Ralph" loop concept for single-task execution — an agent picks up a task and works through it iteratively. Super-Metis needs to evolve this into a Story-level runner that gathers full context (design references, applicable rules, quality requirements) before executing, and verifies quality after completing.
+Metis has a "Ralph" loop concept for single-task execution — an agent picks up a task and works through it iteratively. Cadre needs to evolve this into a Story-level runner that gathers full context (design references, applicable rules, quality requirements) before executing, and verifies quality after completing.
 
 This is the execution engine for single-agent mode. The multi-agent orchestrator (SMET-I-0026) builds on top of this runner.
 

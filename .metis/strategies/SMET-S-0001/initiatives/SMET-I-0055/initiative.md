@@ -26,7 +26,7 @@ initiative_id: tool-integration-add-missing-tools
 
 ## Context **[REQUIRED]**
 
-Ultra-Metis MCP tools lack several capabilities present in the original Metis system:
+Cadre MCP tools lack several capabilities present in the original Metis system:
 
 **Missing Tools (2):**
 1. `reassign_parent` - Move tasks between initiatives or to/from backlog
@@ -40,7 +40,7 @@ Ultra-Metis MCP tools lack several capabilities present in the original Metis sy
 
 **Output Format Gaps:**
 - Original Metis: Rich formatted output (tables, diffs, progress visualization, error context)
-- Ultra-Metis: Minimal output (simple strings, success messages)
+- Cadre: Minimal output (simple strings, success messages)
 
 This reduces workflow efficiency and loses audit trail visibility when managing task reorganization, search filtering, and error recovery.
 

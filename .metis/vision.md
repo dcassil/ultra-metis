@@ -1,7 +1,7 @@
 ---
-id: super-metis-repo-native-ai
+id: cadre-repo-native-ai
 level: vision
-title: "Super-Metis: Repo-Native AI Engineering Orchestration for Monorepo"
+title: "Cadre: Repo-Native AI Engineering Orchestration for Monorepo"
 short_code: "SMET-V-0001"
 created_at: 2026-03-11T19:55:32.128760+00:00
 updated_at: 2026-03-11T19:59:08.237643+00:00
@@ -17,11 +17,11 @@ strategy_id: NULL
 initiative_id: NULL
 ---
 
-# Super-Metis: Repo-Native AI Engineering Orchestration for Monorepo
+# Cadre: Repo-Native AI Engineering Orchestration for Monorepo
 
 ## Purpose
 
-Super-Metis is a repo-native AI engineering operating system for software delivery. It is designed for a single repository or monorepo and persists the durable state of engineering work directly inside the repo: product intent, architecture, plans, rules, quality history, investigations, approvals, and reusable local insight.
+Cadre is a repo-native AI engineering operating system for software delivery. It is designed for a single repository or monorepo and persists the durable state of engineering work directly inside the repo: product intent, architecture, plans, rules, quality history, investigations, approvals, and reusable local insight.
 
 It is not just an AI assistant, not just a planner, and not just a workflow engine. It is the system that lets AI behave like a disciplined software engineer working inside a governed delivery environment.
 
@@ -33,7 +33,7 @@ The design is centered on three ideas:
 2. **Only durable, reusable, governing, or risk-relevant knowledge should be persisted**; moment-to-moment reasoning should remain internal unless promoted.
 3. **The repo is the long-term engineering memory and governance surface**; chat context and transient agent state are not enough.
 
-Build implementation lives in the `super-metis/` folder using the original `metis/` repository as the starting point and reference implementation. The goal is not to rebuild Metis from scratch, but to evolve its existing architecture into this stronger operating system.
+Build implementation lives in the `cadre/` folder using the original `metis/` repository as the starting point and reference implementation. The goal is not to rebuild Metis from scratch, but to evolve its existing architecture into this stronger operating system.
 
 ## Foundational Commitments
 
@@ -109,7 +109,7 @@ However, it lacks:
 
 ## Future State
 
-Super-Metis should be a complete repo-native AI engineering operating system that supports:
+Cadre should be a complete repo-native AI engineering operating system that supports:
 
 ### Core Operating Model
 
@@ -180,7 +180,7 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 
 ## Major Features
 
-### MVP Features (What Super-Metis Must Uniquely Own)
+### MVP Features (What Cadre Must Uniquely Own)
 
 - **Cognitive operation kernel and reusable loops**: The universal reasoning substrate — 12 operations composing into loops that define all workflows. This is the central abstraction replacing brittle one-off workflow scripts.
 - **Core planning hierarchy**: ProductDoc → Epic → Story → Task with typed Stories (feature, bugfix, refactor, migration, architecture-change, investigation, remediation, setup/bootstrap) and required planning fields (objective, scope, rationale, acceptance criteria, dependencies, architecture relevance, validation expectations, risk level)
@@ -202,23 +202,23 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 - **MCP surface**: Expose the full durable operating system — CRUD for all artifacts, quality operations, rule management, traceability queries, note fetch/score, baseline capture/comparison, validation recording, workflow states.
 - **CLI surface**: Developer-native access to all operations including init/bootstrap, create/query, architecture/rules inspection, validation recording, baseline capture, quality deltas, traceability, note inspection, JSON export.
 - **Templates**: Artifact templates (all document types) and workflow templates (bugfix, feature slice, refactor, migration, architecture change, brownfield evaluation, remediation, investigation, greenfield bootstrap) — context-aware, prefilling from parent artifacts and architecture scope.
-- **Migration path**: Smooth upgrade from original Metis concepts to Super-Metis concepts.
+- **Migration path**: Smooth upgrade from original Metis concepts to Cadre concepts.
 - **Design-aware planning**: First-class references to design specs, approved patterns, and visual standards linked to implementation work.
-- **Plugin-based execution**: Skills, agents, hooks, and execution commands delivered as a Claude Code plugin leveraging ultra-metis MCP tools for state management.
+- **Plugin-based execution**: Skills, agents, hooks, and execution commands delivered as a Claude Code plugin leveraging cadre MCP tools for state management.
 
 ### Post-MVP Features (Leverage Existing Tools or Defer)
 
 - **Work leasing**: Isolated execution ownership so agents can claim and work on tasks without conflicts. Defer unless adoption pressure is strong.
 - **Git worktree isolation**: Automated worktree lifecycle for leased work. Defer — existing superpowers plugin handles worktrees.
 - **Multi-agent orchestrator**: Full orchestrated execution with work decomposition, scoped dispatch, conflict detection, execution log merge. Defer until repo-native state layer is mature.
-- **Full custom rule execution engine**: For MVP, partially delegate runtime enforcement to existing plugins and hooks. Ultra-Metis owns the persisted governed rule model and traceability.
+- **Full custom rule execution engine**: For MVP, partially delegate runtime enforcement to existing plugins and hooks. Cadre owns the persisted governed rule model and traceability.
 - **GUI productization**: Valuable but not MVP-critical. Prototype with existing rapid GUI tools. Eventually: hierarchy tree, architecture browser, traceability graph, quality dashboards, note browser, investigation tracker, rule browser, blocked work view.
 - **Bespoke analyzers**: Use existing tools where they suffice; only build custom when uniquely valuable.
 - **Monorepo-root orchestration**: Cross-package coordination with per-package architecture profiles. Defer until single-project model is proven.
 
 ## Success Criteria
 
- 1. Super-Metis can represent a complete product development lifecycle from product definition through architecture selection, design, planning, execution, and quality enforcement
+ 1. Cadre can represent a complete product development lifecycle from product definition through architecture selection, design, planning, execution, and quality enforcement
  2. The cognitive operation kernel and reusable loops are implemented as the universal reasoning substrate — all workflow templates compose from them
  3. A curated architecture catalog exists with practical patterns for common project types, starting with JavaScript/TypeScript
  4. Every initialized repo has a persisted Reference Architecture — either selected from the catalog (greenfield), matched/captured from a strong existing architecture (brownfield-good), or recommended as a replacement for a weak existing architecture with user consent (brownfield-bad) — with the user always having final say
@@ -230,7 +230,7 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 10. The internal cognition vs durable persistence design rule is enforced — promotion rules govern when internal reasoning becomes durable state
 11. Static analysis baselines are tracked, compared, and used to gate execution — including architecture boundary enforcement
 12. All original Metis capabilities (CLI, MCP, search, indexing) are preserved and extended
-13. A working migration path exists from Metis to Super-Metis document models
+13. A working migration path exists from Metis to Cadre document models
 14. The system is auditable, explainable, bounded by rules, architecture-aware, evidence-backed, mode-aware, adaptable, and self-correcting through review, validation, and note pruning
 15. The system is usable in a real repo for real software development work
 
@@ -254,7 +254,7 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 1. Must build on top of existing Metis foundations — not a greenfield rewrite
 2. Must remain repo-local and file-based — no external service dependencies for core functionality
 3. Must preserve backward compatibility with existing Metis document formats during migration
-4. The `metis/` folder is read-only reference; all new work goes into `super-metis/`
+4. The `metis/` folder is read-only reference; all new work goes into `cadre/`
 5. Must work with current MCP server patterns and Claude Code integration
 6. Rust codebase — maintain language consistency with original Metis
 
@@ -276,17 +276,17 @@ For **monorepo roots** (future/non-MVP), the system should eventually support de
 
 ## Workspace Model
 
-Ultra-Metis is structured as a Rust monorepo:
+Cadre is structured as a Rust monorepo:
 
 ```
 crates/
-  ultra-metis-core/     # Domain types, templates, operations kernel
-  ultra-metis-store/    # File persistence layer
-  ultra-metis-mcp/      # MCP server binary
-  ultra-metis-cli/      # CLI binary
+  cadre-core/     # Domain types, templates, operations kernel
+  cadre-store/    # File persistence layer
+  cadre-mcp/      # MCP server binary
+  cadre-cli/      # CLI binary
 plugins/
-  ultra-metis/          # Claude Code plugin (skills, agents, hooks, commands)
+  cadre/          # Claude Code plugin (skills, agents, hooks, commands)
 apps/                   # Future: control-web, control-api, machine-runner
 ```
 
-The `.metis/` directory in any project holds durable state. The `plugins/ultra-metis/` directory holds the Claude Code plugin that provides skills, guidance agents, lifecycle hooks, and execution commands on top of the MCP tool layer.
+The `.metis/` directory in any project holds durable state. The `plugins/cadre/` directory holds the Claude Code plugin that provides skills, guidance agents, lifecycle hooks, and execution commands on top of the MCP tool layer.

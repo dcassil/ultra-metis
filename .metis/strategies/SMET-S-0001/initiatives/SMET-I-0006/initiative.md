@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: add-remediation-and-investigation
 ---
 
@@ -26,7 +26,7 @@ initiative_id: add-remediation-and-investigation
 
 When quality gates detect regression (SMET-I-0005), the system needs a structured response — not just a blocked transition, but a workflow for investigating the root cause, proposing remediation, executing fixes, and verifying resolution. Without this, quality gate violations become dead-ends that users work around rather than address.
 
-Super-Metis should introduce Architecture Investigation documents for root-cause analysis and structured remediation loops that connect quality degradation to corrective action.
+Cadre should introduce Architecture Investigation documents for root-cause analysis and structured remediation loops that connect quality degradation to corrective action.
 
 ## Governing Commitments
 

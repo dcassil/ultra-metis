@@ -16,7 +16,7 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: M
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: architecture-catalog-content-and
 ---
 
@@ -24,7 +24,7 @@ initiative_id: architecture-catalog-content-and
 
 ## Context
 
-Super-Metis moves repos from improvised architecture to intentional architecture. This requires a curated catalog of known-good patterns and a selection flow that helps users choose the right one during setup.
+Cadre moves repos from improvised architecture to intentional architecture. This requires a curated catalog of known-good patterns and a selection flow that helps users choose the right one during setup.
 
 The domain types for ArchitectureCatalogEntry and ReferenceArchitecture are defined in SMET-I-0020. This initiative focuses on the actual catalog content (the 5 initial JS/TS patterns) and the greenfield selection flow. Brownfield evaluation is a separate initiative (SMET-I-0028).
 
@@ -67,7 +67,7 @@ Each entry defines:
 - Analysis expectations (what quality checks should enforce)
 
 ### Catalog Storage
-- Built-in entries ship with Super-Metis binary (embedded or bundled)
+- Built-in entries ship with Cadre binary (embedded or bundled)
 - Custom entries stored in `.metis/catalog/` directory
 - Both queried through the same interface
 

@@ -25,7 +25,7 @@ initiative_id: build-canonical-scenario-packs-and
 
 ## Context
 
-The benchmark is only as good as the scenarios it exercises. Right now the repo has one promising practical scenario and several ad hoc experiments, but no canonical scenario pack format that can be re-run, extended, and scored consistently across tools and revisions. To compare original Metis and Ultra-Metis meaningfully, each run needs a fixed set of inputs, seed artifacts, and expected outcomes.
+The benchmark is only as good as the scenarios it exercises. Right now the repo has one promising practical scenario and several ad hoc experiments, but no canonical scenario pack format that can be re-run, extended, and scored consistently across tools and revisions. To compare original Metis and Cadre meaningfully, each run needs a fixed set of inputs, seed artifacts, and expected outcomes.
 
 This initiative creates those benchmark inputs. It defines what a scenario pack contains, how a run is seeded, and what artifacts are considered ground truth for evaluation.
 
@@ -35,7 +35,7 @@ This initiative creates those benchmark inputs. It defines what a scenario pack 
 - Define a canonical scenario pack schema for benchmark inputs.
 - Create initial benchmark scenarios that cover planning-heavy and build-heavy work.
 - Package each scenario with seed docs, architecture expectations, and verification hints.
-- Make scenarios reusable across both original Metis and Ultra-Metis execution modes.
+- Make scenarios reusable across both original Metis and Cadre execution modes.
 
 **Non-Goals:**
 - Building the full run harness

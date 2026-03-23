@@ -1,6 +1,6 @@
 # Practical Benchmark: File Processing Toolkit
 
-This benchmark measures how well AI executes Super-Metis workflows end-to-end, comparing autonomous execution vs validation-gated execution.
+This benchmark measures how well AI executes Cadre workflows end-to-end, comparing autonomous execution vs validation-gated execution.
 
 ## Scenario
 

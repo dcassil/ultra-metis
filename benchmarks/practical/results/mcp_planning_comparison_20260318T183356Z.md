@@ -9,7 +9,7 @@
 
 ## System Results
 
-| Metric | original-metis | ultra-metis-mcp |
+| Metric | original-metis | cadre-mcp |
 |--------|----------------|-----------------|
 | Initiative docs scored | 1 | 1 |
 | Total tokens | 0 | 0 |

@@ -95,7 +95,7 @@ def start_mcp_server(cmd, cwd=None):
     notif = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
     proc.stdin.write(notif + "\n")
     proc.stdin.flush()
-    # Ultra-metis incorrectly responds with "Method not found". Drain it.
+    # Cadre incorrectly responds with "Method not found". Drain it.
     drain_pending(proc, timeout=0.2)
     return proc, resp
 
@@ -217,7 +217,7 @@ def run_scenario_2_planning(ultra_proc, ultra_path, orig_proc, orig_path, ultra_
     """
     scenario = ScenarioResult(name="Planning Workflow")
 
-    # -- Ultra-metis: create vision explicitly --
+    # -- Cadre: create vision explicitly --
     resp, ms = call_tool(ultra_proc, "create_document", {
         "project_path": ultra_path, "document_type": "vision", "title": "CLI Toolkit",
     }, req_id=next_id())
@@ -701,7 +701,7 @@ def format_report(scenarios, ultra_init_time, orig_init_time, quality_results=No
             if abs(delta) < 5:
                 lines.append("Both tools produce similarly complete documents when templates are filled by AI.")
             elif delta > 0:
-                lines.append(f"**Ultra-metis** templates yield {delta:.0f}% higher completeness scores.")
+                lines.append(f"**Cadre** templates yield {delta:.0f}% higher completeness scores.")
             else:
                 lines.append(f"**Original metis** templates yield {-delta:.0f}% higher completeness scores.")
             lines.append("")
@@ -741,7 +741,7 @@ def main():
 
     ultra_tmp = tempfile.mkdtemp(prefix="bench-ultra-")
     orig_tmp = tempfile.mkdtemp(prefix="bench-orig-")
-    # Ultra-metis: all operations use the project root
+    # Cadre: all operations use the project root
     # Original metis: init uses parent dir, all other ops use .metis path
     orig_metis_path = os.path.join(orig_tmp, ".metis")
 

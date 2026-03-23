@@ -26,7 +26,7 @@ initiative_id: add-work-leasing-and-isolated
 
 When multiple AI agents (or humans) work on a monorepo simultaneously, they need a way to claim ownership of specific work items to avoid conflicts. Current Metis has no concept of work ownership or isolation — any agent can work on any task.
 
-Super-Metis should introduce work leases: a mechanism where an agent acquires exclusive ownership of a Story (or Task), works on it in isolation (potentially in a git worktree), and releases the lease when done. This prevents merge conflicts, duplicate work, and allows the orchestrator to coordinate parallel execution.
+Cadre should introduce work leases: a mechanism where an agent acquires exclusive ownership of a Story (or Task), works on it in isolation (potentially in a git worktree), and releases the lease when done. This prevents merge conflicts, duplicate work, and allows the orchestrator to coordinate parallel execution.
 
 ## Governing Commitments
 

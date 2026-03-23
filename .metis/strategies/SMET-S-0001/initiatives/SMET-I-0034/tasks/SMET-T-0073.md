@@ -1,7 +1,7 @@
 ---
-id: build-cli-binary-ultra-metis-cli
+id: build-cli-binary-cadre-cli
 level: task
-title: "Build CLI binary (ultra-metis-cli)"
+title: "Build CLI binary (cadre-cli)"
 short_code: "SMET-T-0073"
 created_at: 2026-03-17T03:08:35.403341+00:00
 updated_at: 2026-03-17T03:15:04.971989+00:00
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: SMET-I-0034
 ---
 
-# Build CLI binary (ultra-metis-cli)
+# Build CLI binary (cadre-cli)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

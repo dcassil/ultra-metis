@@ -1,7 +1,7 @@
 ---
 id: add-migration-and-versioning-path
 level: initiative
-title: "Add Migration and Versioning Path from Metis to Super-Metis"
+title: "Add Migration and Versioning Path from Metis to Cadre"
 short_code: "SMET-I-0015"
 created_at: 2026-03-11T20:00:15.612457+00:00
 updated_at: 2026-03-11T20:00:15.612457+00:00
@@ -16,17 +16,17 @@ tags:
 
 exit_criteria_met: false
 estimated_complexity: L
-strategy_id: ultra-metis-core-engine-repo
+strategy_id: cadre-core-engine-repo
 initiative_id: add-migration-and-versioning-path
 ---
 
-# Add Migration and Versioning Path from Metis to Super-Metis
+# Add Migration and Versioning Path from Metis to Cadre
 
 ## Context
 
-Existing Metis users have projects with Visions, Strategies, Initiatives, Tasks, and ADRs. Super-Metis introduces a fundamentally different document hierarchy (Product Doc, Epic, Story, Task) and new artifact types. There must be a clear, safe migration path from Metis documents to Super-Metis documents, as well as a schema versioning system that supports future evolution.
+Existing Metis users have projects with Visions, Strategies, Initiatives, Tasks, and ADRs. Cadre introduces a fundamentally different document hierarchy (Product Doc, Epic, Story, Task) and new artifact types. There must be a clear, safe migration path from Metis documents to Cadre documents, as well as a schema versioning system that supports future evolution.
 
-This initiative ensures that the transition from Metis to Super-Metis is smooth, data-preserving, and reversible where possible.
+This initiative ensures that the transition from Metis to Cadre is smooth, data-preserving, and reversible where possible.
 
 ## Governing Commitments
 
@@ -39,16 +39,16 @@ This initiative directly serves:
 ## Goals & Non-Goals
 
 **Goals:**
-- Define mapping rules from Metis document types to Super-Metis types (Vision → Product Doc, Initiative → Epic, Task → Story or Task)
-- Build a migration tool that converts existing Metis projects to Super-Metis format
+- Define mapping rules from Metis document types to Cadre types (Vision → Product Doc, Initiative → Epic, Task → Story or Task)
+- Build a migration tool that converts existing Metis projects to Cadre format
 - Implement document schema versioning so future changes are manageable
 - Preserve all existing document content during migration (no data loss)
 - Support incremental migration (not all-or-nothing)
 - Provide a dry-run mode that shows what would change without applying changes
 
 **Non-Goals:**
-- Backward migration (Super-Metis → Metis) — this is a one-way upgrade
-- Supporting Metis and Super-Metis formats simultaneously in production — after migration, the project is Super-Metis
+- Backward migration (Cadre → Metis) — this is a one-way upgrade
+- Supporting Metis and Cadre formats simultaneously in production — after migration, the project is Cadre
 - Migrating external integrations (CI/CD references to Metis short codes, etc.)
 
 ## Detailed Design
@@ -65,7 +65,7 @@ This initiative directly serves:
 
 ### What is Net New
 - Type mapping rules: Vision → Product Doc, Strategy → (absorbed into Epic or dropped), Initiative → Epic, Task → Story or Task (based on complexity)
-- Migration tool: `super-metis migrate` command
+- Migration tool: `cadre migrate` command
 - Schema version tracking in frontmatter and database
 - Dry-run mode: preview migration without applying changes
 - Migration report: summary of what was migrated, what needs manual attention
@@ -82,8 +82,8 @@ This initiative directly serves:
 
 ## Implementation Plan
 
-Phase 1: Define complete type mapping rules (Metis type → Super-Metis type)
-Phase 2: Add schema version field to all Super-Metis document types
+Phase 1: Define complete type mapping rules (Metis type → Cadre type)
+Phase 2: Add schema version field to all Cadre document types
 Phase 3: Build document format migration logic (read old, write new)
 Phase 4: Build database schema migration
 Phase 5: Implement dry-run mode
@@ -99,7 +99,7 @@ Phase 10: Test migration with real Metis projects
 
 ## Acceptance Criteria
 
-- All Metis document types can be migrated to Super-Metis equivalents
+- All Metis document types can be migrated to Cadre equivalents
 - No content is lost during migration
 - Dry-run mode accurately previews all changes
 - Original files are backed up before migration
@@ -126,9 +126,9 @@ Phase 10: Test migration with real Metis projects
 
 ## Suggested Tasks for Decomposition
 
-1. Document complete type mapping rules (Metis → Super-Metis)
+1. Document complete type mapping rules (Metis → Cadre)
 2. Document phase mapping rules (old phases → new phases)
-3. Add schema version field to all Super-Metis document types
+3. Add schema version field to all Cadre document types
 4. Build Metis document reader (parse old format)
 5. Build document format converter (old → new)
 6. Build database schema migration

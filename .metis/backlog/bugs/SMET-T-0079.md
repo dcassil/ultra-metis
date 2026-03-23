@@ -64,15 +64,15 @@ When calling `transition_phase` on a document that is already in a terminal phas
 ## Implementation Notes
 
 ### Technical Approach
-- In `ultra-metis-store`'s `transition_phase` method:
+- In `cadre-store`'s `transition_phase` method:
   1. After reading the document and parsing its current phase, check `DocumentType::valid_transitions_from(current_phase)`
   2. If the result is an empty vec, the phase is terminal — return error immediately
   3. Error message: "Document {short_code} is in terminal phase '{phase}' — no further transitions are possible"
 - This check should happen BEFORE any target phase resolution or auto-advance logic
 
 ### Dependencies
-- `ultra-metis-store` crate
-- `DocumentType::valid_transitions_from()` in `ultra-metis-core`
+- `cadre-store` crate
+- `DocumentType::valid_transitions_from()` in `cadre-core`
 
 ## Status Updates
 

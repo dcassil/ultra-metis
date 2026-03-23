@@ -27,7 +27,7 @@ initiative_id: SMET-I-0037
 
 ## Objective
 
-Re-run the benchmark Scenario 2 (Planning Workflow) that originally scored ultra-metis template quality at 3/5. After the rewrites in SMET-T-0088 and quality tests in SMET-T-0089, the target is 5/5 template quality — matching or exceeding original metis.
+Re-run the benchmark Scenario 2 (Planning Workflow) that originally scored cadre template quality at 3/5. After the rewrites in SMET-T-0088 and quality tests in SMET-T-0089, the target is 5/5 template quality — matching or exceeding original metis.
 
 This task validates that the investment in SMET-I-0037 paid off and documents the final scores.
 
@@ -37,7 +37,7 @@ This task validates that the investment in SMET-I-0037 paid off and documents th
 
 ## Acceptance Criteria
 
-- [ ] Benchmark Scenario 2 (Planning Workflow) is re-run with the updated ultra-metis binary
+- [ ] Benchmark Scenario 2 (Planning Workflow) is re-run with the updated cadre binary
 - [ ] Template quality score improves from 3/5 to at least 4/5 (target: 5/5)
 - [ ] Benchmark results are recorded in the SMET-I-0037 initiative under a `## Benchmark Results` section
 - [ ] Any remaining gaps (if score < 5/5) are documented with specific actionable improvements
@@ -48,21 +48,21 @@ This task validates that the investment in SMET-I-0037 paid off and documents th
 
 ### Technical Approach
 
-The benchmark is located at `super-metis/benchmarks/` or was run as a shell script in a previous session. Key steps:
+The benchmark is located at `cadre/benchmarks/` or was run as a shell script in a previous session. Key steps:
 
 1. **Build the updated binary:**
    ```bash
-   cd super-metis && cargo build --release
+   cd cadre && cargo build --release
    ```
 
 2. **Find the benchmark script:**
-   Check `super-metis/benchmarks/` for the scenario 2 script. The benchmark was originally run in SMET-I-0035.
+   Check `cadre/benchmarks/` for the scenario 2 script. The benchmark was originally run in SMET-I-0035.
 
 3. **Run against a fresh project:**
    ```bash
    # Initialize fresh project
    TMPDIR=$(mktemp -d)
-   ./target/release/ultra-metis init -p "$TMPDIR" -x BENCH
+   ./target/release/cadre init -p "$TMPDIR" -x BENCH
    # Create a vision + initiative + task via the CLI
    # Observe the templates that are rendered
    ```
@@ -83,7 +83,7 @@ The benchmark is located at `super-metis/benchmarks/` or was run as a shell scri
 ### Finding the Benchmark Script
 
 The benchmark in SMET-I-0035 used a script at approximately:
-- `super-metis/benchmarks/scenario_2_planning_workflow.sh` or similar
+- `cadre/benchmarks/scenario_2_planning_workflow.sh` or similar
 - Or it may have been run inline via the CLI commands
 
 Check git log or the SMET-I-0035 initiative document for the exact benchmark invocation.
@@ -119,7 +119,7 @@ Aggregate score = average across all 4 document types.
 ## Status Updates
 
 ### 2026-03-17
-- Found benchmark script at `super-metis/benchmarks/run-ultra-metis-bench.sh`
+- Found benchmark script at `cadre/benchmarks/run-cadre-bench.sh`
 - Built release binary: `cargo build --release` — succeeded
 - Created fresh benchmark project (BENCH prefix) with Vision, Initiative, and Task
 - Inspected rendered documents — all templates show rich structure matching 5/5 criteria

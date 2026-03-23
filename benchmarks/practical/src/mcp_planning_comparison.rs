@@ -1,7 +1,7 @@
 use crate::api_client;
 use crate::doc_quality::score_content;
 use crate::mcp_adapter::{
-    ExecutionAdapter, McpSession, OriginalMetisAdapter, SystemUnderTest, UltraMetisMcpAdapter,
+    ExecutionAdapter, McpSession, OriginalMetisAdapter, SystemUnderTest, CadreMcpAdapter,
 };
 use crate::prompt_builder;
 use crate::runner::{parse_initiative_response, AiInitiative};
@@ -76,7 +76,7 @@ pub async fn run_planning_comparison(
     )
     .await?;
     let ultra = run_system_planning(
-        &UltraMetisMcpAdapter,
+        &CadreMcpAdapter,
         scenario,
         &planned,
         assessment_tokens,
@@ -235,7 +235,7 @@ fn seed_vision(
 ) -> Result<String> {
     match system {
         SystemUnderTest::OriginalMetis => Ok("PLAN-V-0001".to_string()),
-        SystemUnderTest::UltraMetisMcp => {
+        SystemUnderTest::CadreMcp => {
             let response = call_tool(
                 session,
                 "create_document",
@@ -523,7 +523,7 @@ fn extract_title(artifact: &ScenarioArtifact) -> Option<String> {
 fn document_project_path(system: SystemUnderTest, root: &Path) -> String {
     match system {
         SystemUnderTest::OriginalMetis => root.join(".metis").display().to_string(),
-        SystemUnderTest::UltraMetisMcp => root.display().to_string(),
+        SystemUnderTest::CadreMcp => root.display().to_string(),
     }
 }
 
@@ -551,7 +551,7 @@ fn extract_short_code(text: &str, prefix: &str) -> Option<String> {
 fn system_name(system: SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
-        SystemUnderTest::UltraMetisMcp => "cadre-mcp",
+        SystemUnderTest::CadreMcp => "cadre-mcp",
     }
 }
 

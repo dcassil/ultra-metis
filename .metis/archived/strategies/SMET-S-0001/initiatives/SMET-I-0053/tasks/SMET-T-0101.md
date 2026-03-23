@@ -29,7 +29,7 @@ initiative_id: SMET-I-0053
 
 ## Objective
 
-Document all MCP server tools in both systems. Map tool implementations, parameters, request/response handling, filtering/querying, output formats. Compare feature completeness and API differences between original and Ultra-Metis implementations.
+Document all MCP server tools in both systems. Map tool implementations, parameters, request/response handling, filtering/querying, output formats. Compare feature completeness and API differences between original and Cadre implementations.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -143,7 +143,7 @@ Document all MCP server tools in both systems. Map tool implementations, paramet
 
 ### Completion Summary (2026-03-17)
 
-**Investigation Complete**: All MCP tools in both Original Metis and Ultra-Metis have been thoroughly analyzed and compared.
+**Investigation Complete**: All MCP tools in both Original Metis and Cadre have been thoroughly analyzed and compared.
 
 **Tools Investigated (10 total):**
 1. initialize_project - Both ✓
@@ -154,8 +154,8 @@ Document all MCP server tools in both systems. Map tool implementations, paramet
 6. edit_document - Both ✓ (gaps identified)
 7. transition_phase - Both ✓ (gaps identified)
 8. archive_document - Both ✓
-9. reassign_parent - Original ✓, Ultra-Metis ✗ MISSING
-10. index_code - Original ✓, Ultra-Metis ✗ MISSING
+9. reassign_parent - Original ✓, Cadre ✗ MISSING
+10. index_code - Original ✓, Cadre ✗ MISSING
 
 **Comparison Grids Created: E1-E9**
 - E1: Tool Inventory & Coverage (10x4 grid)
@@ -170,10 +170,10 @@ Document all MCP server tools in both systems. Map tool implementations, paramet
 
 **Key Findings:**
 - 8/10 tools have complete parity (80%)
-- 2/10 tools missing in Ultra-Metis (20%)
+- 2/10 tools missing in Cadre (20%)
 - 4 tools have parameter gaps reducing functionality
 - Original Metis uses production-grade database-driven approach (SQLite FTS5)
-- Ultra-Metis uses simpler file-based stateless approach
+- Cadre uses simpler file-based stateless approach
 - Gap areas identified for prioritized feature parity work
 
 **Critical Gaps (for follow-up initiatives):**

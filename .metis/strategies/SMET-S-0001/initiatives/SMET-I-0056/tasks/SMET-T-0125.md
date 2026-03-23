@@ -57,7 +57,7 @@ Update existing CLI commands to expose the new parameters added in SMET-I-0055: 
 4. Verify clap help output shows new options
 
 ### Key Files
-- `crates/ultra-metis-cli/src/main.rs` — all changes in one file
+- `crates/cadre-cli/src/main.rs` — all changes in one file
 
 ## Status Updates
 

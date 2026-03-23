@@ -29,7 +29,7 @@ initiative_id: SMET-I-0068
 
 ## Objective
 
-Add the `Architecture` document type variant to the `DocumentType` enum in ultra-metis-core with "AR" short code prefix, empty transitions (always Published), and add unit tests to verify the behavior. This variant represents top-level architecture documents that are published once and not transitioned through phases.
+Add the `Architecture` document type variant to the `DocumentType` enum in cadre-core with "AR" short code prefix, empty transitions (always Published), and add unit tests to verify the behavior. This variant represents top-level architecture documents that are published once and not transitioned through phases.
 
 ## Acceptance Criteria
 
@@ -42,7 +42,7 @@ Add the `Architecture` document type variant to the `DocumentType` enum in ultra
 - [ ] `valid_transitions_from()` returns empty vec for all phases (no transitions)
 - [ ] `phase_sequence()` returns `vec![Phase::Published]`
 - [ ] `is_governance_type()` returns true for Architecture
-- [ ] `is_ultra_metis_type()` returns false for Architecture
+- [ ] `is_cadre_type()` returns false for Architecture
 - [ ] `is_legacy_type()` returns false for Architecture
 - [ ] Display impl outputs "architecture"
 - [ ] FromStr impl parses "architecture" correctly
@@ -54,10 +54,10 @@ Add the `Architecture` document type variant to the `DocumentType` enum in ultra
 ## Implementation Notes
 
 ### Technical Approach
-The `Architecture` variant is added to the `DocumentType` enum in `crates/ultra-metis-core/src/domain/documents/types.rs`. It follows the pattern of a governance type that is always in the Published phase with no transitions. The variant needs entries in all match arms: Display, FromStr, short_code_prefix ("AR"), valid_transitions_from (empty vec), phase_sequence ([Published]), and is_governance_type (true). Unit tests are added to verify all behaviors.
+The `Architecture` variant is added to the `DocumentType` enum in `crates/cadre-core/src/domain/documents/types.rs`. It follows the pattern of a governance type that is always in the Published phase with no transitions. The variant needs entries in all match arms: Display, FromStr, short_code_prefix ("AR"), valid_transitions_from (empty vec), phase_sequence ([Published]), and is_governance_type (true). Unit tests are added to verify all behaviors.
 
 ### File Changed
-- `crates/ultra-metis-core/src/domain/documents/types.rs` - enum variant, all impl blocks, and tests
+- `crates/cadre-core/src/domain/documents/types.rs` - enum variant, all impl blocks, and tests
 
 ## Status Updates **[REQUIRED]**
 

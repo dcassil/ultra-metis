@@ -1,7 +1,7 @@
 ---
 id: wire-autonomous-runner-to-live
 level: task
-title: "Wire autonomous runner to live ultra-metis CLI execution and Claude API"
+title: "Wire autonomous runner to live cadre CLI execution and Claude API"
 short_code: "SMET-T-0112"
 created_at: 2026-03-17T22:06:44.737376+00:00
 updated_at: 2026-03-17T22:19:45.125622+00:00
@@ -19,7 +19,7 @@ strategy_id: SMET-S-0002
 initiative_id: SMET-I-0048
 ---
 
-# Wire autonomous runner to live ultra-metis CLI execution and Claude API
+# Wire autonomous runner to live cadre CLI execution and Claude API
 
 ## Parent Initiative
 
@@ -27,7 +27,7 @@ initiative_id: SMET-I-0048
 
 ## Objective
 
-Replace the stubbed placeholder logic in `runner.rs` and `gated_runner.rs` with real execution. The runner must: (1) initialize a temp ultra-metis project using the CLI binary, (2) feed the scenario to Claude API with a structured prompt, (3) capture CLI timing and API token usage, and (4) collect generated artifacts for later scoring.
+Replace the stubbed placeholder logic in `runner.rs` and `gated_runner.rs` with real execution. The runner must: (1) initialize a temp cadre project using the CLI binary, (2) feed the scenario to Claude API with a structured prompt, (3) capture CLI timing and API token usage, and (4) collect generated artifacts for later scoring.
 
 ## Acceptance Criteria
 
@@ -35,7 +35,7 @@ Replace the stubbed placeholder logic in `runner.rs` and `gated_runner.rs` with 
 
 ## Acceptance Criteria
 
-- [ ] `execute_autonomous()` initializes a temp `.metis` project using the ultra-metis binary
+- [ ] `execute_autonomous()` initializes a temp `.metis` project using the cadre binary
 - [ ] Scenario vision + initiative summaries are formatted into a structured Claude API prompt
 - [ ] Claude API response (token counts, generated content) is captured and stored in `InitiativeResult`
 - [ ] CLI operations (create, transition, read) are timed using `CliResult::elapsed` and stored
@@ -47,7 +47,7 @@ Replace the stubbed placeholder logic in `runner.rs` and `gated_runner.rs` with 
 
 ### Technical Approach
 
-**CLI execution pattern** (same as `benchmarks/run-ultra-metis-bench.sh`):
+**CLI execution pattern** (same as `benchmarks/run-cadre-bench.sh`):
 ```rust
 let result = run_cli(&binary_path, &["init", "--path", &proj_dir, "--prefix", "BENCH"])?;
 ```
@@ -65,13 +65,13 @@ let result = run_cli(&binary_path, &["init", "--path", &proj_dir, "--prefix", "B
 
 ### Dependencies
 - Anthropic API key via `ANTHROPIC_API_KEY` env var
-- `ultra-metis` binary must be built: `cargo build --release -p ultra-metis-cli`
+- `cadre` binary must be built: `cargo build --release -p cadre-cli`
 - `reqwest` or `anthropic` Rust crate for API calls
 
 ### Risk Considerations
 - API rate limits: add retry with backoff
 - Temp dir cleanup: use `tempfile::TempDir` for auto-cleanup on drop
-- Binary path: resolve from `ULTRA_METIS_BINARY` env var with fallback to `target/release/ultra-metis`
+- Binary path: resolve from `CADRE_BINARY` env var with fallback to `target/release/cadre`
 
 ## Status Updates
 

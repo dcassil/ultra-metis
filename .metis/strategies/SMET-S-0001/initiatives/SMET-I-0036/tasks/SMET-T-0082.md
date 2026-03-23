@@ -48,7 +48,7 @@ Implement archive cascading (archiving a parent archives all children) and alrea
 2. After marking the target document as archived, enumerate child documents:
    - For initiatives: find all tasks in the initiative's task directory
    - Mark each child as `archived: true`
-3. The original metis uses the database to find children; ultra-metis can use the filesystem (tasks live under `initiatives/{SHORT_CODE}/tasks/`)
+3. The original metis uses the database to find children; cadre can use the filesystem (tasks live under `initiatives/{SHORT_CODE}/tasks/`)
 
 ### Dependencies
 - None — standalone store-layer change
