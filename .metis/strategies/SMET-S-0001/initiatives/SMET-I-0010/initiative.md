@@ -4,14 +4,14 @@ level: initiative
 title: "Extend CLI Support for the Stronger Engineering Model"
 short_code: "SMET-I-0010"
 created_at: 2026-03-11T19:59:55.460665+00:00
-updated_at: 2026-03-11T19:59:55.460665+00:00
+updated_at: 2026-03-23T17:30:51.320127+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/design"
 
 
 exit_criteria_met: false
@@ -107,6 +107,8 @@ Phase 5: Add trace command
 Phase 6: Enhance init command with repo-awareness
 Phase 7: Improve help text and add usage examples
 Phase 8: Add bash/zsh shell completions
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
