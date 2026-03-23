@@ -5,10 +5,13 @@ use std::io::{BufRead, BufReader, Write};
 use std::os::fd::AsRawFd;
 use std::os::unix::process::CommandExt;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const MCP_RESPONSE_TIMEOUT: Duration = Duration::from_secs(15);
 const MCP_NOTIFICATION_TIMEOUT: Duration = Duration::from_millis(250);
+/// Overall timeout for a full send_request round-trip (prevents infinite loops
+/// when the server sends non-matching responses).
+const MCP_REQUEST_OVERALL_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SystemUnderTest {
@@ -185,7 +188,16 @@ impl McpSession {
 
         self.write_message(&payload)?;
 
+        let deadline = Instant::now() + MCP_REQUEST_OVERALL_TIMEOUT;
         loop {
+            if Instant::now() > deadline {
+                return Err(anyhow!(
+                    "Overall timeout ({:.0}s) exceeded waiting for response to '{}' from {}",
+                    MCP_REQUEST_OVERALL_TIMEOUT.as_secs_f64(),
+                    method,
+                    system_name(&self.system)
+                ));
+            }
             let response = self.read_response()?;
             if response["id"].as_u64() == Some(request_id) {
                 if response.get("error").is_some() {
@@ -331,6 +343,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // Spawns real MCP server processes; run explicitly with: cargo test --ignored -p practical-benchmark
     fn shared_tool_surface_smoke_test() {
         let adapters: Vec<Box<dyn ExecutionAdapter>> = vec![
             Box::new(OriginalMetisAdapter),
