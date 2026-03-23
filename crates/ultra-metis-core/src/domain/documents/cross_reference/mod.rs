@@ -375,6 +375,10 @@ impl CrossReference {
         &self.core.title
     }
 
+    pub fn metadata(&self) -> &DocumentMetadata {
+        &self.core.metadata
+    }
+
     pub fn tags(&self) -> &[Tag] {
         &self.core.tags
     }
@@ -390,6 +394,11 @@ impl CrossReference {
             }
         }
         Err(DocumentValidationError::MissingPhaseTag)
+    }
+
+    /// Get mutable access to the document core
+    pub fn core_mut(&mut self) -> &mut DocumentCore {
+        &mut self.core
     }
 
     pub fn validate(&self) -> Result<(), DocumentValidationError> {

@@ -2,6 +2,7 @@
 //!
 //! Implements the Model Context Protocol server using JSON-RPC 2.0.
 
+use crate::system_prompt;
 use crate::tools;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -100,6 +101,8 @@ impl McpServer {
             }
             "tools/list" => self.handle_tools_list(&request),
             "tools/call" => self.handle_tools_call(&request),
+            "prompts/list" => self.handle_prompts_list(&request),
+            "prompts/get" => self.handle_prompts_get(&request),
             "ping" => JsonRpcResponse::success(request.id.clone(), serde_json::json!({})),
             _ => JsonRpcResponse::error(
                 request.id.clone(),
@@ -118,7 +121,8 @@ impl McpServer {
             serde_json::json!({
                 "protocolVersion": "2024-11-05",
                 "capabilities": {
-                    "tools": {}
+                    "tools": {},
+                    "prompts": {}
                 },
                 "serverInfo": {
                     "name": "ultra-metis",
@@ -126,6 +130,48 @@ impl McpServer {
                 }
             }),
         )
+    }
+
+    fn handle_prompts_list(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
+        JsonRpcResponse::success(
+            request.id.clone(),
+            serde_json::json!({
+                "prompts": [{
+                    "name": system_prompt::PROMPT_NAME,
+                    "description": system_prompt::PROMPT_DESCRIPTION
+                }]
+            }),
+        )
+    }
+
+    fn handle_prompts_get(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
+        let params = request.params.as_ref();
+        let name = params
+            .and_then(|p| p.get("name"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+
+        if name == system_prompt::PROMPT_NAME {
+            JsonRpcResponse::success(
+                request.id.clone(),
+                serde_json::json!({
+                    "description": system_prompt::PROMPT_DESCRIPTION,
+                    "messages": [{
+                        "role": "user",
+                        "content": {
+                            "type": "text",
+                            "text": system_prompt::SYSTEM_PROMPT
+                        }
+                    }]
+                }),
+            )
+        } else {
+            JsonRpcResponse::error(
+                request.id.clone(),
+                -32602,
+                format!("Unknown prompt: {}", name),
+            )
+        }
     }
 
     fn handle_tools_list(&self, request: &JsonRpcRequest) -> JsonRpcResponse {

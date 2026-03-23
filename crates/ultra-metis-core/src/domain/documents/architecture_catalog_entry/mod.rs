@@ -295,6 +295,11 @@ impl ArchitectureCatalogEntry {
         }
     }
 
+    /// Get mutable access to the document core
+    pub fn core_mut(&mut self) -> &mut DocumentCore {
+        &mut self.core
+    }
+
     pub fn can_transition_to(&self, phase: Phase) -> bool {
         if let Ok(current_phase) = self.phase() {
             Self::valid_transitions_from(current_phase).contains(&phase)

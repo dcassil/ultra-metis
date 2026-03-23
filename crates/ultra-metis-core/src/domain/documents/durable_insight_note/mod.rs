@@ -821,6 +821,10 @@ impl DurableInsightNote {
         &self.core.title
     }
 
+    pub fn metadata(&self) -> &DocumentMetadata {
+        &self.core.metadata
+    }
+
     pub fn tags(&self) -> &[Tag] {
         &self.core.tags
     }
@@ -842,6 +846,11 @@ impl DurableInsightNote {
         self.core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
         self.core.tags.push(Tag::Phase(new_phase));
         self.core.metadata.updated_at = Utc::now();
+    }
+
+    /// Get mutable access to the document core
+    pub fn core_mut(&mut self) -> &mut DocumentCore {
+        &mut self.core
     }
 
     pub fn validate(&self) -> Result<(), DocumentValidationError> {

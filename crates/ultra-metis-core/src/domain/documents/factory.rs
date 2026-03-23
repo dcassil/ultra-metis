@@ -67,6 +67,12 @@ impl DocumentFactory {
                 let doc = Initiative::from_file(path).await?;
                 Ok(Box::new(doc))
             }
+            // Governance/architecture types do not implement Document trait;
+            // they are accessed through the store's AnyDocument wrapper instead.
+            other => Err(DocumentValidationError::InvalidContent(format!(
+                "Document type '{}' does not support the Document trait factory",
+                other
+            ))),
         }
     }
 
@@ -114,6 +120,12 @@ impl DocumentFactory {
                 let doc = Initiative::from_content(raw_content)?;
                 Ok(Box::new(doc))
             }
+            // Governance/architecture types do not implement Document trait;
+            // they are accessed through the store's AnyDocument wrapper instead.
+            other => Err(DocumentValidationError::InvalidContent(format!(
+                "Document type '{}' does not support the Document trait factory",
+                other
+            ))),
         }
     }
 

@@ -138,6 +138,8 @@ impl fmt::Display for ParentReference {
 /// New types: ProductDoc, DesignContext, Epic, Story
 /// Retained: Task, Adr, Specification
 /// Retained for migration: Vision, Initiative
+/// Governance/Architecture types: AnalysisBaseline, QualityRecord, RulesConfig,
+///   DurableInsightNote, CrossReference, ArchitectureCatalogEntry, ReferenceArchitecture
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DocumentType {
     // New Ultra-Metis planning hierarchy
@@ -154,6 +156,21 @@ pub enum DocumentType {
     // Retained for backward compatibility / migration
     Vision,
     Initiative,
+
+    // Governance types
+    AnalysisBaseline,
+    QualityRecord,
+    RulesConfig,
+
+    // Memory types
+    DurableInsightNote,
+
+    // Traceability types
+    CrossReference,
+
+    // Architecture types
+    ArchitectureCatalogEntry,
+    ReferenceArchitecture,
 }
 
 impl fmt::Display for DocumentType {
@@ -168,6 +185,13 @@ impl fmt::Display for DocumentType {
             DocumentType::Specification => write!(f, "specification"),
             DocumentType::Vision => write!(f, "vision"),
             DocumentType::Initiative => write!(f, "initiative"),
+            DocumentType::AnalysisBaseline => write!(f, "analysis_baseline"),
+            DocumentType::QualityRecord => write!(f, "quality_record"),
+            DocumentType::RulesConfig => write!(f, "rules_config"),
+            DocumentType::DurableInsightNote => write!(f, "durable_insight_note"),
+            DocumentType::CrossReference => write!(f, "cross_reference"),
+            DocumentType::ArchitectureCatalogEntry => write!(f, "architecture_catalog_entry"),
+            DocumentType::ReferenceArchitecture => write!(f, "reference_architecture"),
         }
     }
 }
@@ -188,6 +212,24 @@ impl FromStr for DocumentType {
             "specification" => Ok(DocumentType::Specification),
             "vision" => Ok(DocumentType::Vision),
             "initiative" => Ok(DocumentType::Initiative),
+            "analysis_baseline" | "analysisbaseline" | "analysis-baseline" => {
+                Ok(DocumentType::AnalysisBaseline)
+            }
+            "quality_record" | "qualityrecord" | "quality-record" => {
+                Ok(DocumentType::QualityRecord)
+            }
+            "rules_config" | "rulesconfig" | "rules-config" => Ok(DocumentType::RulesConfig),
+            "durable_insight_note" | "durableinsightnote" | "durable-insight-note" => {
+                Ok(DocumentType::DurableInsightNote)
+            }
+            "cross_reference" | "crossreference" | "cross-reference" => {
+                Ok(DocumentType::CrossReference)
+            }
+            "architecture_catalog_entry" | "architecturecatalogentry"
+            | "architecture-catalog-entry" => Ok(DocumentType::ArchitectureCatalogEntry),
+            "reference_architecture" | "referencearchitecture" | "reference-architecture" => {
+                Ok(DocumentType::ReferenceArchitecture)
+            }
             _ => Err(format!("Unknown document type: {}", s)),
         }
     }
@@ -206,6 +248,13 @@ impl DocumentType {
             DocumentType::Specification => "SP",
             DocumentType::Vision => "V",
             DocumentType::Initiative => "I",
+            DocumentType::AnalysisBaseline => "AB",
+            DocumentType::QualityRecord => "QR",
+            DocumentType::RulesConfig => "RC",
+            DocumentType::DurableInsightNote => "DIN",
+            DocumentType::CrossReference => "XR",
+            DocumentType::ArchitectureCatalogEntry => "ACE",
+            DocumentType::ReferenceArchitecture => "RA",
         }
     }
 
@@ -270,6 +319,19 @@ impl DocumentType {
                 Phase::Ready => vec![Phase::Decompose],
                 Phase::Decompose => vec![Phase::Active],
                 Phase::Active => vec![Phase::Completed],
+                _ => vec![],
+            },
+
+            // Governance types: Draft -> Review -> Published
+            DocumentType::AnalysisBaseline
+            | DocumentType::QualityRecord
+            | DocumentType::RulesConfig
+            | DocumentType::DurableInsightNote
+            | DocumentType::CrossReference
+            | DocumentType::ArchitectureCatalogEntry
+            | DocumentType::ReferenceArchitecture => match from_phase {
+                Phase::Draft => vec![Phase::Review],
+                Phase::Review => vec![Phase::Published],
                 _ => vec![],
             },
         }
@@ -338,6 +400,17 @@ impl DocumentType {
                 Phase::Active,
                 Phase::Completed,
             ],
+
+            // Governance types: Draft -> Review -> Published
+            DocumentType::AnalysisBaseline
+            | DocumentType::QualityRecord
+            | DocumentType::RulesConfig
+            | DocumentType::DurableInsightNote
+            | DocumentType::CrossReference
+            | DocumentType::ArchitectureCatalogEntry
+            | DocumentType::ReferenceArchitecture => {
+                vec![Phase::Draft, Phase::Review, Phase::Published]
+            }
         }
     }
 
@@ -355,6 +428,20 @@ impl DocumentType {
     /// Returns true if this is a legacy Metis type retained for migration
     pub fn is_legacy_type(&self) -> bool {
         matches!(self, DocumentType::Vision | DocumentType::Initiative)
+    }
+
+    /// Returns true if this is a governance/architecture type
+    pub fn is_governance_type(&self) -> bool {
+        matches!(
+            self,
+            DocumentType::AnalysisBaseline
+                | DocumentType::QualityRecord
+                | DocumentType::RulesConfig
+                | DocumentType::DurableInsightNote
+                | DocumentType::CrossReference
+                | DocumentType::ArchitectureCatalogEntry
+                | DocumentType::ReferenceArchitecture
+        )
     }
 }
 

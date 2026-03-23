@@ -12,7 +12,10 @@ use ultra_metis_core::domain::documents::traits::{Document, DocumentValidationEr
 use ultra_metis_core::domain::documents::types::{
     Complexity, DocumentId, DocumentType, Phase, Tag,
 };
-use ultra_metis_core::{Initiative, Task, Vision};
+use ultra_metis_core::{
+    AnalysisBaseline, ArchitectureCatalogEntry, CrossReference, DurableInsightNote, Initiative,
+    QualityRecord, ReferenceArchitecture, RulesConfig, Task, Vision,
+};
 
 const DOCS_DIR: &str = "docs";
 
@@ -32,6 +35,13 @@ pub enum AnyDocument {
     Vision(Vision),
     Initiative(Initiative),
     Task(Task),
+    AnalysisBaseline(AnalysisBaseline),
+    QualityRecord(QualityRecord),
+    RulesConfig(RulesConfig),
+    DurableInsightNote(DurableInsightNote),
+    CrossReference(CrossReference),
+    ArchitectureCatalogEntry(ArchitectureCatalogEntry),
+    ReferenceArchitecture(ReferenceArchitecture),
 }
 
 impl AnyDocument {
@@ -40,6 +50,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => &d.metadata().short_code,
             AnyDocument::Initiative(d) => &d.metadata().short_code,
             AnyDocument::Task(d) => &d.metadata().short_code,
+            AnyDocument::AnalysisBaseline(d) => &d.metadata().short_code,
+            AnyDocument::QualityRecord(d) => &d.metadata().short_code,
+            AnyDocument::RulesConfig(d) => &d.metadata().short_code,
+            AnyDocument::DurableInsightNote(d) => &d.metadata().short_code,
+            AnyDocument::CrossReference(d) => &d.metadata().short_code,
+            AnyDocument::ArchitectureCatalogEntry(d) => &d.metadata().short_code,
+            AnyDocument::ReferenceArchitecture(d) => &d.metadata().short_code,
         }
     }
 
@@ -48,6 +65,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.title(),
             AnyDocument::Initiative(d) => d.title(),
             AnyDocument::Task(d) => d.title(),
+            AnyDocument::AnalysisBaseline(d) => d.title(),
+            AnyDocument::QualityRecord(d) => d.title(),
+            AnyDocument::RulesConfig(d) => d.title(),
+            AnyDocument::DurableInsightNote(d) => d.title(),
+            AnyDocument::CrossReference(d) => d.title(),
+            AnyDocument::ArchitectureCatalogEntry(d) => d.title(),
+            AnyDocument::ReferenceArchitecture(d) => d.title(),
         }
     }
 
@@ -56,6 +80,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.document_type(),
             AnyDocument::Initiative(d) => d.document_type(),
             AnyDocument::Task(d) => d.document_type(),
+            AnyDocument::AnalysisBaseline(_) => DocumentType::AnalysisBaseline,
+            AnyDocument::QualityRecord(_) => DocumentType::QualityRecord,
+            AnyDocument::RulesConfig(_) => DocumentType::RulesConfig,
+            AnyDocument::DurableInsightNote(_) => DocumentType::DurableInsightNote,
+            AnyDocument::CrossReference(_) => DocumentType::CrossReference,
+            AnyDocument::ArchitectureCatalogEntry(_) => DocumentType::ArchitectureCatalogEntry,
+            AnyDocument::ReferenceArchitecture(_) => DocumentType::ReferenceArchitecture,
         }
     }
 
@@ -64,6 +95,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.phase(),
             AnyDocument::Initiative(d) => d.phase(),
             AnyDocument::Task(d) => d.phase(),
+            AnyDocument::AnalysisBaseline(d) => d.phase(),
+            AnyDocument::QualityRecord(d) => d.phase(),
+            AnyDocument::RulesConfig(d) => d.phase(),
+            AnyDocument::DurableInsightNote(d) => d.phase(),
+            AnyDocument::CrossReference(d) => d.phase(),
+            AnyDocument::ArchitectureCatalogEntry(d) => d.phase(),
+            AnyDocument::ReferenceArchitecture(d) => d.phase(),
         }
     }
 
@@ -72,6 +110,14 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Initiative(d) => d.parent_id().map(|id| id.to_string()),
             AnyDocument::Task(d) => d.parent_id().map(|id| id.to_string()),
+            // Governance types are cross-cutting, no parent
+            AnyDocument::AnalysisBaseline(_)
+            | AnyDocument::QualityRecord(_)
+            | AnyDocument::RulesConfig(_)
+            | AnyDocument::DurableInsightNote(_)
+            | AnyDocument::CrossReference(_)
+            | AnyDocument::ArchitectureCatalogEntry(_)
+            | AnyDocument::ReferenceArchitecture(_) => None,
         }
     }
 
@@ -80,6 +126,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.archived(),
             AnyDocument::Initiative(d) => d.archived(),
             AnyDocument::Task(d) => d.archived(),
+            AnyDocument::AnalysisBaseline(d) => d.archived(),
+            AnyDocument::QualityRecord(d) => d.archived(),
+            AnyDocument::RulesConfig(d) => d.archived(),
+            AnyDocument::DurableInsightNote(d) => d.archived(),
+            AnyDocument::CrossReference(d) => d.archived(),
+            AnyDocument::ArchitectureCatalogEntry(d) => d.archived(),
+            AnyDocument::ReferenceArchitecture(d) => d.archived(),
         }
     }
 
@@ -88,6 +141,13 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.to_content(),
             AnyDocument::Initiative(d) => d.to_content(),
             AnyDocument::Task(d) => d.to_content(),
+            AnyDocument::AnalysisBaseline(d) => d.to_content(),
+            AnyDocument::QualityRecord(d) => d.to_content(),
+            AnyDocument::RulesConfig(d) => d.to_content(),
+            AnyDocument::DurableInsightNote(d) => d.to_content(),
+            AnyDocument::CrossReference(d) => d.to_content(),
+            AnyDocument::ArchitectureCatalogEntry(d) => d.to_content(),
+            AnyDocument::ReferenceArchitecture(d) => d.to_content(),
         }
     }
 
@@ -99,7 +159,49 @@ impl AnyDocument {
             AnyDocument::Vision(d) => d.transition_phase(target),
             AnyDocument::Initiative(d) => d.transition_phase(target),
             AnyDocument::Task(d) => d.transition_phase(target),
+            AnyDocument::RulesConfig(d) => d.transition_phase(target),
+            AnyDocument::ArchitectureCatalogEntry(d) => d.transition_phase(target),
+            AnyDocument::ReferenceArchitecture(d) => d.transition_phase(target),
+            // Governance types without built-in transition_phase: use DocumentType-based transitions
+            AnyDocument::AnalysisBaseline(_)
+            | AnyDocument::QualityRecord(_)
+            | AnyDocument::DurableInsightNote(_)
+            | AnyDocument::CrossReference(_) => {
+                let doc_type = self.document_type();
+                let current = self.phase()?;
+                let new_phase = match target {
+                    Some(phase) => {
+                        if !doc_type.can_transition(current, phase) {
+                            return Err(DocumentValidationError::InvalidPhaseTransition {
+                                from: current,
+                                to: phase,
+                            });
+                        }
+                        phase
+                    }
+                    None => doc_type
+                        .next_phase(current)
+                        .unwrap_or(current),
+                };
+                // Can't mutate through self borrow, so we need to match again
+                self.update_phase_tag(new_phase);
+                Ok(new_phase)
+            }
         }
+    }
+
+    /// Internal helper to update phase tag on governance types
+    fn update_phase_tag(&mut self, new_phase: Phase) {
+        let core = match self {
+            AnyDocument::AnalysisBaseline(d) => d.core_mut(),
+            AnyDocument::QualityRecord(d) => d.core_mut(),
+            AnyDocument::DurableInsightNote(d) => d.core_mut(),
+            AnyDocument::CrossReference(d) => d.core_mut(),
+            _ => return, // other types have their own transition_phase
+        };
+        core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+        core.tags.push(Tag::Phase(new_phase));
+        core.metadata.updated_at = chrono::Utc::now();
     }
 
     pub fn to_summary(&self) -> DocumentSummary {
@@ -193,7 +295,7 @@ impl DocumentStore {
                 short_code
             )));
         }
-        // The type prefix is the second part
+        // The type prefix is the second part (may be multi-char like PD, DC, AB, etc.)
         match parts[1] {
             "V" => Ok(DocumentType::Vision),
             "I" => Ok(DocumentType::Initiative),
@@ -204,6 +306,13 @@ impl DocumentStore {
             "PD" => Ok(DocumentType::ProductDoc),
             "DC" => Ok(DocumentType::DesignContext),
             "SP" => Ok(DocumentType::Specification),
+            "AB" => Ok(DocumentType::AnalysisBaseline),
+            "QR" => Ok(DocumentType::QualityRecord),
+            "RC" => Ok(DocumentType::RulesConfig),
+            "DIN" => Ok(DocumentType::DurableInsightNote),
+            "XR" => Ok(DocumentType::CrossReference),
+            "ACE" => Ok(DocumentType::ArchitectureCatalogEntry),
+            "RA" => Ok(DocumentType::ReferenceArchitecture),
             other => Err(StoreError::InvalidDocumentType(format!(
                 "Unknown type prefix: {}",
                 other
@@ -258,6 +367,41 @@ impl DocumentStore {
                 let doc = Task::from_content(content)
                     .map_err(|e| StoreError::Validation(e.to_string()))?;
                 Ok(AnyDocument::Task(doc))
+            }
+            DocumentType::AnalysisBaseline => {
+                let doc = AnalysisBaseline::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::AnalysisBaseline(doc))
+            }
+            DocumentType::QualityRecord => {
+                let doc = QualityRecord::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::QualityRecord(doc))
+            }
+            DocumentType::RulesConfig => {
+                let doc = RulesConfig::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::RulesConfig(doc))
+            }
+            DocumentType::DurableInsightNote => {
+                let doc = DurableInsightNote::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::DurableInsightNote(doc))
+            }
+            DocumentType::CrossReference => {
+                let doc = CrossReference::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::CrossReference(doc))
+            }
+            DocumentType::ArchitectureCatalogEntry => {
+                let doc = ArchitectureCatalogEntry::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::ArchitectureCatalogEntry(doc))
+            }
+            DocumentType::ReferenceArchitecture => {
+                let doc = ReferenceArchitecture::from_content(content)
+                    .map_err(|e| StoreError::Validation(e.to_string()))?;
+                Ok(AnyDocument::ReferenceArchitecture(doc))
             }
             other => Err(StoreError::InvalidDocumentType(format!(
                 "Unsupported document type for store operations: {}",
@@ -335,6 +479,99 @@ impl DocumentStore {
                 )
                 .map_err(|e| StoreError::Validation(e.to_string()))?;
                 AnyDocument::Task(t)
+            }
+            DocumentType::AnalysisBaseline => {
+                let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+                let ab = AnalysisBaseline::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    None,
+                    today,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::AnalysisBaseline(ab)
+            }
+            DocumentType::QualityRecord => {
+                let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+                let qr = QualityRecord::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    None,
+                    today,
+                    ultra_metis_core::domain::documents::quality_record::QualityStatus::Pass,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::QualityRecord(qr)
+            }
+            DocumentType::RulesConfig => {
+                let rc = RulesConfig::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    ultra_metis_core::domain::documents::rules_config::ProtectionLevel::Standard,
+                    ultra_metis_core::domain::documents::rules_config::RuleScope::Repository,
+                    None,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::RulesConfig(rc)
+            }
+            DocumentType::DurableInsightNote => {
+                let din = DurableInsightNote::new(
+                    title.to_string(),
+                    String::new(),
+                    ultra_metis_core::InsightCategory::SubsystemQuirk,
+                    ultra_metis_core::InsightScope::new(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::DurableInsightNote(din)
+            }
+            DocumentType::CrossReference => {
+                let xr = CrossReference::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    String::new(),
+                    String::new(),
+                    ultra_metis_core::RelationshipType::References,
+                    String::new(),
+                    false,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::CrossReference(xr)
+            }
+            DocumentType::ArchitectureCatalogEntry => {
+                let ace = ArchitectureCatalogEntry::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    String::new(),
+                    String::new(),
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::ArchitectureCatalogEntry(ace)
+            }
+            DocumentType::ReferenceArchitecture => {
+                let ra = ReferenceArchitecture::new(
+                    title.to_string(),
+                    vec![Tag::Phase(Phase::Draft)],
+                    false,
+                    short_code.clone(),
+                    None,
+                    false,
+                    ultra_metis_core::ArchitectureStatus::Draft,
+                )
+                .map_err(|e| StoreError::Validation(e.to_string()))?;
+                AnyDocument::ReferenceArchitecture(ra)
             }
             other => {
                 return Err(StoreError::InvalidDocumentType(format!(
@@ -566,27 +803,67 @@ impl DocumentStore {
                         )));
                     }
                     // Directly update the phase tag without exit criteria check
+                    // Helper macro-like approach: get core_mut for any variant
                     match &mut doc {
                         AnyDocument::Vision(d) => {
-                            d.core_mut()
-                                .tags
-                                .retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            d.core_mut().tags.push(Tag::Phase(phase));
-                            d.core_mut().metadata.updated_at = chrono::Utc::now();
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
                         }
                         AnyDocument::Initiative(d) => {
-                            d.core_mut()
-                                .tags
-                                .retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            d.core_mut().tags.push(Tag::Phase(phase));
-                            d.core_mut().metadata.updated_at = chrono::Utc::now();
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
                         }
                         AnyDocument::Task(d) => {
-                            d.core_mut()
-                                .tags
-                                .retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            d.core_mut().tags.push(Tag::Phase(phase));
-                            d.core_mut().metadata.updated_at = chrono::Utc::now();
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::AnalysisBaseline(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::QualityRecord(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::RulesConfig(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::DurableInsightNote(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::CrossReference(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::ArchitectureCatalogEntry(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
+                        }
+                        AnyDocument::ReferenceArchitecture(d) => {
+                            let c = d.core_mut();
+                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
+                            c.tags.push(Tag::Phase(phase));
+                            c.metadata.updated_at = chrono::Utc::now();
                         }
                     }
                     phase
