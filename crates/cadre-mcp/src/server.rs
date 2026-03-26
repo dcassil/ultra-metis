@@ -212,7 +212,7 @@ impl ServerHandler for CadreServerHandler {
         };
 
         match &result {
-            Ok(_) => log(&format!("tool call succeeded")),
+            Ok(_) => log("tool call succeeded"),
             Err(e) => log(&format!("tool call failed: {:?}", e)),
         }
 

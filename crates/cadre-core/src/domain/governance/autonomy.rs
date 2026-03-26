@@ -23,6 +23,7 @@ use super::gates::{GateFailureBehavior, GateType};
 /// without explicit approval.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum AutonomyMode {
     /// Human approval required at most gates.
     ///
@@ -33,6 +34,7 @@ pub enum AutonomyMode {
     ///
     /// This is the default mode.  The system handles routine decisions
     /// but involves humans at key decision points.
+    #[default]
     Mixed,
     /// AI proceeds without routine approval, respects gates and thresholds.
     ///
@@ -72,11 +74,6 @@ impl AutonomyMode {
     }
 }
 
-impl Default for AutonomyMode {
-    fn default() -> Self {
-        Self::Mixed
-    }
-}
 
 impl fmt::Display for AutonomyMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

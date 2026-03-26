@@ -374,7 +374,7 @@ fn fallback_initiative_for_module(module_heading: &str) -> AiInitiative {
     let title = title_case_words(&normalized);
 
     AiInitiative {
-        id: slug.clone(),
+        id: slug,
         title: format!("{title} Module"),
         objective: format!(
             "Implement the {normalized} workflow so the project vision is delivered with clear interfaces, validation, and test coverage."

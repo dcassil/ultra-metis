@@ -4,14 +4,14 @@ level: task
 title: "Create rustfmt.toml and Fix All Formatting Violations"
 short_code: "SMET-T-0176"
 created_at: 2026-03-26T18:27:57.750627+00:00
-updated_at: 2026-03-26T18:31:39.376443+00:00
+updated_at: 2026-03-26T18:35:30.616022+00:00
 parent: SMET-I-0084
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: SMET-I-0084
 ## Objective
 
 Create a `rustfmt.toml` at the workspace root with stable-channel formatting rules and run `cargo fmt --all` to fix all 156 files that currently have formatting diffs.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

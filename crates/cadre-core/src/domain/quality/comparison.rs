@@ -101,7 +101,7 @@ impl BaselineComparisonEngine {
             // For coverage, increasing is improvement
             let direction = if (delta.abs()) < f64::EPSILON {
                 TrendDirection::Unchanged
-            } else if is_higher_better(*key) {
+            } else if is_higher_better(key) {
                 if delta > 0.0 {
                     TrendDirection::Improved
                 } else {

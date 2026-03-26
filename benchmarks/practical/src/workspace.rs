@@ -1,6 +1,6 @@
 use crate::runner::{self, CliResult};
 use crate::scenario_pack::LoadedScenarioPack;
-use crate::types::*;
+use crate::types::{CliTraceEvent, PhaseResult, BenchmarkPhase, PhaseStatus, SystemUnderTest, RunManifest, ToolSurface, RunEnvironment};
 use std::path::Path;
 
 /// An isolated workspace for a benchmark run with seeded scenario artifacts.

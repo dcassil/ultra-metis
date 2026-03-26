@@ -1,4 +1,12 @@
-use crate::{api_client, prompt_builder, scenario_pack::LoadedScenarioPack, types::*, workspace};
+use crate::{
+    api_client, prompt_builder, scenario_pack::LoadedScenarioPack,
+    types::{
+        BenchmarkPhase, BenchmarkRun, CliTraceEvent, CodeArtifact, CodeMetrics, DocumentArtifact,
+        ExecutionMode, InitiativeResult, PhaseResult, PhaseStatus, PromptTraceEvent, RunArtifacts,
+        RunMetrics, RunTrace, ScenarioSummary, SystemUnderTest, TaskResult, TaskStatus,
+    },
+    workspace,
+};
 use chrono::Utc;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -544,6 +552,7 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::RunManifest;
 
     #[test]
     fn test_cli_result_token_approximation() {

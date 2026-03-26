@@ -267,7 +267,7 @@ impl CrossReference {
         let relationship_type_str =
             FrontmatterParser::extract_string(&fm_map, "relationship_type")?;
         let relationship_type = RelationshipType::from_str(&relationship_type_str)
-            .map_err(|e| DocumentValidationError::InvalidContent(e))?;
+            .map_err(DocumentValidationError::InvalidContent)?;
         let description =
             FrontmatterParser::extract_string(&fm_map, "description").unwrap_or_default();
         let bidirectional =

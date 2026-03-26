@@ -81,12 +81,10 @@ pub trait Document {
                         updated_lines.push(line);
                     }
                 }
-            } else {
-                if !content.trim().is_empty() {
-                    updated_lines.push("");
-                    for line in content.lines() {
-                        updated_lines.push(line);
-                    }
+            } else if !content.trim().is_empty() {
+                updated_lines.push("");
+                for line in content.lines() {
+                    updated_lines.push(line);
                 }
             }
 

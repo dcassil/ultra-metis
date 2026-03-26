@@ -98,7 +98,7 @@ impl VerificationEngine {
 mod tests {
     use super::*;
     use crate::domain::documents::quality_gate_config::{
-        GateSeverity, MetricGateRule, QualityGateConfig, ThresholdType,
+        GateSeverity, MetricGateRule, QualityGateConfig,
     };
     use crate::domain::documents::types::{Phase, Tag};
     use crate::domain::quality::gate_engine::GateCheckEngine;

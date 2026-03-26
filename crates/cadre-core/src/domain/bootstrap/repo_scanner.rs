@@ -316,7 +316,7 @@ impl RepoScanner {
         // Merge JS and TS: if we see .ts files but manifest says "javascript",
         // treat typescript as a variant of javascript for language detection
         let ts_count = ext_counts.get("typescript").copied().unwrap_or(0);
-        let js_count = ext_counts.get("javascript").copied().unwrap_or(0);
+        let _js_count = ext_counts.get("javascript").copied().unwrap_or(0);
         if ts_count > 0 && manifest_evidence.contains_key("javascript") {
             // package.json projects with TS files are "javascript" (TypeScript) projects
             *ext_counts.entry("javascript".to_string()).or_insert(0) += ts_count;
@@ -335,9 +335,9 @@ impl RepoScanner {
             .into_iter()
             .map(|name| {
                 let evidence = manifest_evidence.get(&name).cloned().unwrap_or_default();
-                let file_count = ext_counts.get(&name).copied().unwrap_or(0);
+                let _file_count = ext_counts.get(&name).copied().unwrap_or(0);
                 DetectedLanguage {
-                    name: name.clone(),
+                    name,
                     evidence,
                     is_primary: false, // Set below
                 }

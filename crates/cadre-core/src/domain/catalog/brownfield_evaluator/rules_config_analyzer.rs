@@ -8,9 +8,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use super::structure_analyzer::{
-    NamingConvention, StructureAnalysis, StructureAnalyzer, TestPattern,
-};
+use super::structure_analyzer::{StructureAnalysis, StructureAnalyzer};
 
 // ---------------------------------------------------------------------------
 // FileContentReader trait
@@ -741,7 +739,7 @@ fn evaluate_rust_quality(
 
     // Check for workspace-level clippy lints in Cargo.toml files
     // Look for Cargo.toml files that might contain [workspace.lints] or [lints]
-    for file_path in detected.configs.iter().chain(std::iter::empty()) {
+    for _file_path in detected.configs.iter().chain(std::iter::empty()) {
         // We need to check Cargo.toml files which aren't in detected configs
         // This is handled below via cargo workspace members
     }
@@ -758,11 +756,11 @@ fn evaluate_rust_quality(
                 score += 10.0;
                 signals.push("workspace lints: clippy::nursery enabled".to_string());
             }
-            if content.contains("[workspace.lints") || content.contains("[lints") {
-                if !signals.iter().any(|s| s.contains("workspace lints")) {
-                    score = score.max(30.0);
-                    signals.push("workspace lints: lint configuration present".to_string());
-                }
+            if (content.contains("[workspace.lints") || content.contains("[lints"))
+                && !signals.iter().any(|s| s.contains("workspace lints"))
+            {
+                score = score.max(30.0);
+                signals.push("workspace lints: lint configuration present".to_string());
             }
         }
     }
@@ -1425,7 +1423,7 @@ fn evaluate_go_layering(
 ) -> (f64, Vec<String>, Vec<BoundaryRule>, Vec<String>) {
     let mut score = 0.0f64;
     let mut layers = Vec::new();
-    let mut boundaries = Vec::new();
+    let boundaries = Vec::new();
     let mut signals = Vec::new();
 
     // Go internal/ packages = language-enforced boundaries
@@ -1673,6 +1671,7 @@ impl Default for RulesConfigAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::structure_analyzer::TestPattern;
 
     #[test]
     fn test_detect_jsts_quality_configs() {

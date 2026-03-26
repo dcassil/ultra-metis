@@ -268,7 +268,7 @@ fn wait_for_stdout(stdout: &BufReader<ChildStdout>, timeout: Duration) -> Result
     };
 
     let timeout_ms = timeout.as_millis().min(i32::MAX as u128) as i32;
-    let result = unsafe { libc::poll(&mut poll_fd, 1, timeout_ms) };
+    let result = unsafe { libc::poll(&raw mut poll_fd, 1, timeout_ms) };
 
     if result < 0 {
         return Err(anyhow!(

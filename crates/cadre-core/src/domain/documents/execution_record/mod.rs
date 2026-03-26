@@ -374,7 +374,7 @@ impl ExecutionRecord {
             FrontmatterParser::extract_string(&fm_map, "initiating_artifact")?;
         let execution_mode_str = FrontmatterParser::extract_string(&fm_map, "execution_mode")?;
         let execution_mode = ExecutionMode::from_str(&execution_mode_str)
-            .map_err(|e| DocumentValidationError::InvalidContent(e))?;
+            .map_err(DocumentValidationError::InvalidContent)?;
 
         let started_at_str = FrontmatterParser::extract_string(&fm_map, "started_at")?;
         let started_at = DateTime::parse_from_rfc3339(&started_at_str)
@@ -392,7 +392,7 @@ impl ExecutionRecord {
         let final_disposition_str =
             FrontmatterParser::extract_string(&fm_map, "final_disposition")?;
         let final_disposition = Disposition::from_str(&final_disposition_str)
-            .map_err(|e| DocumentValidationError::InvalidContent(e))?;
+            .map_err(DocumentValidationError::InvalidContent)?;
 
         let context_sources =
             FrontmatterParser::extract_string_array(&fm_map, "context_sources").unwrap_or_default();

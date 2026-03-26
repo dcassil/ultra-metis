@@ -8,11 +8,10 @@
 //! 5. Returns a complete `EnforcementResult` with all details
 
 use super::hooks::{
-    HookPriority, PostActionResult, PostTransitionAction, PreCheckResult, PreTransitionCheck,
+    HookPriority, PostActionResult, PreCheckResult, PreTransitionCheck,
     TransitionEvent,
 };
 use super::registry::HookRegistry;
-use crate::domain::documents::types::{DocumentType, Phase};
 use std::fmt;
 
 // ---------------------------------------------------------------------------
@@ -269,7 +268,8 @@ pub fn archived_document_check() -> PreTransitionCheck {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::documents::types::DocumentId;
+    use crate::domain::documents::types::{DocumentId, DocumentType, Phase};
+    use crate::domain::transitions::hooks::PostTransitionAction;
 
     fn task_event(from: Phase, to: Phase) -> TransitionEvent {
         TransitionEvent::new(

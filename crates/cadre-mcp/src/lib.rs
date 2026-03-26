@@ -1,6 +1,3 @@
-#![allow(clippy::redundant_closure)]
-#![allow(clippy::io_other_error)]
-
 pub mod server;
 pub mod system_prompt;
 pub mod tools;

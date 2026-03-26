@@ -4,14 +4,14 @@ level: task
 title: "Fix Existing Clippy Violations Across Workspace"
 short_code: "SMET-T-0178"
 created_at: 2026-03-26T18:28:33.732613+00:00
-updated_at: 2026-03-26T18:28:33.732613+00:00
+updated_at: 2026-03-26T18:43:36.310358+00:00
 parent: SMET-I-0084
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -29,33 +29,37 @@ initiative_id: SMET-I-0084
 
 ## Objective
 
-Fix all existing clippy violations so the workspace passes `cargo clippy --workspace --all-targets -- -D warnings` cleanly. This includes the 66 current errors (mostly unused imports in `benchmarks/practical`) and any new pedantic/nursery warnings surfaced by SMET-T-0177's lint attributes.
+Fix simple clippy violations that don't require structural refactoring — unused imports, unused variables, redundant closures, manual_strip, collapsible_if, etc. Structural issues (too_many_lines, too_many_arguments, cognitive_complexity) are deferred to SMET-I-0091. Bulk pedantic cleanup (use_self, uninlined_format_args, etc.) is deferred to SMET-I-0092.
 
 ## Acceptance Criteria
 
-- [ ] `cargo clippy --workspace --all-targets -- -D warnings` passes with zero warnings/errors
-- [ ] All unused imports removed (not just suppressed)
-- [ ] `cargo test --workspace` still passes after fixes
-- [ ] No `#![allow(...)]` annotations remain that were added as temporary suppressions in SMET-T-0177 (remove as violations are fixed)
+- [ ] `cargo clippy --workspace --all-targets -- -D warnings` passes with zero errors
+- [ ] All unused imports and variables removed
+- [ ] All auto-fixable default clippy violations resolved
+- [ ] `cargo test --workspace` still passes
+- [ ] Structural lints remain allowed in Cargo.toml — tracked by SMET-I-0091
+- [ ] Bulk pedantic allows remain in Cargo.toml — tracked by SMET-I-0092
 
 ## Implementation Notes
 
-### Current Violations (66 errors)
-- ~20 unused imports in `benchmarks/practical/src/` (`std::path::Path`, `chrono::Utc`, `Deserialize`, `Serialize`, `NamingConvention`, `TestPattern`, etc.)
-- `stripping a prefix manually` — should use `strip_prefix()` instead
-- `this if has identical blocks` — dead code or copy-paste error
-- Additional pedantic/nursery warnings TBD after SMET-T-0177 adds lint attributes
+### Violations in Scope (simple fixes)
+- Unused imports (~20 in benchmarks/practical)
+- Unused variables (~3)
+- `manual_strip` (1) — use `strip_prefix()` instead
+- `redundant_field_names` (1)
+- `doc_link_with_quotes` (1)
+- `future_not_send` (1)
+- `collapsible_if` / `collapsible_else_if` (2)
+- `redundant_clone` (2)
+
+### Out of Scope (deferred)
+- **SMET-I-0091**: too_many_lines (24), too_many_arguments (11), cognitive_complexity (4)
+- **SMET-I-0092**: use_self (560), uninlined_format_args (373), and other bulk pedantic lints
 
 ### Technical Approach
-1. Fix all unused imports first (bulk operation)
-2. Fix `strip_prefix` manual pattern
-3. Fix identical `if` blocks
-4. Address pedantic/nursery violations introduced by SMET-T-0177
-5. Remove temporary `#![allow(...)]` as violations are fixed
-6. Verify full clippy + test suite passes
-
-### Blocked By
-- SMET-T-0177 (lint config must be in place first so we fix against the final lint rules)
+1. Run `cargo clippy --fix` for auto-fixable issues
+2. Manually fix remaining issues
+3. Verify clean clippy + test suite
 
 ## Status Updates
 

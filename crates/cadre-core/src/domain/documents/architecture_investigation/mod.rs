@@ -3,7 +3,6 @@ use super::helpers::FrontmatterParser;
 use super::metadata::DocumentMetadata;
 use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
-use chrono::Utc;
 use gray_matter;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -315,12 +314,6 @@ impl ArchitectureInvestigation {
             }
         }
         Err(DocumentValidationError::MissingPhaseTag)
-    }
-
-    fn update_phase_tag(&mut self, new_phase: Phase) {
-        self.core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-        self.core.tags.push(Tag::Phase(new_phase));
-        self.core.metadata.updated_at = Utc::now();
     }
 
     pub fn validate(&self) -> Result<(), DocumentValidationError> {

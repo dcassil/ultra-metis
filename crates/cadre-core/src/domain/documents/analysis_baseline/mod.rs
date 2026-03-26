@@ -3,9 +3,7 @@ use super::helpers::FrontmatterParser;
 use super::metadata::DocumentMetadata;
 use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
-use chrono::Utc;
 use gray_matter;
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tera::{Context, Tera};
 

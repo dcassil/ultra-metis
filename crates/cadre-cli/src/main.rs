@@ -11,7 +11,7 @@ use cadre_core::{
 use cadre_store::DocumentStore;
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(name = "cadre")]
@@ -709,7 +709,7 @@ async fn main() {
 // Existing command implementations
 // ===========================================================================
 
-fn cmd_init(path: &PathBuf, prefix: &str) -> Result<(), String> {
+fn cmd_init(path: &Path, prefix: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
     store.initialize(prefix).map_err(|e| e.user_message())?;
     println!(
@@ -720,7 +720,7 @@ fn cmd_init(path: &PathBuf, prefix: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn cmd_list(path: &PathBuf, include_archived: bool, parent: Option<&str>) -> Result<(), String> {
+fn cmd_list(path: &Path, include_archived: bool, parent: Option<&str>) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let docs = store
         .list_documents_with_options(include_archived, parent)
@@ -746,7 +746,7 @@ fn cmd_list(path: &PathBuf, include_archived: bool, parent: Option<&str>) -> Res
     Ok(())
 }
 
-fn cmd_read(path: &PathBuf, short_code: &str) -> Result<(), String> {
+fn cmd_read(path: &Path, short_code: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let raw = store
         .read_document_raw(short_code)
@@ -756,7 +756,7 @@ fn cmd_read(path: &PathBuf, short_code: &str) -> Result<(), String> {
 }
 
 fn cmd_create(
-    path: &PathBuf,
+    path: &Path,
     doc_type: &str,
     title: &str,
     parent: Option<&str>,
@@ -770,7 +770,7 @@ fn cmd_create(
 }
 
 fn cmd_edit(
-    path: &PathBuf,
+    path: &Path,
     short_code: &str,
     search: &str,
     replace: &str,
@@ -790,7 +790,7 @@ fn cmd_edit(
 }
 
 fn cmd_transition(
-    path: &PathBuf,
+    path: &Path,
     short_code: &str,
     phase: Option<&str>,
     force: bool,
@@ -805,7 +805,7 @@ fn cmd_transition(
 }
 
 fn cmd_search(
-    path: &PathBuf,
+    path: &Path,
     query: &str,
     doc_type: Option<&str>,
     limit: Option<usize>,
@@ -835,7 +835,7 @@ fn cmd_search(
     Ok(())
 }
 
-fn cmd_archive(path: &PathBuf, short_code: &str) -> Result<(), String> {
+fn cmd_archive(path: &Path, short_code: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
     store
         .archive_document(short_code)
@@ -845,7 +845,7 @@ fn cmd_archive(path: &PathBuf, short_code: &str) -> Result<(), String> {
 }
 
 fn cmd_reassign(
-    path: &PathBuf,
+    path: &Path,
     short_code: &str,
     parent: Option<&str>,
     backlog: Option<&str>,
@@ -862,7 +862,7 @@ fn cmd_reassign(
     Ok(())
 }
 
-fn cmd_status(path: &PathBuf) -> Result<(), String> {
+fn cmd_status(path: &Path) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let docs = store.list_documents(false).map_err(|e| e.user_message())?;
 
@@ -972,7 +972,7 @@ fn cmd_status(path: &PathBuf) -> Result<(), String> {
     Ok(())
 }
 
-fn cmd_validate(path: &PathBuf, short_code: Option<&str>, all: bool) -> Result<(), String> {
+fn cmd_validate(path: &Path, short_code: Option<&str>, all: bool) -> Result<(), String> {
     if short_code.is_none() && !all {
         return Err("Specify a short code or use --all to validate all documents".to_string());
     }
@@ -1012,7 +1012,7 @@ fn cmd_validate(path: &PathBuf, short_code: Option<&str>, all: bool) -> Result<(
 
                 // Check 3: Parent cross-reference
                 if let Some(parent_id) = doc.parent_id() {
-                    let parent_str = parent_id.to_string();
+                    let parent_str = parent_id.clone();
                     if parent_str != "NULL" && !known_codes.contains(&parent_str) {
                         doc_issues.push((
                             code.clone(),
@@ -1071,7 +1071,7 @@ fn cmd_validate(path: &PathBuf, short_code: Option<&str>, all: bool) -> Result<(
 // ===========================================================================
 
 fn cmd_quality_capture(
-    path: &PathBuf,
+    path: &Path,
     tool_name: &str,
     raw_output: &str,
     linked_rules: Option<&str>,
@@ -1124,7 +1124,7 @@ fn cmd_quality_capture(
     Ok(())
 }
 
-fn cmd_quality_compare(path: &PathBuf, before_sc: &str, after_sc: &str) -> Result<(), String> {
+fn cmd_quality_compare(path: &Path, before_sc: &str, after_sc: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
 
     // Read both baselines
@@ -1169,7 +1169,7 @@ fn cmd_quality_compare(path: &PathBuf, before_sc: &str, after_sc: &str) -> Resul
 }
 
 fn cmd_quality_list(
-    path: &PathBuf,
+    path: &Path,
     status_filter: Option<&str>,
     limit: Option<usize>,
 ) -> Result<(), String> {
@@ -1278,7 +1278,7 @@ fn load_all_rules_configs(store: &DocumentStore) -> Result<Vec<RulesConfig>, Str
 }
 
 fn cmd_rules_query(
-    path: &PathBuf,
+    path: &Path,
     scope_str: Option<&str>,
     protection_str: Option<&str>,
     arch_ref: Option<&str>,
@@ -1344,7 +1344,7 @@ fn cmd_rules_query(
     Ok(())
 }
 
-fn cmd_rules_applicable(path: &PathBuf, target_scope_str: &str) -> Result<(), String> {
+fn cmd_rules_applicable(path: &Path, target_scope_str: &str) -> Result<(), String> {
     let target_scope: cadre_core::domain::documents::rules_config::RuleScope = target_scope_str
         .parse()
         .map_err(|e: cadre_core::DocumentValidationError| e.to_string())?;
@@ -1404,7 +1404,7 @@ fn cmd_rules_applicable(path: &PathBuf, target_scope_str: &str) -> Result<(), St
     Ok(())
 }
 
-fn cmd_rules_protected(path: &PathBuf) -> Result<(), String> {
+fn cmd_rules_protected(path: &Path) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let rules_configs = load_all_rules_configs(&store)?;
     let refs: Vec<&RulesConfig> = rules_configs.iter().collect();
@@ -1463,7 +1463,7 @@ fn build_scope(
 }
 
 fn cmd_notes_create(
-    path: &PathBuf,
+    path: &Path,
     title: &str,
     note_text: &str,
     category_str: &str,
@@ -1533,7 +1533,7 @@ fn cmd_notes_create(
 }
 
 fn cmd_notes_fetch(
-    path: &PathBuf,
+    path: &Path,
     scope_repo: Option<&str>,
     scope_package: Option<&str>,
     scope_subsystem: Option<&str>,
@@ -1609,7 +1609,7 @@ fn cmd_notes_fetch(
     Ok(())
 }
 
-fn cmd_notes_score(path: &PathBuf, short_code: &str, signal_str: &str) -> Result<(), String> {
+fn cmd_notes_score(path: &Path, short_code: &str, signal_str: &str) -> Result<(), String> {
     let signal: FeedbackSignal = signal_str.parse().map_err(|e: String| e)?;
 
     let store = DocumentStore::new(path);
@@ -1649,7 +1649,7 @@ fn cmd_notes_score(path: &PathBuf, short_code: &str, signal_str: &str) -> Result
 }
 
 fn cmd_notes_list(
-    path: &PathBuf,
+    path: &Path,
     status_filter: Option<&str>,
     category_filter: Option<&str>,
     include_archived: bool,
@@ -1750,7 +1750,7 @@ fn capitalize_first(s: &str) -> String {
 }
 
 fn cmd_trace_create(
-    path: &PathBuf,
+    path: &Path,
     source_ref: &str,
     target_ref: &str,
     rel_type_str: &str,
@@ -1782,7 +1782,7 @@ fn cmd_trace_create(
 
     // Create the proper cross-reference and overwrite
     let xref = CrossReference::new(
-        title.clone(),
+        title,
         vec![cadre_core::Tag::Phase(cadre_core::Phase::Draft)],
         false,
         short_code.clone(),
@@ -1817,7 +1817,7 @@ fn cmd_trace_create(
 }
 
 fn cmd_trace_query(
-    path: &PathBuf,
+    path: &Path,
     short_code: &str,
     direction: &str,
     rel_type_filter: Option<&str>,
@@ -1866,7 +1866,7 @@ fn cmd_trace_query(
     Ok(())
 }
 
-fn cmd_trace_ancestry(path: &PathBuf, short_code: &str, direction: &str) -> Result<(), String> {
+fn cmd_trace_ancestry(path: &Path, short_code: &str, direction: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let (index, _) = build_traceability_index(&store)?;
 
@@ -1909,7 +1909,7 @@ fn cmd_trace_ancestry(path: &PathBuf, short_code: &str, direction: &str) -> Resu
 }
 
 fn cmd_trace_list(
-    path: &PathBuf,
+    path: &Path,
     rel_type_filter: Option<&str>,
     involving: Option<&str>,
 ) -> Result<(), String> {

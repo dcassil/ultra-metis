@@ -21,6 +21,9 @@ tree-sitter = { workspace = true }
 tree-sitter-rust = { workspace = true }
 glob = { workspace = true }
 
+[lints]
+workspace = true
+
 [dev-dependencies]
 tempfile = { workspace = true }
 tokio = { workspace = true }

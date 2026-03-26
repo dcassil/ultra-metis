@@ -182,8 +182,7 @@ impl MonorepoDetector {
     fn detect_tools(file_paths: &[String]) -> Vec<MonorepoTool> {
         let root_files: HashSet<String> = file_paths
             .iter()
-            .filter(|p| Path::new(p).components().count() == 1)
-            .map(|p| p.clone())
+            .filter(|p| Path::new(p).components().count() == 1).cloned()
             .collect();
 
         let all_file_names: HashSet<String> = file_paths

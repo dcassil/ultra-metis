@@ -51,9 +51,7 @@ impl HierarchyValidator {
 
             // Task: parent must be a Story, Epic, or Initiative (legacy)
             DocumentType::Task => match parent_type {
-                Some(DocumentType::Story)
-                | Some(DocumentType::Epic)
-                | Some(DocumentType::Initiative) => Ok(()),
+                Some(DocumentType::Story | DocumentType::Epic | DocumentType::Initiative) => Ok(()),
                 Some(other) => Err(format!(
                     "Task parent must be a Story, Epic, or Initiative, found {:?}",
                     other

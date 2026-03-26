@@ -1,5 +1,5 @@
 use crate::scoring::ScoreBreakdown;
-use crate::types::*;
+use crate::types::{BenchmarkRun, SystemUnderTest, ToolSurface};
 use serde::{Deserialize, Serialize};
 
 /// How to compare two systems.
@@ -309,6 +309,10 @@ pub fn validate_constrained_fairness(original: &BenchmarkRun, ultra: &BenchmarkR
 mod tests {
     use super::*;
     use crate::scoring::{ScoringCheck, TrackScore};
+    use crate::types::{
+        CodeMetrics, ExecutionMode, InitiativeResult, RunArtifacts, RunEnvironment, RunManifest,
+        RunMetrics, RunTrace, ScenarioSummary, TaskResult, TaskStatus,
+    };
     use std::time::Duration;
 
     fn make_run(system: SystemUnderTest, tokens: u64, time_ms: u64) -> BenchmarkRun {

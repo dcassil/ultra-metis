@@ -37,5 +37,8 @@ futures = "0.3"
 schemars = "0.8"
 chrono = { workspace = true }
 
+[lints]
+workspace = true
+
 [dev-dependencies]
 tempfile = { workspace = true }

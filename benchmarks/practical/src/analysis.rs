@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::types::{BenchmarkRun, GateDecision, RunMetrics};
 
 pub struct BenchmarkAnalysis {
     autonomous_run: BenchmarkRun,

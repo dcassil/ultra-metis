@@ -3,7 +3,7 @@
 //! Analyzes remediation history to detect patterns of recurring quality
 //! issues, enabling proactive intervention for systemic problems.
 
-use super::types::{FailedMetric, RemediationLoop, RemediationLoopPhase, RemediationTrigger};
+use super::types::{RemediationLoop, RemediationLoopPhase, RemediationTrigger};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

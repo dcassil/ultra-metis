@@ -19,9 +19,9 @@ pub fn build_scope_from_args(
     scope_symbols: &Option<Vec<String>>,
 ) -> InsightScope {
     let mut scope = InsightScope::new();
-    scope.repo = scope_repo.clone();
-    scope.package = scope_package.clone();
-    scope.subsystem = scope_subsystem.clone();
+    scope.repo.clone_from(scope_repo);
+    scope.package.clone_from(scope_package);
+    scope.subsystem.clone_from(scope_subsystem);
     scope.paths = scope_paths.clone().unwrap_or_default();
     scope.symbols = scope_symbols.clone().unwrap_or_default();
     scope

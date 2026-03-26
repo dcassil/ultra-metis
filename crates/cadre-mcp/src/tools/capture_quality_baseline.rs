@@ -35,16 +35,16 @@ impl CaptureQualityBaselineTool {
         let parsed = match self.tool_name.to_lowercase().as_str() {
             "eslint" => EslintParser
                 .parse(&self.raw_output)
-                .map_err(|e| tool_error(e))?,
+                .map_err(tool_error)?,
             "clippy" => ClippyParser
                 .parse(&self.raw_output)
-                .map_err(|e| tool_error(e))?,
+                .map_err(tool_error)?,
             "tsc" | "typescript" => TypeScriptParser
                 .parse(&self.raw_output)
-                .map_err(|e| tool_error(e))?,
+                .map_err(tool_error)?,
             "coverage" => CoverageParser
                 .parse(&self.raw_output)
-                .map_err(|e| tool_error(e))?,
+                .map_err(tool_error)?,
             _ => {
                 return Err(tool_error(format!(
                     "Unknown tool: {}. Supported: eslint, clippy, tsc, coverage",
@@ -64,14 +64,14 @@ impl CaptureQualityBaselineTool {
 
         let baseline =
             BaselineCaptureService::capture(&parsed, &short_code, self.linked_rules_config.clone())
-                .map_err(|e| tool_error(e))?;
+                .map_err(tool_error)?;
 
-        let content = baseline.to_content().map_err(|e| tool_error(e))?;
+        let content = baseline.to_content().map_err(tool_error)?;
         let doc_path = Path::new(&self.project_path)
             .join(".cadre")
             .join("docs")
             .join(format!("{}.md", short_code));
-        std::fs::write(&doc_path, content).map_err(|e| tool_error(e))?;
+        std::fs::write(&doc_path, content).map_err(tool_error)?;
 
         let text = format!(
             "## Quality Baseline Captured\n\n\

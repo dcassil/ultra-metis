@@ -61,7 +61,7 @@ impl CreateCrossReferenceTool {
             .map_err(|e| tool_error(e.user_message()))?;
 
         let xref = CrossReference::new(
-            title.clone(),
+            title,
             vec![Tag::Phase(Phase::Draft)],
             false,
             short_code.clone(),
@@ -71,14 +71,14 @@ impl CreateCrossReferenceTool {
             description.to_string(),
             bidirectional,
         )
-        .map_err(|e| tool_error(e))?;
+        .map_err(tool_error)?;
 
-        let content = xref.to_content().map_err(|e| tool_error(e))?;
+        let content = xref.to_content().map_err(tool_error)?;
         let doc_path = Path::new(&self.project_path)
             .join(".cadre")
             .join("docs")
             .join(format!("{}.md", short_code));
-        std::fs::write(&doc_path, content).map_err(|e| tool_error(e))?;
+        std::fs::write(&doc_path, content).map_err(tool_error)?;
 
         let bidir_label = if bidirectional {
             " (bidirectional)"

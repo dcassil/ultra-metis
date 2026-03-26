@@ -124,11 +124,11 @@ fn extract_sections(body: &str) -> Vec<(String, String)> {
     let mut current: Option<(String, String)> = None;
 
     for line in body.lines() {
-        if line.starts_with("## ") {
+        if let Some(heading) = line.strip_prefix("## ") {
             if let Some(sec) = current.take() {
                 sections.push(sec);
             }
-            current = Some((line[3..].trim().to_string(), String::new()));
+            current = Some((heading.trim().to_string(), String::new()));
         } else if line.starts_with("### ") {
             // Sub-section: append to current body but don't create new tracked section
             if let Some((_, ref mut body)) = current {

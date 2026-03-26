@@ -30,7 +30,7 @@ impl InvestigationTriggerEngine {
             .blocking_failures
             .iter()
             .chain(result.advisory_failures.iter())
-            .map(|m| metric_check_to_failed_metric(m))
+            .map(metric_check_to_failed_metric)
             .collect();
 
         let trigger = RemediationTrigger::GateFailure {
@@ -162,7 +162,7 @@ fn metric_check_to_failed_metric(m: &MetricCheckResult) -> FailedMetric {
 mod tests {
     use super::*;
     use crate::domain::documents::quality_gate_config::{
-        GateSeverity, MetricGateRule, QualityGateConfig, ThresholdType,
+        GateSeverity, MetricGateRule, QualityGateConfig,
     };
     use crate::domain::documents::types::{Phase, Tag};
     use crate::domain::quality::gate_engine::GateCheckEngine;

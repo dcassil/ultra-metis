@@ -281,7 +281,7 @@ impl DocumentStore {
     /// suffix so the store always operates from the project root.
     pub fn new(project_path: &Path) -> Self {
         let normalized = match project_path.file_name().and_then(|f| f.to_str()) {
-            Some(".cadre") | Some(".metis") => {
+            Some(".cadre" | ".metis") => {
                 project_path.parent().unwrap_or(project_path).to_path_buf()
             }
             _ => project_path.to_path_buf(),
@@ -340,6 +340,7 @@ impl DocumentStore {
     }
 
     /// Detect document type from short code (e.g., "PROJ-V-0001" -> Vision)
+    #[allow(dead_code)]
     fn detect_type_from_short_code(short_code: &str) -> Result<DocumentType> {
         let parts: Vec<&str> = short_code.split('-').collect();
         if parts.len() < 3 {
@@ -387,7 +388,7 @@ impl DocumentStore {
                     .trim_matches('"');
                 return level
                     .parse::<DocumentType>()
-                    .map_err(|e| StoreError::InvalidDocumentType(e));
+                    .map_err(StoreError::InvalidDocumentType);
             }
             // Stop at end of frontmatter
             if trimmed == "---" && content.starts_with("---") && !trimmed.is_empty() {
@@ -783,21 +784,18 @@ impl DocumentStore {
                 Err(_) => continue,
             };
 
-            match Self::parse_document(&content) {
-                Ok(doc) => {
-                    if !include_archived && doc.archived() {
-                        continue;
-                    }
-                    let summary = doc.to_summary();
-                    if let Some(filter_parent) = parent_id {
-                        match &summary.parent_id {
-                            Some(pid) if pid == filter_parent => {}
-                            _ => continue,
-                        }
-                    }
-                    summaries.push(summary);
+            if let Ok(doc) = Self::parse_document(&content) {
+                if !include_archived && doc.archived() {
+                    continue;
                 }
-                Err(_) => continue,
+                let summary = doc.to_summary();
+                if let Some(filter_parent) = parent_id {
+                    match &summary.parent_id {
+                        Some(pid) if pid == filter_parent => {}
+                        _ => continue,
+                    }
+                }
+                summaries.push(summary);
             }
         }
 
@@ -919,7 +917,7 @@ impl DocumentStore {
         let mut doc = self.read_document(short_code)?;
 
         let target = match target_phase {
-            Some(p) => Some(p.parse::<Phase>().map_err(|e| StoreError::Validation(e))?),
+            Some(p) => Some(p.parse::<Phase>().map_err(StoreError::Validation)?),
             None => None,
         };
 
@@ -1078,7 +1076,7 @@ impl DocumentStore {
         let type_filter: Option<DocumentType> = match document_type {
             Some(t) => Some(
                 t.parse::<DocumentType>()
-                    .map_err(|e| StoreError::InvalidDocumentType(e))?,
+                    .map_err(StoreError::InvalidDocumentType)?,
             ),
             None => None,
         };
@@ -1102,19 +1100,16 @@ impl DocumentStore {
             };
 
             if content.to_lowercase().contains(&query_lower) {
-                match Self::parse_document(&content) {
-                    Ok(doc) => {
-                        if !include_archived && doc.archived() {
+                if let Ok(doc) = Self::parse_document(&content) {
+                    if !include_archived && doc.archived() {
+                        continue;
+                    }
+                    if let Some(ref tf) = type_filter {
+                        if doc.document_type() != *tf {
                             continue;
                         }
-                        if let Some(ref tf) = type_filter {
-                            if doc.document_type() != *tf {
-                                continue;
-                            }
-                        }
-                        results.push(doc.to_summary());
                     }
-                    Err(_) => continue,
+                    results.push(doc.to_summary());
                 }
             }
         }
@@ -1210,7 +1205,7 @@ impl DocumentStore {
         let mut in_frontmatter = false;
         let mut frontmatter_start_seen = false;
 
-        for line in lines.iter_mut() {
+        for line in &mut lines {
             let trimmed = line.trim();
             if trimmed == "---" {
                 if !frontmatter_start_seen {
@@ -1522,7 +1517,7 @@ mod tests {
         let result = store.edit_document(&code, "# My Vision", "# My Updated Vision");
         assert!(result.is_ok());
 
-        let doc = store.read_document(&code).unwrap();
+        let _doc = store.read_document(&code).unwrap();
         let raw = store.read_document_raw(&code).unwrap();
         assert!(raw.contains("# My Updated Vision"));
     }
@@ -1883,7 +1878,7 @@ mod tests {
         store
             .create_document("vision", "Alpha Vision", None)
             .unwrap();
-        let i_code = store
+        let _i_code = store
             .create_document("initiative", "Alpha Initiative", None)
             .unwrap();
 

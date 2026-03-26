@@ -335,7 +335,7 @@ impl ToolDetector {
         ];
 
         for rules in all_rules {
-            for rule in rules.iter() {
+            for rule in rules {
                 let matching_files: Vec<String> = rule
                     .patterns
                     .iter()

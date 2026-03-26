@@ -251,7 +251,7 @@ impl CodeIndexer {
             .symbols
             .iter()
             .filter(|s| {
-                if let Some(ref pattern) = name_pattern {
+                if let Some(pattern) = name_pattern {
                     let pattern_lower = pattern.to_lowercase();
                     if !s.name.to_lowercase().contains(&pattern_lower) {
                         return false;

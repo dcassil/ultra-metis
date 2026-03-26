@@ -33,7 +33,7 @@ impl ScoreInsightNoteTool {
         let raw = store
             .read_document_raw(&self.short_code)
             .map_err(|e| tool_error(e.user_message()))?;
-        let mut din = DurableInsightNote::from_content(&raw).map_err(|e| tool_error(e))?;
+        let mut din = DurableInsightNote::from_content(&raw).map_err(tool_error)?;
 
         din.record_feedback(signal);
 
@@ -42,12 +42,12 @@ impl ScoreInsightNoteTool {
             din.mark_prune_candidate();
         }
 
-        let content = din.to_content().map_err(|e| tool_error(e))?;
+        let content = din.to_content().map_err(tool_error)?;
         let doc_path = Path::new(&self.project_path)
             .join(".cadre")
             .join("docs")
             .join(format!("{}.md", self.short_code));
-        std::fs::write(&doc_path, content).map_err(|e| tool_error(e))?;
+        std::fs::write(&doc_path, content).map_err(tool_error)?;
 
         let status_change = if was_pruned {
             " (marked as prune candidate)"

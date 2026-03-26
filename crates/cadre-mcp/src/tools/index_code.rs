@@ -41,7 +41,7 @@ impl IndexCodeTool {
                 )
             })?;
             let index: cadre_store::CodeIndex =
-                serde_json::from_str(&index_content).map_err(|e| tool_error(e))?;
+                serde_json::from_str(&index_content).map_err(tool_error)?;
 
             let results = CodeIndexer::search_symbols(&index, Some(q), self.kind.as_deref());
 
@@ -82,17 +82,17 @@ impl IndexCodeTool {
             .unwrap_or_else(|| vec!["src/**/*.rs".to_string()]);
 
         let indexer = CodeIndexer::new(Path::new(&self.project_path));
-        let index = indexer.index(&patterns).map_err(|e| tool_error(e))?;
+        let index = indexer.index(&patterns).map_err(tool_error)?;
 
         let symbol_count = index.symbols.len();
         let file_count = index.indexed_files;
 
         // Save index to disk
-        let json = serde_json::to_string_pretty(&index).map_err(|e| tool_error(e))?;
+        let json = serde_json::to_string_pretty(&index).map_err(tool_error)?;
         if let Some(parent) = index_path.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| tool_error(e))?;
+            std::fs::create_dir_all(parent).map_err(tool_error)?;
         }
-        std::fs::write(&index_path, json).map_err(|e| tool_error(e))?;
+        std::fs::write(&index_path, json).map_err(tool_error)?;
 
         let text = format!(
             "## Code Index Built\n\nIndexed {} symbols across {} files.\nIndex saved to: {}",

@@ -3,9 +3,7 @@ use super::helpers::FrontmatterParser;
 use super::metadata::DocumentMetadata;
 use super::traits::{DocumentCore, DocumentValidationError};
 use super::types::{DocumentId, Phase, Tag};
-use chrono::Utc;
 use gray_matter;
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tera::{Context, Tera};
 
@@ -15,9 +13,9 @@ use tera::{Context, Tera};
 #[derive(Debug)]
 pub struct ValidationPolicy {
     core: DocumentCore,
-    /// Pattern describing what this policy applies to (e.g. "story:feature", "task:*", "epic:*")
+    /// Pattern describing what this policy applies to (e.g. `story:feature`, `task:*`, `epic:*`)
     pub applies_to: String,
-    /// Validation checks that must pass (e.g. ["unit-test", "lint", "type-check"])
+    /// Validation checks that must pass (e.g. `["unit-test", "lint", "type-check"]`)
     pub required_validations: Vec<String>,
 }
 
@@ -274,12 +272,6 @@ impl ValidationPolicy {
             }
         }
         Err(DocumentValidationError::MissingPhaseTag)
-    }
-
-    fn update_phase_tag(&mut self, new_phase: Phase) {
-        self.core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-        self.core.tags.push(Tag::Phase(new_phase));
-        self.core.metadata.updated_at = Utc::now();
     }
 
     pub fn validate(&self) -> Result<(), DocumentValidationError> {

@@ -19,10 +19,10 @@ async fn main() -> anyhow::Result<()> {
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--results-dir" => {
-                results_dir = PathBuf::from(args.next().expect("--results-dir requires a value"))
+                results_dir = PathBuf::from(args.next().expect("--results-dir requires a value"));
             }
             "--scenario" => {
-                scenario_path = PathBuf::from(args.next().expect("--scenario requires a value"))
+                scenario_path = PathBuf::from(args.next().expect("--scenario requires a value"));
             }
             "--mode" => {
                 mode = match args.next().expect("--mode requires a value").as_str() {

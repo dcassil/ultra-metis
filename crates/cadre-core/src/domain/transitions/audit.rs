@@ -6,7 +6,6 @@
 //! for documents that are in a blocked state.
 
 use super::enforcer::{EnforcementOutcome, EnforcementResult};
-use super::hooks::TransitionEvent;
 use crate::domain::documents::types::{DocumentId, DocumentType, Phase};
 use chrono::{DateTime, Utc};
 use std::fmt;
@@ -430,7 +429,9 @@ mod tests {
     use super::*;
     use crate::domain::documents::types::DocumentId;
     use crate::domain::transitions::enforcer::TransitionEnforcer;
-    use crate::domain::transitions::hooks::{PreCheckResult, PreTransitionCheck};
+    use crate::domain::transitions::hooks::{
+        PreCheckResult, PreTransitionCheck, TransitionEvent,
+    };
     use crate::domain::transitions::registry::HookRegistry;
 
     fn make_enforcement_result(

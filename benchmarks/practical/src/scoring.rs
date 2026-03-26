@@ -1,7 +1,6 @@
 use crate::scenario_pack::{ExpectedOutputs, LoadedScenarioPack, VerificationCheck};
-use crate::types::*;
+use crate::types::{BenchmarkRun, DocumentArtifact};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 use std::process::Command;
 
 /// Complete scoring breakdown for a benchmark run.
@@ -402,6 +401,10 @@ fn build_track_score(checks: Vec<ScoringCheck>) -> TrackScore {
 mod tests {
     use super::*;
     use crate::scenario_pack::*;
+    use crate::types::{
+        CliTraceEvent, CodeArtifact, CodeMetrics, ExecutionMode, InitiativeResult, RunArtifacts,
+        RunManifest, RunMetrics, RunTrace, ScenarioSummary, TaskResult, TaskStatus,
+    };
     use std::time::Duration;
 
     fn make_test_run() -> BenchmarkRun {

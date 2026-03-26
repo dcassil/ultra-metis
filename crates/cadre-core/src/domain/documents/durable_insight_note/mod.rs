@@ -842,12 +842,6 @@ impl DurableInsightNote {
         Err(DocumentValidationError::MissingPhaseTag)
     }
 
-    fn update_phase_tag(&mut self, new_phase: Phase) {
-        self.core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-        self.core.tags.push(Tag::Phase(new_phase));
-        self.core.metadata.updated_at = Utc::now();
-    }
-
     /// Get mutable access to the document core
     pub fn core_mut(&mut self) -> &mut DocumentCore {
         &mut self.core
