@@ -1,5 +1,5 @@
 .PHONY: build build-mcp build-cli install install-binary test clean \
-       ci lint fmt fmt-check release-local package
+       ci lint lint-shell fmt fmt-check release-local package
 
 INSTALL_DIR ?= $(HOME)/.local/bin
 
@@ -41,8 +41,13 @@ clean:
 # --------------------------------------------------------------------------
 
 # Run the full CI suite locally (matches GitHub Actions CI workflow)
-ci: test lint fmt-check
+ci: test lint lint-shell fmt-check
 	@echo "All CI checks passed."
+
+# Run shellcheck on project shell scripts (excludes vendor/)
+lint-shell:
+	@echo "Running shellcheck on project shell scripts..."
+	@find plugins/cadre benchmarks scripts tests -name '*.sh' -print0 | xargs -0 shellcheck -S warning
 
 # Run clippy with warnings-as-errors (matches CI)
 lint:

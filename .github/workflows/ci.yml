@@ -38,6 +38,18 @@ jobs:
       - name: Run clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+  shellcheck:
+    name: Shell Script Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: './plugins/cadre'
+          additional_files: 'benchmarks/run-cadre-bench.sh benchmarks/run-practical-bench.sh scripts/package.sh tests/e2e_test.sh'
+          severity: warning
+
   fmt:
     name: Format Check
     runs-on: ubuntu-latest
