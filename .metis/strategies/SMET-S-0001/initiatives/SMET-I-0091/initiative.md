@@ -4,14 +4,14 @@ level: initiative
 title: "Structural Clippy Compliance: Function Length, Argument Count, and Complexity"
 short_code: "SMET-I-0091"
 created_at: 2026-03-26T18:47:12.508020+00:00
-updated_at: 2026-03-26T19:19:46.750980+00:00
+updated_at: 2026-03-26T20:49:53.438714+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/active"
 
 
 exit_criteria_met: false

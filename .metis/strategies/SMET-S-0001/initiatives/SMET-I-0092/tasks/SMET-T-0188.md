@@ -4,14 +4,14 @@ level: task
 title: "Style and Docs Pedantic Lint Batch"
 short_code: "SMET-T-0188"
 created_at: 2026-03-26T19:24:24.387137+00:00
-updated_at: 2026-03-26T20:13:41.134817+00:00
+updated_at: 2026-03-26T20:49:09.104600+00:00
 parent: SMET-I-0092
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -118,6 +118,8 @@ These are lower-priority style preferences, documentation lints, and nursery lin
 
 4. For "Defer" lints:
    - Leave the allow as-is but update the comment with context for the future
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -27,14 +27,8 @@ pub fn log(msg: &str) {
     }
 }
 
-/// Run the MCP server
-pub async fn run() -> Result<()> {
-    log("=== cadre-mcp starting ===");
-    log(&format!("PID: {}", std::process::id()));
-    log(&format!("version: {}", env!("CARGO_PKG_VERSION")));
-    log(&format!("args: {:?}", std::env::args().collect::<Vec<_>>()));
-
-    // Initialize logging to a file (stderr may not be visible, stdout is MCP protocol)
+/// Initialize the tracing subscriber, writing to a file or falling back to stderr.
+fn init_tracing() {
     let log_path = std::env::temp_dir().join("cadre-mcp-tracing.log");
     log(&format!("tracing log path: {}", log_path.display()));
 
@@ -61,11 +55,11 @@ pub async fn run() -> Result<()> {
                 .try_init();
         }
     }
+}
 
-    tracing::info!("Starting Cadre MCP Server");
-    log("building server_details (InitializeResult)");
-
-    let server_details = InitializeResult {
+/// Build the MCP server initialization result describing this server's identity and capabilities.
+fn build_server_details() -> InitializeResult {
+    let details = InitializeResult {
         server_info: Implementation {
             name: "Cadre Document Management System".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
@@ -85,13 +79,10 @@ pub async fn run() -> Result<()> {
         protocol_version: LATEST_PROTOCOL_VERSION.to_string(),
     };
 
-    log(&format!(
-        "protocol_version: {}",
-        server_details.protocol_version
-    ));
+    log(&format!("protocol_version: {}", details.protocol_version));
     log(&format!(
         "instructions length: {} chars",
-        server_details
+        details
             .instructions
             .as_ref()
             .map(std::string::String::len)
@@ -99,8 +90,24 @@ pub async fn run() -> Result<()> {
     ));
     log(&format!(
         "capabilities: tools={:?}",
-        server_details.capabilities.tools.is_some()
+        details.capabilities.tools.is_some()
     ));
+
+    details
+}
+
+/// Run the MCP server
+pub async fn run() -> Result<()> {
+    log("=== cadre-mcp starting ===");
+    log(&format!("PID: {}", std::process::id()));
+    log(&format!("version: {}", env!("CARGO_PKG_VERSION")));
+    log(&format!("args: {:?}", std::env::args().collect::<Vec<_>>()));
+
+    init_tracing();
+    tracing::info!("Starting Cadre MCP Server");
+    log("building server_details (InitializeResult)");
+
+    let server_details = build_server_details();
 
     log("creating StdioTransport");
     let transport = match StdioTransport::new(TransportOptions::default()) {
