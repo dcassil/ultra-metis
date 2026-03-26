@@ -9,6 +9,7 @@ if [ ! -d "$CLAUDE_PROJECT_DIR/.metis" ]; then
 fi
 
 # Read hook input from stdin
+# shellcheck disable=SC2034
 HOOK_INPUT=$(cat)
 
 # Get active work items if cadre CLI is available

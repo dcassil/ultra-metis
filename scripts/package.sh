@@ -132,7 +132,7 @@ echo ""
 echo "Generating SHA256 checksums..."
 (
   cd "${DIST_DIR}"
-  sha256 *.tar.gz *.zip 2>/dev/null > SHA256SUMS.txt || true
+  sha256 ./*.tar.gz ./*.zip 2>/dev/null > SHA256SUMS.txt || true
   # If no archives matched the globs, generate from what we have
   if [[ ! -s SHA256SUMS.txt ]]; then
     for f in *; do

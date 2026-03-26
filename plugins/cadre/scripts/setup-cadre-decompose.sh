@@ -182,7 +182,7 @@ cat <<EOF
 Cadre Decompose activated for: $SHORT_CODE
 
 Project: $PROJECT_PATH
-Max iterations: $(if [[ $MAX_ITERATIONS -gt 0 ]]; then echo $MAX_ITERATIONS; else echo "unlimited"; fi)
+Max iterations: $(if [[ $MAX_ITERATIONS -gt 0 ]]; then echo "$MAX_ITERATIONS"; else echo "unlimited"; fi)
 
 Mapped skills:
   - superpowers:brainstorming

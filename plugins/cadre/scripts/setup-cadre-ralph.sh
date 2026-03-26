@@ -219,7 +219,7 @@ Cadre Ralph activated for: $SHORT_CODE
 Document type: $DOC_TYPE
 Story type: ${STORY_TYPE:-task}
 Project: $PROJECT_PATH
-Max iterations: $(if [[ $MAX_ITERATIONS -gt 0 ]]; then echo $MAX_ITERATIONS; else echo "unlimited"; fi)
+Max iterations: $(if [[ $MAX_ITERATIONS -gt 0 ]]; then echo "$MAX_ITERATIONS"; else echo "unlimited"; fi)
 
 Mapped superpowers skills:
 $SKILLS_LIST
