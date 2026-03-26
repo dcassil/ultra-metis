@@ -6,7 +6,7 @@
 use crate::config::ProjectConfig;
 use crate::error::{Result, StoreError};
 use cadre_core::domain::documents::hierarchy::HierarchyValidator;
-use cadre_core::domain::documents::traits::{Document, DocumentValidationError};
+use cadre_core::domain::documents::traits::{Document, DocumentCore, DocumentValidationError};
 use cadre_core::domain::documents::types::{
     Complexity, DocumentId, DocumentType, Phase, RiskLevel, StoryType, Tag,
 };
@@ -234,19 +234,45 @@ impl AnyDocument {
         }
     }
 
-    /// Internal helper to update phase tag on governance types
-    fn update_phase_tag(&mut self, new_phase: Phase) {
-        let core = match self {
-            Self::Architecture(d) => d.core_mut(),
+    /// Get mutable access to the document core for any variant
+    fn core_mut(&mut self) -> &mut DocumentCore {
+        match self {
+            Self::Vision(d) => d.core_mut(),
+            Self::Initiative(d) => d.core_mut(),
+            Self::Task(d) => d.core_mut(),
+            Self::ProductDoc(d) => d.core_mut(),
+            Self::Epic(d) => d.core_mut(),
+            Self::Story(d) => d.core_mut(),
+            Self::DesignContext(d) => d.core_mut(),
             Self::AnalysisBaseline(d) => d.core_mut(),
             Self::QualityRecord(d) => d.core_mut(),
+            Self::RulesConfig(d) => d.core_mut(),
             Self::DurableInsightNote(d) => d.core_mut(),
             Self::CrossReference(d) => d.core_mut(),
-            _ => return, // other types have their own transition_phase
-        };
+            Self::Architecture(d) => d.core_mut(),
+            Self::ArchitectureCatalogEntry(d) => d.core_mut(),
+            Self::ReferenceArchitecture(d) => d.core_mut(),
+        }
+    }
+
+    /// Force-update the phase tag directly, bypassing exit criteria
+    fn force_update_phase(&mut self, new_phase: Phase) {
+        let core = self.core_mut();
         core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
         core.tags.push(Tag::Phase(new_phase));
         core.metadata.updated_at = chrono::Utc::now();
+    }
+
+    /// Internal helper to update phase tag on governance types
+    fn update_phase_tag(&mut self, new_phase: Phase) {
+        match self {
+            Self::Architecture(_)
+            | Self::AnalysisBaseline(_)
+            | Self::QualityRecord(_)
+            | Self::DurableInsightNote(_)
+            | Self::CrossReference(_) => self.force_update_phase(new_phase),
+            _ => {} // other types have their own transition_phase
+        }
     }
 
     pub fn to_summary(&self) -> DocumentSummary {
@@ -405,82 +431,53 @@ impl DocumentStore {
     /// Parse a document from its file content
     fn parse_document(content: &str) -> Result<AnyDocument> {
         let doc_type = Self::detect_type_from_content(content)?;
+        let validation_err = |e: DocumentValidationError| StoreError::Validation(e.to_string());
         match doc_type {
-            DocumentType::Vision => {
-                let doc = Vision::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::Vision(doc))
-            }
-            DocumentType::Initiative => {
-                let doc = Initiative::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::Initiative(doc))
-            }
-            DocumentType::Task => {
-                let doc = Task::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::Task(doc))
-            }
-            DocumentType::AnalysisBaseline => {
-                let doc = AnalysisBaseline::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::AnalysisBaseline(doc))
-            }
-            DocumentType::QualityRecord => {
-                let doc = QualityRecord::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::QualityRecord(doc))
-            }
-            DocumentType::RulesConfig => {
-                let doc = RulesConfig::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::RulesConfig(doc))
-            }
-            DocumentType::DurableInsightNote => {
-                let doc = DurableInsightNote::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::DurableInsightNote(doc))
-            }
-            DocumentType::CrossReference => {
-                let doc = CrossReference::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::CrossReference(doc))
-            }
-            DocumentType::Architecture => {
-                let doc = Architecture::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::Architecture(doc))
-            }
-            DocumentType::ArchitectureCatalogEntry => {
-                let doc = ArchitectureCatalogEntry::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::ArchitectureCatalogEntry(doc))
-            }
-            DocumentType::ReferenceArchitecture => {
-                let doc = ReferenceArchitecture::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::ReferenceArchitecture(doc))
-            }
-            DocumentType::ProductDoc => {
-                let doc = ProductDoc::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::ProductDoc(doc))
-            }
-            DocumentType::Epic => {
-                let doc = Epic::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::Epic(doc))
-            }
-            DocumentType::Story => {
-                let doc = Story::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::Story(doc))
-            }
-            DocumentType::DesignContext => {
-                let doc = DesignContext::from_content(content)
-                    .map_err(|e| StoreError::Validation(e.to_string()))?;
-                Ok(AnyDocument::DesignContext(doc))
-            }
+            DocumentType::Vision => Ok(AnyDocument::Vision(
+                Vision::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::Initiative => Ok(AnyDocument::Initiative(
+                Initiative::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::Task => Ok(AnyDocument::Task(
+                Task::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::AnalysisBaseline => Ok(AnyDocument::AnalysisBaseline(
+                AnalysisBaseline::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::QualityRecord => Ok(AnyDocument::QualityRecord(
+                QualityRecord::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::RulesConfig => Ok(AnyDocument::RulesConfig(
+                RulesConfig::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::DurableInsightNote => Ok(AnyDocument::DurableInsightNote(
+                DurableInsightNote::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::CrossReference => Ok(AnyDocument::CrossReference(
+                CrossReference::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::Architecture => Ok(AnyDocument::Architecture(
+                Architecture::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::ArchitectureCatalogEntry => Ok(AnyDocument::ArchitectureCatalogEntry(
+                ArchitectureCatalogEntry::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::ReferenceArchitecture => Ok(AnyDocument::ReferenceArchitecture(
+                ReferenceArchitecture::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::ProductDoc => Ok(AnyDocument::ProductDoc(
+                ProductDoc::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::Epic => Ok(AnyDocument::Epic(
+                Epic::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::Story => Ok(AnyDocument::Story(
+                Story::from_content(content).map_err(validation_err)?,
+            )),
+            DocumentType::DesignContext => Ok(AnyDocument::DesignContext(
+                DesignContext::from_content(content).map_err(validation_err)?,
+            )),
             other => Err(StoreError::InvalidDocumentType(format!(
                 "Unsupported document type for store operations: {other}"
             ))),
@@ -519,200 +516,13 @@ impl DocumentStore {
             .map_err(StoreError::Validation)?;
 
         let parent_id = parent_short_code.map(DocumentId::from);
-
-        let doc = match document_type {
-            DocumentType::Vision => {
-                let v = Vision::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::Vision(v)
-            }
-            DocumentType::Initiative => {
-                let i = Initiative::new(
-                    title.to_string(),
-                    parent_id,
-                    vec![],
-                    vec![Tag::Phase(Phase::Discovery)],
-                    false,
-                    Complexity::M,
-                    short_code.clone(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::Initiative(i)
-            }
-            DocumentType::Task => {
-                let t = Task::new(
-                    title.to_string(),
-                    parent_id,
-                    vec![],
-                    vec![Tag::Phase(Phase::Todo)],
-                    false,
-                    short_code.clone(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::Task(t)
-            }
-            DocumentType::AnalysisBaseline => {
-                let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-                let ab = AnalysisBaseline::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    None,
-                    today,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::AnalysisBaseline(ab)
-            }
-            DocumentType::QualityRecord => {
-                let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-                let qr = QualityRecord::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    None,
-                    today,
-                    cadre_core::domain::documents::quality_record::QualityStatus::Pass,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::QualityRecord(qr)
-            }
-            DocumentType::RulesConfig => {
-                let rc = RulesConfig::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    cadre_core::domain::documents::rules_config::ProtectionLevel::Standard,
-                    cadre_core::domain::documents::rules_config::RuleScope::Repository,
-                    None,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::RulesConfig(rc)
-            }
-            DocumentType::DurableInsightNote => {
-                let din = DurableInsightNote::new(
-                    title.to_string(),
-                    String::new(),
-                    cadre_core::InsightCategory::SubsystemQuirk,
-                    cadre_core::InsightScope::new(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::DurableInsightNote(din)
-            }
-            DocumentType::CrossReference => {
-                let xr = CrossReference::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    String::new(),
-                    String::new(),
-                    cadre_core::RelationshipType::References,
-                    String::new(),
-                    false,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::CrossReference(xr)
-            }
-            DocumentType::Architecture => {
-                let ar = Architecture::new(
-                    title.to_string(),
-                    short_code.clone(),
-                    parent_short_code.map(std::string::ToString::to_string),
-                    None,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::Architecture(ar)
-            }
-            DocumentType::ArchitectureCatalogEntry => {
-                let ace = ArchitectureCatalogEntry::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    String::new(),
-                    String::new(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::ArchitectureCatalogEntry(ace)
-            }
-            DocumentType::ReferenceArchitecture => {
-                let ra = ReferenceArchitecture::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    None,
-                    false,
-                    cadre_core::ArchitectureStatus::Draft,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::ReferenceArchitecture(ra)
-            }
-            DocumentType::ProductDoc => {
-                let pd = ProductDoc::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::ProductDoc(pd)
-            }
-            DocumentType::Epic => {
-                let e = Epic::new(
-                    title.to_string(),
-                    parent_id,
-                    vec![],
-                    vec![Tag::Phase(Phase::Discovery)],
-                    false,
-                    Complexity::M,
-                    short_code.clone(),
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::Epic(e)
-            }
-            DocumentType::Story => {
-                let s = Story::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Discovery)],
-                    false,
-                    short_code.clone(),
-                    parent_id,
-                    StoryType::Feature,
-                    RiskLevel::Medium,
-                    None,
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::Story(s)
-            }
-            DocumentType::DesignContext => {
-                let dc = DesignContext::new(
-                    title.to_string(),
-                    vec![Tag::Phase(Phase::Draft)],
-                    false,
-                    short_code.clone(),
-                    vec![],
-                )
-                .map_err(|e| StoreError::Validation(e.to_string()))?;
-                AnyDocument::DesignContext(dc)
-            }
-            other => {
-                return Err(StoreError::InvalidDocumentType(format!(
-                    "Document type '{other}' not yet supported for creation"
-                )));
-            }
-        };
+        let doc = Self::build_new_document(
+            document_type,
+            title,
+            &short_code,
+            parent_id,
+            parent_short_code,
+        )?;
 
         let content = doc
             .to_content()
@@ -722,6 +532,161 @@ impl DocumentStore {
 
         self.save_config(&config)?;
         Ok(short_code)
+    }
+
+    /// Build a new document instance with default values for the given type
+    fn build_new_document(
+        document_type: DocumentType,
+        title: &str,
+        short_code: &str,
+        parent_id: Option<DocumentId>,
+        parent_short_code: Option<&str>,
+    ) -> Result<AnyDocument> {
+        match document_type {
+            DocumentType::Vision | DocumentType::Initiative | DocumentType::Task
+            | DocumentType::Epic | DocumentType::Story | DocumentType::ProductDoc
+            | DocumentType::DesignContext => {
+                Self::build_work_item(document_type, title, short_code, parent_id)
+            }
+            DocumentType::AnalysisBaseline | DocumentType::QualityRecord
+            | DocumentType::RulesConfig | DocumentType::DurableInsightNote
+            | DocumentType::CrossReference | DocumentType::Architecture
+            | DocumentType::ArchitectureCatalogEntry | DocumentType::ReferenceArchitecture => {
+                Self::build_governance_document(
+                    document_type, title, short_code, parent_short_code,
+                )
+            }
+            other => Err(StoreError::InvalidDocumentType(format!(
+                "Document type '{other}' not yet supported for creation"
+            ))),
+        }
+    }
+
+    /// Build a new work-item document (Vision, Initiative, Task, Epic, Story, etc.)
+    fn build_work_item(
+        document_type: DocumentType,
+        title: &str,
+        short_code: &str,
+        parent_id: Option<DocumentId>,
+    ) -> Result<AnyDocument> {
+        let validation_err = |e: DocumentValidationError| StoreError::Validation(e.to_string());
+        match document_type {
+            DocumentType::Vision => Ok(AnyDocument::Vision(
+                Vision::new(title.to_string(), vec![Tag::Phase(Phase::Draft)], false, short_code.to_string())
+                    .map_err(validation_err)?,
+            )),
+            DocumentType::Initiative => Ok(AnyDocument::Initiative(
+                Initiative::new(
+                    title.to_string(), parent_id, vec![], vec![Tag::Phase(Phase::Discovery)],
+                    false, Complexity::M, short_code.to_string(),
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::Task => Ok(AnyDocument::Task(
+                Task::new(
+                    title.to_string(), parent_id, vec![], vec![Tag::Phase(Phase::Todo)],
+                    false, short_code.to_string(),
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::Epic => Ok(AnyDocument::Epic(
+                Epic::new(
+                    title.to_string(), parent_id, vec![], vec![Tag::Phase(Phase::Discovery)],
+                    false, Complexity::M, short_code.to_string(),
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::Story => Ok(AnyDocument::Story(
+                Story::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Discovery)], false,
+                    short_code.to_string(), parent_id, StoryType::Feature, RiskLevel::Medium, None,
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::ProductDoc => Ok(AnyDocument::ProductDoc(
+                ProductDoc::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Draft)], false, short_code.to_string(),
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::DesignContext => Ok(AnyDocument::DesignContext(
+                DesignContext::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                    short_code.to_string(), vec![],
+                ).map_err(validation_err)?,
+            )),
+            _ => unreachable!("build_work_item called with non-work-item type"),
+        }
+    }
+
+    /// Build a new governance/catalog document (AnalysisBaseline, QualityRecord, etc.)
+    fn build_governance_document(
+        document_type: DocumentType,
+        title: &str,
+        short_code: &str,
+        parent_short_code: Option<&str>,
+    ) -> Result<AnyDocument> {
+        let validation_err = |e: DocumentValidationError| StoreError::Validation(e.to_string());
+        match document_type {
+            DocumentType::AnalysisBaseline => {
+                let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+                Ok(AnyDocument::AnalysisBaseline(
+                    AnalysisBaseline::new(
+                        title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                        short_code.to_string(), None, today,
+                    ).map_err(validation_err)?,
+                ))
+            }
+            DocumentType::QualityRecord => {
+                let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+                Ok(AnyDocument::QualityRecord(
+                    QualityRecord::new(
+                        title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                        short_code.to_string(), None, today,
+                        cadre_core::domain::documents::quality_record::QualityStatus::Pass,
+                    ).map_err(validation_err)?,
+                ))
+            }
+            DocumentType::RulesConfig => Ok(AnyDocument::RulesConfig(
+                RulesConfig::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                    short_code.to_string(),
+                    cadre_core::domain::documents::rules_config::ProtectionLevel::Standard,
+                    cadre_core::domain::documents::rules_config::RuleScope::Repository,
+                    None,
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::DurableInsightNote => Ok(AnyDocument::DurableInsightNote(
+                DurableInsightNote::new(
+                    title.to_string(), String::new(),
+                    cadre_core::InsightCategory::SubsystemQuirk,
+                    cadre_core::InsightScope::new(),
+                    vec![Tag::Phase(Phase::Draft)], false, short_code.to_string(),
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::CrossReference => Ok(AnyDocument::CrossReference(
+                CrossReference::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                    short_code.to_string(), String::new(), String::new(),
+                    cadre_core::RelationshipType::References, String::new(), false,
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::Architecture => Ok(AnyDocument::Architecture(
+                Architecture::new(
+                    title.to_string(), short_code.to_string(),
+                    parent_short_code.map(std::string::ToString::to_string), None,
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::ArchitectureCatalogEntry => Ok(AnyDocument::ArchitectureCatalogEntry(
+                ArchitectureCatalogEntry::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                    short_code.to_string(), String::new(), String::new(),
+                ).map_err(validation_err)?,
+            )),
+            DocumentType::ReferenceArchitecture => Ok(AnyDocument::ReferenceArchitecture(
+                ReferenceArchitecture::new(
+                    title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
+                    short_code.to_string(), None, false,
+                    cadre_core::ArchitectureStatus::Draft,
+                ).map_err(validation_err)?,
+            )),
+            _ => unreachable!("build_governance_document called with non-governance type"),
+        }
     }
 
     /// Read a document by short code
@@ -917,119 +882,8 @@ impl DocumentStore {
             .phase()
             .map_err(|e| StoreError::Validation(e.to_string()))?;
 
-        // If force is set, we still validate the phase sequence but skip exit criteria
         let new_phase = if force {
-            match target {
-                Some(phase) => {
-                    // Force still validates the phase transition is in the valid sequence
-                    let doc_type = doc.document_type();
-                    if !doc_type.can_transition(old_phase, phase) {
-                        return Err(StoreError::Validation(format!(
-                            "Cannot transition from '{old_phase}' to '{phase}' even with force (invalid sequence for {doc_type})"
-                        )));
-                    }
-                    // Directly update the phase tag without exit criteria check
-                    // Helper macro-like approach: get core_mut for any variant
-                    match &mut doc {
-                        AnyDocument::Vision(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::Initiative(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::Task(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::Architecture(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::AnalysisBaseline(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::QualityRecord(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::RulesConfig(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::DurableInsightNote(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::CrossReference(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::ArchitectureCatalogEntry(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::ReferenceArchitecture(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::ProductDoc(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::Epic(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::Story(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                        AnyDocument::DesignContext(d) => {
-                            let c = d.core_mut();
-                            c.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
-                            c.tags.push(Tag::Phase(phase));
-                            c.metadata.updated_at = chrono::Utc::now();
-                        }
-                    }
-                    phase
-                }
-                None => {
-                    // Auto-advance with force: use normal transition
-                    doc.transition_phase(None)
-                        .map_err(|e| StoreError::Validation(e.to_string()))?
-                }
-            }
+            Self::apply_forced_transition(&mut doc, old_phase, target)?
         } else {
             doc.transition_phase(target)
                 .map_err(|e| StoreError::Validation(e.to_string()))?
@@ -1048,6 +902,31 @@ impl DocumentStore {
         std::fs::write(&path, content)?;
 
         Ok(format!("{old_phase} -> {new_phase}"))
+    }
+
+    /// Apply a forced phase transition, validating sequence but skipping exit criteria
+    fn apply_forced_transition(
+        doc: &mut AnyDocument,
+        old_phase: Phase,
+        target: Option<Phase>,
+    ) -> Result<Phase> {
+        match target {
+            Some(phase) => {
+                let doc_type = doc.document_type();
+                if !doc_type.can_transition(old_phase, phase) {
+                    return Err(StoreError::Validation(format!(
+                        "Cannot transition from '{old_phase}' to '{phase}' even with force (invalid sequence for {doc_type})"
+                    )));
+                }
+                doc.force_update_phase(phase);
+                Ok(phase)
+            }
+            None => {
+                // Auto-advance with force: use normal transition
+                doc.transition_phase(None)
+                    .map_err(|e| StoreError::Validation(e.to_string()))
+            }
+        }
     }
 
     /// Search documents with filtering options

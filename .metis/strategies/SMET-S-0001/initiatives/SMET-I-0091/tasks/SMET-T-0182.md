@@ -4,14 +4,14 @@ level: task
 title: "cadre-mcp: Refactor Functions Exceeding Structural Clippy Thresholds"
 short_code: "SMET-T-0182"
 created_at: 2026-03-26T19:20:10.186584+00:00
-updated_at: 2026-03-26T20:50:00.789218+00:00
+updated_at: 2026-03-26T20:57:26.448557+00:00
 parent: SMET-I-0091
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -45,6 +45,8 @@ None.
 ### cognitive_complexity (0 violations)
 
 None.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
