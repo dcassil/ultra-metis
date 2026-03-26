@@ -437,10 +437,7 @@ pub fn format_run_detail_report(run: &BenchmarkRun) -> String {
 }
 
 /// Save the normalized result as JSON for machine-readable trend tracking.
-pub fn save_normalized_result(
-    run: &BenchmarkRun,
-    results_dir: &Path,
-) -> anyhow::Result<PathBuf> {
+pub fn save_normalized_result(run: &BenchmarkRun, results_dir: &Path) -> anyhow::Result<PathBuf> {
     std::fs::create_dir_all(results_dir)?;
     let result = NormalizedResult::from_run(run);
     let ts = run.timestamp.format("%Y%m%dT%H%M%SZ");

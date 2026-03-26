@@ -43,8 +43,7 @@ impl IndexCodeTool {
             let index: cadre_store::CodeIndex =
                 serde_json::from_str(&index_content).map_err(|e| tool_error(e))?;
 
-            let results =
-                CodeIndexer::search_symbols(&index, Some(q), self.kind.as_deref());
+            let results = CodeIndexer::search_symbols(&index, Some(q), self.kind.as_deref());
 
             if results.is_empty() {
                 let text = format!("No symbols matching '{}'", q);

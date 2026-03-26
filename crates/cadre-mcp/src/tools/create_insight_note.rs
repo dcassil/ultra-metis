@@ -39,10 +39,7 @@ pub struct CreateInsightNoteTool {
 
 impl CreateInsightNoteTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
-        let category: InsightCategory = self
-            .category
-            .parse()
-            .map_err(|e: String| tool_error(e))?;
+        let category: InsightCategory = self.category.parse().map_err(|e: String| tool_error(e))?;
 
         let scope = build_scope_from_args(
             &self.scope_repo,

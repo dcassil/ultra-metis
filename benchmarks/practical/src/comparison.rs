@@ -109,11 +109,7 @@ impl ComparisonResult {
             time_ms: ultra.total_metrics.total_time.as_millis() as u64,
             scores: ultra_scores,
             initiative_count: ultra.initiatives.len() as u32,
-            task_count: ultra
-                .initiatives
-                .iter()
-                .map(|i| i.tasks.len() as u32)
-                .sum(),
+            task_count: ultra.initiatives.iter().map(|i| i.tasks.len() as u32).sum(),
         };
 
         let deltas = compute_deltas(&orig, &ult);
@@ -158,11 +154,7 @@ impl ComparisonResult {
             time_ms: ultra.total_metrics.total_time.as_millis() as u64,
             scores: Some(ultra_scores),
             initiative_count: ultra.initiatives.len() as u32,
-            task_count: ultra
-                .initiatives
-                .iter()
-                .map(|i| i.tasks.len() as u32)
-                .sum(),
+            task_count: ultra.initiatives.iter().map(|i| i.tasks.len() as u32).sum(),
         };
 
         let deltas = compute_deltas(&orig, &ult);
@@ -191,7 +183,10 @@ impl ComparisonResult {
         md.push_str(&format!("**Mode**: {}\n", mode_label));
         md.push_str(&format!("**Scenario**: {}\n", self.config.scenario_id));
         md.push_str(&format!("**Model**: {}\n", self.config.model_id));
-        md.push_str(&format!("**Date**: {}\n\n", self.timestamp.format("%Y-%m-%d %H:%M UTC")));
+        md.push_str(&format!(
+            "**Date**: {}\n\n",
+            self.timestamp.format("%Y-%m-%d %H:%M UTC")
+        ));
 
         md.push_str("## Cost Metrics\n\n");
         md.push_str("| Metric | Original Metis | Cadre | Delta |\n");
@@ -205,14 +200,11 @@ impl ComparisonResult {
         ));
         md.push_str(&format!(
             "| Time (ms) | {} | {} | {:+} |\n",
-            self.original_metis.time_ms,
-            self.cadre.time_ms,
-            self.deltas.time_delta_ms
+            self.original_metis.time_ms, self.cadre.time_ms, self.deltas.time_delta_ms
         ));
         md.push_str(&format!(
             "| Initiatives | {} | {} | |\n",
-            self.original_metis.initiative_count,
-            self.cadre.initiative_count,
+            self.original_metis.initiative_count, self.cadre.initiative_count,
         ));
         md.push_str(&format!(
             "| Tasks | {} | {} | |\n\n",
@@ -256,16 +248,16 @@ fn compute_deltas(original: &SystemResult, ultra: &SystemResult) -> ComparisonDe
     let time_delta_ms = ultra.time_ms as i64 - original.time_ms as i64;
 
     // Score deltas (ultra - original), only if both have scores
-    let (doc_delta, decomp_delta, build_delta, arch_delta) =
-        match (&original.scores, &ultra.scores) {
-            (Some(orig_s), Some(ult_s)) => (
-                ult_s.document_generation.percent() - orig_s.document_generation.percent(),
-                ult_s.decomposition.percent() - orig_s.decomposition.percent(),
-                ult_s.build_outcome.percent() - orig_s.build_outcome.percent(),
-                ult_s.architecture_conformance - orig_s.architecture_conformance,
-            ),
-            _ => (0.0, 0.0, 0.0, 0.0),
-        };
+    let (doc_delta, decomp_delta, build_delta, arch_delta) = match (&original.scores, &ultra.scores)
+    {
+        (Some(orig_s), Some(ult_s)) => (
+            ult_s.document_generation.percent() - orig_s.document_generation.percent(),
+            ult_s.decomposition.percent() - orig_s.decomposition.percent(),
+            ult_s.build_outcome.percent() - orig_s.build_outcome.percent(),
+            ult_s.architecture_conformance - orig_s.architecture_conformance,
+        ),
+        _ => (0.0, 0.0, 0.0, 0.0),
+    };
 
     ComparisonDeltas {
         token_delta,
@@ -279,10 +271,7 @@ fn compute_deltas(original: &SystemResult, ultra: &SystemResult) -> ComparisonDe
 }
 
 /// Validate that a constrained comparison meets fairness requirements.
-pub fn validate_constrained_fairness(
-    original: &BenchmarkRun,
-    ultra: &BenchmarkRun,
-) -> Vec<String> {
+pub fn validate_constrained_fairness(original: &BenchmarkRun, ultra: &BenchmarkRun) -> Vec<String> {
     let mut issues = Vec::new();
 
     if original.manifest.model_id != ultra.manifest.model_id {
@@ -440,7 +429,10 @@ mod tests {
         let run_b = make_run(SystemUnderTest::Cadre, 10000, 25000);
 
         let issues = validate_constrained_fairness(&run_a, &run_b);
-        assert!(issues.is_empty(), "Same config should have no fairness issues");
+        assert!(
+            issues.is_empty(),
+            "Same config should have no fairness issues"
+        );
     }
 
     #[test]

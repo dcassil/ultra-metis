@@ -404,10 +404,7 @@ mod tests {
             2
         );
 
-        assert_eq!(
-            loaded.manifest.expected_outputs.expected_hierarchy.len(),
-            2
-        );
+        assert_eq!(loaded.manifest.expected_outputs.expected_hierarchy.len(), 2);
         assert_eq!(
             loaded
                 .manifest

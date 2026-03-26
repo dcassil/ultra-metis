@@ -2,16 +2,16 @@
 //!
 //! Command-line interface for Cadre document management.
 
-use clap::{Parser, Subcommand};
-use std::collections::HashMap;
-use std::path::PathBuf;
+use cadre_core::domain::rules::query::{scope_hierarchy, scope_rank, RuleQuery, RuleQueryEngine};
 use cadre_core::{
     BaselineCaptureService, ClippyParser, CoverageParser, CrossReference, DurableInsightNote,
     EslintParser, FeedbackSignal, InsightCategory, InsightScope, NoteStatus, RelationshipType,
     RulesConfig, ToolOutputParser, TraceabilityIndex, TypeScriptParser,
 };
-use cadre_core::domain::rules::query::{RuleQuery, RuleQueryEngine, scope_hierarchy, scope_rank};
 use cadre_store::DocumentStore;
+use clap::{Parser, Subcommand};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "cadre")]
@@ -1080,8 +1080,12 @@ fn cmd_quality_capture(
     let parsed = match tool_name.to_lowercase().as_str() {
         "eslint" => EslintParser.parse(raw_output).map_err(|e| e.to_string())?,
         "clippy" => ClippyParser.parse(raw_output).map_err(|e| e.to_string())?,
-        "tsc" | "typescript" => TypeScriptParser.parse(raw_output).map_err(|e| e.to_string())?,
-        "coverage" => CoverageParser.parse(raw_output).map_err(|e| e.to_string())?,
+        "tsc" | "typescript" => TypeScriptParser
+            .parse(raw_output)
+            .map_err(|e| e.to_string())?,
+        "coverage" => CoverageParser
+            .parse(raw_output)
+            .map_err(|e| e.to_string())?,
         _ => {
             return Err(format!(
                 "Unknown tool: {}. Supported: eslint, clippy, tsc, coverage",
@@ -1092,16 +1096,17 @@ fn cmd_quality_capture(
 
     let store = DocumentStore::new(path);
     let short_code = store
-        .create_document("analysis_baseline", &format!("{} Baseline", tool_name), None)
+        .create_document(
+            "analysis_baseline",
+            &format!("{} Baseline", tool_name),
+            None,
+        )
         .map_err(|e| e.user_message())?;
 
     // Capture into a proper baseline and overwrite the file
-    let baseline = BaselineCaptureService::capture(
-        &parsed,
-        &short_code,
-        linked_rules.map(|s| s.to_string()),
-    )
-    .map_err(|e| e.to_string())?;
+    let baseline =
+        BaselineCaptureService::capture(&parsed, &short_code, linked_rules.map(|s| s.to_string()))
+            .map_err(|e| e.to_string())?;
 
     let content = baseline.to_content().map_err(|e| e.to_string())?;
     let doc_path = path
@@ -1110,38 +1115,16 @@ fn cmd_quality_capture(
         .join(format!("{}.md", short_code));
     std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write baseline: {}", e))?;
 
-    println!(
-        "{:<18} {}",
-        "Short Code:", short_code
-    );
-    println!(
-        "{:<18} {}",
-        "Tool:", parsed.tool_name
-    );
-    println!(
-        "{:<18} {}",
-        "Total Findings:", parsed.total_findings()
-    );
-    println!(
-        "{:<18} {}",
-        "Errors:", parsed.error_count()
-    );
-    println!(
-        "{:<18} {}",
-        "Warnings:", parsed.warning_count()
-    );
-    println!(
-        "{:<18} {}",
-        "Metrics:", parsed.metrics.len()
-    );
+    println!("{:<18} {}", "Short Code:", short_code);
+    println!("{:<18} {}", "Tool:", parsed.tool_name);
+    println!("{:<18} {}", "Total Findings:", parsed.total_findings());
+    println!("{:<18} {}", "Errors:", parsed.error_count());
+    println!("{:<18} {}", "Warnings:", parsed.warning_count());
+    println!("{:<18} {}", "Metrics:", parsed.metrics.len());
     Ok(())
 }
 
-fn cmd_quality_compare(
-    path: &PathBuf,
-    before_sc: &str,
-    after_sc: &str,
-) -> Result<(), String> {
+fn cmd_quality_compare(path: &PathBuf, before_sc: &str, after_sc: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
 
     // Read both baselines
@@ -1174,22 +1157,10 @@ fn cmd_quality_compare(
         )
         .map_err(|e| e.user_message())?;
 
-    println!(
-        "{:<18} {}",
-        "Before:", before_sc
-    );
-    println!(
-        "{:<18} {}",
-        "After:", after_sc
-    );
-    println!(
-        "{:<18} {}",
-        "Tool:", before_tool
-    );
-    println!(
-        "{:<18} {}",
-        "Record:", qr_code
-    );
+    println!("{:<18} {}", "Before:", before_sc);
+    println!("{:<18} {}", "After:", after_sc);
+    println!("{:<18} {}", "Tool:", before_tool);
+    println!("{:<18} {}", "Record:", qr_code);
     println!(
         "\nComparison record created. Edit {} to add detailed metric deltas.",
         qr_code
@@ -1214,9 +1185,7 @@ fn cmd_quality_list(
     let mut results = Vec::new();
     for doc in &docs {
         if let Some(filter) = status_filter {
-            let raw = store
-                .read_document_raw(&doc.short_code)
-                .unwrap_or_default();
+            let raw = store.read_document_raw(&doc.short_code).unwrap_or_default();
             if !raw
                 .to_lowercase()
                 .contains(&format!("overall_status: {}", filter.to_lowercase()))
@@ -1233,32 +1202,20 @@ fn cmd_quality_list(
 
     if !results.is_empty() {
         println!("QUALITY RECORDS ({})", results.len());
-        println!(
-            "{:<16} {:<40} {:<12}",
-            "SHORT CODE", "TITLE", "PHASE"
-        );
+        println!("{:<16} {:<40} {:<12}", "SHORT CODE", "TITLE", "PHASE");
         println!("{}", "-".repeat(68));
         for doc in &results {
-            println!(
-                "{:<16} {:<40} {:<12}",
-                doc.short_code, doc.title, doc.phase
-            );
+            println!("{:<16} {:<40} {:<12}", doc.short_code, doc.title, doc.phase);
         }
         println!();
     }
 
     if !baselines.is_empty() {
         println!("ANALYSIS BASELINES ({})", baselines.len());
-        println!(
-            "{:<16} {:<40} {:<12}",
-            "SHORT CODE", "TITLE", "PHASE"
-        );
+        println!("{:<16} {:<40} {:<12}", "SHORT CODE", "TITLE", "PHASE");
         println!("{}", "-".repeat(68));
         for doc in &baselines {
-            println!(
-                "{:<16} {:<40} {:<12}",
-                doc.short_code, doc.title, doc.phase
-            );
+            println!("{:<16} {:<40} {:<12}", doc.short_code, doc.title, doc.phase);
         }
     }
 
@@ -1377,17 +1334,20 @@ fn cmd_rules_query(
         };
         println!(
             "{:<16} {:<30} {:<12} {:<12} {:<10}",
-            rule.metadata().short_code, title_trunc, rule.scope, rule.protection_level, phase
+            rule.metadata().short_code,
+            title_trunc,
+            rule.scope,
+            rule.protection_level,
+            phase
         );
     }
     Ok(())
 }
 
 fn cmd_rules_applicable(path: &PathBuf, target_scope_str: &str) -> Result<(), String> {
-    let target_scope: cadre_core::domain::documents::rules_config::RuleScope =
-        target_scope_str
-            .parse()
-            .map_err(|e: cadre_core::DocumentValidationError| e.to_string())?;
+    let target_scope: cadre_core::domain::documents::rules_config::RuleScope = target_scope_str
+        .parse()
+        .map_err(|e: cadre_core::DocumentValidationError| e.to_string())?;
 
     let store = DocumentStore::new(path);
     let rules_configs = load_all_rules_configs(&store)?;
@@ -1435,7 +1395,10 @@ fn cmd_rules_applicable(path: &PathBuf, target_scope_str: &str) -> Result<(), St
         };
         println!(
             "{:<16} {:<30} {:<12} {:<12}",
-            rule.metadata().short_code, title_trunc, rule.scope, rule.protection_level
+            rule.metadata().short_code,
+            title_trunc,
+            rule.scope,
+            rule.protection_level
         );
     }
     Ok(())
@@ -1461,10 +1424,7 @@ fn cmd_rules_protected(path: &PathBuf) -> Result<(), String> {
     );
     println!("{}", "-".repeat(78));
     for rule in &results {
-        let arch_ref = rule
-            .source_architecture_ref
-            .as_deref()
-            .unwrap_or("-");
+        let arch_ref = rule.source_architecture_ref.as_deref().unwrap_or("-");
         let title_trunc = if rule.title().len() > 29 {
             format!("{}...", &rule.title()[..26])
         } else {
@@ -1472,7 +1432,10 @@ fn cmd_rules_protected(path: &PathBuf) -> Result<(), String> {
         };
         println!(
             "{:<16} {:<30} {:<12} {:<20}",
-            rule.metadata().short_code, title_trunc, rule.scope, arch_ref
+            rule.metadata().short_code,
+            title_trunc,
+            rule.scope,
+            arch_ref
         );
     }
     Ok(())
@@ -1511,7 +1474,13 @@ fn cmd_notes_create(
     scope_symbols: Option<&[String]>,
 ) -> Result<(), String> {
     let category: InsightCategory = category_str.parse().map_err(|e: String| e)?;
-    let scope = build_scope(scope_repo, scope_package, scope_subsystem, scope_paths, scope_symbols);
+    let scope = build_scope(
+        scope_repo,
+        scope_package,
+        scope_subsystem,
+        scope_paths,
+        scope_symbols,
+    );
 
     let store = DocumentStore::new(path);
     let short_code = store
@@ -1549,14 +1518,8 @@ fn cmd_notes_create(
     .join(", ");
 
     println!("Created insight note {}", short_code);
-    println!(
-        "{:<18} {}",
-        "Title:", title
-    );
-    println!(
-        "{:<18} {}",
-        "Category:", category_str
-    );
+    println!("{:<18} {}", "Title:", title);
+    println!("{:<18} {}", "Category:", category_str);
     println!(
         "{:<18} {}",
         "Scope:",
@@ -1579,7 +1542,13 @@ fn cmd_notes_fetch(
     limit: Option<usize>,
 ) -> Result<(), String> {
     let limit = limit.unwrap_or(10);
-    let query_scope = build_scope(scope_repo, scope_package, scope_subsystem, scope_paths, scope_symbols);
+    let query_scope = build_scope(
+        scope_repo,
+        scope_package,
+        scope_subsystem,
+        scope_paths,
+        scope_symbols,
+    );
 
     let store = DocumentStore::new(path);
     let all_docs = store.list_documents(false).map_err(|e| e.user_message())?;
@@ -1614,17 +1583,12 @@ fn cmd_notes_fetch(
 
     // Record fetch on each matched note and save back
     for (sc, _) in &matched {
-        let mut note = DurableInsightNote::from_content(
-            &store.read_document_raw(sc).unwrap_or_default(),
-        )
-        .ok();
+        let mut note =
+            DurableInsightNote::from_content(&store.read_document_raw(sc).unwrap_or_default()).ok();
         if let Some(ref mut n) = note {
             n.record_fetch();
             if let Ok(content) = n.to_content() {
-                let doc_path = path
-                    .join(".cadre")
-                    .join("docs")
-                    .join(format!("{}.md", sc));
+                let doc_path = path.join(".cadre").join("docs").join(format!("{}.md", sc));
                 let _ = std::fs::write(&doc_path, content);
             }
         }
@@ -1638,23 +1602,14 @@ fn cmd_notes_fetch(
     println!("INSIGHT NOTES ({})", matched.len());
     println!();
     for (sc, din) in &matched {
-        println!(
-            "--- {} -- {} [{}]",
-            sc,
-            din.title(),
-            din.category
-        );
+        println!("--- {} -- {} [{}]", sc, din.title(), din.category);
         println!("{}", din.note);
         println!();
     }
     Ok(())
 }
 
-fn cmd_notes_score(
-    path: &PathBuf,
-    short_code: &str,
-    signal_str: &str,
-) -> Result<(), String> {
+fn cmd_notes_score(path: &PathBuf, short_code: &str, signal_str: &str) -> Result<(), String> {
     let signal: FeedbackSignal = signal_str.parse().map_err(|e: String| e)?;
 
     let store = DocumentStore::new(path);
@@ -1685,26 +1640,11 @@ fn cmd_notes_score(
     };
 
     println!("Feedback recorded for {}{}", short_code, status_change);
-    println!(
-        "{:<18} {}",
-        "Signal:", signal_str
-    );
-    println!(
-        "{:<18} {}",
-        "Helpful:", din.thumbs_up_count
-    );
-    println!(
-        "{:<18} {}",
-        "Meh:", din.meh_count
-    );
-    println!(
-        "{:<18} {}",
-        "Harmful:", din.thumbs_down_count
-    );
-    println!(
-        "{:<18} {}",
-        "Status:", din.status
-    );
+    println!("{:<18} {}", "Signal:", signal_str);
+    println!("{:<18} {}", "Helpful:", din.thumbs_up_count);
+    println!("{:<18} {}", "Meh:", din.meh_count);
+    println!("{:<18} {}", "Harmful:", din.thumbs_down_count);
+    println!("{:<18} {}", "Status:", din.status);
     Ok(())
 }
 
@@ -1867,23 +1807,11 @@ fn cmd_trace_create(
         ""
     };
     println!("Created cross-reference {}{}", short_code, bidir_label);
-    println!(
-        "{:<18} {}",
-        "Source:", source_ref
-    );
-    println!(
-        "{:<18} {}",
-        "Target:", target_ref
-    );
-    println!(
-        "{:<18} {}",
-        "Type:", rel_type
-    );
+    println!("{:<18} {}", "Source:", source_ref);
+    println!("{:<18} {}", "Target:", target_ref);
+    println!("{:<18} {}", "Type:", rel_type);
     if !desc.is_empty() {
-        println!(
-            "{:<18} {}",
-            "Description:", desc
-        );
+        println!("{:<18} {}", "Description:", desc);
     }
     Ok(())
 }
@@ -1914,16 +1842,15 @@ fn cmd_trace_query(
     };
 
     if filtered.is_empty() {
-        println!(
-            "No {} relationships found for {}.",
-            direction, short_code
-        );
+        println!("No {} relationships found for {}.", direction, short_code);
         return Ok(());
     }
 
     println!(
         "RELATIONSHIPS FOR {} ({}, {})",
-        short_code, direction, filtered.len()
+        short_code,
+        direction,
+        filtered.len()
     );
     println!(
         "{:<16} {:<20} {:<16} {:<14}",
@@ -1939,11 +1866,7 @@ fn cmd_trace_query(
     Ok(())
 }
 
-fn cmd_trace_ancestry(
-    path: &PathBuf,
-    short_code: &str,
-    direction: &str,
-) -> Result<(), String> {
+fn cmd_trace_ancestry(path: &PathBuf, short_code: &str, direction: &str) -> Result<(), String> {
     let store = DocumentStore::new(path);
     let (index, _) = build_traceability_index(&store)?;
 

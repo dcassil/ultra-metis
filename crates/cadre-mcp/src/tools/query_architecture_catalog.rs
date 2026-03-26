@@ -53,10 +53,7 @@ impl QueryArchitectureCatalogTool {
             });
         }
 
-        let mut output = format!(
-            "## Architecture Catalog ({} entries)\n\n",
-            matches.len()
-        );
+        let mut output = format!("## Architecture Catalog ({} entries)\n\n", matches.len());
         for m in &matches {
             let entry = m.entry;
             output.push_str(&format!(

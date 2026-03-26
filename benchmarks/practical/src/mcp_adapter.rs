@@ -341,5 +341,4 @@ mod tests {
         assert_eq!(cmd.program, "cadre-mcp");
         assert!(cmd.args.is_empty());
     }
-
 }

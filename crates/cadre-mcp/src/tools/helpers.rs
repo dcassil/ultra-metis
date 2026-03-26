@@ -30,7 +30,9 @@ pub fn build_scope_from_args(
 pub fn build_traceability_index(
     store: &DocumentStore,
 ) -> Result<(TraceabilityIndex, Vec<(String, CrossReference)>), CallToolError> {
-    let all_docs = store.list_documents(false).map_err(|e| tool_error(e.user_message()))?;
+    let all_docs = store
+        .list_documents(false)
+        .map_err(|e| tool_error(e.user_message()))?;
     let mut index = TraceabilityIndex::new();
     let mut xrefs = Vec::new();
 
@@ -50,9 +52,7 @@ pub fn build_traceability_index(
     Ok((index, xrefs))
 }
 
-pub fn load_all_rules_configs(
-    store: &DocumentStore,
-) -> Result<Vec<RulesConfig>, CallToolError> {
+pub fn load_all_rules_configs(store: &DocumentStore) -> Result<Vec<RulesConfig>, CallToolError> {
     let docs = store
         .search_documents_with_options("rules_config", Some("rules_config"), None, false)
         .map_err(|e| tool_error(e.user_message()))?;

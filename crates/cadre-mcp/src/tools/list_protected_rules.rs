@@ -46,10 +46,7 @@ impl ListProtectedRulesTool {
             results.len()
         );
         for rule in &results {
-            let arch_ref = rule
-                .source_architecture_ref
-                .as_deref()
-                .unwrap_or("-");
+            let arch_ref = rule.source_architecture_ref.as_deref().unwrap_or("-");
             output.push_str(&format!(
                 "| {} | {} | {} | {} |\n",
                 rule.metadata().short_code,

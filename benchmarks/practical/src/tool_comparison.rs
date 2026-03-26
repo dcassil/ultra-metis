@@ -348,8 +348,7 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
 
     // Get cadre template
     tracing::info!("Extracting cadre initiative template...");
-    let ultra_template =
-        get_cadre_template().context("Failed to get cadre template")?;
+    let ultra_template = get_cadre_template().context("Failed to get cadre template")?;
     tracing::info!("cadre template: {} chars", ultra_template.len());
 
     // Get original-metis template

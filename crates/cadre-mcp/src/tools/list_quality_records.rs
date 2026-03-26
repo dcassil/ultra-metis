@@ -42,9 +42,7 @@ impl ListQualityRecordsTool {
         let mut results = Vec::new();
         for doc in &docs {
             if let Some(filter) = &self.status {
-                let raw = store
-                    .read_document_raw(&doc.short_code)
-                    .unwrap_or_default();
+                let raw = store.read_document_raw(&doc.short_code).unwrap_or_default();
                 if !raw
                     .to_lowercase()
                     .contains(&format!("overall_status: {}", filter.to_lowercase()))

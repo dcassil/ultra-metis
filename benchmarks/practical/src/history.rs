@@ -21,12 +21,15 @@ impl BenchmarkHistory {
         }
         let raw = std::fs::read_to_string(&path)
             .with_context(|| format!("Failed to read {}", path.display()))?;
-        serde_json::from_str(&raw)
-            .with_context(|| format!("Failed to parse {}", path.display()))
+        serde_json::from_str(&raw).with_context(|| format!("Failed to parse {}", path.display()))
     }
 
     /// Append a result and save to disk.
-    pub fn append_and_save(&mut self, result: NormalizedResult, results_dir: &Path) -> Result<PathBuf> {
+    pub fn append_and_save(
+        &mut self,
+        result: NormalizedResult,
+        results_dir: &Path,
+    ) -> Result<PathBuf> {
         self.entries.push(result);
         let path = results_dir.join(HISTORY_FILE);
         std::fs::create_dir_all(results_dir)?;
@@ -48,10 +51,7 @@ impl BenchmarkHistory {
     }
 
     /// Compare a new result against the most recent comparable baseline.
-    pub fn detect_regressions(
-        &self,
-        new_result: &NormalizedResult,
-    ) -> RegressionSummary {
+    pub fn detect_regressions(&self, new_result: &NormalizedResult) -> RegressionSummary {
         let baseline = self
             .entries
             .iter()

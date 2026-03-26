@@ -33,12 +33,18 @@ pub struct CaptureQualityBaselineTool {
 impl CaptureQualityBaselineTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
         let parsed = match self.tool_name.to_lowercase().as_str() {
-            "eslint" => EslintParser.parse(&self.raw_output).map_err(|e| tool_error(e))?,
-            "clippy" => ClippyParser.parse(&self.raw_output).map_err(|e| tool_error(e))?,
-            "tsc" | "typescript" => {
-                TypeScriptParser.parse(&self.raw_output).map_err(|e| tool_error(e))?
-            }
-            "coverage" => CoverageParser.parse(&self.raw_output).map_err(|e| tool_error(e))?,
+            "eslint" => EslintParser
+                .parse(&self.raw_output)
+                .map_err(|e| tool_error(e))?,
+            "clippy" => ClippyParser
+                .parse(&self.raw_output)
+                .map_err(|e| tool_error(e))?,
+            "tsc" | "typescript" => TypeScriptParser
+                .parse(&self.raw_output)
+                .map_err(|e| tool_error(e))?,
+            "coverage" => CoverageParser
+                .parse(&self.raw_output)
+                .map_err(|e| tool_error(e))?,
             _ => {
                 return Err(tool_error(format!(
                     "Unknown tool: {}. Supported: eslint, clippy, tsc, coverage",
@@ -56,12 +62,9 @@ impl CaptureQualityBaselineTool {
             )
             .map_err(|e| tool_error(e.user_message()))?;
 
-        let baseline = BaselineCaptureService::capture(
-            &parsed,
-            &short_code,
-            self.linked_rules_config.clone(),
-        )
-        .map_err(|e| tool_error(e))?;
+        let baseline =
+            BaselineCaptureService::capture(&parsed, &short_code, self.linked_rules_config.clone())
+                .map_err(|e| tool_error(e))?;
 
         let content = baseline.to_content().map_err(|e| tool_error(e))?;
         let doc_path = Path::new(&self.project_path)

@@ -250,11 +250,7 @@ pub struct NormalizedResult {
 impl NormalizedResult {
     /// Flatten a BenchmarkRun into a NormalizedResult for history tracking.
     pub fn from_run(run: &BenchmarkRun) -> Self {
-        let task_count: u32 = run
-            .initiatives
-            .iter()
-            .map(|i| i.tasks.len() as u32)
-            .sum();
+        let task_count: u32 = run.initiatives.iter().map(|i| i.tasks.len() as u32).sum();
 
         Self {
             run_id: run.run_id.clone(),

@@ -4,14 +4,14 @@ level: initiative
 title: "Future: Monorepo-Root Orchestration and Multi-Architecture Support"
 short_code: "SMET-I-0017"
 created_at: 2026-03-11T20:45:54.158770+00:00
-updated_at: 2026-03-11T20:45:54.158770+00:00
+updated_at: 2026-03-26T18:20:13.316634+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/decompose"
 
 
 exit_criteria_met: false
@@ -22,7 +22,7 @@ initiative_id: future-monorepo-root-orchestration
 
 # Future: Monorepo-Root Orchestration and Multi-Architecture Support
 
-> **STATUS: BACKLOG / NON-MVP** — This initiative captures a future direction that should NOT be implemented until the core Cadre system is working. It is included in planning to ensure the MVP architecture does not preclude this future capability.
+> **STATUS: ACTIVE** — Scoped to Phase 1: per-member architecture support. Cross-package coordination, dashboards, and aggregate views deferred to a follow-up initiative.
 
 ## Context
 
@@ -73,28 +73,26 @@ This initiative directly serves (in future):
 
 ### Conceptual Model
 
+**Naming convention**: Use dot notation for member subdirectories. The first segment before `.` is the repo directory, the rest is the package name. E.g., `packages.api-core` → `packages/api-core`. This avoids ambiguity with repos that use `-` in directory names.
+
+**Centralized storage**: All member data lives under the root `.cadre/members/` directory, NOT distributed `.cadre/` dirs inside each package.
+
 ```
 monorepo-root/
-  .cadre/              ← root-level workspace
-    product-doc.md           ← shared product definition
-    design-context/          ← shared design references
-    rules/                   ← shared/root-level rules
-    initiatives/             ← cross-package coordination initiatives
-  packages/
-    web/
-      .cadre/          ← package-level workspace
-        reference-arch.md    ← javascript/react-app
-        rules/               ← web-specific rules (inherits from root)
-        initiatives/         ← web-specific work
-    server/
-      .cadre/          ← package-level workspace
-        reference-arch.md    ← javascript/server
-        rules/               ← server-specific rules (inherits from root)
-        initiatives/         ← server-specific work
-    shared-ui/
-      .cadre/          ← package-level workspace
-        reference-arch.md    ← javascript/component-lib
-        ...
+  .cadre/                              ← root-level workspace
+    product-doc.md                           ← shared product definition
+    design-context/                          ← shared design references
+    rules/                                   ← shared/root-level rules
+    members/
+      apps.dashboard/                  ← member workspace (from apps/dashboard)
+        reference-arch.md                    ← javascript/react-app
+        rules/                               ← member-specific rules (inherits from root)
+      packages.api-core/               ← member workspace (from packages/api-core)
+        reference-arch.md                    ← javascript/server
+        rules/                               ← member-specific rules (inherits from root)
+      packages.shared-ui/              ← member workspace (from packages/shared-ui)
+        reference-arch.md                    ← javascript/component-lib
+        rules/                               ← member-specific rules (inherits from root)
 ```
 
 ### Key Design Considerations
@@ -155,6 +153,12 @@ When the time comes, likely phases:
 5. Implement root-level coordination views
 6. Implement aggregate quality dashboards
 7. Integration test with real monorepo structures
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria (future)
 

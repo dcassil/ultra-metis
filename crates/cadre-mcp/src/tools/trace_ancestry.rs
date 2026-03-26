@@ -41,10 +41,7 @@ impl TraceAncestryTool {
         };
 
         if results.is_empty() {
-            let text = format!(
-                "No {} found for {}.",
-                self.direction, self.short_code
-            );
+            let text = format!("No {} found for {}.", self.direction, self.short_code);
             return Ok(CallToolResult {
                 content: vec![TextContent::new(text, None, None).into()],
                 is_error: None,

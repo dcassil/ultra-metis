@@ -5,8 +5,6 @@
 
 use crate::config::ProjectConfig;
 use crate::error::{Result, StoreError};
-use chrono;
-use std::path::{Path, PathBuf};
 use cadre_core::domain::documents::hierarchy::HierarchyValidator;
 use cadre_core::domain::documents::traits::{Document, DocumentValidationError};
 use cadre_core::domain::documents::types::{
@@ -17,6 +15,8 @@ use cadre_core::{
     DurableInsightNote, Epic, Initiative, ProductDoc, QualityRecord, ReferenceArchitecture,
     RulesConfig, Story, Task, Vision,
 };
+use chrono;
+use std::path::{Path, PathBuf};
 
 const DOCS_DIR: &str = "docs";
 
@@ -225,9 +225,7 @@ impl AnyDocument {
                         }
                         phase
                     }
-                    None => doc_type
-                        .next_phase(current)
-                        .unwrap_or(current),
+                    None => doc_type.next_phase(current).unwrap_or(current),
                 };
                 // Can't mutate through self borrow, so we need to match again
                 self.update_phase_tag(new_phase);
@@ -283,10 +281,9 @@ impl DocumentStore {
     /// suffix so the store always operates from the project root.
     pub fn new(project_path: &Path) -> Self {
         let normalized = match project_path.file_name().and_then(|f| f.to_str()) {
-            Some(".cadre") | Some(".metis") => project_path
-                .parent()
-                .unwrap_or(project_path)
-                .to_path_buf(),
+            Some(".cadre") | Some(".metis") => {
+                project_path.parent().unwrap_or(project_path).to_path_buf()
+            }
             _ => project_path.to_path_buf(),
         };
         Self {
@@ -1963,7 +1960,9 @@ mod tests {
     #[test]
     fn test_list_with_parent_filter() {
         let (_dir, store) = setup_store();
-        let v_code = store.create_document("vision", "Parent Vision", None).unwrap();
+        let v_code = store
+            .create_document("vision", "Parent Vision", None)
+            .unwrap();
         let _i1 = store
             .create_document("initiative", "Child Init 1", Some(&v_code))
             .unwrap();

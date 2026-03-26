@@ -91,8 +91,7 @@ impl BenchmarkWorkspace {
         // Seed initiatives from scenario pack
         if !vision_code.is_empty() {
             for (i, seed) in scenario.seed_initiatives.iter().enumerate() {
-                let title = extract_title(&seed.content)
-                    .unwrap_or("Seed Initiative");
+                let title = extract_title(&seed.content).unwrap_or("Seed Initiative");
                 if let Ok(result) = runner::run_cli(
                     &binary,
                     &[
@@ -180,10 +179,7 @@ fn extract_title(content: &str) -> Option<&str> {
 }
 
 /// Build a default RunManifest for an autonomous or validated run.
-pub fn default_manifest(
-    scenario: &LoadedScenarioPack,
-    system: SystemUnderTest,
-) -> RunManifest {
+pub fn default_manifest(scenario: &LoadedScenarioPack, system: SystemUnderTest) -> RunManifest {
     let git_commit = std::process::Command::new("git")
         .args(["rev-parse", "--short", "HEAD"])
         .output()

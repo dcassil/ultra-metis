@@ -423,11 +423,7 @@ pub mod submodule {
         fs::create_dir_all(&src_dir).unwrap();
 
         // Write a valid file
-        fs::write(
-            src_dir.join("good.rs"),
-            "pub fn good_func() {}\n",
-        )
-        .unwrap();
+        fs::write(src_dir.join("good.rs"), "pub fn good_func() {}\n").unwrap();
 
         // Write a malformed file (invalid Rust syntax)
         fs::write(
@@ -440,7 +436,10 @@ pub mod submodule {
         // Should not error — bad file is skipped
         let index = indexer.index(&["src/**/*.rs".to_string()]).unwrap();
         // Should have indexed the good file (bad file skipped)
-        assert!(index.indexed_files >= 1, "Should index at least the good file");
+        assert!(
+            index.indexed_files >= 1,
+            "Should index at least the good file"
+        );
 
         let names: Vec<&str> = index.symbols.iter().map(|s| s.name.as_str()).collect();
         assert!(names.contains(&"good_func"), "Should find good_func");
@@ -454,11 +453,7 @@ pub mod submodule {
         fs::create_dir_all(&src_dir).unwrap();
 
         // Write a valid file
-        fs::write(
-            src_dir.join("good.rs"),
-            "pub fn another_func() {}\n",
-        )
-        .unwrap();
+        fs::write(src_dir.join("good.rs"), "pub fn another_func() {}\n").unwrap();
 
         let indexer = CodeIndexer::new(&project_root);
         // Should succeed even with only good files

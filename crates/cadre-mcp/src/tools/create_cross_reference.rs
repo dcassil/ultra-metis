@@ -35,9 +35,7 @@ pub struct CreateCrossReferenceTool {
 impl CreateCrossReferenceTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
         if self.source_ref == self.target_ref {
-            return Err(tool_error(
-                "Source and target cannot be the same document.",
-            ));
+            return Err(tool_error("Source and target cannot be the same document."));
         }
 
         let rel_type: RelationshipType = self

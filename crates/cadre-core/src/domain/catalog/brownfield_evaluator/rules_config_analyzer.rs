@@ -8,7 +8,9 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use super::structure_analyzer::{NamingConvention, StructureAnalysis, StructureAnalyzer, TestPattern};
+use super::structure_analyzer::{
+    NamingConvention, StructureAnalysis, StructureAnalyzer, TestPattern,
+};
 
 // ---------------------------------------------------------------------------
 // FileContentReader trait
@@ -558,7 +560,10 @@ pub fn evaluate_quality(
 
 // --- JS/TS quality ---
 
-fn evaluate_jsts_quality(detected: &DetectedConfigs, reader: &dyn FileContentReader) -> (f64, Vec<String>) {
+fn evaluate_jsts_quality(
+    detected: &DetectedConfigs,
+    reader: &dyn FileContentReader,
+) -> (f64, Vec<String>) {
     let mut score = 0.0f64;
     let mut signals = Vec::new();
     let jsts_configs = detected.for_language(Language::JsTs);
@@ -609,10 +614,9 @@ fn evaluate_jsts_quality(detected: &DetectedConfigs, reader: &dyn FileContentRea
                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
                     if let Some(extends) = val.get("extends") {
                         let extends_list = match extends {
-                            serde_json::Value::Array(arr) => arr
-                                .iter()
-                                .filter_map(|v| v.as_str())
-                                .collect::<Vec<_>>(),
+                            serde_json::Value::Array(arr) => {
+                                arr.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>()
+                            }
                             serde_json::Value::String(s) => vec![s.as_str()],
                             _ => vec![],
                         };
@@ -652,12 +656,19 @@ fn evaluate_jsts_quality(detected: &DetectedConfigs, reader: &dyn FileContentRea
             "biome.json" | "biome.jsonc" => {
                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
                     if let Some(linter) = val.get("linter") {
-                        if linter.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false) {
+                        if linter
+                            .get("enabled")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false)
+                        {
                             score = score.max(30.0);
                             signals.push("biome: linter enabled".to_string());
                         }
                         if let Some(rules) = linter.get("rules") {
-                            if rules.get("recommended").and_then(|v| v.as_bool()).unwrap_or(false)
+                            if rules
+                                .get("recommended")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(false)
                                 || rules.get("all").and_then(|v| v.as_bool()).unwrap_or(false)
                             {
                                 score = score.max(45.0);
@@ -682,7 +693,10 @@ fn evaluate_jsts_quality(detected: &DetectedConfigs, reader: &dyn FileContentRea
 
 // --- Rust quality ---
 
-fn evaluate_rust_quality(detected: &DetectedConfigs, reader: &dyn FileContentReader) -> (f64, Vec<String>) {
+fn evaluate_rust_quality(
+    detected: &DetectedConfigs,
+    reader: &dyn FileContentReader,
+) -> (f64, Vec<String>) {
     let mut score = 0.0f64;
     let mut signals = Vec::new();
     let rust_configs = detected.for_language(Language::Rust);
@@ -764,7 +778,10 @@ fn evaluate_rust_quality(detected: &DetectedConfigs, reader: &dyn FileContentRea
 
 // --- Python quality ---
 
-fn evaluate_python_quality(detected: &DetectedConfigs, reader: &dyn FileContentReader) -> (f64, Vec<String>) {
+fn evaluate_python_quality(
+    detected: &DetectedConfigs,
+    reader: &dyn FileContentReader,
+) -> (f64, Vec<String>) {
     let mut score = 0.0f64;
     let mut signals = Vec::new();
     let py_configs = detected.for_language(Language::Python);
@@ -777,7 +794,10 @@ fn evaluate_python_quality(detected: &DetectedConfigs, reader: &dyn FileContentR
 
         match config.pattern_filename {
             "mypy.ini" | ".mypy.ini" => {
-                if content.contains("strict = True") || content.contains("strict=True") || content.contains("strict = true") {
+                if content.contains("strict = True")
+                    || content.contains("strict=True")
+                    || content.contains("strict = true")
+                {
                     score = score.max(45.0);
                     signals.push("mypy: strict mode enabled".to_string());
                 } else {
@@ -818,7 +838,9 @@ fn evaluate_python_quality(detected: &DetectedConfigs, reader: &dyn FileContentR
             "pyproject.toml" => {
                 // Check for [tool.ruff] section
                 if content.contains("[tool.ruff") {
-                    if content.contains("select = [\"ALL\"]") || content.contains("select = ['ALL']") {
+                    if content.contains("select = [\"ALL\"]")
+                        || content.contains("select = ['ALL']")
+                    {
                         score = score.max(45.0);
                         signals.push("ruff (pyproject): ALL rules selected".to_string());
                     } else {
@@ -856,14 +878,26 @@ fn evaluate_python_quality(detected: &DetectedConfigs, reader: &dyn FileContentR
 
 // --- Go quality ---
 
-fn evaluate_go_quality(detected: &DetectedConfigs, reader: &dyn FileContentReader) -> (f64, Vec<String>) {
+fn evaluate_go_quality(
+    detected: &DetectedConfigs,
+    reader: &dyn FileContentReader,
+) -> (f64, Vec<String>) {
     let mut score = 0.0f64;
     let mut signals = Vec::new();
     let go_configs = detected.for_language(Language::Go);
 
     let key_linters = [
-        "govet", "staticcheck", "revive", "errcheck", "gosec", "gocritic",
-        "gocyclo", "dupl", "ineffassign", "unconvert", "misspell",
+        "govet",
+        "staticcheck",
+        "revive",
+        "errcheck",
+        "gosec",
+        "gocritic",
+        "gocyclo",
+        "dupl",
+        "ineffassign",
+        "unconvert",
+        "misspell",
     ];
 
     for config in &go_configs {
@@ -1014,7 +1048,8 @@ fn evaluate_jsts_layering(
         match config.pattern_filename {
             pat if pat.starts_with(".dependency-cruiser") => {
                 // Extract forbidden rules: look for "from" and "to" path patterns
-                let forbidden_re = regex::Regex::new(r#"(?:from|path)\s*:\s*["']([^"']+)["']"#).ok();
+                let forbidden_re =
+                    regex::Regex::new(r#"(?:from|path)\s*:\s*["']([^"']+)["']"#).ok();
                 if let Some(re) = &forbidden_re {
                     let found_paths: Vec<String> = re
                         .captures_iter(&content)
@@ -1050,7 +1085,8 @@ fn evaluate_jsts_layering(
                 // Both forbidden AND allowed = very strict
                 if content.contains("forbidden") && content.contains("allowed") {
                     score = score.max(85.0);
-                    signals.push("dependency-cruiser: both allowed and forbidden rules".to_string());
+                    signals
+                        .push("dependency-cruiser: both allowed and forbidden rules".to_string());
                 }
 
                 // Extract boundary rules from forbidden patterns
@@ -1102,8 +1138,8 @@ fn evaluate_jsts_layering(
                 // Check for no-restricted-imports with path patterns
                 if content.contains("no-restricted-imports") {
                     // Count the number of restricted patterns as a proxy for strictness
-                    let pattern_count = content.matches("patterns").count()
-                        + content.matches("paths").count();
+                    let pattern_count =
+                        content.matches("patterns").count() + content.matches("paths").count();
                     if pattern_count >= 3 {
                         score = score.max(55.0);
                         signals.push(format!(
@@ -1138,7 +1174,9 @@ fn evaluate_rust_layering(
     // Cargo workspace = language-enforced module boundaries
     if detected.has_cargo_workspace {
         let member_count = detected.cargo_workspace_members.len();
-        layers = detected.cargo_workspace_members.iter()
+        layers = detected
+            .cargo_workspace_members
+            .iter()
             .map(|m| {
                 // Extract crate name from path like "crates/core" -> "core"
                 Path::new(m)
@@ -1224,20 +1262,39 @@ fn evaluate_python_layering(
             ".importlinter" => {
                 score = score.max(70.0);
                 signals.push("import-linter: standalone config present".to_string());
-                extract_import_linter_layers(&content, &mut layers, &mut boundaries, &mut signals, &mut score);
+                extract_import_linter_layers(
+                    &content,
+                    &mut layers,
+                    &mut boundaries,
+                    &mut signals,
+                    &mut score,
+                );
             }
             "pyproject.toml" => {
-                if content.contains("[tool.import_linter") || content.contains("[tool.importlinter") {
+                if content.contains("[tool.import_linter") || content.contains("[tool.importlinter")
+                {
                     score = score.max(70.0);
                     signals.push("import-linter: configured in pyproject.toml".to_string());
-                    extract_import_linter_layers(&content, &mut layers, &mut boundaries, &mut signals, &mut score);
+                    extract_import_linter_layers(
+                        &content,
+                        &mut layers,
+                        &mut boundaries,
+                        &mut signals,
+                        &mut score,
+                    );
                 }
             }
             "setup.cfg" => {
                 if content.contains("[importlinter") || content.contains("[import-linter") {
                     score = score.max(70.0);
                     signals.push("import-linter: configured in setup.cfg".to_string());
-                    extract_import_linter_layers(&content, &mut layers, &mut boundaries, &mut signals, &mut score);
+                    extract_import_linter_layers(
+                        &content,
+                        &mut layers,
+                        &mut boundaries,
+                        &mut signals,
+                        &mut score,
+                    );
                 }
             }
             _ => {}
@@ -1257,8 +1314,10 @@ fn extract_import_linter_layers(
 ) {
     // Extract contract types
     let has_layers_contract = content.contains("type = layers") || content.contains("type=layers");
-    let has_forbidden_contract = content.contains("type = forbidden") || content.contains("type=forbidden");
-    let has_independence_contract = content.contains("type = independence") || content.contains("type=independence");
+    let has_forbidden_contract =
+        content.contains("type = forbidden") || content.contains("type=forbidden");
+    let has_independence_contract =
+        content.contains("type = independence") || content.contains("type=independence");
 
     if has_layers_contract {
         *score = score.max(80.0);
@@ -1295,7 +1354,10 @@ fn extract_import_linter_layers(
             if let Some(bracket_start) = trimmed.find('[') {
                 let after = &trimmed[bracket_start..];
                 // Extract items from inline array
-                for item in after.trim_matches(|c: char| c == '[' || c == ']').split(',') {
+                for item in after
+                    .trim_matches(|c: char| c == '[' || c == ']')
+                    .split(',')
+                {
                     let module = item
                         .trim()
                         .trim_matches(|c: char| c == '"' || c == '\'' || c == ' ')
@@ -1506,7 +1568,8 @@ impl RulesConfigAnalyzer {
         let detected = detect_configs(file_paths);
 
         // Early exit: no configs found at all
-        if detected.configs.is_empty() && !detected.has_cargo_workspace && !detected.has_go_internal {
+        if detected.configs.is_empty() && !detected.has_cargo_workspace && !detected.has_go_internal
+        {
             return RulesConfigAnalysisResult {
                 quality: QualityStrictnessResult {
                     score: 0.0,
@@ -1624,7 +1687,11 @@ mod tests {
 
         assert!(detected.has_quality_configs());
         let quality = detected.for_axis(ConfigAxis::Quality);
-        assert!(quality.len() >= 2, "Expected >=2 quality configs, got {}", quality.len());
+        assert!(
+            quality.len() >= 2,
+            "Expected >=2 quality configs, got {}",
+            quality.len()
+        );
 
         let filenames: Vec<&str> = quality.iter().map(|c| c.pattern_filename).collect();
         assert!(filenames.contains(&".eslintrc"));
@@ -1772,10 +1839,7 @@ mod tests {
 
     #[test]
     fn test_cargo_workspace_single_crate_not_workspace() {
-        let paths = vec![
-            "Cargo.toml".to_string(),
-            "src/main.rs".to_string(),
-        ];
+        let paths = vec!["Cargo.toml".to_string(), "src/main.rs".to_string()];
 
         let detected = detect_configs(&paths);
 
@@ -1786,7 +1850,10 @@ mod tests {
     #[test]
     fn test_mock_content_reader() {
         let mut files = HashMap::new();
-        files.insert("tsconfig.json".to_string(), r#"{"compilerOptions":{"strict":true}}"#.to_string());
+        files.insert(
+            "tsconfig.json".to_string(),
+            r#"{"compilerOptions":{"strict":true}}"#.to_string(),
+        );
         let reader = MockContentReader::new(files);
 
         assert!(reader.read_content("tsconfig.json").is_some());
@@ -1863,7 +1930,11 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 40.0, "Score {} should be >= 40", result.score);
+        assert!(
+            result.score >= 40.0,
+            "Score {} should be >= 40",
+            result.score
+        );
         assert!(result.signals.iter().any(|s| s.contains("strict mode")));
     }
 
@@ -1877,7 +1948,11 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 45.0, "Score {} should be >= 45", result.score);
+        assert!(
+            result.score >= 45.0,
+            "Score {} should be >= 45",
+            result.score
+        );
     }
 
     #[test]
@@ -1890,15 +1965,16 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 35.0, "Score {} should be >= 35", result.score);
+        assert!(
+            result.score >= 35.0,
+            "Score {} should be >= 35",
+            result.score
+        );
     }
 
     #[test]
     fn test_jsts_quality_combined_tsconfig_and_eslint() {
-        let paths = vec![
-            "tsconfig.json".to_string(),
-            ".eslintrc.json".to_string(),
-        ];
+        let paths = vec!["tsconfig.json".to_string(), ".eslintrc.json".to_string()];
         let detected = detect_configs(&paths);
         let reader = mock_reader(vec![
             ("tsconfig.json", r#"{"compilerOptions":{"strict":true}}"#),
@@ -1907,7 +1983,11 @@ mod tests {
 
         let result = evaluate_quality(&detected, &reader);
         // Combined should score higher than either alone
-        assert!(result.score >= 50.0, "Combined score {} should be >= 50", result.score);
+        assert!(
+            result.score >= 50.0,
+            "Combined score {} should be >= 50",
+            result.score
+        );
         assert!(result.signals.iter().any(|s| s.contains("combined")));
     }
 
@@ -1921,7 +2001,11 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 45.0, "Score {} should be >= 45", result.score);
+        assert!(
+            result.score >= 45.0,
+            "Score {} should be >= 45",
+            result.score
+        );
     }
 
     #[test]
@@ -1940,7 +2024,11 @@ mod tests {
         ]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 50.0, "Score {} should be >= 50", result.score);
+        assert!(
+            result.score >= 50.0,
+            "Score {} should be >= 50",
+            result.score
+        );
     }
 
     #[test]
@@ -1950,17 +2038,28 @@ mod tests {
         let reader = mock_reader(vec![("rustfmt.toml", "max_width = 100")]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score <= 30.0, "Minimal config score {} should be <= 30", result.score);
+        assert!(
+            result.score <= 30.0,
+            "Minimal config score {} should be <= 30",
+            result.score
+        );
     }
 
     #[test]
     fn test_python_quality_strict_mypy() {
         let paths = vec!["mypy.ini".to_string()];
         let detected = detect_configs(&paths);
-        let reader = mock_reader(vec![("mypy.ini", "[mypy]\nstrict = True\nwarn_return_any = True")]);
+        let reader = mock_reader(vec![(
+            "mypy.ini",
+            "[mypy]\nstrict = True\nwarn_return_any = True",
+        )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 45.0, "Score {} should be >= 45", result.score);
+        assert!(
+            result.score >= 45.0,
+            "Score {} should be >= 45",
+            result.score
+        );
         assert!(result.signals.iter().any(|s| s.contains("strict")));
     }
 
@@ -1971,7 +2070,11 @@ mod tests {
         let reader = mock_reader(vec![("ruff.toml", "[lint]\nselect = [\"ALL\"]\n")]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 45.0, "Score {} should be >= 45", result.score);
+        assert!(
+            result.score >= 45.0,
+            "Score {} should be >= 45",
+            result.score
+        );
     }
 
     #[test]
@@ -1984,7 +2087,11 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 45.0, "Score {} should be >= 45", result.score);
+        assert!(
+            result.score >= 45.0,
+            "Score {} should be >= 45",
+            result.score
+        );
     }
 
     #[test]
@@ -1997,7 +2104,11 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 50.0, "Score {} should be >= 50", result.score);
+        assert!(
+            result.score >= 50.0,
+            "Score {} should be >= 50",
+            result.score
+        );
     }
 
     #[test]
@@ -2010,8 +2121,15 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score >= 50.0, "Score {} should be >= 50", result.score);
-        assert!(result.signals.iter().any(|s| s.contains("comprehensive") || s.contains("key linters")));
+        assert!(
+            result.score >= 50.0,
+            "Score {} should be >= 50",
+            result.score
+        );
+        assert!(result
+            .signals
+            .iter()
+            .any(|s| s.contains("comprehensive") || s.contains("key linters")));
     }
 
     #[test]
@@ -2024,7 +2142,11 @@ mod tests {
         )]);
 
         let result = evaluate_quality(&detected, &reader);
-        assert!(result.score <= 20.0, "Minimal config score {} should be <= 20", result.score);
+        assert!(
+            result.score <= 20.0,
+            "Minimal config score {} should be <= 20",
+            result.score
+        );
     }
 
     #[test]
@@ -2071,9 +2193,19 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert!(result.score >= 85.0, "Score {} should be >= 85 (both forbidden and allowed)", result.score);
-        assert!(!result.declared_layers.is_empty(), "Should extract layer names");
-        assert!(result.signals.iter().any(|s| s.contains("dependency-cruiser")));
+        assert!(
+            result.score >= 85.0,
+            "Score {} should be >= 85 (both forbidden and allowed)",
+            result.score
+        );
+        assert!(
+            !result.declared_layers.is_empty(),
+            "Should extract layer names"
+        );
+        assert!(result
+            .signals
+            .iter()
+            .any(|s| s.contains("dependency-cruiser")));
     }
 
     #[test]
@@ -2091,7 +2223,11 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert!(result.score >= 70.0, "Score {} should be >= 70", result.score);
+        assert!(
+            result.score >= 70.0,
+            "Score {} should be >= 70",
+            result.score
+        );
     }
 
     #[test]
@@ -2104,7 +2240,11 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert!(result.score >= 65.0, "Score {} should be >= 65", result.score);
+        assert!(
+            result.score >= 65.0,
+            "Score {} should be >= 65",
+            result.score
+        );
     }
 
     #[test]
@@ -2117,7 +2257,11 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert!(result.score >= 40.0, "Score {} should be >= 40", result.score);
+        assert!(
+            result.score >= 40.0,
+            "Score {} should be >= 40",
+            result.score
+        );
     }
 
     #[test]
@@ -2133,7 +2277,11 @@ mod tests {
         let reader = mock_reader(vec![]);
 
         let result = evaluate_layering(&detected, &paths, &reader);
-        assert!(result.score >= 70.0, "Score {} should be >= 70 (4 crates)", result.score);
+        assert!(
+            result.score >= 70.0,
+            "Score {} should be >= 70 (4 crates)",
+            result.score
+        );
         assert_eq!(result.declared_layers.len(), 4);
         assert!(result.declared_layers.contains(&"core".to_string()));
     }
@@ -2153,8 +2301,15 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &paths, &reader);
-        assert!(result.score >= 60.0, "Score {} should be >= 60", result.score);
-        assert!(result.signals.iter().any(|s| s.contains("combined") || s.contains("workspace")));
+        assert!(
+            result.score >= 60.0,
+            "Score {} should be >= 60",
+            result.score
+        );
+        assert!(result
+            .signals
+            .iter()
+            .any(|s| s.contains("combined") || s.contains("workspace")));
     }
 
     #[test]
@@ -2167,8 +2322,15 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert!(result.score >= 80.0, "Score {} should be >= 80 (layers contract)", result.score);
-        assert!(result.declared_layers.len() >= 2, "Should extract layer names from contract");
+        assert!(
+            result.score >= 80.0,
+            "Score {} should be >= 80 (layers contract)",
+            result.score
+        );
+        assert!(
+            result.declared_layers.len() >= 2,
+            "Should extract layer names from contract"
+        );
     }
 
     #[test]
@@ -2181,7 +2343,11 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert!(result.score >= 90.0, "Score {} should be >= 90 (layers + forbidden)", result.score);
+        assert!(
+            result.score >= 90.0,
+            "Score {} should be >= 90 (layers + forbidden)",
+            result.score
+        );
     }
 
     #[test]
@@ -2197,7 +2363,11 @@ mod tests {
         let reader = mock_reader(vec![]);
 
         let result = evaluate_layering(&detected, &paths, &reader);
-        assert!(result.score >= 45.0, "Score {} should be >= 45 (internal pkgs)", result.score);
+        assert!(
+            result.score >= 45.0,
+            "Score {} should be >= 45 (internal pkgs)",
+            result.score
+        );
         assert!(result.declared_layers.contains(&"auth".to_string()));
         assert!(result.declared_layers.contains(&"database".to_string()));
     }
@@ -2216,7 +2386,11 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &paths, &reader);
-        assert!(result.score >= 80.0, "Score {} should be >= 80 (depguard + internal)", result.score);
+        assert!(
+            result.score >= 80.0,
+            "Score {} should be >= 80 (depguard + internal)",
+            result.score
+        );
     }
 
     #[test]
@@ -2241,7 +2415,10 @@ mod tests {
         )]);
 
         let result = evaluate_layering(&detected, &[], &reader);
-        assert_eq!(result.score, 0.0, "Quality-only eslint should not score on layering");
+        assert_eq!(
+            result.score, 0.0,
+            "Quality-only eslint should not score on layering"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -2261,16 +2438,25 @@ mod tests {
         ];
 
         let reader = mock_reader(vec![
-            ("tsconfig.json", r#"{"compilerOptions":{"strict":true,"noUncheckedIndexedAccess":true,"noImplicitReturns":true}}"#),
-            (".eslintrc.json", r#"{"extends":["eslint:recommended","@typescript-eslint/strict"]}"#),
-            (".dependency-cruiser.js", r#"module.exports = {
+            (
+                "tsconfig.json",
+                r#"{"compilerOptions":{"strict":true,"noUncheckedIndexedAccess":true,"noImplicitReturns":true}}"#,
+            ),
+            (
+                ".eslintrc.json",
+                r#"{"extends":["eslint:recommended","@typescript-eslint/strict"]}"#,
+            ),
+            (
+                ".dependency-cruiser.js",
+                r#"module.exports = {
                 forbidden: [
                     { from: { path: "^src/domain" }, to: { path: "^src/infrastructure" } },
                 ],
                 allowed: [
                     { from: { path: "^src/application" }, to: { path: "^src/domain" } },
                 ],
-            };"#),
+            };"#,
+            ),
         ]);
 
         // Use lower thresholds to match our scoring
@@ -2282,12 +2468,26 @@ mod tests {
         let result = analyzer.analyze(&paths, &reader);
 
         assert!(result.attempted);
-        assert!(result.quality.score >= 50.0, "Quality {} should be >= 50", result.quality.score);
-        assert!(result.layering.score >= 60.0, "Layering {} should be >= 60", result.layering.score);
-        assert!(result.inferred_analysis.is_some(), "Should infer analysis when both axes pass");
+        assert!(
+            result.quality.score >= 50.0,
+            "Quality {} should be >= 50",
+            result.quality.score
+        );
+        assert!(
+            result.layering.score >= 60.0,
+            "Layering {} should be >= 60",
+            result.layering.score
+        );
+        assert!(
+            result.inferred_analysis.is_some(),
+            "Should infer analysis when both axes pass"
+        );
 
         let analysis = result.inferred_analysis.unwrap();
-        assert!(!analysis.detected_layers.is_empty(), "Should have layers from dependency-cruiser");
+        assert!(
+            !analysis.detected_layers.is_empty(),
+            "Should have layers from dependency-cruiser"
+        );
         assert!(analysis.structure_quality_score > 0.0);
         assert!(analysis.has_src_root);
     }
@@ -2308,8 +2508,14 @@ mod tests {
         let result = analyzer.analyze(&paths, &reader);
 
         assert!(result.attempted);
-        assert!(result.quality.score < 70.0, "Quality should be low (no quality configs)");
-        assert!(result.inferred_analysis.is_none(), "Should NOT infer when quality fails");
+        assert!(
+            result.quality.score < 70.0,
+            "Quality should be low (no quality configs)"
+        );
+        assert!(
+            result.inferred_analysis.is_none(),
+            "Should NOT infer when quality fails"
+        );
     }
 
     #[test]
@@ -2321,8 +2527,14 @@ mod tests {
         ];
 
         let reader = mock_reader(vec![
-            ("tsconfig.json", r#"{"compilerOptions":{"strict":true,"noUncheckedIndexedAccess":true,"noImplicitReturns":true}}"#),
-            (".eslintrc.json", r#"{"extends":["@typescript-eslint/strict"]}"#),
+            (
+                "tsconfig.json",
+                r#"{"compilerOptions":{"strict":true,"noUncheckedIndexedAccess":true,"noImplicitReturns":true}}"#,
+            ),
+            (
+                ".eslintrc.json",
+                r#"{"extends":["@typescript-eslint/strict"]}"#,
+            ),
         ]);
 
         let config = RulesConfigAnalyzerConfig {
@@ -2334,16 +2546,16 @@ mod tests {
 
         assert!(result.attempted);
         assert!(result.quality.score >= 40.0);
-        assert!(result.layering.score < 60.0, "Layering should be low (no boundary configs)");
+        assert!(
+            result.layering.score < 60.0,
+            "Layering should be low (no boundary configs)"
+        );
         assert!(result.inferred_analysis.is_none());
     }
 
     #[test]
     fn test_analyzer_no_configs_not_attempted() {
-        let paths = vec![
-            "src/main.rs".to_string(),
-            "src/lib.rs".to_string(),
-        ];
+        let paths = vec!["src/main.rs".to_string(), "src/lib.rs".to_string()];
         let reader = mock_reader(vec![]);
 
         let analyzer = RulesConfigAnalyzer::new();
@@ -2382,10 +2594,16 @@ mod tests {
         let result = analyzer.analyze(&paths, &reader);
 
         assert!(result.attempted);
-        assert!(result.inferred_analysis.is_some(), "Rust workspace with clippy+deny should pass");
+        assert!(
+            result.inferred_analysis.is_some(),
+            "Rust workspace with clippy+deny should pass"
+        );
         let analysis = result.inferred_analysis.unwrap();
         // Layers should come from workspace members
-        assert!(analysis.detected_layers.len() >= 4, "Should have crate names as layers");
+        assert!(
+            analysis.detected_layers.len() >= 4,
+            "Should have crate names as layers"
+        );
     }
 
     #[test]
@@ -2420,7 +2638,10 @@ mod tests {
 
     #[test]
     fn test_analyzer_custom_thresholds() {
-        let paths = vec![".golangci.yml".to_string(), "internal/auth/handler.go".to_string()];
+        let paths = vec![
+            ".golangci.yml".to_string(),
+            "internal/auth/handler.go".to_string(),
+        ];
         let reader = mock_reader(vec![(
             ".golangci.yml",
             "linters:\n  enable:\n    - govet\n    - staticcheck\n    - depguard\n    - errcheck\n    - gosec\n    - gocritic\n    - revive\nlinters-settings:\n  depguard:\n    rules:\n      main:\n        deny:\n          - \"unsafe\"\n",
@@ -2433,7 +2654,10 @@ mod tests {
         };
         let analyzer = RulesConfigAnalyzer::with_config(config);
         let result = analyzer.analyze(&paths, &reader);
-        assert!(result.inferred_analysis.is_some(), "Should pass with lenient thresholds");
+        assert!(
+            result.inferred_analysis.is_some(),
+            "Should pass with lenient thresholds"
+        );
 
         // Strict thresholds
         let config2 = RulesConfigAnalyzerConfig {
@@ -2442,7 +2666,10 @@ mod tests {
         };
         let analyzer2 = RulesConfigAnalyzer::with_config(config2);
         let result2 = analyzer2.analyze(&paths, &reader);
-        assert!(result2.inferred_analysis.is_none(), "Should fail with strict thresholds");
+        assert!(
+            result2.inferred_analysis.is_none(),
+            "Should fail with strict thresholds"
+        );
     }
 
     #[test]

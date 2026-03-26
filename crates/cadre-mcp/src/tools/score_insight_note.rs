@@ -27,10 +27,7 @@ pub struct ScoreInsightNoteTool {
 
 impl ScoreInsightNoteTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
-        let signal: FeedbackSignal = self
-            .signal
-            .parse()
-            .map_err(|e: String| tool_error(e))?;
+        let signal: FeedbackSignal = self.signal.parse().map_err(|e: String| tool_error(e))?;
 
         let store = store_for(&self.project_path);
         let raw = store

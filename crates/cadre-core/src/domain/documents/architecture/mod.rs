@@ -92,11 +92,9 @@ impl Architecture {
         let mut context = Context::new();
         context.insert("title", &title);
 
-        let rendered_content = tera
-            .render("architecture_content", &context)
-            .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
-            })?;
+        let rendered_content = tera.render("architecture_content", &context).map_err(|e| {
+            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+        })?;
 
         let content = DocumentContent::new(&rendered_content);
 
@@ -457,7 +455,8 @@ impl Architecture {
                     story_types: vec![StoryType::Bugfix],
                 });
                 items.push(ChecklistItem {
-                    question: "Could the root cause indicate an architecture violation?".to_string(),
+                    question: "Could the root cause indicate an architecture violation?"
+                        .to_string(),
                     answer: None,
                     story_types: vec![StoryType::Bugfix],
                 });
@@ -609,7 +608,10 @@ impl Architecture {
 
         context.insert("relevant_layers", &self.relevant_layers);
         context.insert("relevant_boundaries", &self.relevant_boundaries);
-        context.insert("applicable_dependency_rules", &self.applicable_dependency_rules);
+        context.insert(
+            "applicable_dependency_rules",
+            &self.applicable_dependency_rules,
+        );
         context.insert(
             "applicable_naming_conventions",
             &self.applicable_naming_conventions,

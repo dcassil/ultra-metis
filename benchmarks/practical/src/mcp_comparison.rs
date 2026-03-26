@@ -1,6 +1,6 @@
 use crate::mcp_adapter::{
-    expected_shared_tool_names, ExecutionAdapter, McpSession, OriginalMetisAdapter,
-    SystemUnderTest, CadreMcpAdapter,
+    expected_shared_tool_names, CadreMcpAdapter, ExecutionAdapter, McpSession,
+    OriginalMetisAdapter, SystemUnderTest,
 };
 use anyhow::{Context, Result};
 use chrono::Utc;

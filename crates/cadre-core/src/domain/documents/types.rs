@@ -228,7 +228,8 @@ impl FromStr for DocumentType {
                 Ok(DocumentType::CrossReference)
             }
             "architecture" => Ok(DocumentType::Architecture),
-            "architecture_catalog_entry" | "architecturecatalogentry"
+            "architecture_catalog_entry"
+            | "architecturecatalogentry"
             | "architecture-catalog-entry" => Ok(DocumentType::ArchitectureCatalogEntry),
             "reference_architecture" | "referencearchitecture" | "reference-architecture" => {
                 Ok(DocumentType::ReferenceArchitecture)

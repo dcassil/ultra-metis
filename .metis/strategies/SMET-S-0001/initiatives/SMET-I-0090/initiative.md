@@ -4,14 +4,14 @@ level: initiative
 title: "Rules Engine Config Fast-Path for Brownfield Architecture Evaluation"
 short_code: "SMET-I-0090"
 created_at: 2026-03-26T17:40:44.385546+00:00
-updated_at: 2026-03-26T18:05:09.270267+00:00
+updated_at: 2026-03-26T18:25:43.290666+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false

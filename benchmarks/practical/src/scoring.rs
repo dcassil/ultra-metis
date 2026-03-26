@@ -83,10 +83,7 @@ fn score_document_generation(run: &BenchmarkRun, expected: &ExpectedOutputs) -> 
             name: format!("{}_count", req.role),
             passed: count >= min,
             weight: 2.0,
-            detail: format!(
-                "Found {} '{}' documents (need >= {})",
-                count, req.role, min
-            ),
+            detail: format!("Found {} '{}' documents (need >= {})", count, req.role, min),
         });
 
         // Check required sections in matching docs
@@ -95,7 +92,11 @@ fn score_document_generation(run: &BenchmarkRun, expected: &ExpectedOutputs) -> 
                 .iter()
                 .any(|d| d.excerpt.to_lowercase().contains(&section.to_lowercase()));
             checks.push(ScoringCheck {
-                name: format!("{}_{}_section", req.role, section.to_lowercase().replace(' ', "_")),
+                name: format!(
+                    "{}_{}_section",
+                    req.role,
+                    section.to_lowercase().replace(' ', "_")
+                ),
                 passed: has_section,
                 weight: 1.0,
                 detail: format!(
@@ -137,11 +138,12 @@ fn score_decomposition(run: &BenchmarkRun, expected: &ExpectedOutputs) -> TrackS
 
     // Check hierarchy links
     for link in &expected.expected_hierarchy {
-        let (parent_count, child_count) = match (link.parent_role.as_str(), link.child_role.as_str()) {
-            ("vision", "initiative") => (1usize, total_initiatives),
-            ("initiative", "task") => (total_initiatives, total_tasks),
-            _ => continue,
-        };
+        let (parent_count, child_count) =
+            match (link.parent_role.as_str(), link.child_role.as_str()) {
+                ("vision", "initiative") => (1usize, total_initiatives),
+                ("initiative", "task") => (total_initiatives, total_tasks),
+                _ => continue,
+            };
         let min = link.min_children.unwrap_or(1) as usize;
         let avg_children = if parent_count > 0 {
             child_count / parent_count
@@ -204,10 +206,7 @@ fn score_decomposition(run: &BenchmarkRun, expected: &ExpectedOutputs) -> TrackS
                 name: "total_task_count".to_string(),
                 passed: total_tasks as u32 >= min,
                 weight: 2.0,
-                detail: format!(
-                    "{} total tasks (need >= {})",
-                    total_tasks, min
-                ),
+                detail: format!("{} total tasks (need >= {})", total_tasks, min),
             });
         }
     }
@@ -296,7 +295,15 @@ fn score_architecture_conformance(run: &BenchmarkRun, expected: &ExpectedOutputs
 
 /// Score static tool utilization: did the run use verification tools (test, lint, typecheck)?
 fn score_static_tool_utilization(run: &BenchmarkRun) -> f32 {
-    let tool_keywords = ["test", "lint", "clippy", "typecheck", "check", "verify", "fmt"];
+    let tool_keywords = [
+        "test",
+        "lint",
+        "clippy",
+        "typecheck",
+        "check",
+        "verify",
+        "fmt",
+    ];
     let total_cli_events = run.trace.cli_events.len();
     if total_cli_events == 0 {
         return 0.0;
@@ -382,11 +389,7 @@ fn run_verification_command(command: &str) -> Result<(i32, String), String> {
 
 fn build_track_score(checks: Vec<ScoringCheck>) -> TrackScore {
     let max_score: f32 = checks.iter().map(|c| c.weight).sum();
-    let score: f32 = checks
-        .iter()
-        .filter(|c| c.passed)
-        .map(|c| c.weight)
-        .sum();
+    let score: f32 = checks.iter().filter(|c| c.passed).map(|c| c.weight).sum();
 
     TrackScore {
         score,
@@ -454,7 +457,8 @@ mod tests {
                         path: "initiatives/BENCH-I-0002.md".to_string(),
                         title: "Transform Initiative".to_string(),
                         short_code: Some("BENCH-I-0002".to_string()),
-                        excerpt: "## Context\nTransform module\n## Goals\nTransform data".to_string(),
+                        excerpt: "## Context\nTransform module\n## Goals\nTransform data"
+                            .to_string(),
                     },
                 ],
                 code_files: vec![CodeArtifact {
@@ -545,7 +549,10 @@ mod tests {
 
         assert!(score.percent() > 50.0, "Well-formed run should score > 50%");
         assert!(
-            score.checks.iter().any(|c| c.name == "no_placeholder_leakage" && c.passed),
+            score
+                .checks
+                .iter()
+                .any(|c| c.name == "no_placeholder_leakage" && c.passed),
             "No placeholders in test run"
         );
     }
@@ -556,14 +563,20 @@ mod tests {
         let expected = make_expected_outputs();
         let score = score_decomposition(&run, &expected);
 
-        assert!(score.percent() > 50.0, "Well-decomposed run should score > 50%");
+        assert!(
+            score.percent() > 50.0,
+            "Well-decomposed run should score > 50%"
+        );
     }
 
     #[test]
     fn test_static_tool_utilization() {
         let run = make_test_run();
         let util = score_static_tool_utilization(&run);
-        assert!(util > 0.0, "Run with 'cargo test' event should have > 0% utilization");
+        assert!(
+            util > 0.0,
+            "Run with 'cargo test' event should have > 0% utilization"
+        );
     }
 
     #[test]

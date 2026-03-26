@@ -3,13 +3,13 @@
 //! These tests exercise the full flow across modules:
 //! QualityGateConfig → GateCheckEngine → GateCheckResult → GateOverride → GateOverrideAuditEntry
 
-use std::collections::HashMap;
 use cadre_core::Phase;
 use cadre_core::Tag;
 use cadre_core::{
     GateCheckEngine, GateOverride, GateOverrideAuditEntry, GateSeverity, MetricGateRule,
     OverrideType, QualityGateConfig, ThresholdType, TransitionGateConfig, TrendRequirement,
 };
+use std::collections::HashMap;
 
 fn metrics(pairs: &[(&str, f64)]) -> HashMap<String, f64> {
     pairs.iter().map(|(k, v)| (k.to_string(), *v)).collect()

@@ -1,6 +1,4 @@
-use crate::{
-    api_client, prompt_builder, scenario_pack::LoadedScenarioPack, types::*, workspace,
-};
+use crate::{api_client, prompt_builder, scenario_pack::LoadedScenarioPack, types::*, workspace};
 use chrono::Utc;
 use std::fs;
 use std::path::{Path, PathBuf};

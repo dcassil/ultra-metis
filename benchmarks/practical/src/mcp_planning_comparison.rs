@@ -1,7 +1,7 @@
 use crate::api_client;
 use crate::doc_quality::score_content;
 use crate::mcp_adapter::{
-    ExecutionAdapter, McpSession, OriginalMetisAdapter, SystemUnderTest, CadreMcpAdapter,
+    CadreMcpAdapter, ExecutionAdapter, McpSession, OriginalMetisAdapter, SystemUnderTest,
 };
 use crate::prompt_builder;
 use crate::runner::{parse_initiative_response, AiInitiative};
@@ -245,9 +245,8 @@ fn seed_vision(
                     "title": title,
                 }),
             )?;
-            extract_short_code(&extract_text_content(&response), "PLAN-V-").ok_or_else(|| {
-                anyhow!("Failed to extract vision short code from cadre response")
-            })
+            extract_short_code(&extract_text_content(&response), "PLAN-V-")
+                .ok_or_else(|| anyhow!("Failed to extract vision short code from cadre response"))
         }
     }
 }

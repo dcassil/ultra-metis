@@ -37,8 +37,7 @@ impl ReadReferenceArchitectureTool {
             match ra {
                 Some(d) => d.short_code.clone(),
                 None => {
-                    let text =
-                        "No reference architecture found. Create one first.".to_string();
+                    let text = "No reference architecture found. Create one first.".to_string();
                     return Ok(CallToolResult {
                         content: vec![TextContent::new(text, None, None).into()],
                         is_error: None,

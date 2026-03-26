@@ -66,7 +66,9 @@ impl QueryRelationshipsTool {
             "## Relationships for {} ({}, {})\n\n\
             | Source | Type | Target | Bidirectional |\n\
             | ------ | ---- | ------ | ------------- |\n",
-            self.short_code, direction, filtered.len()
+            self.short_code,
+            direction,
+            filtered.len()
         );
         for entry in &filtered {
             output.push_str(&format!(

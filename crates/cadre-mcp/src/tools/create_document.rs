@@ -29,11 +29,7 @@ impl CreateDocumentTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
         let store = store_for(&self.project_path);
         let short_code = store
-            .create_document(
-                &self.document_type,
-                &self.title,
-                self.parent_id.as_deref(),
-            )
+            .create_document(&self.document_type, &self.title, self.parent_id.as_deref())
             .map_err(|e| tool_error(e.user_message()))?;
 
         let parent_row = if let Some(pid) = &self.parent_id {

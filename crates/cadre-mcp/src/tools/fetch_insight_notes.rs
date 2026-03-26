@@ -79,10 +79,9 @@ impl FetchInsightNotesTool {
 
         // Record fetch on each matched note and save back
         for (sc, _) in &matched {
-            let mut note = DurableInsightNote::from_content(
-                &store.read_document_raw(sc).unwrap_or_default(),
-            )
-            .ok();
+            let mut note =
+                DurableInsightNote::from_content(&store.read_document_raw(sc).unwrap_or_default())
+                    .ok();
             if let Some(ref mut n) = note {
                 n.record_fetch();
                 if let Ok(content) = n.to_content() {

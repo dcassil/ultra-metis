@@ -1,14 +1,14 @@
+use crate::log;
 use crate::tools::{
     ArchiveDocumentTool, CadreTools, CaptureQualityBaselineTool, CheckArchitectureConformanceTool,
     CompareQualityBaselinesTool, CreateCrossReferenceTool, CreateDocumentTool,
     CreateInsightNoteTool, EditDocumentTool, EvaluateBrownfieldTool, FetchInsightNotesTool,
     GetApplicableRulesTool, IndexCodeTool, InitializeProjectTool, ListCatalogLanguagesTool,
     ListCrossReferencesTool, ListDocumentsTool, ListInsightNotesTool, ListProtectedRulesTool,
-    ListQualityRecordsTool, QueryArchitectureCatalogTool, QueryRelationshipsTool,
-    QueryRulesTool, ReadReferenceArchitectureTool, ReassignParentTool, ReadDocumentTool,
-    ScoreInsightNoteTool, SearchDocumentsTool, TraceAncestryTool, TransitionPhaseTool,
+    ListQualityRecordsTool, QueryArchitectureCatalogTool, QueryRelationshipsTool, QueryRulesTool,
+    ReadDocumentTool, ReadReferenceArchitectureTool, ReassignParentTool, ScoreInsightNoteTool,
+    SearchDocumentsTool, TraceAncestryTool, TransitionPhaseTool,
 };
-use crate::log;
 use async_trait::async_trait;
 use rust_mcp_sdk::{
     mcp_server::ServerHandler,
@@ -36,7 +36,10 @@ impl ServerHandler for CadreServerHandler {
         _runtime: Arc<dyn McpServer>,
     ) -> Result<ListToolsResult, RpcError> {
         let tools = CadreTools::tools();
-        log(&format!("handle_list_tools_request: returning {} tools", tools.len()));
+        log(&format!(
+            "handle_list_tools_request: returning {} tools",
+            tools.len()
+        ));
         Ok(ListToolsResult {
             tools,
             meta: None,
@@ -50,7 +53,11 @@ impl ServerHandler for CadreServerHandler {
         _runtime: Arc<dyn McpServer>,
     ) -> Result<CallToolResult, rust_mcp_sdk::schema::schema_utils::CallToolError> {
         let args = serde_json::Value::Object(params.arguments.unwrap_or_default());
-        log(&format!("handle_call_tool_request: tool='{}' args_keys={:?}", params.name, args.as_object().map(|o| o.keys().collect::<Vec<_>>())));
+        log(&format!(
+            "handle_call_tool_request: tool='{}' args_keys={:?}",
+            params.name,
+            args.as_object().map(|o| o.keys().collect::<Vec<_>>())
+        ));
 
         let result = match params.name.as_str() {
             "initialize_project" => {
@@ -200,9 +207,7 @@ impl ServerHandler for CadreServerHandler {
             }
             _ => {
                 log(&format!("unknown tool: {}", params.name));
-                Err(
-                    rust_mcp_sdk::schema::schema_utils::CallToolError::unknown_tool(params.name),
-                )
+                Err(rust_mcp_sdk::schema::schema_utils::CallToolError::unknown_tool(params.name))
             }
         };
 

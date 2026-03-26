@@ -114,8 +114,7 @@ fn test_full_flow_express_server_catalog_match() {
 
             // RA should serialize and deserialize
             let serialized = reference_architecture.to_content().unwrap();
-            let loaded =
-                cadre_core::ReferenceArchitecture::from_content(&serialized).unwrap();
+            let loaded = cadre_core::ReferenceArchitecture::from_content(&serialized).unwrap();
             assert_eq!(loaded.title(), reference_architecture.title());
             assert_eq!(
                 loaded.source_catalog_ref,
