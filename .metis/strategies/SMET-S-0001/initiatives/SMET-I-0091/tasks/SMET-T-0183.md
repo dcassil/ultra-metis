@@ -4,14 +4,14 @@ level: task
 title: "cadre-cli: Refactor Functions Exceeding Structural Clippy Thresholds"
 short_code: "SMET-T-0183"
 created_at: 2026-03-26T19:20:15.021154+00:00
-updated_at: 2026-03-26T21:05:00.331186+00:00
+updated_at: 2026-03-26T21:10:28.888358+00:00
 parent: SMET-I-0091
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -47,6 +47,8 @@ Refactor all functions in the `cadre-cli` crate that violate the structural clip
 ### cognitive_complexity (0 violations)
 
 None.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

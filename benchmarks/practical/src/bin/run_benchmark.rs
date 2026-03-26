@@ -6,11 +6,55 @@
 /// Usage:
 ///   ANTHROPIC_API_KEY=... CADRE_BINARY=./target/release/cadre \
 ///     cargo run -p practical-benchmark --bin run_benchmark -- --results-dir benchmarks/practical/results
-use std::path::PathBuf;
+use practical_benchmark::types::BenchmarkRun;
+use std::path::{Path, PathBuf};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Parse args
+    let (results_dir, scenario_path, mode) = parse_args();
+    verify_claude_access();
+
+    let history_path = results_dir.join("results_history.csv");
+    std::fs::create_dir_all(&results_dir)?;
+
+    println!("=== Practical Benchmark Suite ===");
+    println!("Scenario : {}", scenario_path.display());
+    println!("Results  : {}", results_dir.display());
+    println!("Mode     : {mode:?}");
+    println!();
+
+    let harness =
+        practical_benchmark::BenchmarkHarness::new(&scenario_path, results_dir.clone());
+
+    let autonomous_run = if matches!(mode, RunMode::Autonomous | RunMode::Both) {
+        run_autonomous_phase(&harness, &results_dir, &history_path).await?
+    } else {
+        None
+    };
+
+    let validated_run = if matches!(mode, RunMode::Validated | RunMode::Both) {
+        run_validated_phase(&harness, &results_dir, &history_path).await?
+    } else {
+        None
+    };
+
+    if let (Some(auto), Some(val)) = (autonomous_run, validated_run) {
+        print_comparison(&auto, &val, &results_dir)?;
+    }
+
+    println!();
+    println!("=== Benchmark Complete ===");
+    Ok(())
+}
+
+#[derive(Debug)]
+enum RunMode {
+    Autonomous,
+    Validated,
+    Both,
+}
+
+fn parse_args() -> (PathBuf, PathBuf, RunMode) {
     let mut results_dir = PathBuf::from("benchmarks/practical/results");
     let mut scenario_path = PathBuf::from("benchmarks/practical/scenario");
     let mut mode = RunMode::Both;
@@ -35,9 +79,11 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Verify some form of Claude access is available
+    (results_dir, scenario_path, mode)
+}
+
+fn verify_claude_access() {
     if std::env::var("ANTHROPIC_API_KEY").is_err() {
-        // Check claude CLI is available as fallback
         if std::process::Command::new("claude")
             .arg("--version")
             .output()
@@ -49,84 +95,70 @@ async fn main() -> anyhow::Result<()> {
         println!("Note: Using `claude` CLI for API calls (no ANTHROPIC_API_KEY set)");
         println!();
     }
-
-    let history_path = results_dir.join("results_history.csv");
-    std::fs::create_dir_all(&results_dir)?;
-
-    println!("=== Practical Benchmark Suite ===");
-    println!("Scenario : {}", scenario_path.display());
-    println!("Results  : {}", results_dir.display());
-    println!("Mode     : {mode:?}");
-    println!();
-
-    let harness =
-        practical_benchmark::BenchmarkHarness::new(&scenario_path, results_dir.clone());
-
-    let autonomous_run = if matches!(mode, RunMode::Autonomous | RunMode::Both) {
-        println!("=== Phase 1: Autonomous Execution (Baseline) ===");
-        let run = harness.run_autonomous().await?;
-        println!(
-            "  Initiatives: {}  |  Tokens: {}  |  Time: {:.1}s",
-            run.initiatives.len(),
-            run.total_metrics.total_tokens,
-            run.total_metrics.total_time.as_secs_f32(),
-        );
-        let path = practical_benchmark::reports::save_run(&run, &results_dir)?;
-        let report_path = practical_benchmark::reports::save_run_report(&run, &results_dir)?;
-        practical_benchmark::reports::append_history(&run, &history_path)?;
-        println!("  Saved: {}", path.display());
-        println!("  Report: {}", report_path.display());
-        println!();
-        Some(run)
-    } else {
-        None
-    };
-
-    let validated_run = if matches!(mode, RunMode::Validated | RunMode::Both) {
-        println!("=== Phase 2: Validated Execution (With Gates) ===");
-        let run = harness.run_validated().await?;
-        println!(
-            "  Initiatives: {}  |  Tokens: {}  |  Gate effectiveness: {:.1}%",
-            run.initiatives.len(),
-            run.total_metrics.total_tokens,
-            run.total_metrics.gate_effectiveness.unwrap_or(0.0),
-        );
-        let path = practical_benchmark::reports::save_run(&run, &results_dir)?;
-        let report_path = practical_benchmark::reports::save_run_report(&run, &results_dir)?;
-        practical_benchmark::reports::append_history(&run, &history_path)?;
-        println!("  Saved: {}", path.display());
-        println!("  Report: {}", report_path.display());
-        println!();
-        Some(run)
-    } else {
-        None
-    };
-
-    // Generate comparison report when both runs are available
-    if let (Some(auto), Some(val)) = (autonomous_run, validated_run) {
-        println!("=== Comparison Report ===");
-        let ts = chrono::Utc::now().format("%Y%m%dT%H%M%SZ");
-        let report_path = results_dir.join(format!("comparison_{ts}.md"));
-        practical_benchmark::reports::generate_comparison_report(&auto, &val, &report_path)?;
-        println!("  Report: {}", report_path.display());
-
-        let analysis = practical_benchmark::analysis::BenchmarkAnalysis::new(auto, val);
-        let report = analysis.compare();
-        println!();
-        println!("  Token overhead  : {:+.1}%", report.token_overhead);
-        println!("  Quality delta   : {:+.1} points", report.quality_delta);
-        println!("  ROI             : {:.2}", report.roi);
-        println!("  Error detection : {:.1}%", report.error_detection_rate);
-    }
-
-    println!();
-    println!("=== Benchmark Complete ===");
-    Ok(())
 }
 
-#[derive(Debug)]
-enum RunMode {
-    Autonomous,
-    Validated,
-    Both,
+async fn run_autonomous_phase(
+    harness: &practical_benchmark::BenchmarkHarness,
+    results_dir: &Path,
+    history_path: &Path,
+) -> anyhow::Result<Option<BenchmarkRun>> {
+    println!("=== Phase 1: Autonomous Execution (Baseline) ===");
+    let run = harness.run_autonomous().await?;
+    println!(
+        "  Initiatives: {}  |  Tokens: {}  |  Time: {:.1}s",
+        run.initiatives.len(),
+        run.total_metrics.total_tokens,
+        run.total_metrics.total_time.as_secs_f32(),
+    );
+    let path = practical_benchmark::reports::save_run(&run, results_dir)?;
+    let report_path = practical_benchmark::reports::save_run_report(&run, results_dir)?;
+    practical_benchmark::reports::append_history(&run, history_path)?;
+    println!("  Saved: {}", path.display());
+    println!("  Report: {}", report_path.display());
+    println!();
+    Ok(Some(run))
+}
+
+async fn run_validated_phase(
+    harness: &practical_benchmark::BenchmarkHarness,
+    results_dir: &Path,
+    history_path: &Path,
+) -> anyhow::Result<Option<BenchmarkRun>> {
+    println!("=== Phase 2: Validated Execution (With Gates) ===");
+    let run = harness.run_validated().await?;
+    println!(
+        "  Initiatives: {}  |  Tokens: {}  |  Gate effectiveness: {:.1}%",
+        run.initiatives.len(),
+        run.total_metrics.total_tokens,
+        run.total_metrics.gate_effectiveness.unwrap_or(0.0),
+    );
+    let path = practical_benchmark::reports::save_run(&run, results_dir)?;
+    let report_path = practical_benchmark::reports::save_run_report(&run, results_dir)?;
+    practical_benchmark::reports::append_history(&run, history_path)?;
+    println!("  Saved: {}", path.display());
+    println!("  Report: {}", report_path.display());
+    println!();
+    Ok(Some(run))
+}
+
+fn print_comparison(
+    auto: &BenchmarkRun,
+    val: &BenchmarkRun,
+    results_dir: &Path,
+) -> anyhow::Result<()> {
+    println!("=== Comparison Report ===");
+    let ts = chrono::Utc::now().format("%Y%m%dT%H%M%SZ");
+    let report_path = results_dir.join(format!("comparison_{ts}.md"));
+    practical_benchmark::reports::generate_comparison_report(auto, val, &report_path)?;
+    println!("  Report: {}", report_path.display());
+
+    let analysis =
+        practical_benchmark::analysis::BenchmarkAnalysis::new(auto.clone(), val.clone());
+    let report = analysis.compare();
+    println!();
+    println!("  Token overhead  : {:+.1}%", report.token_overhead);
+    println!("  Quality delta   : {:+.1} points", report.quality_delta);
+    println!("  ROI             : {:.2}", report.roi);
+    println!("  Error detection : {:.1}%", report.error_detection_rate);
+    Ok(())
 }

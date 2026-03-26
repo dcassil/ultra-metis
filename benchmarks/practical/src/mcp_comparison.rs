@@ -80,6 +80,54 @@ fn run_tool_workflow<A: ExecutionAdapter>(
     let mut session = adapter.start()?;
     let mut operations = vec![];
 
+    let tool_names = validate_shared_tools(&mut session, adapter)?;
+    let root_project = project_path.display().to_string();
+
+    record_call(
+        &mut session,
+        &mut operations,
+        "initialize_project",
+        json!({ "project_path": root_project, "prefix": prefix }),
+    )?;
+
+    let document_project_path = document_project_path(adapter.system_under_test(), project_path);
+    let vision_code = create_vision_for_system(
+        adapter.system_under_test(),
+        &mut session,
+        &mut operations,
+        &document_project_path,
+        vision_title,
+    )?;
+
+    let initiative_code = create_and_extract_initiative(
+        &mut session,
+        &mut operations,
+        &document_project_path,
+        initiative_title,
+        &vision_code,
+    )?;
+
+    run_read_and_search_operations(
+        &mut session,
+        &mut operations,
+        &document_project_path,
+        &initiative_code,
+        search_term,
+    )?;
+
+    Ok(McpToolRun {
+        system: system_name(adapter.system_under_test()).to_string(),
+        tool_surface: "mcp-stdio".to_string(),
+        startup_ok: true,
+        tools_available: tool_names,
+        operations,
+    })
+}
+
+fn validate_shared_tools<A: ExecutionAdapter>(
+    session: &mut McpSession,
+    adapter: &A,
+) -> Result<Vec<String>> {
     let tools = session.list_tools().context("Failed to list MCP tools")?;
     let tool_names = tools.iter().map(|t| t.name.clone()).collect::<Vec<_>>();
     for expected in expected_shared_tool_names() {
@@ -91,22 +139,17 @@ fn run_tool_workflow<A: ExecutionAdapter>(
             );
         }
     }
+    Ok(tool_names)
+}
 
-    let root_project = project_path.display().to_string();
-
-    record_call(
-        &mut session,
-        &mut operations,
-        "initialize_project",
-        json!({
-            "project_path": root_project,
-            "prefix": prefix,
-        }),
-    )?;
-
-    let document_project_path = document_project_path(adapter.system_under_test(), project_path);
-
-    let vision_code = match adapter.system_under_test() {
+fn create_vision_for_system(
+    system: SystemUnderTest,
+    session: &mut McpSession,
+    operations: &mut Vec<McpOperationResult>,
+    document_project_path: &str,
+    vision_title: &str,
+) -> Result<String> {
+    match system {
         SystemUnderTest::OriginalMetis => {
             operations.push(McpOperationResult {
                 operation: "create_vision".to_string(),
@@ -115,12 +158,12 @@ fn run_tool_workflow<A: ExecutionAdapter>(
                 output_size: 28,
                 detail: "Vision auto-created during init".to_string(),
             });
-            "BENCH-V-0001".to_string()
+            Ok("BENCH-V-0001".to_string())
         }
         SystemUnderTest::CadreMcp => {
             record_call(
-                &mut session,
-                &mut operations,
+                session,
+                operations,
                 "create_vision",
                 json!({
                     "project_path": document_project_path,
@@ -133,13 +176,22 @@ fn run_tool_workflow<A: ExecutionAdapter>(
                 .find(|op| op.operation == "create_vision")
                 .map(|op| op.detail.as_str())
                 .unwrap_or("");
-            extract_short_code(detail, "BENCH-V-").unwrap_or_else(|| "BENCH-V-0001".to_string())
+            Ok(extract_short_code(detail, "BENCH-V-")
+                .unwrap_or_else(|| "BENCH-V-0001".to_string()))
         }
-    };
+    }
+}
 
+fn create_and_extract_initiative(
+    session: &mut McpSession,
+    operations: &mut Vec<McpOperationResult>,
+    document_project_path: &str,
+    initiative_title: &str,
+    vision_code: &str,
+) -> Result<String> {
     record_call(
-        &mut session,
-        &mut operations,
+        session,
+        operations,
         "create_initiative",
         json!({
             "project_path": document_project_path,
@@ -154,45 +206,39 @@ fn run_tool_workflow<A: ExecutionAdapter>(
         .find(|op| op.operation == "create_initiative")
         .map(|op| op.detail.as_str())
         .unwrap_or("");
-    let initiative_code = extract_short_code(initiative_detail, "BENCH-I-")
-        .unwrap_or_else(|| "BENCH-I-0001".to_string());
+    Ok(extract_short_code(initiative_detail, "BENCH-I-")
+        .unwrap_or_else(|| "BENCH-I-0001".to_string()))
+}
 
+fn run_read_and_search_operations(
+    session: &mut McpSession,
+    operations: &mut Vec<McpOperationResult>,
+    document_project_path: &str,
+    initiative_code: &str,
+    search_term: &str,
+) -> Result<()> {
     record_call(
-        &mut session,
-        &mut operations,
-        "list_documents",
-        json!({
-            "project_path": document_project_path,
-        }),
-    )?;
-
-    record_call(
-        &mut session,
-        &mut operations,
-        "read_document",
-        json!({
-            "project_path": document_project_path,
-            "short_code": initiative_code,
-        }),
-    )?;
-
-    record_call(
-        &mut session,
-        &mut operations,
-        "search_documents",
-        json!({
-            "project_path": document_project_path,
-            "query": search_term,
-        }),
-    )?;
-
-    Ok(McpToolRun {
-        system: system_name(adapter.system_under_test()).to_string(),
-        tool_surface: "mcp-stdio".to_string(),
-        startup_ok: true,
-        tools_available: tool_names,
+        session,
         operations,
-    })
+        "list_documents",
+        json!({ "project_path": document_project_path }),
+    )?;
+
+    record_call(
+        session,
+        operations,
+        "read_document",
+        json!({ "project_path": document_project_path, "short_code": initiative_code }),
+    )?;
+
+    record_call(
+        session,
+        operations,
+        "search_documents",
+        json!({ "project_path": document_project_path, "query": search_term }),
+    )?;
+
+    Ok(())
 }
 
 fn document_project_path(system: SystemUnderTest, root: &Path) -> String {

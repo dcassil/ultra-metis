@@ -44,17 +44,51 @@ impl GateScorer {
         let mut issues: Vec<String> = vec![];
         let mut blocking_failures: usize = 0;
 
-        // --- Token sanity: initiative must have executed ---
+        self.check_token_sanity(initiative, &mut issues, &mut blocking_failures);
+        self.check_task_count(initiative, &mut issues, &mut blocking_failures);
+        self.check_per_task_quality(initiative, &mut issues, &mut blocking_failures);
+        check_initiative_title(initiative, &mut issues, &mut blocking_failures);
+        check_artifact_dir(artifact_dir, &mut issues, &mut blocking_failures);
+
+        let rework_tokens = issues.len() as u64 * REWORK_TOKENS_PER_ISSUE;
+        let gate_decision = if blocking_failures > 0 {
+            GateDecision::Rejected
+        } else if !issues.is_empty() {
+            GateDecision::RequiresRework
+        } else {
+            GateDecision::Approved
+        };
+
+        ValidationGateResult {
+            gate_decision,
+            issues_found: issues,
+            rework_tokens,
+            rework_time: std::time::Duration::from_millis(0),
+        }
+    }
+
+    fn check_token_sanity(
+        &self,
+        initiative: &InitiativeResult,
+        issues: &mut Vec<String>,
+        blocking_failures: &mut usize,
+    ) {
         if initiative.total_tokens == 0 {
             issues.push("No tokens recorded — initiative may not have executed".to_string());
-            blocking_failures += 1;
+            *blocking_failures += 1;
         }
+    }
 
-        // --- Task count check (instruction adherence) ---
+    fn check_task_count(
+        &self,
+        initiative: &InitiativeResult,
+        issues: &mut Vec<String>,
+        blocking_failures: &mut usize,
+    ) {
         let (min_tasks, max_tasks) = self.expected_task_range;
         if initiative.tasks.is_empty() {
             issues.push("Initiative has no tasks".to_string());
-            blocking_failures += 1;
+            *blocking_failures += 1;
         } else {
             if initiative.tasks.len() < min_tasks {
                 issues.push(format!(
@@ -71,13 +105,18 @@ impl GateScorer {
                 ));
             }
         }
+    }
 
-        // --- Per-task quality checks ---
+    fn check_per_task_quality(
+        &self,
+        initiative: &InitiativeResult,
+        issues: &mut Vec<String>,
+        blocking_failures: &mut usize,
+    ) {
         for task in &initiative.tasks {
-            // Title must not be empty or a placeholder
             if task.task_title.trim().is_empty() {
                 issues.push(format!("Task '{}' has empty title", task.task_id));
-                blocking_failures += 1;
+                *blocking_failures += 1;
             } else if task.task_title.contains('{') || task.task_title.contains('}') {
                 issues.push(format!(
                     "Task '{}' contains unfilled placeholder text",
@@ -85,7 +124,6 @@ impl GateScorer {
                 ));
             }
 
-            // Doc accuracy threshold
             if task.code_metrics.doc_accuracy_percent < self.doc_accuracy_threshold {
                 issues.push(format!(
                     "Task '{}' has low doc accuracy ({:.0}% < {:.0}% threshold)",
@@ -95,7 +133,6 @@ impl GateScorer {
                 ));
             }
 
-            // Instruction adherence threshold
             if task.code_metrics.instruction_adherence_percent < self.adherence_threshold {
                 issues.push(format!(
                     "Task '{}' has low instruction adherence ({:.0}% < {:.0}% threshold) — AI may not have followed prompt format",
@@ -105,46 +142,39 @@ impl GateScorer {
                 ));
             }
         }
+    }
+}
 
-        // --- Initiative title must not be empty or placeholder ---
-        if initiative.initiative_title.trim().is_empty() {
-            issues.push("Initiative has empty title".to_string());
-            blocking_failures += 1;
-        } else if initiative.initiative_title.contains('{')
-            || initiative.initiative_title.contains('}')
-        {
+fn check_initiative_title(
+    initiative: &InitiativeResult,
+    issues: &mut Vec<String>,
+    blocking_failures: &mut usize,
+) {
+    if initiative.initiative_title.trim().is_empty() {
+        issues.push("Initiative has empty title".to_string());
+        *blocking_failures += 1;
+    } else if initiative.initiative_title.contains('{')
+        || initiative.initiative_title.contains('}')
+    {
+        issues.push(format!(
+            "Initiative title '{}' contains unfilled placeholders",
+            initiative.initiative_title
+        ));
+    }
+}
+
+fn check_artifact_dir(
+    artifact_dir: Option<&Path>,
+    issues: &mut Vec<String>,
+    blocking_failures: &mut usize,
+) {
+    if let Some(dir) = artifact_dir {
+        if !dir.exists() {
             issues.push(format!(
-                "Initiative title '{}' contains unfilled placeholders",
-                initiative.initiative_title
+                "Artifact directory '{}' does not exist — CLI operations may have failed",
+                dir.display()
             ));
-        }
-
-        // --- Artifact dir check ---
-        if let Some(dir) = artifact_dir {
-            if !dir.exists() {
-                issues.push(format!(
-                    "Artifact directory '{}' does not exist — CLI operations may have failed",
-                    dir.display()
-                ));
-                blocking_failures += 1;
-            }
-        }
-
-        // --- Gate decision ---
-        let rework_tokens = issues.len() as u64 * REWORK_TOKENS_PER_ISSUE;
-        let gate_decision = if blocking_failures > 0 {
-            GateDecision::Rejected
-        } else if !issues.is_empty() {
-            GateDecision::RequiresRework
-        } else {
-            GateDecision::Approved
-        };
-
-        ValidationGateResult {
-            gate_decision,
-            issues_found: issues,
-            rework_tokens,
-            rework_time: std::time::Duration::from_millis(0),
+            *blocking_failures += 1;
         }
     }
 }

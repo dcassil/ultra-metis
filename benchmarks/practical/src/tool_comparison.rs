@@ -386,7 +386,14 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
         result.timestamp.format("%Y-%m-%d %H:%M:%S UTC"),
     ));
 
-    // Executive summary
+    format_tool_executive_summary(&mut out, result);
+    format_tool_results_table(&mut out, result);
+    format_tool_interpretation(&mut out, result);
+
+    out
+}
+
+fn format_tool_executive_summary(out: &mut String, result: &ToolComparisonResult) {
     out.push_str("## Executive Summary\n\n");
     let (winner, loser) = if result.completeness_delta > 5.0 {
         ("**cadre** templates", "original-metis")
@@ -409,8 +416,9 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
         "- Placeholder reduction: **{:+.1}** placeholders/doc (original − ultra)\n\n",
         result.placeholder_delta,
     ));
+}
 
-    // Per-tool table
+fn format_tool_results_table(out: &mut String, result: &ToolComparisonResult) {
     out.push_str("## Per-Tool Results\n\n");
     out.push_str("| Metric | cadre | original-metis | Delta |\n");
     out.push_str("|--------|-------------|----------------|-------|\n");
@@ -445,8 +453,9 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
         u.time_elapsed.as_secs_f32(),
         o.time_elapsed.as_secs_f32(),
     ));
+}
 
-    // Interpretation
+fn format_tool_interpretation(out: &mut String, result: &ToolComparisonResult) {
     out.push_str("## Interpretation\n\n");
     if result.completeness_delta.abs() < 5.0 {
         out.push_str("- Templates perform similarly — AI fills both equally well\n");
@@ -478,8 +487,6 @@ pub fn format_comparison_report(result: &ToolComparisonResult) -> String {
     } else {
         out.push_str("- Both tools produce similar placeholder completion rates\n");
     }
-
-    out
 }
 
 /// Find the first `initiative.md` file under a directory (recursive walk).

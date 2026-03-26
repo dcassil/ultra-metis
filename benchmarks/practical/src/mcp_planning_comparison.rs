@@ -144,10 +144,7 @@ async fn run_system_planning<A: ExecutionAdapter>(
     call_tool(
         &mut session,
         "initialize_project",
-        json!({
-            "project_path": init_project_path,
-            "prefix": "PLAN"
-        }),
+        json!({ "project_path": init_project_path, "prefix": "PLAN" }),
     )?;
 
     let vision_code = seed_vision(
@@ -156,23 +153,60 @@ async fn run_system_planning<A: ExecutionAdapter>(
         &document_project_path,
         &scenario.manifest.title,
     )?;
+    seed_existing_initiatives(&mut session, &document_project_path, &vision_code, scenario)?;
+
+    let (docs, total_tokens, total_time_ms) = fill_planned_initiatives(
+        &mut session,
+        &document_project_path,
+        &vision_code,
+        planned,
+        assessment_tokens,
+        assessment_time,
+    )
+    .await?;
+
+    Ok(build_planning_result(
+        adapter.system_under_test(),
+        planned,
+        docs,
+        total_tokens,
+        total_time_ms,
+    ))
+}
+
+fn seed_existing_initiatives(
+    session: &mut McpSession,
+    document_project_path: &str,
+    vision_code: &str,
+    scenario: &LoadedScenarioPack,
+) -> Result<()> {
     for seed in &scenario.seed_initiatives {
         let title = extract_title(seed).unwrap_or_else(|| "Seed Initiative".to_string());
-        let _ = create_initiative(&mut session, &document_project_path, &vision_code, &title)?;
+        let _ = create_initiative(session, document_project_path, vision_code, &title)?;
     }
+    Ok(())
+}
 
+async fn fill_planned_initiatives(
+    session: &mut McpSession,
+    document_project_path: &str,
+    vision_code: &str,
+    planned: &[AiInitiative],
+    assessment_tokens: u64,
+    assessment_time: Duration,
+) -> Result<(Vec<PlanningDocumentResult>, u64, f64)> {
     let mut docs = vec![];
     let mut total_tokens = assessment_tokens;
     let mut total_time_ms = assessment_time.as_secs_f64() * 1000.0;
 
     for initiative in planned {
         let short_code = create_initiative(
-            &mut session,
-            &document_project_path,
-            &vision_code,
+            session,
+            document_project_path,
+            vision_code,
             &initiative.title,
         )?;
-        let template = read_document(&mut session, &document_project_path, &short_code)?;
+        let template = read_document(session, document_project_path, &short_code)?;
 
         let fill_start = Instant::now();
         let (filled, fill_tokens) = fill_initiative_template(initiative, &template).await?;
@@ -198,6 +232,16 @@ async fn run_system_planning<A: ExecutionAdapter>(
         });
     }
 
+    Ok((docs, total_tokens, total_time_ms))
+}
+
+fn build_planning_result(
+    system: SystemUnderTest,
+    planned: &[AiInitiative],
+    docs: Vec<PlanningDocumentResult>,
+    total_tokens: u64,
+    total_time_ms: f64,
+) -> PlanningSystemResult {
     let count = docs.len().max(1) as f32;
     let avg_completeness = docs
         .iter()
@@ -215,8 +259,8 @@ async fn run_system_planning<A: ExecutionAdapter>(
         .sum::<f32>()
         / (planned.len().max(1) as f32);
 
-    Ok(PlanningSystemResult {
-        system: system_name(adapter.system_under_test()).to_string(),
+    PlanningSystemResult {
+        system: system_name(system).to_string(),
         initiative_count: docs.len(),
         total_tokens,
         total_time_ms,
@@ -224,7 +268,7 @@ async fn run_system_planning<A: ExecutionAdapter>(
         avg_placeholder_count: avg_placeholders,
         avg_task_count,
         docs,
-    })
+    }
 }
 
 fn seed_vision(

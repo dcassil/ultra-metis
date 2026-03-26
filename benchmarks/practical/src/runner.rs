@@ -376,51 +376,111 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
 
     tracing::info!("Starting autonomous run: {}", run_id);
 
-    // Create isolated workspace and seed scenario documents
     let mut ws = workspace::BenchmarkWorkspace::setup(scenario)?;
     let setup = ws.take_setup_trace();
     trace.cli_events.extend(setup.cli_events);
     phases.push(setup.phase_result);
 
-    // Ask Claude to assess what additional initiatives are needed
-    let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)?;
+    let mut assessment = assess_scenario_autonomous(scenario, &mut trace).await;
+    phases.push(std::mem::replace(
+        &mut assessment.phase_result,
+        PhaseResult {
+            phase: BenchmarkPhase::DocumentGeneration,
+            status: PhaseStatus::Completed,
+            tokens_used: 0,
+            time_elapsed: std::time::Duration::ZERO,
+            notes: vec![],
+        },
+    ));
+
+    let initiatives = build_autonomous_initiatives(
+        &assessment,
+        &ws,
+        &mut trace,
+    );
+
+    let total_tokens: u64 = initiatives.iter().map(|i| i.total_tokens).sum();
+    let total_time = start_time.elapsed();
+    phases.push(PhaseResult {
+        phase: BenchmarkPhase::Decomposition,
+        status: PhaseStatus::Completed,
+        tokens_used: total_tokens,
+        time_elapsed: total_time,
+        notes: vec![format!(
+            "Produced {} initiative assessments",
+            initiatives.len()
+        )],
+    });
+
+    let metrics = compute_autonomous_metrics(&initiatives, total_tokens, total_time);
+
+    Ok(BenchmarkRun {
+        run_id,
+        timestamp: Utc::now(),
+        manifest,
+        scenario: ScenarioSummary {
+            id: scenario.manifest.id.clone(),
+            title: scenario.manifest.title.clone(),
+            root: scenario.root.display().to_string(),
+        },
+        execution_mode: ExecutionMode::Autonomous,
+        phases,
+        trace,
+        artifacts: snapshot_workspace_artifacts(ws.path()),
+        initiatives,
+        total_metrics: metrics,
+    })
+}
+
+/// Result of the initial scenario assessment API call for autonomous mode.
+struct AutonomousAssessment {
+    api_input_tokens: u64,
+    api_output_tokens: u64,
+    ai_initiatives: Vec<AiInitiative>,
+    response_was_valid_json: bool,
+    api_time: std::time::Duration,
+    phase_result: PhaseResult,
+}
+
+async fn assess_scenario_autonomous(
+    scenario: &LoadedScenarioPack,
+    trace: &mut RunTrace,
+) -> AutonomousAssessment {
+    let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)
+        .expect("prompt build should not fail");
     let api_start = std::time::Instant::now();
     let api_result = api_client::ask(&prompt.system, &prompt.user).await;
     let api_time = api_start.elapsed();
-    let (
-        api_input_tokens,
-        api_output_tokens,
-        api_content,
-        ai_initiatives,
-        response_was_valid_json,
-        phase_note,
-    ) = match api_result {
-        Ok(api_resp) => {
-            let parsed = parse_initiative_response(&api_resp.content);
-            let valid_json =
-                !parsed.is_empty() || api_resp.content.contains("additional_initiatives_needed");
-            (
-                api_resp.input_tokens,
-                api_resp.output_tokens,
-                api_resp.content,
-                parsed,
-                valid_json,
-                format!(
-                    "Scenario '{}' with {} seeded initiatives assessed",
-                    scenario.manifest.id,
-                    scenario.seed_initiatives.len()
-                ),
-            )
-        }
-        Err(err) => (
-            0,
-            0,
-            format!("Deterministic fallback used because scenario assessment failed: {err}"),
-            vec![default_fallback_ai_initiative()],
-            false,
-            format!("Fallback initiative generation used after Claude failure: {err}"),
-        ),
-    };
+
+    let (api_input_tokens, api_output_tokens, api_content, ai_initiatives, response_was_valid_json, phase_note) =
+        match api_result {
+            Ok(api_resp) => {
+                let parsed = parse_initiative_response(&api_resp.content);
+                let valid_json = !parsed.is_empty()
+                    || api_resp.content.contains("additional_initiatives_needed");
+                (
+                    api_resp.input_tokens,
+                    api_resp.output_tokens,
+                    api_resp.content,
+                    parsed,
+                    valid_json,
+                    format!(
+                        "Scenario '{}' with {} seeded initiatives assessed",
+                        scenario.manifest.id,
+                        scenario.seed_initiatives.len()
+                    ),
+                )
+            }
+            Err(err) => (
+                0,
+                0,
+                format!("Deterministic fallback used because scenario assessment failed: {err}"),
+                vec![default_fallback_ai_initiative()],
+                false,
+                format!("Fallback initiative generation used after Claude failure: {err}"),
+            ),
+        };
+
     trace.prompt_events.push(prompt_trace_event(
         "scenario_assessment",
         &prompt.system,
@@ -430,20 +490,34 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         api_output_tokens,
         api_time,
     ));
-    phases.push(PhaseResult {
+
+    let phase_result = PhaseResult {
         phase: BenchmarkPhase::DocumentGeneration,
         status: PhaseStatus::Completed,
         tokens_used: api_input_tokens + api_output_tokens,
         time_elapsed: api_time,
         notes: vec![phase_note],
-    });
+    };
 
-    // Build initiative results from AI response
+    AutonomousAssessment {
+        api_input_tokens,
+        api_output_tokens,
+        ai_initiatives,
+        response_was_valid_json,
+        api_time,
+        phase_result,
+    }
+}
+
+fn build_autonomous_initiatives(
+    assessment: &AutonomousAssessment,
+    ws: &workspace::BenchmarkWorkspace,
+    trace: &mut RunTrace,
+) -> Vec<InitiativeResult> {
     let mut initiatives = vec![];
-    let n = ai_initiatives.len().max(1) as u32;
+    let n = assessment.ai_initiatives.len().max(1) as u32;
 
-    for (idx, ai_init) in ai_initiatives.iter().enumerate() {
-        // Create the initiative in CLI for artifact tracking
+    for (idx, ai_init) in assessment.ai_initiatives.iter().enumerate() {
         let cli_result = ws.create_initiative(&ai_init.title);
         if let Some(ref cli) = cli_result {
             trace.cli_events.push(cli.as_trace_event(
@@ -454,8 +528,10 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
 
         let cli_tokens = cli_result.as_ref().map(CliResult::approx_tokens).unwrap_or(0);
         let cli_time = cli_result.as_ref().map(|r| r.elapsed).unwrap_or_default();
-        let task_tokens = ((api_input_tokens + api_output_tokens) / u64::from(n)) + cli_tokens;
-        let task_time = (api_time / n) + cli_time;
+        let task_tokens =
+            ((assessment.api_input_tokens + assessment.api_output_tokens) / u64::from(n))
+                + cli_tokens;
+        let task_time = (assessment.api_time / n) + cli_time;
 
         tracing::info!(
             "AI initiative {}/{}: '{}' (tokens: {})",
@@ -474,7 +550,7 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
                 status: TaskStatus::Completed,
                 tokens_used: task_tokens,
                 time_elapsed: task_time,
-                code_metrics: score_ai_initiative(ai_init, response_was_valid_json),
+                code_metrics: score_ai_initiative(ai_init, assessment.response_was_valid_json),
                 validation_gate: None,
             }],
             total_tokens: task_tokens,
@@ -485,24 +561,20 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
     if initiatives.is_empty() {
         tracing::info!("AI identified no additional initiatives");
         initiatives.push(fallback_initiative(
-            api_input_tokens + api_output_tokens,
-            api_time,
-            response_was_valid_json,
+            assessment.api_input_tokens + assessment.api_output_tokens,
+            assessment.api_time,
+            assessment.response_was_valid_json,
         ));
     }
 
-    let total_tokens: u64 = initiatives.iter().map(|i| i.total_tokens).sum();
-    let total_time = start_time.elapsed();
-    phases.push(PhaseResult {
-        phase: BenchmarkPhase::Decomposition,
-        status: PhaseStatus::Completed,
-        tokens_used: total_tokens,
-        time_elapsed: total_time,
-        notes: vec![format!(
-            "Produced {} initiative assessments",
-            initiatives.len()
-        )],
-    });
+    initiatives
+}
+
+fn compute_autonomous_metrics(
+    initiatives: &[InitiativeResult],
+    total_tokens: u64,
+    total_time: std::time::Duration,
+) -> RunMetrics {
     let task_count = initiatives
         .iter()
         .map(|i| i.tasks.len())
@@ -523,30 +595,15 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
         .sum::<f32>()
         / task_count;
 
-    Ok(BenchmarkRun {
-        run_id,
-        timestamp: Utc::now(),
-        manifest,
-        scenario: ScenarioSummary {
-            id: scenario.manifest.id.clone(),
-            title: scenario.manifest.title.clone(),
-            root: scenario.root.display().to_string(),
-        },
-        execution_mode: ExecutionMode::Autonomous,
-        phases,
-        trace,
-        artifacts: snapshot_workspace_artifacts(ws.path()),
-        initiatives,
-        total_metrics: RunMetrics {
-            total_tokens,
-            total_time,
-            avg_code_quality: avg_doc_accuracy,
-            avg_test_coverage: 0.0,
-            avg_doc_accuracy,
-            avg_instruction_adherence,
-            gate_effectiveness: None,
-        },
-    })
+    RunMetrics {
+        total_tokens,
+        total_time,
+        avg_code_quality: avg_doc_accuracy,
+        avg_test_coverage: 0.0,
+        avg_doc_accuracy,
+        avg_instruction_adherence,
+        gate_effectiveness: None,
+    }
 }
 
 #[cfg(test)]

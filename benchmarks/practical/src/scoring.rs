@@ -416,96 +416,9 @@ mod tests {
             },
             execution_mode: ExecutionMode::Autonomous,
             phases: vec![],
-            trace: RunTrace {
-                prompt_events: vec![],
-                cli_events: vec![
-                    CliTraceEvent {
-                        label: "test".to_string(),
-                        command: "cargo test".to_string(),
-                        exit_code: 0,
-                        duration: Duration::from_secs(5),
-                        approx_tokens: 100,
-                        stdout_excerpt: "test result: ok".to_string(),
-                        stderr_excerpt: String::new(),
-                    },
-                    CliTraceEvent {
-                        label: "create".to_string(),
-                        command: "cadre create".to_string(),
-                        exit_code: 0,
-                        duration: Duration::from_secs(1),
-                        approx_tokens: 50,
-                        stdout_excerpt: String::new(),
-                        stderr_excerpt: String::new(),
-                    },
-                ],
-            },
-            artifacts: RunArtifacts {
-                documents: vec![
-                    DocumentArtifact {
-                        path: "vision/BENCH-V-0001.md".to_string(),
-                        title: "Test Vision".to_string(),
-                        short_code: Some("BENCH-V-0001".to_string()),
-                        excerpt: "## Context\nBuilding a file processor".to_string(),
-                    },
-                    DocumentArtifact {
-                        path: "initiatives/BENCH-I-0001.md".to_string(),
-                        title: "Parse Initiative".to_string(),
-                        short_code: Some("BENCH-I-0001".to_string()),
-                        excerpt: "## Context\nParsing module\n## Goals\nParse CSV".to_string(),
-                    },
-                    DocumentArtifact {
-                        path: "initiatives/BENCH-I-0002.md".to_string(),
-                        title: "Transform Initiative".to_string(),
-                        short_code: Some("BENCH-I-0002".to_string()),
-                        excerpt: "## Context\nTransform module\n## Goals\nTransform data"
-                            .to_string(),
-                    },
-                ],
-                code_files: vec![CodeArtifact {
-                    path: "src/lib.rs".to_string(),
-                    language: "Rust".to_string(),
-                    line_count: 100,
-                    excerpt: "mod parse;\nmod transform;\nstruct Record {}".to_string(),
-                }],
-            },
-            initiatives: vec![InitiativeResult {
-                initiative_id: "parse".to_string(),
-                initiative_title: "Parse Module".to_string(),
-                tasks: vec![
-                    TaskResult {
-                        task_id: "t1".to_string(),
-                        task_title: "Implement CSV parser".to_string(),
-                        status: TaskStatus::Completed,
-                        tokens_used: 1000,
-                        time_elapsed: Duration::from_secs(30),
-                        code_metrics: CodeMetrics {
-                            lines_of_code: 50,
-                            test_coverage_percent: 80.0,
-                            cyclomatic_complexity: 3.0,
-                            doc_accuracy_percent: 85.0,
-                            instruction_adherence_percent: 90.0,
-                        },
-                        validation_gate: None,
-                    },
-                    TaskResult {
-                        task_id: "t2".to_string(),
-                        task_title: "Add CSV tests".to_string(),
-                        status: TaskStatus::Completed,
-                        tokens_used: 800,
-                        time_elapsed: Duration::from_secs(20),
-                        code_metrics: CodeMetrics {
-                            lines_of_code: 30,
-                            test_coverage_percent: 90.0,
-                            cyclomatic_complexity: 2.0,
-                            doc_accuracy_percent: 75.0,
-                            instruction_adherence_percent: 85.0,
-                        },
-                        validation_gate: None,
-                    },
-                ],
-                total_tokens: 1800,
-                total_time: Duration::from_secs(50),
-            }],
+            trace: make_test_trace(),
+            artifacts: make_test_artifacts(),
+            initiatives: vec![make_test_initiative()],
             total_metrics: RunMetrics {
                 total_tokens: 1800,
                 total_time: Duration::from_secs(50),
@@ -515,6 +428,104 @@ mod tests {
                 avg_instruction_adherence: 87.5,
                 gate_effectiveness: None,
             },
+        }
+    }
+
+    fn make_test_trace() -> RunTrace {
+        RunTrace {
+            prompt_events: vec![],
+            cli_events: vec![
+                CliTraceEvent {
+                    label: "test".to_string(),
+                    command: "cargo test".to_string(),
+                    exit_code: 0,
+                    duration: Duration::from_secs(5),
+                    approx_tokens: 100,
+                    stdout_excerpt: "test result: ok".to_string(),
+                    stderr_excerpt: String::new(),
+                },
+                CliTraceEvent {
+                    label: "create".to_string(),
+                    command: "cadre create".to_string(),
+                    exit_code: 0,
+                    duration: Duration::from_secs(1),
+                    approx_tokens: 50,
+                    stdout_excerpt: String::new(),
+                    stderr_excerpt: String::new(),
+                },
+            ],
+        }
+    }
+
+    fn make_test_artifacts() -> RunArtifacts {
+        RunArtifacts {
+            documents: vec![
+                DocumentArtifact {
+                    path: "vision/BENCH-V-0001.md".to_string(),
+                    title: "Test Vision".to_string(),
+                    short_code: Some("BENCH-V-0001".to_string()),
+                    excerpt: "## Context\nBuilding a file processor".to_string(),
+                },
+                DocumentArtifact {
+                    path: "initiatives/BENCH-I-0001.md".to_string(),
+                    title: "Parse Initiative".to_string(),
+                    short_code: Some("BENCH-I-0001".to_string()),
+                    excerpt: "## Context\nParsing module\n## Goals\nParse CSV".to_string(),
+                },
+                DocumentArtifact {
+                    path: "initiatives/BENCH-I-0002.md".to_string(),
+                    title: "Transform Initiative".to_string(),
+                    short_code: Some("BENCH-I-0002".to_string()),
+                    excerpt: "## Context\nTransform module\n## Goals\nTransform data".to_string(),
+                },
+            ],
+            code_files: vec![CodeArtifact {
+                path: "src/lib.rs".to_string(),
+                language: "Rust".to_string(),
+                line_count: 100,
+                excerpt: "mod parse;\nmod transform;\nstruct Record {}".to_string(),
+            }],
+        }
+    }
+
+    fn make_test_initiative() -> InitiativeResult {
+        InitiativeResult {
+            initiative_id: "parse".to_string(),
+            initiative_title: "Parse Module".to_string(),
+            tasks: vec![
+                TaskResult {
+                    task_id: "t1".to_string(),
+                    task_title: "Implement CSV parser".to_string(),
+                    status: TaskStatus::Completed,
+                    tokens_used: 1000,
+                    time_elapsed: Duration::from_secs(30),
+                    code_metrics: CodeMetrics {
+                        lines_of_code: 50,
+                        test_coverage_percent: 80.0,
+                        cyclomatic_complexity: 3.0,
+                        doc_accuracy_percent: 85.0,
+                        instruction_adherence_percent: 90.0,
+                    },
+                    validation_gate: None,
+                },
+                TaskResult {
+                    task_id: "t2".to_string(),
+                    task_title: "Add CSV tests".to_string(),
+                    status: TaskStatus::Completed,
+                    tokens_used: 800,
+                    time_elapsed: Duration::from_secs(20),
+                    code_metrics: CodeMetrics {
+                        lines_of_code: 30,
+                        test_coverage_percent: 90.0,
+                        cyclomatic_complexity: 2.0,
+                        doc_accuracy_percent: 75.0,
+                        instruction_adherence_percent: 85.0,
+                    },
+                    validation_gate: None,
+                },
+            ],
+            total_tokens: 1800,
+            total_time: Duration::from_secs(50),
         }
     }
 

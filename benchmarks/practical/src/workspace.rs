@@ -45,79 +45,9 @@ impl BenchmarkWorkspace {
         let proj_str = temp_dir.path().to_str().unwrap_or("/tmp/bench").to_string();
         let mut cli_events = Vec::new();
 
-        // Initialize project
-        if let Ok(result) =
-            runner::run_cli(&binary, &["init", "--path", &proj_str, "--prefix", "BENCH"])
-        {
-            cli_events.push(result.as_trace_event(
-                "workspace_init",
-                format!(
-                    "{} init --path {} --prefix BENCH",
-                    binary.display(),
-                    proj_str
-                ),
-            ));
-        }
-
-        // Create vision from scenario
-        let vision_title = extract_title(&scenario.vision).unwrap_or("Benchmark Vision");
-        let vision_result = runner::run_cli(
-            &binary,
-            &[
-                "create",
-                "--type",
-                "vision",
-                "--path",
-                &proj_str,
-                vision_title,
-            ],
-        );
-        if let Ok(result) = &vision_result {
-            cli_events.push(result.as_trace_event(
-                "seed_vision",
-                format!(
-                    "{} create --type vision --path {} {}",
-                    binary.display(),
-                    proj_str,
-                    vision_title
-                ),
-            ));
-        }
-        let vision_code = vision_result
-            .as_ref()
-            .map(|r| runner::extract_short_code(&r.stdout, "BENCH-V-"))
-            .unwrap_or_default();
-
-        // Seed initiatives from scenario pack
-        if !vision_code.is_empty() {
-            for (i, seed) in scenario.seed_initiatives.iter().enumerate() {
-                let title = extract_title(&seed.content).unwrap_or("Seed Initiative");
-                if let Ok(result) = runner::run_cli(
-                    &binary,
-                    &[
-                        "create",
-                        "--type",
-                        "initiative",
-                        "--path",
-                        &proj_str,
-                        "--parent",
-                        &vision_code,
-                        title,
-                    ],
-                ) {
-                    cli_events.push(result.as_trace_event(
-                        format!("seed_initiative_{i}"),
-                        format!(
-                            "{} create --type initiative --path {} --parent {} {}",
-                            binary.display(),
-                            proj_str,
-                            vision_code,
-                            title
-                        ),
-                    ));
-                }
-            }
-        }
+        init_project(&binary, &proj_str, &mut cli_events);
+        let vision_code = seed_vision(&binary, &proj_str, scenario, &mut cli_events);
+        seed_initiatives(&binary, &proj_str, &vision_code, scenario, &mut cli_events);
 
         let phase_result = PhaseResult {
             phase: BenchmarkPhase::ScenarioSetup,
@@ -166,6 +96,88 @@ impl BenchmarkWorkspace {
             ],
         )
         .ok()
+    }
+}
+
+fn init_project(
+    binary: &Path,
+    proj_str: &str,
+    cli_events: &mut Vec<CliTraceEvent>,
+) {
+    if let Ok(result) =
+        runner::run_cli(binary, &["init", "--path", proj_str, "--prefix", "BENCH"])
+    {
+        cli_events.push(result.as_trace_event(
+            "workspace_init",
+            format!("{} init --path {} --prefix BENCH", binary.display(), proj_str),
+        ));
+    }
+}
+
+fn seed_vision(
+    binary: &Path,
+    proj_str: &str,
+    scenario: &LoadedScenarioPack,
+    cli_events: &mut Vec<CliTraceEvent>,
+) -> String {
+    let vision_title = extract_title(&scenario.vision).unwrap_or("Benchmark Vision");
+    let vision_result = runner::run_cli(
+        binary,
+        &["create", "--type", "vision", "--path", proj_str, vision_title],
+    );
+    if let Ok(result) = &vision_result {
+        cli_events.push(result.as_trace_event(
+            "seed_vision",
+            format!(
+                "{} create --type vision --path {} {}",
+                binary.display(),
+                proj_str,
+                vision_title
+            ),
+        ));
+    }
+    vision_result
+        .as_ref()
+        .map(|r| runner::extract_short_code(&r.stdout, "BENCH-V-"))
+        .unwrap_or_default()
+}
+
+fn seed_initiatives(
+    binary: &Path,
+    proj_str: &str,
+    vision_code: &str,
+    scenario: &LoadedScenarioPack,
+    cli_events: &mut Vec<CliTraceEvent>,
+) {
+    if vision_code.is_empty() {
+        return;
+    }
+    for (i, seed) in scenario.seed_initiatives.iter().enumerate() {
+        let title = extract_title(&seed.content).unwrap_or("Seed Initiative");
+        if let Ok(result) = runner::run_cli(
+            binary,
+            &[
+                "create",
+                "--type",
+                "initiative",
+                "--path",
+                proj_str,
+                "--parent",
+                vision_code,
+                title,
+            ],
+        ) {
+            cli_events.push(result.as_trace_event(
+                format!("seed_initiative_{i}"),
+                format!(
+                    "{} create --type initiative --path {} --parent {} {}",
+                    binary.display(),
+                    proj_str,
+                    vision_code,
+                    title
+                ),
+            ));
+        }
     }
 }
 

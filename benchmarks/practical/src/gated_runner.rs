@@ -17,51 +17,131 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
 
     tracing::info!("Starting validated run with gates: {}", run_id);
 
-    // Create isolated workspace and seed scenario documents
     let mut ws = workspace::BenchmarkWorkspace::setup(scenario)?;
     let setup = ws.take_setup_trace();
     trace.cli_events.extend(setup.cli_events);
     phases.push(setup.phase_result);
 
-    // Ask Claude to assess what additional initiatives are needed
-    let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)?;
+    let mut assessment = assess_scenario(scenario, &mut trace).await;
+    phases.push(std::mem::replace(
+        &mut assessment.phase_result,
+        PhaseResult {
+            phase: BenchmarkPhase::DocumentGeneration,
+            status: PhaseStatus::Completed,
+            tokens_used: 0,
+            time_elapsed: std::time::Duration::ZERO,
+            notes: vec![],
+        },
+    ));
+
+    let mut initiatives = vec![];
+    let mut total_rework_tokens = 0u64;
+    let scorer = GateScorer::new();
+
+    evaluate_gated_initiatives(
+        &assessment,
+        &scorer,
+        &ws,
+        &mut trace,
+        &mut initiatives,
+        &mut total_rework_tokens,
+    )
+    .await;
+
+    if initiatives.is_empty() {
+        add_fallback_gated_initiative(
+            &assessment,
+            &mut trace,
+            &mut initiatives,
+            &mut total_rework_tokens,
+        )
+        .await;
+    }
+
+    let total_tokens =
+        initiatives.iter().map(|i| i.total_tokens).sum::<u64>() + total_rework_tokens;
+    let total_time = start_time.elapsed();
+    phases.push(PhaseResult {
+        phase: BenchmarkPhase::Decomposition,
+        status: PhaseStatus::Completed,
+        tokens_used: total_tokens,
+        time_elapsed: total_time,
+        notes: vec![format!(
+            "Produced {} gated initiative assessments",
+            initiatives.len()
+        )],
+    });
+
+    let metrics = compute_run_metrics(&initiatives, total_tokens, total_time, true);
+
+    Ok(BenchmarkRun {
+        run_id,
+        timestamp: Utc::now(),
+        manifest,
+        scenario: ScenarioSummary {
+            id: scenario.manifest.id.clone(),
+            title: scenario.manifest.title.clone(),
+            root: scenario.root.display().to_string(),
+        },
+        execution_mode: ExecutionMode::Validated,
+        phases,
+        trace,
+        artifacts: runner::snapshot_workspace_artifacts(ws.path()),
+        initiatives,
+        total_metrics: metrics,
+    })
+}
+
+/// Result of the initial scenario assessment API call.
+struct AssessmentResult {
+    api_input_tokens: u64,
+    api_output_tokens: u64,
+    api_content: String,
+    ai_initiatives: Vec<runner::AiInitiative>,
+    response_was_valid_json: bool,
+    api_time: std::time::Duration,
+    phase_result: PhaseResult,
+}
+
+async fn assess_scenario(
+    scenario: &LoadedScenarioPack,
+    trace: &mut RunTrace,
+) -> AssessmentResult {
+    let prompt = prompt_builder::build_scenario_assessment_prompt(&scenario.root)
+        .expect("prompt build should not fail");
     let api_start = std::time::Instant::now();
     let api_result = api_client::ask(&prompt.system, &prompt.user).await;
     let api_time = api_start.elapsed();
-    let (
-        api_input_tokens,
-        api_output_tokens,
-        api_content,
-        ai_initiatives,
-        response_was_valid_json,
-        phase_note,
-    ) = match api_result {
-        Ok(api_resp) => {
-            let parsed = runner::parse_initiative_response(&api_resp.content);
-            let valid_json =
-                !parsed.is_empty() || api_resp.content.contains("additional_initiatives_needed");
-            (
-                api_resp.input_tokens,
-                api_resp.output_tokens,
-                api_resp.content,
-                parsed,
-                valid_json,
-                format!(
-                    "Scenario '{}' with {} seeded initiatives assessed",
-                    scenario.manifest.id,
-                    scenario.seed_initiatives.len()
-                ),
-            )
-        }
-        Err(err) => (
-            0,
-            0,
-            format!("Deterministic fallback used because scenario assessment failed: {err}"),
-            vec![runner::default_fallback_ai_initiative()],
-            false,
-            format!("Fallback initiative generation used after Claude failure: {err}"),
-        ),
-    };
+
+    let (api_input_tokens, api_output_tokens, api_content, ai_initiatives, response_was_valid_json, phase_note) =
+        match api_result {
+            Ok(api_resp) => {
+                let parsed = runner::parse_initiative_response(&api_resp.content);
+                let valid_json = !parsed.is_empty()
+                    || api_resp.content.contains("additional_initiatives_needed");
+                (
+                    api_resp.input_tokens,
+                    api_resp.output_tokens,
+                    api_resp.content,
+                    parsed,
+                    valid_json,
+                    format!(
+                        "Scenario '{}' with {} seeded initiatives assessed",
+                        scenario.manifest.id,
+                        scenario.seed_initiatives.len()
+                    ),
+                )
+            }
+            Err(err) => (
+                0,
+                0,
+                format!("Deterministic fallback used because scenario assessment failed: {err}"),
+                vec![runner::default_fallback_ai_initiative()],
+                false,
+                format!("Fallback initiative generation used after Claude failure: {err}"),
+            ),
+        };
+
     trace.prompt_events.push(runner::prompt_trace_event(
         "scenario_assessment",
         &prompt.system,
@@ -71,21 +151,37 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         api_output_tokens,
         api_time,
     ));
-    phases.push(PhaseResult {
+
+    let phase_result = PhaseResult {
         phase: BenchmarkPhase::DocumentGeneration,
         status: PhaseStatus::Completed,
         tokens_used: api_input_tokens + api_output_tokens,
         time_elapsed: api_time,
         notes: vec![phase_note],
-    });
+    };
 
-    let scorer = GateScorer::new();
-    let mut initiatives = vec![];
-    let mut total_rework_tokens = 0u64;
-    let n = ai_initiatives.len().max(1) as u32;
+    AssessmentResult {
+        api_input_tokens,
+        api_output_tokens,
+        api_content,
+        ai_initiatives,
+        response_was_valid_json,
+        api_time,
+        phase_result,
+    }
+}
 
-    for (idx, ai_init) in ai_initiatives.iter().enumerate() {
-        // Create the initiative in CLI
+async fn evaluate_gated_initiatives(
+    assessment: &AssessmentResult,
+    scorer: &GateScorer,
+    ws: &workspace::BenchmarkWorkspace,
+    trace: &mut RunTrace,
+    initiatives: &mut Vec<InitiativeResult>,
+    total_rework_tokens: &mut u64,
+) {
+    let n = assessment.ai_initiatives.len().max(1) as u32;
+
+    for (idx, ai_init) in assessment.ai_initiatives.iter().enumerate() {
         let cli_result = ws.create_initiative(&ai_init.title);
         if let Some(ref cli) = cli_result {
             trace.cli_events.push(cli.as_trace_event(
@@ -94,88 +190,30 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
             ));
         }
 
-        let cli_tokens = cli_result.as_ref().map(super::runner::CliResult::approx_tokens).unwrap_or(0);
+        let cli_tokens = cli_result
+            .as_ref()
+            .map(super::runner::CliResult::approx_tokens)
+            .unwrap_or(0);
         let cli_time = cli_result.as_ref().map(|r| r.elapsed).unwrap_or_default();
-        let task_tokens = ((api_input_tokens + api_output_tokens) / u64::from(n)) + cli_tokens;
-        let task_time = (api_time / n) + cli_time;
+        let task_tokens =
+            ((assessment.api_input_tokens + assessment.api_output_tokens) / u64::from(n))
+                + cli_tokens;
+        let task_time = (assessment.api_time / n) + cli_time;
 
-        // Build a partial InitiativeResult so GateScorer can inspect its structure
-        let code_metrics = runner::score_ai_initiative(ai_init, response_was_valid_json);
-        let partial = InitiativeResult {
-            initiative_id: ai_init.id.clone(),
-            initiative_title: ai_init.title.clone(),
-            tasks: vec![TaskResult {
-                task_id: format!("{}-assess", ai_init.id),
-                task_title: format!("Assess and design: {}", ai_init.title),
-                status: TaskStatus::Completed,
-                tokens_used: task_tokens,
-                time_elapsed: task_time,
-                code_metrics: code_metrics.clone(),
-                validation_gate: None,
-            }],
-            total_tokens: task_tokens,
-            total_time: task_time,
-        };
+        let code_metrics =
+            runner::score_ai_initiative(ai_init, assessment.response_was_valid_json);
+        let partial = build_partial_initiative(ai_init, &code_metrics, task_tokens, task_time);
 
-        // 1. Structural gate (deterministic, no API cost)
         let structural = scorer.score_initiative(&partial, None);
-        let structural_rejected = matches!(structural.gate_decision, GateDecision::Rejected);
-
-        // 2. Semantic gate via Claude API (only when structure looks sound)
-        let validation_gate = if structural_rejected {
-            tracing::info!(
-                "Structural gate rejected initiative {}/{}: '{}' (issues: {})",
-                idx + 1,
-                n,
-                ai_init.title,
-                structural.issues_found.len()
-            );
-            total_rework_tokens += structural.rework_tokens;
-            Some(structural)
-        } else {
-            let initiative_content = format!(
-                "Objective: {}\nTasks: {}",
-                ai_init.objective,
-                ai_init.tasks.join(", ")
-            );
-            let api_gate = run_gate_check(&ai_init.title, &initiative_content).await;
-            match api_gate {
-                Ok(outcome) => {
-                    trace.prompt_events.push(outcome.trace_event);
-                    // Merge structural issues into API gate result
-                    let mut api_issues = outcome.issues;
-                    api_issues.extend(structural.issues_found.clone());
-                    let merged_decision =
-                        stricter_decision(outcome.decision, structural.gate_decision);
-                    let merged_rework = outcome.rework_tokens + structural.rework_tokens;
-                    total_rework_tokens += merged_rework;
-                    tracing::info!(
-                        "Gate check {}/{}: '{}' → {:?} (rework tokens: {})",
-                        idx + 1,
-                        n,
-                        ai_init.title,
-                        merged_decision,
-                        merged_rework
-                    );
-                    Some(ValidationGateResult {
-                        gate_decision: merged_decision,
-                        issues_found: api_issues,
-                        rework_tokens: merged_rework,
-                        rework_time: outcome.rework_time,
-                    })
-                }
-                Err(e) => {
-                    // API unavailable — fall back to structural gate
-                    tracing::warn!(
-                        "API gate failed for '{}', using structural gate: {}",
-                        ai_init.title,
-                        e
-                    );
-                    total_rework_tokens += structural.rework_tokens;
-                    Some(structural)
-                }
-            }
-        };
+        let validation_gate = resolve_gate_decision(
+            &structural,
+            ai_init,
+            idx,
+            n,
+            trace,
+            total_rework_tokens,
+        )
+        .await;
 
         initiatives.push(InitiativeResult {
             initiative_id: ai_init.id.clone(),
@@ -193,64 +231,153 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
             total_time: task_time,
         });
     }
+}
 
-    // Handle case where AI found no additional initiatives
-    if initiatives.is_empty() {
-        tracing::info!("AI identified no additional initiatives — running gate on base response");
-        let gate_result = run_gate_check("Strategic assessment", &api_content).await;
-        let validation_gate = match gate_result {
-            Ok(outcome) => {
-                trace.prompt_events.push(outcome.trace_event);
-                total_rework_tokens += outcome.rework_tokens;
-                Some(ValidationGateResult {
-                    gate_decision: outcome.decision,
-                    issues_found: outcome.issues,
-                    rework_tokens: outcome.rework_tokens,
-                    rework_time: outcome.rework_time,
-                })
-            }
-            Err(_) => None,
-        };
+fn build_partial_initiative(
+    ai_init: &runner::AiInitiative,
+    code_metrics: &CodeMetrics,
+    task_tokens: u64,
+    task_time: std::time::Duration,
+) -> InitiativeResult {
+    InitiativeResult {
+        initiative_id: ai_init.id.clone(),
+        initiative_title: ai_init.title.clone(),
+        tasks: vec![TaskResult {
+            task_id: format!("{}-assess", ai_init.id),
+            task_title: format!("Assess and design: {}", ai_init.title),
+            status: TaskStatus::Completed,
+            tokens_used: task_tokens,
+            time_elapsed: task_time,
+            code_metrics: code_metrics.clone(),
+            validation_gate: None,
+        }],
+        total_tokens: task_tokens,
+        total_time: task_time,
+    }
+}
 
-        let metrics = CodeMetrics {
-            lines_of_code: 1,
-            test_coverage_percent: 0.0,
-            cyclomatic_complexity: 0.0,
-            doc_accuracy_percent: if response_was_valid_json { 80.0 } else { 30.0 },
-            instruction_adherence_percent: if response_was_valid_json { 100.0 } else { 50.0 },
-        };
-        initiatives.push(InitiativeResult {
-            initiative_id: "no-additional".to_string(),
-            initiative_title: "No additional initiatives identified".to_string(),
-            tasks: vec![TaskResult {
-                task_id: "strategic-assessment".to_string(),
-                task_title: "Strategic completeness assessment".to_string(),
-                status: TaskStatus::Completed,
-                tokens_used: api_input_tokens + api_output_tokens,
-                time_elapsed: api_time,
-                code_metrics: metrics,
-                validation_gate,
-            }],
-            total_tokens: api_input_tokens + api_output_tokens,
-            total_time: api_time,
-        });
+async fn resolve_gate_decision(
+    structural: &ValidationGateResult,
+    ai_init: &runner::AiInitiative,
+    idx: usize,
+    n: u32,
+    trace: &mut RunTrace,
+    total_rework_tokens: &mut u64,
+) -> Option<ValidationGateResult> {
+    if matches!(structural.gate_decision, GateDecision::Rejected) {
+        tracing::info!(
+            "Structural gate rejected initiative {}/{}: '{}' (issues: {})",
+            idx + 1,
+            n,
+            ai_init.title,
+            structural.issues_found.len()
+        );
+        *total_rework_tokens += structural.rework_tokens;
+        return Some(structural.clone());
     }
 
-    let total_tokens: u64 =
-        initiatives.iter().map(|i| i.total_tokens).sum::<u64>() + total_rework_tokens;
-    let total_time = start_time.elapsed();
-    phases.push(PhaseResult {
-        phase: BenchmarkPhase::Decomposition,
-        status: PhaseStatus::Completed,
-        tokens_used: total_tokens,
-        time_elapsed: total_time,
-        notes: vec![format!(
-            "Produced {} gated initiative assessments",
-            initiatives.len()
-        )],
-    });
-    let gate_effectiveness = calculate_gate_effectiveness(&initiatives);
+    let initiative_content = format!(
+        "Objective: {}\nTasks: {}",
+        ai_init.objective,
+        ai_init.tasks.join(", ")
+    );
+    let api_gate = run_gate_check(&ai_init.title, &initiative_content).await;
+    match api_gate {
+        Ok(outcome) => {
+            trace.prompt_events.push(outcome.trace_event);
+            let mut api_issues = outcome.issues;
+            api_issues.extend(structural.issues_found.clone());
+            let merged_decision =
+                stricter_decision(outcome.decision, structural.gate_decision.clone());
+            let merged_rework = outcome.rework_tokens + structural.rework_tokens;
+            *total_rework_tokens += merged_rework;
+            tracing::info!(
+                "Gate check {}/{}: '{}' -> {:?} (rework tokens: {})",
+                idx + 1,
+                n,
+                ai_init.title,
+                merged_decision,
+                merged_rework
+            );
+            Some(ValidationGateResult {
+                gate_decision: merged_decision,
+                issues_found: api_issues,
+                rework_tokens: merged_rework,
+                rework_time: outcome.rework_time,
+            })
+        }
+        Err(e) => {
+            tracing::warn!(
+                "API gate failed for '{}', using structural gate: {}",
+                ai_init.title,
+                e
+            );
+            *total_rework_tokens += structural.rework_tokens;
+            Some(structural.clone())
+        }
+    }
+}
 
+async fn add_fallback_gated_initiative(
+    assessment: &AssessmentResult,
+    trace: &mut RunTrace,
+    initiatives: &mut Vec<InitiativeResult>,
+    total_rework_tokens: &mut u64,
+) {
+    tracing::info!("AI identified no additional initiatives — running gate on base response");
+    let gate_result = run_gate_check("Strategic assessment", &assessment.api_content).await;
+    let validation_gate = match gate_result {
+        Ok(outcome) => {
+            trace.prompt_events.push(outcome.trace_event);
+            *total_rework_tokens += outcome.rework_tokens;
+            Some(ValidationGateResult {
+                gate_decision: outcome.decision,
+                issues_found: outcome.issues,
+                rework_tokens: outcome.rework_tokens,
+                rework_time: outcome.rework_time,
+            })
+        }
+        Err(_) => None,
+    };
+
+    let metrics = CodeMetrics {
+        lines_of_code: 1,
+        test_coverage_percent: 0.0,
+        cyclomatic_complexity: 0.0,
+        doc_accuracy_percent: if assessment.response_was_valid_json {
+            80.0
+        } else {
+            30.0
+        },
+        instruction_adherence_percent: if assessment.response_was_valid_json {
+            100.0
+        } else {
+            50.0
+        },
+    };
+    initiatives.push(InitiativeResult {
+        initiative_id: "no-additional".to_string(),
+        initiative_title: "No additional initiatives identified".to_string(),
+        tasks: vec![TaskResult {
+            task_id: "strategic-assessment".to_string(),
+            task_title: "Strategic completeness assessment".to_string(),
+            status: TaskStatus::Completed,
+            tokens_used: assessment.api_input_tokens + assessment.api_output_tokens,
+            time_elapsed: assessment.api_time,
+            code_metrics: metrics,
+            validation_gate,
+        }],
+        total_tokens: assessment.api_input_tokens + assessment.api_output_tokens,
+        total_time: assessment.api_time,
+    });
+}
+
+fn compute_run_metrics(
+    initiatives: &[InitiativeResult],
+    total_tokens: u64,
+    total_time: std::time::Duration,
+    include_gate_effectiveness: bool,
+) -> RunMetrics {
     let task_count = initiatives
         .iter()
         .map(|i| i.tasks.len())
@@ -271,30 +398,21 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
         .sum::<f32>()
         / task_count;
 
-    Ok(BenchmarkRun {
-        run_id,
-        timestamp: Utc::now(),
-        manifest,
-        scenario: ScenarioSummary {
-            id: scenario.manifest.id.clone(),
-            title: scenario.manifest.title.clone(),
-            root: scenario.root.display().to_string(),
-        },
-        execution_mode: ExecutionMode::Validated,
-        phases,
-        trace,
-        artifacts: runner::snapshot_workspace_artifacts(ws.path()),
-        initiatives,
-        total_metrics: RunMetrics {
-            total_tokens,
-            total_time,
-            avg_code_quality: avg_doc_accuracy,
-            avg_test_coverage: 0.0,
-            avg_doc_accuracy,
-            avg_instruction_adherence,
-            gate_effectiveness: Some(gate_effectiveness),
-        },
-    })
+    let gate_effectiveness = if include_gate_effectiveness {
+        Some(calculate_gate_effectiveness(initiatives))
+    } else {
+        None
+    };
+
+    RunMetrics {
+        total_tokens,
+        total_time,
+        avg_code_quality: avg_doc_accuracy,
+        avg_test_coverage: 0.0,
+        avg_doc_accuracy,
+        avg_instruction_adherence,
+        gate_effectiveness,
+    }
 }
 
 /// Return the stricter of two gate decisions (Rejected > RequiresRework > Approved).
