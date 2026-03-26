@@ -94,9 +94,9 @@ pub async fn execute_with_gates(scenario: &LoadedScenarioPack) -> anyhow::Result
             ));
         }
 
-        let cli_tokens = cli_result.as_ref().map(|r| r.approx_tokens()).unwrap_or(0);
+        let cli_tokens = cli_result.as_ref().map(super::runner::CliResult::approx_tokens).unwrap_or(0);
         let cli_time = cli_result.as_ref().map(|r| r.elapsed).unwrap_or_default();
-        let task_tokens = ((api_input_tokens + api_output_tokens) / n as u64) + cli_tokens;
+        let task_tokens = ((api_input_tokens + api_output_tokens) / u64::from(n)) + cli_tokens;
         let task_time = (api_time / n) + cli_time;
 
         // Build a partial InitiativeResult so GateScorer can inspect its structure
@@ -365,15 +365,15 @@ fn parse_gate_response(response: &str) -> (GateDecision, Vec<String>) {
 
     let approved = parsed
         .get("approved")
-        .and_then(|v| v.as_bool())
+        .and_then(serde_json::Value::as_bool)
         .unwrap_or(true);
-    let score = parsed.get("score").and_then(|v| v.as_f64()).unwrap_or(0.8);
+    let score = parsed.get("score").and_then(serde_json::Value::as_f64).unwrap_or(0.8);
     let issues: Vec<String> = parsed
         .get("issues")
         .and_then(|v| v.as_array())
         .map(|arr| {
             arr.iter()
-                .filter_map(|i| i.as_str().map(|s| s.to_string()))
+                .filter_map(|i| i.as_str().map(std::string::ToString::to_string))
                 .collect()
         })
         .unwrap_or_default();

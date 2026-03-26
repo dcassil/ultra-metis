@@ -39,14 +39,14 @@ impl Vision {
         let mut tera = Tera::default();
         tera.add_raw_template("vision_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
         context.insert("title", &title);
 
         let rendered_content = tera.render("vision_content", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
         })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -90,7 +90,7 @@ impl Vision {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -122,8 +122,7 @@ impl Vision {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "vision" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'vision', found '{}'",
-                level
+                "Expected level 'vision', found '{level}'"
             )));
         }
 
@@ -157,7 +156,7 @@ impl Vision {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -165,7 +164,7 @@ impl Vision {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", self.frontmatter_template())
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -180,16 +179,16 @@ impl Vision {
             &self.metadata().exit_criteria_met.to_string(),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

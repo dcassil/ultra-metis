@@ -86,44 +86,44 @@ pub enum ParentReference {
 impl ParentReference {
     pub fn to_path_string(&self) -> String {
         match self {
-            ParentReference::Some(id) => id.as_str().to_string(),
-            ParentReference::None => "root".to_string(),
-            ParentReference::Null => "NULL".to_string(),
+            Self::Some(id) => id.as_str().to_string(),
+            Self::None => "root".to_string(),
+            Self::Null => "NULL".to_string(),
         }
     }
 
     pub fn has_parent(&self) -> bool {
-        matches!(self, ParentReference::Some(_))
+        matches!(self, Self::Some(_))
     }
 
     pub fn parent_id(&self) -> Option<&DocumentId> {
         match self {
-            ParentReference::Some(id) => Some(id),
+            Self::Some(id) => Some(id),
             _ => None,
         }
     }
 
     pub fn from_option(id: Option<DocumentId>) -> Self {
         match id {
-            Some(id) => ParentReference::Some(id),
-            None => ParentReference::None,
+            Some(id) => Self::Some(id),
+            None => Self::None,
         }
     }
 
     pub fn null() -> Self {
-        ParentReference::Null
+        Self::Null
     }
 }
 
 impl From<DocumentId> for ParentReference {
     fn from(id: DocumentId) -> Self {
-        ParentReference::Some(id)
+        Self::Some(id)
     }
 }
 
 impl From<Option<DocumentId>> for ParentReference {
     fn from(opt: Option<DocumentId>) -> Self {
-        ParentReference::from_option(opt)
+        Self::from_option(opt)
     }
 }
 
@@ -177,23 +177,23 @@ pub enum DocumentType {
 impl fmt::Display for DocumentType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            DocumentType::ProductDoc => write!(f, "product_doc"),
-            DocumentType::DesignContext => write!(f, "design_context"),
-            DocumentType::Epic => write!(f, "epic"),
-            DocumentType::Story => write!(f, "story"),
-            DocumentType::Task => write!(f, "task"),
-            DocumentType::Adr => write!(f, "adr"),
-            DocumentType::Specification => write!(f, "specification"),
-            DocumentType::Vision => write!(f, "vision"),
-            DocumentType::Initiative => write!(f, "initiative"),
-            DocumentType::AnalysisBaseline => write!(f, "analysis_baseline"),
-            DocumentType::QualityRecord => write!(f, "quality_record"),
-            DocumentType::RulesConfig => write!(f, "rules_config"),
-            DocumentType::DurableInsightNote => write!(f, "durable_insight_note"),
-            DocumentType::CrossReference => write!(f, "cross_reference"),
-            DocumentType::Architecture => write!(f, "architecture"),
-            DocumentType::ArchitectureCatalogEntry => write!(f, "architecture_catalog_entry"),
-            DocumentType::ReferenceArchitecture => write!(f, "reference_architecture"),
+            Self::ProductDoc => write!(f, "product_doc"),
+            Self::DesignContext => write!(f, "design_context"),
+            Self::Epic => write!(f, "epic"),
+            Self::Story => write!(f, "story"),
+            Self::Task => write!(f, "task"),
+            Self::Adr => write!(f, "adr"),
+            Self::Specification => write!(f, "specification"),
+            Self::Vision => write!(f, "vision"),
+            Self::Initiative => write!(f, "initiative"),
+            Self::AnalysisBaseline => write!(f, "analysis_baseline"),
+            Self::QualityRecord => write!(f, "quality_record"),
+            Self::RulesConfig => write!(f, "rules_config"),
+            Self::DurableInsightNote => write!(f, "durable_insight_note"),
+            Self::CrossReference => write!(f, "cross_reference"),
+            Self::Architecture => write!(f, "architecture"),
+            Self::ArchitectureCatalogEntry => write!(f, "architecture_catalog_entry"),
+            Self::ReferenceArchitecture => write!(f, "reference_architecture"),
         }
     }
 }
@@ -203,38 +203,38 @@ impl FromStr for DocumentType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "product_doc" | "productdoc" | "product-doc" => Ok(DocumentType::ProductDoc),
+            "product_doc" | "productdoc" | "product-doc" => Ok(Self::ProductDoc),
             "design_context" | "designcontext" | "design-context" => {
-                Ok(DocumentType::DesignContext)
+                Ok(Self::DesignContext)
             }
-            "epic" => Ok(DocumentType::Epic),
-            "story" => Ok(DocumentType::Story),
-            "task" => Ok(DocumentType::Task),
-            "adr" => Ok(DocumentType::Adr),
-            "specification" => Ok(DocumentType::Specification),
-            "vision" => Ok(DocumentType::Vision),
-            "initiative" => Ok(DocumentType::Initiative),
+            "epic" => Ok(Self::Epic),
+            "story" => Ok(Self::Story),
+            "task" => Ok(Self::Task),
+            "adr" => Ok(Self::Adr),
+            "specification" => Ok(Self::Specification),
+            "vision" => Ok(Self::Vision),
+            "initiative" => Ok(Self::Initiative),
             "analysis_baseline" | "analysisbaseline" | "analysis-baseline" => {
-                Ok(DocumentType::AnalysisBaseline)
+                Ok(Self::AnalysisBaseline)
             }
             "quality_record" | "qualityrecord" | "quality-record" => {
-                Ok(DocumentType::QualityRecord)
+                Ok(Self::QualityRecord)
             }
-            "rules_config" | "rulesconfig" | "rules-config" => Ok(DocumentType::RulesConfig),
+            "rules_config" | "rulesconfig" | "rules-config" => Ok(Self::RulesConfig),
             "durable_insight_note" | "durableinsightnote" | "durable-insight-note" => {
-                Ok(DocumentType::DurableInsightNote)
+                Ok(Self::DurableInsightNote)
             }
             "cross_reference" | "crossreference" | "cross-reference" => {
-                Ok(DocumentType::CrossReference)
+                Ok(Self::CrossReference)
             }
-            "architecture" => Ok(DocumentType::Architecture),
+            "architecture" => Ok(Self::Architecture),
             "architecture_catalog_entry"
             | "architecturecatalogentry"
-            | "architecture-catalog-entry" => Ok(DocumentType::ArchitectureCatalogEntry),
+            | "architecture-catalog-entry" => Ok(Self::ArchitectureCatalogEntry),
             "reference_architecture" | "referencearchitecture" | "reference-architecture" => {
-                Ok(DocumentType::ReferenceArchitecture)
+                Ok(Self::ReferenceArchitecture)
             }
-            _ => Err(format!("Unknown document type: {}", s)),
+            _ => Err(format!("Unknown document type: {s}")),
         }
     }
 }
@@ -243,41 +243,41 @@ impl DocumentType {
     /// Get the short code prefix letter(s) for this document type
     pub fn short_code_prefix(&self) -> &'static str {
         match self {
-            DocumentType::ProductDoc => "PD",
-            DocumentType::DesignContext => "DC",
-            DocumentType::Epic => "E",
-            DocumentType::Story => "S",
-            DocumentType::Task => "T",
-            DocumentType::Adr => "A",
-            DocumentType::Specification => "SP",
-            DocumentType::Vision => "V",
-            DocumentType::Initiative => "I",
-            DocumentType::AnalysisBaseline => "AB",
-            DocumentType::QualityRecord => "QR",
-            DocumentType::RulesConfig => "RC",
-            DocumentType::DurableInsightNote => "DIN",
-            DocumentType::CrossReference => "XR",
-            DocumentType::Architecture => "AR",
-            DocumentType::ArchitectureCatalogEntry => "ACE",
-            DocumentType::ReferenceArchitecture => "RA",
+            Self::ProductDoc => "PD",
+            Self::DesignContext => "DC",
+            Self::Epic => "E",
+            Self::Story => "S",
+            Self::Task => "T",
+            Self::Adr => "A",
+            Self::Specification => "SP",
+            Self::Vision => "V",
+            Self::Initiative => "I",
+            Self::AnalysisBaseline => "AB",
+            Self::QualityRecord => "QR",
+            Self::RulesConfig => "RC",
+            Self::DurableInsightNote => "DIN",
+            Self::CrossReference => "XR",
+            Self::Architecture => "AR",
+            Self::ArchitectureCatalogEntry => "ACE",
+            Self::ReferenceArchitecture => "RA",
         }
     }
 
     /// Get valid transitions from a given phase for this document type.
     pub fn valid_transitions_from(&self, from_phase: Phase) -> Vec<Phase> {
         match self {
-            DocumentType::ProductDoc => match from_phase {
+            Self::ProductDoc => match from_phase {
                 Phase::Draft => vec![Phase::Review],
                 Phase::Review => vec![Phase::Published],
                 _ => vec![],
             },
-            DocumentType::DesignContext => match from_phase {
+            Self::DesignContext => match from_phase {
                 Phase::Draft => vec![Phase::Review],
                 Phase::Review => vec![Phase::Published],
                 Phase::Published => vec![Phase::Superseded],
                 _ => vec![],
             },
-            DocumentType::Epic => match from_phase {
+            Self::Epic => match from_phase {
                 Phase::Discovery => vec![Phase::Design],
                 Phase::Design => vec![Phase::Ready],
                 Phase::Ready => vec![Phase::Decompose],
@@ -285,7 +285,7 @@ impl DocumentType {
                 Phase::Active => vec![Phase::Completed],
                 _ => vec![],
             },
-            DocumentType::Story => match from_phase {
+            Self::Story => match from_phase {
                 Phase::Discovery => vec![Phase::Design],
                 Phase::Design => vec![Phase::Ready],
                 Phase::Ready => vec![Phase::Active],
@@ -293,32 +293,32 @@ impl DocumentType {
                 Phase::Blocked => vec![Phase::Ready, Phase::Active],
                 _ => vec![],
             },
-            DocumentType::Task => match from_phase {
+            Self::Task => match from_phase {
                 Phase::Backlog => vec![Phase::Todo],
                 Phase::Todo => vec![Phase::Active, Phase::Blocked],
                 Phase::Active => vec![Phase::Completed, Phase::Blocked],
                 Phase::Blocked => vec![Phase::Todo, Phase::Active],
                 _ => vec![],
             },
-            DocumentType::Adr => match from_phase {
+            Self::Adr => match from_phase {
                 Phase::Draft => vec![Phase::Discussion],
                 Phase::Discussion => vec![Phase::Decided],
                 Phase::Decided => vec![Phase::Superseded],
                 _ => vec![],
             },
-            DocumentType::Specification => match from_phase {
+            Self::Specification => match from_phase {
                 Phase::Discovery => vec![Phase::Drafting],
                 Phase::Drafting => vec![Phase::Review],
                 Phase::Review => vec![Phase::Published],
                 _ => vec![],
             },
             // Legacy types retained for migration
-            DocumentType::Vision => match from_phase {
+            Self::Vision => match from_phase {
                 Phase::Draft => vec![Phase::Review],
                 Phase::Review => vec![Phase::Published],
                 _ => vec![],
             },
-            DocumentType::Initiative => match from_phase {
+            Self::Initiative => match from_phase {
                 Phase::Discovery => vec![Phase::Design],
                 Phase::Design => vec![Phase::Ready],
                 Phase::Ready => vec![Phase::Decompose],
@@ -328,16 +328,16 @@ impl DocumentType {
             },
 
             // Architecture: always Published, no transitions
-            DocumentType::Architecture => vec![],
+            Self::Architecture => vec![],
 
             // Governance types: Draft -> Review -> Published
-            DocumentType::AnalysisBaseline
-            | DocumentType::QualityRecord
-            | DocumentType::RulesConfig
-            | DocumentType::DurableInsightNote
-            | DocumentType::CrossReference
-            | DocumentType::ArchitectureCatalogEntry
-            | DocumentType::ReferenceArchitecture => match from_phase {
+            Self::AnalysisBaseline
+            | Self::QualityRecord
+            | Self::RulesConfig
+            | Self::DurableInsightNote
+            | Self::CrossReference
+            | Self::ArchitectureCatalogEntry
+            | Self::ReferenceArchitecture => match from_phase {
                 Phase::Draft => vec![Phase::Review],
                 Phase::Review => vec![Phase::Published],
                 _ => vec![],
@@ -358,8 +358,8 @@ impl DocumentType {
     /// Get the ordered phase sequence for this document type (for display purposes).
     pub fn phase_sequence(&self) -> Vec<Phase> {
         match self {
-            DocumentType::ProductDoc => vec![Phase::Draft, Phase::Review, Phase::Published],
-            DocumentType::DesignContext => {
+            Self::ProductDoc => vec![Phase::Draft, Phase::Review, Phase::Published],
+            Self::DesignContext => {
                 vec![
                     Phase::Draft,
                     Phase::Review,
@@ -367,7 +367,7 @@ impl DocumentType {
                     Phase::Superseded,
                 ]
             }
-            DocumentType::Epic => vec![
+            Self::Epic => vec![
                 Phase::Discovery,
                 Phase::Design,
                 Phase::Ready,
@@ -375,23 +375,23 @@ impl DocumentType {
                 Phase::Active,
                 Phase::Completed,
             ],
-            DocumentType::Story => vec![
+            Self::Story => vec![
                 Phase::Discovery,
                 Phase::Design,
                 Phase::Ready,
                 Phase::Active,
                 Phase::Completed,
             ],
-            DocumentType::Task => {
+            Self::Task => {
                 vec![Phase::Backlog, Phase::Todo, Phase::Active, Phase::Completed]
             }
-            DocumentType::Adr => vec![
+            Self::Adr => vec![
                 Phase::Draft,
                 Phase::Discussion,
                 Phase::Decided,
                 Phase::Superseded,
             ],
-            DocumentType::Specification => {
+            Self::Specification => {
                 vec![
                     Phase::Discovery,
                     Phase::Drafting,
@@ -399,8 +399,8 @@ impl DocumentType {
                     Phase::Published,
                 ]
             }
-            DocumentType::Vision => vec![Phase::Draft, Phase::Review, Phase::Published],
-            DocumentType::Initiative => vec![
+            Self::Vision => vec![Phase::Draft, Phase::Review, Phase::Published],
+            Self::Initiative => vec![
                 Phase::Discovery,
                 Phase::Design,
                 Phase::Ready,
@@ -410,16 +410,16 @@ impl DocumentType {
             ],
 
             // Architecture: always Published (no lifecycle)
-            DocumentType::Architecture => vec![Phase::Published],
+            Self::Architecture => vec![Phase::Published],
 
             // Governance types: Draft -> Review -> Published
-            DocumentType::AnalysisBaseline
-            | DocumentType::QualityRecord
-            | DocumentType::RulesConfig
-            | DocumentType::DurableInsightNote
-            | DocumentType::CrossReference
-            | DocumentType::ArchitectureCatalogEntry
-            | DocumentType::ReferenceArchitecture => {
+            Self::AnalysisBaseline
+            | Self::QualityRecord
+            | Self::RulesConfig
+            | Self::DurableInsightNote
+            | Self::CrossReference
+            | Self::ArchitectureCatalogEntry
+            | Self::ReferenceArchitecture => {
                 vec![Phase::Draft, Phase::Review, Phase::Published]
             }
         }
@@ -429,30 +429,30 @@ impl DocumentType {
     pub fn is_cadre_type(&self) -> bool {
         matches!(
             self,
-            DocumentType::ProductDoc
-                | DocumentType::DesignContext
-                | DocumentType::Epic
-                | DocumentType::Story
+            Self::ProductDoc
+                | Self::DesignContext
+                | Self::Epic
+                | Self::Story
         )
     }
 
     /// Returns true if this is a legacy Metis type retained for migration
     pub fn is_legacy_type(&self) -> bool {
-        matches!(self, DocumentType::Vision | DocumentType::Initiative)
+        matches!(self, Self::Vision | Self::Initiative)
     }
 
     /// Returns true if this is a governance/architecture type
     pub fn is_governance_type(&self) -> bool {
         matches!(
             self,
-            DocumentType::Architecture
-                | DocumentType::AnalysisBaseline
-                | DocumentType::QualityRecord
-                | DocumentType::RulesConfig
-                | DocumentType::DurableInsightNote
-                | DocumentType::CrossReference
-                | DocumentType::ArchitectureCatalogEntry
-                | DocumentType::ReferenceArchitecture
+            Self::Architecture
+                | Self::AnalysisBaseline
+                | Self::QualityRecord
+                | Self::RulesConfig
+                | Self::DurableInsightNote
+                | Self::CrossReference
+                | Self::ArchitectureCatalogEntry
+                | Self::ReferenceArchitecture
         )
     }
 }
@@ -473,14 +473,14 @@ pub enum StoryType {
 impl fmt::Display for StoryType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            StoryType::Feature => write!(f, "feature"),
-            StoryType::Bugfix => write!(f, "bugfix"),
-            StoryType::Refactor => write!(f, "refactor"),
-            StoryType::Migration => write!(f, "migration"),
-            StoryType::ArchitectureChange => write!(f, "architecture-change"),
-            StoryType::Investigation => write!(f, "investigation"),
-            StoryType::Remediation => write!(f, "remediation"),
-            StoryType::Setup => write!(f, "setup"),
+            Self::Feature => write!(f, "feature"),
+            Self::Bugfix => write!(f, "bugfix"),
+            Self::Refactor => write!(f, "refactor"),
+            Self::Migration => write!(f, "migration"),
+            Self::ArchitectureChange => write!(f, "architecture-change"),
+            Self::Investigation => write!(f, "investigation"),
+            Self::Remediation => write!(f, "remediation"),
+            Self::Setup => write!(f, "setup"),
         }
     }
 }
@@ -490,17 +490,17 @@ impl FromStr for StoryType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "feature" => Ok(StoryType::Feature),
-            "bugfix" | "bug-fix" | "bug_fix" => Ok(StoryType::Bugfix),
-            "refactor" => Ok(StoryType::Refactor),
-            "migration" => Ok(StoryType::Migration),
+            "feature" => Ok(Self::Feature),
+            "bugfix" | "bug-fix" | "bug_fix" => Ok(Self::Bugfix),
+            "refactor" => Ok(Self::Refactor),
+            "migration" => Ok(Self::Migration),
             "architecture-change" | "architecture_change" | "arch-change" => {
-                Ok(StoryType::ArchitectureChange)
+                Ok(Self::ArchitectureChange)
             }
-            "investigation" => Ok(StoryType::Investigation),
-            "remediation" => Ok(StoryType::Remediation),
-            "setup" | "bootstrap" | "setup/bootstrap" => Ok(StoryType::Setup),
-            _ => Err(format!("Unknown story type: {}", s)),
+            "investigation" => Ok(Self::Investigation),
+            "remediation" => Ok(Self::Remediation),
+            "setup" | "bootstrap" | "setup/bootstrap" => Ok(Self::Setup),
+            _ => Err(format!("Unknown story type: {s}")),
         }
     }
 }
@@ -538,22 +538,22 @@ pub enum Phase {
 impl fmt::Display for Phase {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Phase::Draft => write!(f, "draft"),
-            Phase::Review => write!(f, "review"),
-            Phase::Published => write!(f, "published"),
-            Phase::Discussion => write!(f, "discussion"),
-            Phase::Decided => write!(f, "decided"),
-            Phase::Superseded => write!(f, "superseded"),
-            Phase::Backlog => write!(f, "backlog"),
-            Phase::Todo => write!(f, "todo"),
-            Phase::Active => write!(f, "active"),
-            Phase::Blocked => write!(f, "blocked"),
-            Phase::Completed => write!(f, "completed"),
-            Phase::Design => write!(f, "design"),
-            Phase::Ready => write!(f, "ready"),
-            Phase::Decompose => write!(f, "decompose"),
-            Phase::Discovery => write!(f, "discovery"),
-            Phase::Drafting => write!(f, "drafting"),
+            Self::Draft => write!(f, "draft"),
+            Self::Review => write!(f, "review"),
+            Self::Published => write!(f, "published"),
+            Self::Discussion => write!(f, "discussion"),
+            Self::Decided => write!(f, "decided"),
+            Self::Superseded => write!(f, "superseded"),
+            Self::Backlog => write!(f, "backlog"),
+            Self::Todo => write!(f, "todo"),
+            Self::Active => write!(f, "active"),
+            Self::Blocked => write!(f, "blocked"),
+            Self::Completed => write!(f, "completed"),
+            Self::Design => write!(f, "design"),
+            Self::Ready => write!(f, "ready"),
+            Self::Decompose => write!(f, "decompose"),
+            Self::Discovery => write!(f, "discovery"),
+            Self::Drafting => write!(f, "drafting"),
         }
     }
 }
@@ -563,23 +563,23 @@ impl FromStr for Phase {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "draft" => Ok(Phase::Draft),
-            "review" => Ok(Phase::Review),
-            "published" => Ok(Phase::Published),
-            "discussion" => Ok(Phase::Discussion),
-            "decided" => Ok(Phase::Decided),
-            "superseded" => Ok(Phase::Superseded),
-            "backlog" => Ok(Phase::Backlog),
-            "todo" => Ok(Phase::Todo),
-            "active" => Ok(Phase::Active),
-            "blocked" => Ok(Phase::Blocked),
-            "completed" => Ok(Phase::Completed),
-            "design" => Ok(Phase::Design),
-            "ready" => Ok(Phase::Ready),
-            "decompose" => Ok(Phase::Decompose),
-            "discovery" => Ok(Phase::Discovery),
-            "drafting" => Ok(Phase::Drafting),
-            _ => Err(format!("Unknown phase: {}", s)),
+            "draft" => Ok(Self::Draft),
+            "review" => Ok(Self::Review),
+            "published" => Ok(Self::Published),
+            "discussion" => Ok(Self::Discussion),
+            "decided" => Ok(Self::Decided),
+            "superseded" => Ok(Self::Superseded),
+            "backlog" => Ok(Self::Backlog),
+            "todo" => Ok(Self::Todo),
+            "active" => Ok(Self::Active),
+            "blocked" => Ok(Self::Blocked),
+            "completed" => Ok(Self::Completed),
+            "design" => Ok(Self::Design),
+            "ready" => Ok(Self::Ready),
+            "decompose" => Ok(Self::Decompose),
+            "discovery" => Ok(Self::Discovery),
+            "drafting" => Ok(Self::Drafting),
+            _ => Err(format!("Unknown phase: {s}")),
         }
     }
 }
@@ -594,12 +594,12 @@ pub enum Tag {
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Tag::Phase(phase) => write!(f, "#phase/{}", phase),
-            Tag::Label(label) => {
+            Self::Phase(phase) => write!(f, "#phase/{phase}"),
+            Self::Label(label) => {
                 if label.starts_with('#') {
-                    write!(f, "{}", label)
+                    write!(f, "{label}")
                 } else {
-                    write!(f, "#{}", label)
+                    write!(f, "#{label}")
                 }
             }
         }
@@ -608,19 +608,19 @@ impl fmt::Display for Tag {
 
 impl From<Phase> for Tag {
     fn from(phase: Phase) -> Self {
-        Tag::Phase(phase)
+        Self::Phase(phase)
     }
 }
 
 impl From<String> for Tag {
     fn from(label: String) -> Self {
-        Tag::Label(label)
+        Self::Label(label)
     }
 }
 
 impl From<&str> for Tag {
     fn from(label: &str) -> Self {
-        Tag::Label(label.to_string())
+        Self::Label(label.to_string())
     }
 }
 
@@ -630,13 +630,13 @@ impl FromStr for Tag {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some(phase_str) = s.strip_prefix("#phase/") {
             match phase_str.parse::<Phase>() {
-                Ok(phase) => Ok(Tag::Phase(phase)),
+                Ok(phase) => Ok(Self::Phase(phase)),
                 Err(_) => Err(()),
             }
         } else if let Some(stripped) = s.strip_prefix('#') {
-            Ok(Tag::Label(stripped.to_string()))
+            Ok(Self::Label(stripped.to_string()))
         } else {
-            Ok(Tag::Label(s.to_string()))
+            Ok(Self::Label(s.to_string()))
         }
     }
 }
@@ -644,12 +644,12 @@ impl FromStr for Tag {
 impl Tag {
     pub fn to_str(&self) -> String {
         match self {
-            Tag::Phase(phase) => format!("#phase/{}", phase),
-            Tag::Label(label) => {
+            Self::Phase(phase) => format!("#phase/{phase}"),
+            Self::Label(label) => {
                 if label.starts_with('#') {
                     label.clone()
                 } else {
-                    format!("#{}", label)
+                    format!("#{label}")
                 }
             }
         }
@@ -669,11 +669,11 @@ pub enum Complexity {
 impl fmt::Display for Complexity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Complexity::XS => write!(f, "XS"),
-            Complexity::S => write!(f, "S"),
-            Complexity::M => write!(f, "M"),
-            Complexity::L => write!(f, "L"),
-            Complexity::XL => write!(f, "XL"),
+            Self::XS => write!(f, "XS"),
+            Self::S => write!(f, "S"),
+            Self::M => write!(f, "M"),
+            Self::L => write!(f, "L"),
+            Self::XL => write!(f, "XL"),
         }
     }
 }
@@ -683,12 +683,12 @@ impl FromStr for Complexity {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_uppercase().as_str() {
-            "XS" => Ok(Complexity::XS),
-            "S" => Ok(Complexity::S),
-            "M" => Ok(Complexity::M),
-            "L" => Ok(Complexity::L),
-            "XL" => Ok(Complexity::XL),
-            _ => Err(format!("Invalid complexity: {}", s)),
+            "XS" => Ok(Self::XS),
+            "S" => Ok(Self::S),
+            "M" => Ok(Self::M),
+            "L" => Ok(Self::L),
+            "XL" => Ok(Self::XL),
+            _ => Err(format!("Invalid complexity: {s}")),
         }
     }
 }
@@ -705,10 +705,10 @@ pub enum RiskLevel {
 impl fmt::Display for RiskLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RiskLevel::Low => write!(f, "low"),
-            RiskLevel::Medium => write!(f, "medium"),
-            RiskLevel::High => write!(f, "high"),
-            RiskLevel::Critical => write!(f, "critical"),
+            Self::Low => write!(f, "low"),
+            Self::Medium => write!(f, "medium"),
+            Self::High => write!(f, "high"),
+            Self::Critical => write!(f, "critical"),
         }
     }
 }
@@ -718,11 +718,11 @@ impl FromStr for RiskLevel {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "low" => Ok(RiskLevel::Low),
-            "medium" | "med" => Ok(RiskLevel::Medium),
-            "high" => Ok(RiskLevel::High),
-            "critical" | "crit" => Ok(RiskLevel::Critical),
-            _ => Err(format!("Invalid risk level: {}", s)),
+            "low" => Ok(Self::Low),
+            "medium" | "med" => Ok(Self::Medium),
+            "high" => Ok(Self::High),
+            "critical" | "crit" => Ok(Self::Critical),
+            _ => Err(format!("Invalid risk level: {s}")),
         }
     }
 }

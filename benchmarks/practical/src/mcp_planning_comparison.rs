@@ -433,7 +433,7 @@ fn build_fallback_initiative_document(initiative: &AiInitiative, template: &str)
         .join("\n");
 
     format!(
-        r#"# {title}
+        r"# {title}
 
 ## Context
 
@@ -484,7 +484,7 @@ The work should preserve typed boundaries, explicit validation, and deterministi
 - The initiative is actionable without additional clarification.
 - The resulting work can be scored for completeness, architecture alignment, and quality.
 - The implementation path is detailed enough to break into tasks and execute predictably.
-"#,
+",
         title = initiative.title,
         architecture_context = architecture_context,
         objective = initiative.objective,

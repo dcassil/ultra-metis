@@ -46,20 +46,20 @@ pub enum CognitiveOperation {
 
 impl CognitiveOperation {
     /// Returns all 12 operations in canonical order.
-    pub fn all() -> &'static [CognitiveOperation] {
+    pub fn all() -> &'static [Self] {
         &[
-            CognitiveOperation::FrameObjective,
-            CognitiveOperation::AcquireContext,
-            CognitiveOperation::BuildModel,
-            CognitiveOperation::LocateFocus,
-            CognitiveOperation::AnalyzeStructure,
-            CognitiveOperation::TraceFlow,
-            CognitiveOperation::AssessImpact,
-            CognitiveOperation::ShapeSolution,
-            CognitiveOperation::DecomposeWork,
-            CognitiveOperation::CreateArtifact,
-            CognitiveOperation::ValidateReality,
-            CognitiveOperation::ReassessAdapt,
+            Self::FrameObjective,
+            Self::AcquireContext,
+            Self::BuildModel,
+            Self::LocateFocus,
+            Self::AnalyzeStructure,
+            Self::TraceFlow,
+            Self::AssessImpact,
+            Self::ShapeSolution,
+            Self::DecomposeWork,
+            Self::CreateArtifact,
+            Self::ValidateReality,
+            Self::ReassessAdapt,
         ]
     }
 
@@ -123,7 +123,7 @@ impl FromStr for CognitiveOperation {
             "create_artifact" | "create" | "artifact" => Ok(Self::CreateArtifact),
             "validate_reality" | "validate" | "reality" => Ok(Self::ValidateReality),
             "reassess_adapt" | "reassess" | "adapt" => Ok(Self::ReassessAdapt),
-            _ => Err(format!("Unknown cognitive operation: {}", s)),
+            _ => Err(format!("Unknown cognitive operation: {s}")),
         }
     }
 }
@@ -239,7 +239,7 @@ impl fmt::Display for EscalationCondition {
             Self::RiskThresholdExceeded => write!(f, "risk_threshold_exceeded"),
             Self::ValidationFailed => write!(f, "validation_failed"),
             Self::IterationBudgetExhausted => write!(f, "iteration_budget_exhausted"),
-            Self::Custom(desc) => write!(f, "custom: {}", desc),
+            Self::Custom(desc) => write!(f, "custom: {desc}"),
         }
     }
 }
@@ -441,7 +441,7 @@ mod tests {
     fn test_operation_identifiers_are_unique() {
         let ids: Vec<&str> = CognitiveOperation::all()
             .iter()
-            .map(|op| op.identifier())
+            .map(super::CognitiveOperation::identifier)
             .collect();
         let mut deduped = ids.clone();
         deduped.sort();
@@ -496,14 +496,12 @@ mod tests {
             assert_eq!(spec.operation, *op);
             assert!(
                 !spec.input_requirements.is_empty(),
-                "op {:?} has no inputs",
-                op
+                "op {op:?} has no inputs"
             );
-            assert!(!spec.tool_hints.is_empty(), "op {:?} has no tool hints", op);
+            assert!(!spec.tool_hints.is_empty(), "op {op:?} has no tool hints");
             assert!(
                 !spec.escalation_conditions.is_empty(),
-                "op {:?} has no escalations",
-                op
+                "op {op:?} has no escalations"
             );
             assert!(!spec.description.is_empty());
         }

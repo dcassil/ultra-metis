@@ -120,8 +120,7 @@ fn score_document_generation(run: &BenchmarkRun, expected: &ExpectedOutputs) -> 
         passed: placeholder_count == 0,
         weight: 3.0,
         detail: format!(
-            "{} placeholder patterns found in document excerpts",
-            placeholder_count
+            "{placeholder_count} placeholder patterns found in document excerpts"
         ),
     });
 
@@ -175,8 +174,7 @@ fn score_decomposition(run: &BenchmarkRun, expected: &ExpectedOutputs) -> TrackS
         passed: well_titled == total_tasks && total_tasks > 0,
         weight: 1.0,
         detail: format!(
-            "{}/{} tasks have well-formed titles",
-            well_titled, total_tasks
+            "{well_titled}/{total_tasks} tasks have well-formed titles"
         ),
     });
 
@@ -192,8 +190,7 @@ fn score_decomposition(run: &BenchmarkRun, expected: &ExpectedOutputs) -> TrackS
         passed: high_quality_tasks >= total_tasks.saturating_sub(1),
         weight: 2.0,
         detail: format!(
-            "{}/{} tasks have doc accuracy >= 60%",
-            high_quality_tasks, total_tasks
+            "{high_quality_tasks}/{total_tasks} tasks have doc accuracy >= 60%"
         ),
     });
 
@@ -205,7 +202,7 @@ fn score_decomposition(run: &BenchmarkRun, expected: &ExpectedOutputs) -> TrackS
                 name: "total_task_count".to_string(),
                 passed: total_tasks as u32 >= min,
                 weight: 2.0,
-                detail: format!("{} total tasks (need >= {})", total_tasks, min),
+                detail: format!("{total_tasks} total tasks (need >= {min})"),
             });
         }
     }
@@ -379,7 +376,7 @@ fn run_verification_command(command: &str) -> Result<(i32, String), String> {
         .arg("-c")
         .arg(command)
         .output()
-        .map_err(|e| format!("Failed to execute '{}': {}", command, e))?;
+        .map_err(|e| format!("Failed to execute '{command}': {e}"))?;
 
     let exit_code = output.status.code().unwrap_or(-1);
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();

@@ -57,7 +57,7 @@ impl RecurrenceDetector {
         recurrence_threshold: u32,
         window_days: u32,
     ) -> RecurrenceReport {
-        let cutoff = Utc::now() - Duration::days(window_days as i64);
+        let cutoff = Utc::now() - Duration::days(i64::from(window_days));
 
         let in_window: Vec<&RemediationLoop> =
             loops.iter().filter(|l| l.created_at >= cutoff).collect();
@@ -96,7 +96,7 @@ impl RecurrenceDetector {
         for (metric_name, occurrences) in &metric_occurrences {
             let count = occurrences.len() as u32;
             if count >= recurrence_threshold {
-                let avg_delta = occurrences.iter().map(|o| o.delta).sum::<f64>() / count as f64;
+                let avg_delta = occurrences.iter().map(|o| o.delta).sum::<f64>() / f64::from(count);
 
                 let time_span_days = if occurrences.len() >= 2 {
                     let min_ts = occurrences.iter().map(|o| o.timestamp).min().unwrap();

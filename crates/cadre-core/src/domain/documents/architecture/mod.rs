@@ -86,14 +86,14 @@ impl Architecture {
         let mut tera = Tera::default();
         tera.add_raw_template("architecture_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
         context.insert("title", &title);
 
         let rendered_content = tera.render("architecture_content", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
         })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -103,7 +103,7 @@ impl Architecture {
                 title,
                 metadata,
                 content,
-                parent_id: parent_id.map(|id| id.into()),
+                parent_id: parent_id.map(std::convert::Into::into),
                 blocked_by: Vec::new(),
                 tags: vec![Tag::Phase(Phase::Published)],
                 archived: false,
@@ -152,7 +152,7 @@ impl Architecture {
                 title,
                 metadata,
                 content,
-                parent_id: parent_id.map(|id| id.into()),
+                parent_id: parent_id.map(std::convert::Into::into),
                 blocked_by: Vec::new(),
                 tags,
                 archived,
@@ -176,7 +176,7 @@ impl Architecture {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -208,8 +208,7 @@ impl Architecture {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "architecture" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'architecture', found '{}'",
-                level
+                "Expected level 'architecture', found '{level}'"
             )));
         }
 
@@ -370,7 +369,7 @@ impl Architecture {
     }
 
     pub fn parent_id(&self) -> Option<&str> {
-        self.core.parent_id.as_ref().map(|id| id.as_str())
+        self.core.parent_id.as_ref().map(super::types::DocumentId::as_str)
     }
 
     /// Architecture documents are always in Published phase (no lifecycle).
@@ -547,7 +546,7 @@ impl Architecture {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -555,7 +554,7 @@ impl Architecture {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -573,11 +572,11 @@ impl Architecture {
             "parent_id",
             &self
                 .parent_id()
-                .map(|s| format!("\"{}\"", s))
+                .map(|s| format!("\"{s}\""))
                 .unwrap_or_else(|| "NULL".to_string()),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
 
@@ -586,7 +585,7 @@ impl Architecture {
             &self
                 .source_reference_architecture
                 .as_ref()
-                .map(|s| format!("\"{}\"", s))
+                .map(|s| format!("\"{s}\""))
                 .unwrap_or_else(|| "NULL".to_string()),
         );
         context.insert("locked", &self.locked.to_string());
@@ -631,11 +630,11 @@ impl Architecture {
                 map.insert(
                     "answer".to_string(),
                     match &item.answer {
-                        Some(a) => serde_json::Value::String(format!("\"{}\"", a)),
+                        Some(a) => serde_json::Value::String(format!("\"{a}\"")),
                         None => serde_json::Value::String("null".to_string()),
                     },
                 );
-                let st: Vec<String> = item.story_types.iter().map(|s| s.to_string()).collect();
+                let st: Vec<String> = item.story_types.iter().map(std::string::ToString::to_string).collect();
                 map.insert("story_types".to_string(), serde_json::json!(st));
                 map
             })
@@ -657,12 +656,12 @@ impl Architecture {
         context.insert("unlock_history", &unlock_data);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

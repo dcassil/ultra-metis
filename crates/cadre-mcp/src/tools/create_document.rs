@@ -33,7 +33,7 @@ impl CreateDocumentTool {
             .map_err(|e| tool_error(e.user_message()))?;
 
         let parent_row = if let Some(pid) = &self.parent_id {
-            format!("\n| Parent | {} |", pid)
+            format!("\n| Parent | {pid} |")
         } else {
             String::new()
         };

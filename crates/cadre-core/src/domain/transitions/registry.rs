@@ -315,7 +315,7 @@ mod tests {
         registry.register_pre_check(PreTransitionCheck::new("check", |_| {
             PreCheckResult::pass("check", "ok")
         }));
-        let debug = format!("{:?}", registry);
+        let debug = format!("{registry:?}");
         assert!(debug.contains("check"));
     }
 }

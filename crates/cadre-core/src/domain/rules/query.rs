@@ -253,7 +253,7 @@ mod tests {
             short_code.to_string(),
             protection,
             scope,
-            arch_ref.map(|s| s.to_string()),
+            arch_ref.map(std::string::ToString::to_string),
         )
         .unwrap()
     }

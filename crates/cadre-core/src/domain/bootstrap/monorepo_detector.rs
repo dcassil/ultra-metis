@@ -33,15 +33,15 @@ pub enum MonorepoTool {
 impl std::fmt::Display for MonorepoTool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MonorepoTool::CargoWorkspace => write!(f, "cargo-workspace"),
-            MonorepoTool::PnpmWorkspace => write!(f, "pnpm-workspace"),
-            MonorepoTool::YarnWorkspace => write!(f, "yarn-workspace"),
-            MonorepoTool::NpmWorkspace => write!(f, "npm-workspace"),
-            MonorepoTool::Turborepo => write!(f, "turborepo"),
-            MonorepoTool::Nx => write!(f, "nx"),
-            MonorepoTool::Lerna => write!(f, "lerna"),
-            MonorepoTool::GoWorkspace => write!(f, "go-workspace"),
-            MonorepoTool::DotNetSolution => write!(f, "dotnet-solution"),
+            Self::CargoWorkspace => write!(f, "cargo-workspace"),
+            Self::PnpmWorkspace => write!(f, "pnpm-workspace"),
+            Self::YarnWorkspace => write!(f, "yarn-workspace"),
+            Self::NpmWorkspace => write!(f, "npm-workspace"),
+            Self::Turborepo => write!(f, "turborepo"),
+            Self::Nx => write!(f, "nx"),
+            Self::Lerna => write!(f, "lerna"),
+            Self::GoWorkspace => write!(f, "go-workspace"),
+            Self::DotNetSolution => write!(f, "dotnet-solution"),
         }
     }
 }
@@ -60,9 +60,9 @@ pub enum PackageKind {
 impl std::fmt::Display for PackageKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PackageKind::App => write!(f, "app"),
-            PackageKind::Library => write!(f, "library"),
-            PackageKind::Unknown => write!(f, "unknown"),
+            Self::App => write!(f, "app"),
+            Self::Library => write!(f, "library"),
+            Self::Unknown => write!(f, "unknown"),
         }
     }
 }
@@ -237,7 +237,7 @@ impl MonorepoDetector {
                         .unwrap_or(false)
                     && PACKAGE_DIRS
                         .iter()
-                        .any(|dir| p.starts_with(&format!("{}/", dir)))
+                        .any(|dir| p.starts_with(&format!("{dir}/")))
             });
             if has_workspace_structure {
                 tools.push(MonorepoTool::NpmWorkspace);

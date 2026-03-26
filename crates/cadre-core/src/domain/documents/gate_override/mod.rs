@@ -22,8 +22,8 @@ pub enum OverrideType {
 impl fmt::Display for OverrideType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            OverrideType::Emergency => write!(f, "emergency"),
-            OverrideType::Approved => write!(f, "approved"),
+            Self::Emergency => write!(f, "emergency"),
+            Self::Approved => write!(f, "approved"),
         }
     }
 }
@@ -33,9 +33,9 @@ impl FromStr for OverrideType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "emergency" => Ok(OverrideType::Emergency),
-            "approved" | "pre-approved" => Ok(OverrideType::Approved),
-            _ => Err(format!("Unknown override type: {}", s)),
+            "emergency" => Ok(Self::Emergency),
+            "approved" | "pre-approved" => Ok(Self::Approved),
+            _ => Err(format!("Unknown override type: {s}")),
         }
     }
 }
@@ -158,7 +158,7 @@ impl GateOverrideAuditEntry {
         let mut tera = Tera::default();
         tera.add_raw_template("gate_override_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -167,7 +167,7 @@ impl GateOverrideAuditEntry {
         let rendered_content = tera
             .render("gate_override_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -273,7 +273,7 @@ impl GateOverrideAuditEntry {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -297,8 +297,7 @@ impl GateOverrideAuditEntry {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "gate_override_audit" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'gate_override_audit', found '{}'",
-                level
+                "Expected level 'gate_override_audit', found '{level}'"
             )));
         }
 
@@ -350,7 +349,7 @@ impl GateOverrideAuditEntry {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -358,7 +357,7 @@ impl GateOverrideAuditEntry {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -386,16 +385,16 @@ impl GateOverrideAuditEntry {
             &self.linked_gate_config.as_deref().unwrap_or("NULL"),
         );
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

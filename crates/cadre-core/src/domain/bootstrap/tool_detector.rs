@@ -28,13 +28,13 @@ pub enum ToolCategory {
 impl std::fmt::Display for ToolCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ToolCategory::Linter => write!(f, "linter"),
-            ToolCategory::Formatter => write!(f, "formatter"),
-            ToolCategory::TestRunner => write!(f, "test-runner"),
-            ToolCategory::TypeChecker => write!(f, "type-checker"),
-            ToolCategory::CiSystem => write!(f, "ci-system"),
-            ToolCategory::CoverageTool => write!(f, "coverage-tool"),
-            ToolCategory::Bundler => write!(f, "bundler"),
+            Self::Linter => write!(f, "linter"),
+            Self::Formatter => write!(f, "formatter"),
+            Self::TestRunner => write!(f, "test-runner"),
+            Self::TypeChecker => write!(f, "type-checker"),
+            Self::CiSystem => write!(f, "ci-system"),
+            Self::CoverageTool => write!(f, "coverage-tool"),
+            Self::Bundler => write!(f, "bundler"),
         }
     }
 }
@@ -340,7 +340,7 @@ impl ToolDetector {
                     .patterns
                     .iter()
                     .filter(|pattern| file_names.contains(**pattern))
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect();
 
                 if !matching_files.is_empty() && seen_names.insert(rule.name.to_string()) {

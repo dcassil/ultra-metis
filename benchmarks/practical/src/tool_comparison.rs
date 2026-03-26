@@ -115,7 +115,7 @@ fn get_cadre_template() -> anyhow::Result<String> {
         .join("docs")
         .join(format!("{init_code}.md"));
     std::fs::read_to_string(&doc_path)
-        .with_context(|| format!("cadre: could not read {:?}", doc_path))
+        .with_context(|| format!("cadre: could not read {doc_path:?}"))
 }
 
 /// Get the blank initiative template from original metis.
@@ -140,7 +140,7 @@ fn get_original_metis_template() -> anyhow::Result<String> {
         .context("metis init failed")?;
     if !init_out.status.success() {
         let stderr = String::from_utf8_lossy(&init_out.stderr);
-        anyhow::bail!("metis init failed: {}", stderr);
+        anyhow::bail!("metis init failed: {stderr}");
     }
 
     // Transition vision: draft → review → published
@@ -165,8 +165,7 @@ fn get_original_metis_template() -> anyhow::Result<String> {
     let strat_code = extract_short_code(&strat_stdout, "TC-S-");
     if strat_code.is_empty() {
         anyhow::bail!(
-            "original metis: could not extract strategy short code from: {}",
-            strat_stdout
+            "original metis: could not extract strategy short code from: {strat_stdout}"
         );
     }
 
@@ -184,7 +183,7 @@ fn get_original_metis_template() -> anyhow::Result<String> {
         .context("metis create initiative failed")?;
     if !init_result.status.success() {
         let stderr = String::from_utf8_lossy(&init_result.stderr);
-        anyhow::bail!("metis create initiative failed: {}", stderr);
+        anyhow::bail!("metis create initiative failed: {stderr}");
     }
 
     // Original metis stores as .metis/strategies/<id>/initiatives/<id>/initiative.md
@@ -218,14 +217,14 @@ pub fn find_original_metis_binary() -> Option<String> {
             // Try direct bin dir (e.g. metis/bin/metis)
             let bin = path.join("bin").join("metis");
             if bin.exists() {
-                return bin.to_str().map(|s| s.to_string());
+                return bin.to_str().map(std::string::ToString::to_string);
             }
             // Try versioned subdirs (e.g. metis/1.1.0/bin/metis)
             if let Ok(versions) = std::fs::read_dir(&path) {
                 for v in versions.flatten() {
                     let vbin = v.path().join("bin").join("metis");
                     if vbin.exists() {
-                        return vbin.to_str().map(|s| s.to_string());
+                        return vbin.to_str().map(std::string::ToString::to_string);
                     }
                 }
             }
@@ -271,7 +270,7 @@ fn fill_template_with_claude(
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("claude CLI error for '{}': {}", module_name, stderr);
+        anyhow::bail!("claude CLI error for '{module_name}': {stderr}");
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);

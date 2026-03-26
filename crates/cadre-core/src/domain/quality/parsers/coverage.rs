@@ -115,7 +115,7 @@ impl ToolOutputParser for CoverageParser {
         ));
         output.metrics.push(MetricEntry::new(
             "files_covered",
-            file_count as f64,
+            f64::from(file_count),
             "count",
         ));
 
@@ -136,7 +136,7 @@ impl ToolOutputParser for CoverageParser {
             .insert("total_lines_hit".to_string(), total_lines_hit as f64);
         output
             .summary
-            .insert("files_covered".to_string(), file_count as f64);
+            .insert("files_covered".to_string(), f64::from(file_count));
 
         Ok(output)
     }
@@ -146,7 +146,7 @@ impl ToolOutputParser for CoverageParser {
 mod tests {
     use super::*;
 
-    const LCOV_FIXTURE: &str = r#"TN:
+    const LCOV_FIXTURE: &str = r"TN:
 SF:src/app.ts
 FN:1,main
 FN:10,helper
@@ -175,7 +175,7 @@ LF:2
 LH:2
 BRF:0
 BRH:0
-end_of_record"#;
+end_of_record";
 
     #[test]
     fn test_coverage_parser_basic() {

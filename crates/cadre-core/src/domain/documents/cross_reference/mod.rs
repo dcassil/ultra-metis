@@ -40,15 +40,15 @@ pub enum RelationshipType {
 impl fmt::Display for RelationshipType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RelationshipType::ParentChild => write!(f, "parent_child"),
-            RelationshipType::Governs => write!(f, "governs"),
-            RelationshipType::References => write!(f, "references"),
-            RelationshipType::DerivedFrom => write!(f, "derived_from"),
-            RelationshipType::Supersedes => write!(f, "supersedes"),
-            RelationshipType::ConflictsWith => write!(f, "conflicts_with"),
-            RelationshipType::Validates => write!(f, "validates"),
-            RelationshipType::Blocks => write!(f, "blocks"),
-            RelationshipType::ApprovedBy => write!(f, "approved_by"),
+            Self::ParentChild => write!(f, "parent_child"),
+            Self::Governs => write!(f, "governs"),
+            Self::References => write!(f, "references"),
+            Self::DerivedFrom => write!(f, "derived_from"),
+            Self::Supersedes => write!(f, "supersedes"),
+            Self::ConflictsWith => write!(f, "conflicts_with"),
+            Self::Validates => write!(f, "validates"),
+            Self::Blocks => write!(f, "blocks"),
+            Self::ApprovedBy => write!(f, "approved_by"),
         }
     }
 }
@@ -58,16 +58,16 @@ impl FromStr for RelationshipType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().replace('-', "_").as_str() {
-            "parent_child" | "parent" | "child" => Ok(RelationshipType::ParentChild),
-            "governs" | "governed_by" => Ok(RelationshipType::Governs),
-            "references" | "referenced_by" | "ref" => Ok(RelationshipType::References),
-            "derived_from" | "derives" => Ok(RelationshipType::DerivedFrom),
-            "supersedes" | "superseded_by" => Ok(RelationshipType::Supersedes),
-            "conflicts_with" | "conflicts" => Ok(RelationshipType::ConflictsWith),
-            "validates" | "validated_by" => Ok(RelationshipType::Validates),
-            "blocks" | "blocked_by" => Ok(RelationshipType::Blocks),
-            "approved_by" | "approves" => Ok(RelationshipType::ApprovedBy),
-            _ => Err(format!("Unknown relationship type: {}", s)),
+            "parent_child" | "parent" | "child" => Ok(Self::ParentChild),
+            "governs" | "governed_by" => Ok(Self::Governs),
+            "references" | "referenced_by" | "ref" => Ok(Self::References),
+            "derived_from" | "derives" => Ok(Self::DerivedFrom),
+            "supersedes" | "superseded_by" => Ok(Self::Supersedes),
+            "conflicts_with" | "conflicts" => Ok(Self::ConflictsWith),
+            "validates" | "validated_by" => Ok(Self::Validates),
+            "blocks" | "blocked_by" => Ok(Self::Blocks),
+            "approved_by" | "approves" => Ok(Self::ApprovedBy),
+            _ => Err(format!("Unknown relationship type: {s}")),
         }
     }
 }
@@ -76,15 +76,15 @@ impl RelationshipType {
     /// Get the inverse relationship type for traversal in the opposite direction.
     pub fn inverse(&self) -> Self {
         match self {
-            RelationshipType::ParentChild => RelationshipType::ParentChild,
-            RelationshipType::Governs => RelationshipType::Governs,
-            RelationshipType::References => RelationshipType::References,
-            RelationshipType::DerivedFrom => RelationshipType::DerivedFrom,
-            RelationshipType::Supersedes => RelationshipType::Supersedes,
-            RelationshipType::ConflictsWith => RelationshipType::ConflictsWith,
-            RelationshipType::Validates => RelationshipType::Validates,
-            RelationshipType::Blocks => RelationshipType::Blocks,
-            RelationshipType::ApprovedBy => RelationshipType::ApprovedBy,
+            Self::ParentChild => Self::ParentChild,
+            Self::Governs => Self::Governs,
+            Self::References => Self::References,
+            Self::DerivedFrom => Self::DerivedFrom,
+            Self::Supersedes => Self::Supersedes,
+            Self::ConflictsWith => Self::ConflictsWith,
+            Self::Validates => Self::Validates,
+            Self::Blocks => Self::Blocks,
+            Self::ApprovedBy => Self::ApprovedBy,
         }
     }
 
@@ -92,22 +92,22 @@ impl RelationshipType {
     pub fn is_symmetric(&self) -> bool {
         matches!(
             self,
-            RelationshipType::References | RelationshipType::ConflictsWith
+            Self::References | Self::ConflictsWith
         )
     }
 
     /// All available relationship types.
-    pub fn all() -> &'static [RelationshipType] {
+    pub fn all() -> &'static [Self] {
         &[
-            RelationshipType::ParentChild,
-            RelationshipType::Governs,
-            RelationshipType::References,
-            RelationshipType::DerivedFrom,
-            RelationshipType::Supersedes,
-            RelationshipType::ConflictsWith,
-            RelationshipType::Validates,
-            RelationshipType::Blocks,
-            RelationshipType::ApprovedBy,
+            Self::ParentChild,
+            Self::Governs,
+            Self::References,
+            Self::DerivedFrom,
+            Self::Supersedes,
+            Self::ConflictsWith,
+            Self::Validates,
+            Self::Blocks,
+            Self::ApprovedBy,
         ]
     }
 }
@@ -155,7 +155,7 @@ impl CrossReference {
         let mut tera = Tera::default();
         tera.add_raw_template("cross_reference_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -164,7 +164,7 @@ impl CrossReference {
         let rendered_content = tera
             .render("cross_reference_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -224,7 +224,7 @@ impl CrossReference {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -248,8 +248,7 @@ impl CrossReference {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "cross_reference" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'cross_reference', found '{}'",
-                level
+                "Expected level 'cross_reference', found '{level}'"
             )));
         }
 
@@ -298,7 +297,7 @@ impl CrossReference {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -306,7 +305,7 @@ impl CrossReference {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -327,16 +326,16 @@ impl CrossReference {
         context.insert("description", &self.description);
         context.insert("bidirectional", &self.bidirectional.to_string());
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

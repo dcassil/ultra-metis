@@ -45,11 +45,11 @@ pub enum AutonomyMode {
 
 impl AutonomyMode {
     /// Returns all 3 modes in order of increasing autonomy.
-    pub fn all() -> &'static [AutonomyMode] {
+    pub fn all() -> &'static [Self] {
         &[
-            AutonomyMode::Tight,
-            AutonomyMode::Mixed,
-            AutonomyMode::Autonomous,
+            Self::Tight,
+            Self::Mixed,
+            Self::Autonomous,
         ]
     }
 
@@ -89,7 +89,7 @@ impl FromStr for AutonomyMode {
             "tight" | "collaborative" | "strict" => Ok(Self::Tight),
             "mixed" | "default" | "balanced" => Ok(Self::Mixed),
             "autonomous" | "auto" | "full" => Ok(Self::Autonomous),
-            _ => Err(format!("Unknown autonomy mode: {}", s)),
+            _ => Err(format!("Unknown autonomy mode: {s}")),
         }
     }
 }

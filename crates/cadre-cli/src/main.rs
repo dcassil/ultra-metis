@@ -519,7 +519,7 @@ async fn main() {
     // Handle MCP subcommand separately (async, different error type)
     if matches!(cli.command, Commands::Mcp) {
         if let Err(e) = cadre_mcp_server::run().await {
-            eprintln!("MCP server error: {}", e);
+            eprintln!("MCP server error: {e}");
             std::process::exit(1);
         }
         return;
@@ -700,7 +700,7 @@ async fn main() {
     };
 
     if let Err(e) = result {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {e}");
         std::process::exit(1);
     }
 }
@@ -751,7 +751,7 @@ fn cmd_read(path: &Path, short_code: &str) -> Result<(), String> {
     let raw = store
         .read_document_raw(short_code)
         .map_err(|e| e.user_message())?;
-    println!("{}", raw);
+    println!("{raw}");
     Ok(())
 }
 
@@ -765,7 +765,7 @@ fn cmd_create(
     let short_code = store
         .create_document(doc_type, title, parent)
         .map_err(|e| e.user_message())?;
-    println!("Created {} ({}: {})", short_code, doc_type, title);
+    println!("Created {short_code} ({doc_type}: {title})");
     Ok(())
 }
 
@@ -785,7 +785,7 @@ fn cmd_edit(
     } else {
         ""
     };
-    println!("Updated {}{}", short_code, mode);
+    println!("Updated {short_code}{mode}");
     Ok(())
 }
 
@@ -800,7 +800,7 @@ fn cmd_transition(
         .transition_phase_with_options(short_code, phase, force)
         .map_err(|e| e.user_message())?;
     let force_note = if force { " (forced)" } else { "" };
-    println!("{}: {}{}", short_code, result, force_note);
+    println!("{short_code}: {result}{force_note}");
     Ok(())
 }
 
@@ -817,7 +817,7 @@ fn cmd_search(
         .map_err(|e| e.user_message())?;
 
     if docs.is_empty() {
-        println!("No documents matching '{}'", query);
+        println!("No documents matching '{query}'");
         return Ok(());
     }
 
@@ -840,7 +840,7 @@ fn cmd_archive(path: &Path, short_code: &str) -> Result<(), String> {
     store
         .archive_document(short_code)
         .map_err(|e| e.user_message())?;
-    println!("Archived {}", short_code);
+    println!("Archived {short_code}");
     Ok(())
 }
 
@@ -858,7 +858,7 @@ fn cmd_reassign(
     let result = store
         .reassign_parent(short_code, parent, backlog)
         .map_err(|e| e.user_message())?;
-    println!("{}", result);
+    println!("{result}");
     Ok(())
 }
 
@@ -961,12 +961,10 @@ fn cmd_status(path: &Path) -> Result<(), String> {
     let active = phase_counts.get("active").unwrap_or(&0);
     let completed = phase_counts.get("completed").unwrap_or(&0);
     println!(
-        "{} documents: {} visions, {} initiatives, {} tasks",
-        total, vision_count, init_count, task_count
+        "{total} documents: {vision_count} visions, {init_count} initiatives, {task_count} tasks"
     );
     println!(
-        "Phases: {} todo, {} active, {} completed",
-        todo, active, completed
+        "Phases: {todo} todo, {active} active, {completed} completed"
     );
 
     Ok(())
@@ -1007,7 +1005,7 @@ fn cmd_validate(path: &Path, short_code: Option<&str>, all: bool) -> Result<(), 
             Ok(doc) => {
                 // Check 2: Phase is valid
                 if let Err(e) = doc.phase() {
-                    doc_issues.push((code.clone(), format!("Invalid phase: {}", e), "ERROR"));
+                    doc_issues.push((code.clone(), format!("Invalid phase: {e}"), "ERROR"));
                 }
 
                 // Check 3: Parent cross-reference
@@ -1016,14 +1014,14 @@ fn cmd_validate(path: &Path, short_code: Option<&str>, all: bool) -> Result<(), 
                     if parent_str != "NULL" && !known_codes.contains(&parent_str) {
                         doc_issues.push((
                             code.clone(),
-                            format!("Parent '{}' not found", parent_str),
+                            format!("Parent '{parent_str}' not found"),
                             "ERROR",
                         ));
                     }
                 }
             }
             Err(e) => {
-                doc_issues.push((code.clone(), format!("Parse error: {}", e), "ERROR"));
+                doc_issues.push((code.clone(), format!("Parse error: {e}"), "ERROR"));
             }
         }
 
@@ -1036,7 +1034,7 @@ fn cmd_validate(path: &Path, short_code: Option<&str>, all: bool) -> Result<(), 
 
     // Output results
     if issues.is_empty() {
-        println!("All {} documents valid.", ok_count);
+        println!("All {ok_count} documents valid.");
         return Ok(());
     }
 
@@ -1088,8 +1086,7 @@ fn cmd_quality_capture(
             .map_err(|e| e.to_string())?,
         _ => {
             return Err(format!(
-                "Unknown tool: {}. Supported: eslint, clippy, tsc, coverage",
-                tool_name
+                "Unknown tool: {tool_name}. Supported: eslint, clippy, tsc, coverage"
             ))
         }
     };
@@ -1098,22 +1095,22 @@ fn cmd_quality_capture(
     let short_code = store
         .create_document(
             "analysis_baseline",
-            &format!("{} Baseline", tool_name),
+            &format!("{tool_name} Baseline"),
             None,
         )
         .map_err(|e| e.user_message())?;
 
     // Capture into a proper baseline and overwrite the file
     let baseline =
-        BaselineCaptureService::capture(&parsed, &short_code, linked_rules.map(|s| s.to_string()))
+        BaselineCaptureService::capture(&parsed, &short_code, linked_rules.map(std::string::ToString::to_string))
             .map_err(|e| e.to_string())?;
 
     let content = baseline.to_content().map_err(|e| e.to_string())?;
     let doc_path = path
         .join(".cadre")
         .join("docs")
-        .join(format!("{}.md", short_code));
-    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write baseline: {}", e))?;
+        .join(format!("{short_code}.md"));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write baseline: {e}"))?;
 
     println!("{:<18} {}", "Short Code:", short_code);
     println!("{:<18} {}", "Tool:", parsed.tool_name);
@@ -1143,8 +1140,7 @@ fn cmd_quality_compare(path: &Path, before_sc: &str, after_sc: &str) -> Result<(
 
     if before_tool != after_tool {
         return Err(format!(
-            "Cannot compare baselines from different tools: '{}' vs '{}'",
-            before_tool, after_tool
+            "Cannot compare baselines from different tools: '{before_tool}' vs '{after_tool}'"
         ));
     }
 
@@ -1152,7 +1148,7 @@ fn cmd_quality_compare(path: &Path, before_sc: &str, after_sc: &str) -> Result<(
     let qr_code = store
         .create_document(
             "quality_record",
-            &format!("{} Comparison: {} vs {}", before_tool, before_sc, after_sc),
+            &format!("{before_tool} Comparison: {before_sc} vs {after_sc}"),
             None,
         )
         .map_err(|e| e.user_message())?;
@@ -1162,8 +1158,7 @@ fn cmd_quality_compare(path: &Path, before_sc: &str, after_sc: &str) -> Result<(
     println!("{:<18} {}", "Tool:", before_tool);
     println!("{:<18} {}", "Record:", qr_code);
     println!(
-        "\nComparison record created. Edit {} to add detailed metric deltas.",
-        qr_code
+        "\nComparison record created. Edit {qr_code} to add detailed metric deltas."
     );
     Ok(())
 }
@@ -1357,7 +1352,7 @@ fn cmd_rules_applicable(path: &Path, target_scope_str: &str) -> Result<(), Strin
     let results = engine.applicable_at_scope(target_scope);
 
     if results.is_empty() {
-        println!("No rules applicable at scope '{}'.", target_scope_str);
+        println!("No rules applicable at scope '{target_scope_str}'.");
         return Ok(());
     }
 
@@ -1454,11 +1449,11 @@ fn build_scope(
     symbols: Option<&[String]>,
 ) -> InsightScope {
     let mut scope = InsightScope::new();
-    scope.repo = repo.map(|s| s.to_string());
-    scope.package = package.map(|s| s.to_string());
-    scope.subsystem = subsystem.map(|s| s.to_string());
-    scope.paths = paths.map(|p| p.to_vec()).unwrap_or_default();
-    scope.symbols = symbols.map(|s| s.to_vec()).unwrap_or_default();
+    scope.repo = repo.map(std::string::ToString::to_string);
+    scope.package = package.map(std::string::ToString::to_string);
+    scope.subsystem = subsystem.map(std::string::ToString::to_string);
+    scope.paths = paths.map(<[std::string::String]>::to_vec).unwrap_or_default();
+    scope.symbols = symbols.map(<[std::string::String]>::to_vec).unwrap_or_default();
     scope
 }
 
@@ -1503,8 +1498,8 @@ fn cmd_notes_create(
     let doc_path = path
         .join(".cadre")
         .join("docs")
-        .join(format!("{}.md", short_code));
-    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write note: {}", e))?;
+        .join(format!("{short_code}.md"));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write note: {e}"))?;
 
     let scope_desc = [
         scope.repo.as_deref().unwrap_or(""),
@@ -1517,7 +1512,7 @@ fn cmd_notes_create(
     .collect::<Vec<_>>()
     .join(", ");
 
-    println!("Created insight note {}", short_code);
+    println!("Created insight note {short_code}");
     println!("{:<18} {}", "Title:", title);
     println!("{:<18} {}", "Category:", category_str);
     println!(
@@ -1588,7 +1583,7 @@ fn cmd_notes_fetch(
         if let Some(ref mut n) = note {
             n.record_fetch();
             if let Ok(content) = n.to_content() {
-                let doc_path = path.join(".cadre").join("docs").join(format!("{}.md", sc));
+                let doc_path = path.join(".cadre").join("docs").join(format!("{sc}.md"));
                 let _ = std::fs::write(&doc_path, content);
             }
         }
@@ -1630,8 +1625,8 @@ fn cmd_notes_score(path: &Path, short_code: &str, signal_str: &str) -> Result<()
     let doc_path = path
         .join(".cadre")
         .join("docs")
-        .join(format!("{}.md", short_code));
-    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write: {}", e))?;
+        .join(format!("{short_code}.md"));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write: {e}"))?;
 
     let status_change = if was_pruned {
         " (marked as prune candidate)"
@@ -1639,7 +1634,7 @@ fn cmd_notes_score(path: &Path, short_code: &str, signal_str: &str) -> Result<()
         ""
     };
 
-    println!("Feedback recorded for {}{}", short_code, status_change);
+    println!("Feedback recorded for {short_code}{status_change}");
     println!("{:<18} {}", "Signal:", signal_str);
     println!("{:<18} {}", "Helpful:", din.thumbs_up_count);
     println!("{:<18} {}", "Meh:", din.meh_count);
@@ -1773,7 +1768,7 @@ fn cmd_trace_create(
         .read_document(target_ref)
         .map_err(|e| e.user_message())?;
 
-    let title = format!("{} {} {}", source_ref, rel_type, target_ref);
+    let title = format!("{source_ref} {rel_type} {target_ref}");
     let short_code = store
         .create_document("cross_reference", &title, None)
         .map_err(|e| e.user_message())?;
@@ -1798,15 +1793,15 @@ fn cmd_trace_create(
     let doc_path = path
         .join(".cadre")
         .join("docs")
-        .join(format!("{}.md", short_code));
-    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write: {}", e))?;
+        .join(format!("{short_code}.md"));
+    std::fs::write(&doc_path, content).map_err(|e| format!("Failed to write: {e}"))?;
 
     let bidir_label = if bidirectional {
         " (bidirectional)"
     } else {
         ""
     };
-    println!("Created cross-reference {}{}", short_code, bidir_label);
+    println!("Created cross-reference {short_code}{bidir_label}");
     println!("{:<18} {}", "Source:", source_ref);
     println!("{:<18} {}", "Target:", target_ref);
     println!("{:<18} {}", "Type:", rel_type);
@@ -1842,7 +1837,7 @@ fn cmd_trace_query(
     };
 
     if filtered.is_empty() {
-        println!("No {} relationships found for {}.", direction, short_code);
+        println!("No {direction} relationships found for {short_code}.");
         return Ok(());
     }
 
@@ -1876,14 +1871,13 @@ fn cmd_trace_ancestry(path: &Path, short_code: &str, direction: &str) -> Result<
         "siblings" => index.siblings(short_code),
         _ => {
             return Err(format!(
-                "Invalid direction '{}'. Use: ancestors, descendants, or siblings",
-                direction
+                "Invalid direction '{direction}'. Use: ancestors, descendants, or siblings"
             ))
         }
     };
 
     if results.is_empty() {
-        println!("No {} found for {}.", direction, short_code);
+        println!("No {direction} found for {short_code}.");
         return Ok(());
     }
 
@@ -1903,7 +1897,7 @@ fn cmd_trace_ancestry(path: &Path, short_code: &str, direction: &str) -> Result<
         } else {
             String::new()
         };
-        println!("{}- {} ({})", prefix, sc, title);
+        println!("{prefix}- {sc} ({title})");
     }
     Ok(())
 }

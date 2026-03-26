@@ -19,9 +19,9 @@ pub enum ValidationResult {
 impl ValidationResult {
     pub fn as_str(&self) -> &'static str {
         match self {
-            ValidationResult::Passed => "Passed",
-            ValidationResult::Failed => "Failed",
-            ValidationResult::Skipped => "Skipped",
+            Self::Passed => "Passed",
+            Self::Failed => "Failed",
+            Self::Skipped => "Skipped",
         }
     }
 }
@@ -31,12 +31,11 @@ impl std::str::FromStr for ValidationResult {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "Passed" => Ok(ValidationResult::Passed),
-            "Failed" => Ok(ValidationResult::Failed),
-            "Skipped" => Ok(ValidationResult::Skipped),
+            "Passed" => Ok(Self::Passed),
+            "Failed" => Ok(Self::Failed),
+            "Skipped" => Ok(Self::Skipped),
             other => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown ValidationResult: '{}'",
-                other
+                "Unknown ValidationResult: '{other}'"
             ))),
         }
     }
@@ -93,7 +92,7 @@ impl ValidationRecord {
         let mut tera = Tera::default();
         tera.add_raw_template("validation_record_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -102,7 +101,7 @@ impl ValidationRecord {
         let rendered_content = tera
             .render("validation_record_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -158,7 +157,7 @@ impl ValidationRecord {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -190,8 +189,7 @@ impl ValidationRecord {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "validation_record" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'validation_record', found '{}'",
-                level
+                "Expected level 'validation_record', found '{level}'"
             )));
         }
 
@@ -260,7 +258,7 @@ impl ValidationRecord {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -268,7 +266,7 @@ impl ValidationRecord {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -283,7 +281,7 @@ impl ValidationRecord {
             &self.metadata().exit_criteria_met.to_string(),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
 
@@ -294,12 +292,12 @@ impl ValidationRecord {
         context.insert("required", &self.required.to_string());
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

@@ -59,14 +59,14 @@ impl Adr {
         let mut tera = Tera::default();
         tera.add_raw_template("adr_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
         context.insert("title", &title);
 
         let rendered_content = tera.render("adr_content", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
         })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -118,7 +118,7 @@ impl Adr {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -142,8 +142,7 @@ impl Adr {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "adr" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'adr', found '{}'",
-                level
+                "Expected level 'adr', found '{level}'"
             )));
         }
 
@@ -207,7 +206,7 @@ impl Adr {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -215,7 +214,7 @@ impl Adr {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", self.frontmatter_template())
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -234,7 +233,7 @@ impl Adr {
             .core
             .parent_id
             .as_ref()
-            .map(|id| id.to_string())
+            .map(std::string::ToString::to_string)
             .unwrap_or_else(|| "NULL".to_string());
         context.insert("parent_id", &parent_id_str);
 
@@ -245,16 +244,16 @@ impl Adr {
         context.insert("number", &number_str);
         context.insert("decision_maker", &self.decision_maker);
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

@@ -100,8 +100,7 @@ impl ArchitectureConformanceChecker {
                     "missing_expected_dir",
                     Severity::Warning,
                     &format!(
-                        "Expected directory '{}' not found in actual paths",
-                        expected
+                        "Expected directory '{expected}' not found in actual paths"
                     ),
                     expected,
                 ));
@@ -147,7 +146,7 @@ impl ArchitectureConformanceChecker {
             output.findings.push(FindingEntry::new(
                 "tolerated_exception",
                 Severity::Info,
-                &format!("Tolerated exception: {}", exception),
+                &format!("Tolerated exception: {exception}"),
                 "architecture",
             ));
         }

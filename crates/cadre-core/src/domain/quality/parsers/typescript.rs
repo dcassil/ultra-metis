@@ -64,13 +64,13 @@ impl ToolOutputParser for TypeScriptParser {
 
         output.metrics.push(MetricEntry::new(
             "total_errors",
-            total_errors as f64,
+            f64::from(total_errors),
             "count",
         ));
 
         output
             .summary
-            .insert("total_errors".to_string(), total_errors as f64);
+            .insert("total_errors".to_string(), f64::from(total_errors));
 
         Ok(output)
     }
@@ -80,11 +80,11 @@ impl ToolOutputParser for TypeScriptParser {
 mod tests {
     use super::*;
 
-    const TSC_FIXTURE: &str = r#"src/app.ts(10,5): error TS2304: Cannot find name 'foo'.
+    const TSC_FIXTURE: &str = r"src/app.ts(10,5): error TS2304: Cannot find name 'foo'.
 src/app.ts(15,10): error TS2551: Property 'baz' does not exist on type 'Bar'. Did you mean 'bar'?
 src/utils.ts(3,1): error TS7006: Parameter 'x' implicitly has an 'any' type.
 
-Found 3 errors."#;
+Found 3 errors.";
 
     #[test]
     fn test_typescript_parser_basic() {

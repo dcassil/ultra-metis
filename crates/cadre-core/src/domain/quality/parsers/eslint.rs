@@ -59,13 +59,13 @@ impl ToolOutputParser for EslintParser {
             // Per-file metrics
             if file_result.error_count > 0 {
                 output.metrics.push(
-                    MetricEntry::new("error_count", file_result.error_count as f64, "count")
+                    MetricEntry::new("error_count", f64::from(file_result.error_count), "count")
                         .with_file(&file_result.file_path),
                 );
             }
             if file_result.warning_count > 0 {
                 output.metrics.push(
-                    MetricEntry::new("warning_count", file_result.warning_count as f64, "count")
+                    MetricEntry::new("warning_count", f64::from(file_result.warning_count), "count")
                         .with_file(&file_result.file_path),
                 );
             }
@@ -92,12 +92,12 @@ impl ToolOutputParser for EslintParser {
         // Summary metrics
         output.metrics.push(MetricEntry::new(
             "total_errors",
-            total_errors as f64,
+            f64::from(total_errors),
             "count",
         ));
         output.metrics.push(MetricEntry::new(
             "total_warnings",
-            total_warnings as f64,
+            f64::from(total_warnings),
             "count",
         ));
         output.metrics.push(MetricEntry::new(
@@ -107,22 +107,22 @@ impl ToolOutputParser for EslintParser {
         ));
         output.metrics.push(MetricEntry::new(
             "files_with_issues",
-            files_with_issues as f64,
+            f64::from(files_with_issues),
             "count",
         ));
 
         output
             .summary
-            .insert("total_errors".to_string(), total_errors as f64);
+            .insert("total_errors".to_string(), f64::from(total_errors));
         output
             .summary
-            .insert("total_warnings".to_string(), total_warnings as f64);
+            .insert("total_warnings".to_string(), f64::from(total_warnings));
         output
             .summary
             .insert("files_checked".to_string(), file_results.len() as f64);
         output
             .summary
-            .insert("files_with_issues".to_string(), files_with_issues as f64);
+            .insert("files_with_issues".to_string(), f64::from(files_with_issues));
 
         Ok(output)
     }

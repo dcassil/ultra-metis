@@ -34,8 +34,8 @@ async fn main() -> anyhow::Result<()> {
 
     let result = practical_benchmark::mcp_suite::run_suite(&scenario).await?;
     let ts = result.timestamp.format("%Y%m%dT%H%M%SZ");
-    let json_path = results_dir.join(format!("mcp_suite_{}.json", ts));
-    let report_path = results_dir.join(format!("mcp_suite_{}.md", ts));
+    let json_path = results_dir.join(format!("mcp_suite_{ts}.json"));
+    let report_path = results_dir.join(format!("mcp_suite_{ts}.md"));
     let json = serde_json::to_string_pretty(&result)?;
     std::fs::write(&json_path, &json)?;
     std::fs::write(results_dir.join("latest_mcp_suite.json"), &json)?;

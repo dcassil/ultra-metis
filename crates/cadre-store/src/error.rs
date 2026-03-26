@@ -36,32 +36,26 @@ impl StoreError {
     /// Returns a user-friendly error message with actionable guidance.
     pub fn user_message(&self) -> String {
         match self {
-            StoreError::Io(e) => format!("File system error: {}. Check file permissions and disk space.", e),
-            StoreError::NotInitialized { path } => format!(
-                "No Metis workspace found at '{}'. Run initialize_project first.",
-                path
+            Self::Io(e) => format!("File system error: {e}. Check file permissions and disk space."),
+            Self::NotInitialized { path } => format!(
+                "No Metis workspace found at '{path}'. Run initialize_project first."
             ),
-            StoreError::AlreadyInitialized { path } => format!(
-                "A Metis workspace already exists at '{}'. Use the existing workspace or choose a different directory.",
-                path
+            Self::AlreadyInitialized { path } => format!(
+                "A Metis workspace already exists at '{path}'. Use the existing workspace or choose a different directory."
             ),
-            StoreError::DocumentNotFound { short_code } => format!(
-                "Document '{}' not found. Use list_documents to see available documents.",
-                short_code
+            Self::DocumentNotFound { short_code } => format!(
+                "Document '{short_code}' not found. Use list_documents to see available documents."
             ),
-            StoreError::InvalidDocumentType(msg) => format!(
-                "{}. Valid document types: vision, initiative, task, adr.",
-                msg
+            Self::InvalidDocumentType(msg) => format!(
+                "{msg}. Valid document types: vision, initiative, task, adr."
             ),
-            StoreError::Validation(msg) => msg.clone(),
-            StoreError::Config(msg) => format!("Configuration error: {}.", msg),
-            StoreError::Serialization(msg) => format!(
-                "Failed to serialize document: {}. The document may have invalid structure.",
-                msg
+            Self::Validation(msg) => msg.clone(),
+            Self::Config(msg) => format!("Configuration error: {msg}."),
+            Self::Serialization(msg) => format!(
+                "Failed to serialize document: {msg}. The document may have invalid structure."
             ),
-            StoreError::EditFailed(msg) => format!(
-                "{}. Use read_document to view current content and verify your search text.",
-                msg
+            Self::EditFailed(msg) => format!(
+                "{msg}. Use read_document to view current content and verify your search text."
             ),
         }
     }

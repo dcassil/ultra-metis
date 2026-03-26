@@ -55,8 +55,7 @@ Score is 0.0 to 1.0. Approve (true) if score >= 0.7. No text outside JSON."#
         .to_string();
 
     let user = format!(
-        "Review this initiative plan for '{}':\n\n{}\n\nCheck for: clear objective, specific actionable tasks, identified risks, defined acceptance criteria. Score 0.0-1.0.",
-        initiative_title, initiative_content
+        "Review this initiative plan for '{initiative_title}':\n\n{initiative_content}\n\nCheck for: clear objective, specific actionable tasks, identified risks, defined acceptance criteria. Score 0.0-1.0."
     );
 
     ScenarioPrompt { system, user }

@@ -20,10 +20,10 @@ pub enum ResolutionStatus {
 impl ResolutionStatus {
     pub fn as_str(&self) -> &'static str {
         match self {
-            ResolutionStatus::Open => "Open",
-            ResolutionStatus::InProgress => "InProgress",
-            ResolutionStatus::Resolved => "Resolved",
-            ResolutionStatus::WontFix => "WontFix",
+            Self::Open => "Open",
+            Self::InProgress => "InProgress",
+            Self::Resolved => "Resolved",
+            Self::WontFix => "WontFix",
         }
     }
 }
@@ -33,13 +33,12 @@ impl std::str::FromStr for ResolutionStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "Open" => Ok(ResolutionStatus::Open),
-            "InProgress" => Ok(ResolutionStatus::InProgress),
-            "Resolved" => Ok(ResolutionStatus::Resolved),
-            "WontFix" => Ok(ResolutionStatus::WontFix),
+            "Open" => Ok(Self::Open),
+            "InProgress" => Ok(Self::InProgress),
+            "Resolved" => Ok(Self::Resolved),
+            "WontFix" => Ok(Self::WontFix),
             other => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown ResolutionStatus: '{}'",
-                other
+                "Unknown ResolutionStatus: '{other}'"
             ))),
         }
     }
@@ -96,7 +95,7 @@ impl RemediationRecord {
         let mut tera = Tera::default();
         tera.add_raw_template("remediation_record_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -105,7 +104,7 @@ impl RemediationRecord {
         let rendered_content = tera
             .render("remediation_record_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -161,7 +160,7 @@ impl RemediationRecord {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -193,8 +192,7 @@ impl RemediationRecord {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "remediation_record" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'remediation_record', found '{}'",
-                level
+                "Expected level 'remediation_record', found '{level}'"
             )));
         }
 
@@ -263,7 +261,7 @@ impl RemediationRecord {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -271,7 +269,7 @@ impl RemediationRecord {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -286,7 +284,7 @@ impl RemediationRecord {
             &self.metadata().exit_criteria_met.to_string(),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
 
@@ -296,12 +294,12 @@ impl RemediationRecord {
         context.insert("resolution_status", self.resolution_status.as_str());
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

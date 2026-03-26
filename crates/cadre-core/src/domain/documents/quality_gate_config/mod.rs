@@ -22,8 +22,8 @@ pub enum GateSeverity {
 impl fmt::Display for GateSeverity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            GateSeverity::Blocking => write!(f, "blocking"),
-            GateSeverity::Advisory => write!(f, "advisory"),
+            Self::Blocking => write!(f, "blocking"),
+            Self::Advisory => write!(f, "advisory"),
         }
     }
 }
@@ -33,9 +33,9 @@ impl FromStr for GateSeverity {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "blocking" | "block" => Ok(GateSeverity::Blocking),
-            "advisory" | "warn" | "warning" => Ok(GateSeverity::Advisory),
-            _ => Err(format!("Unknown gate severity: {}", s)),
+            "blocking" | "block" => Ok(Self::Blocking),
+            "advisory" | "warn" | "warning" => Ok(Self::Advisory),
+            _ => Err(format!("Unknown gate severity: {s}")),
         }
     }
 }
@@ -55,27 +55,27 @@ impl ThresholdType {
     /// Serialize to a type string for frontmatter.
     pub fn type_name(&self) -> &'static str {
         match self {
-            ThresholdType::Absolute(_) => "absolute",
-            ThresholdType::RelativeRegression(_) => "relative",
-            ThresholdType::Trend(_) => "trend",
+            Self::Absolute(_) => "absolute",
+            Self::RelativeRegression(_) => "relative",
+            Self::Trend(_) => "trend",
         }
     }
 
     /// Get the numeric value for serialization (trend uses 0.0 as placeholder).
     pub fn value(&self) -> f64 {
         match self {
-            ThresholdType::Absolute(v) => *v,
-            ThresholdType::RelativeRegression(v) => *v,
-            ThresholdType::Trend(_) => 0.0,
+            Self::Absolute(v) => *v,
+            Self::RelativeRegression(v) => *v,
+            Self::Trend(_) => 0.0,
         }
     }
 
     /// Parse from type name and value.
     pub fn from_parts(type_name: &str, value: f64) -> Result<Self, String> {
         match type_name.to_lowercase().as_str() {
-            "absolute" | "abs" => Ok(ThresholdType::Absolute(value)),
+            "absolute" | "abs" => Ok(Self::Absolute(value)),
             "relative" | "relative_regression" | "rel" => {
-                Ok(ThresholdType::RelativeRegression(value))
+                Ok(Self::RelativeRegression(value))
             }
             "trend" => {
                 // value > 0 means improving required, value == 0 means stable ok
@@ -84,9 +84,9 @@ impl ThresholdType {
                 } else {
                     TrendRequirement::NotRegressing
                 };
-                Ok(ThresholdType::Trend(requirement))
+                Ok(Self::Trend(requirement))
             }
-            _ => Err(format!("Unknown threshold type: {}", type_name)),
+            _ => Err(format!("Unknown threshold type: {type_name}")),
         }
     }
 }
@@ -103,8 +103,8 @@ pub enum TrendRequirement {
 impl fmt::Display for TrendRequirement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TrendRequirement::Improving => write!(f, "improving"),
-            TrendRequirement::NotRegressing => write!(f, "not_regressing"),
+            Self::Improving => write!(f, "improving"),
+            Self::NotRegressing => write!(f, "not_regressing"),
         }
     }
 }
@@ -238,7 +238,7 @@ impl QualityGateConfig {
         let mut tera = Tera::default();
         tera.add_raw_template("quality_gate_config_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -247,7 +247,7 @@ impl QualityGateConfig {
         let rendered_content = tera
             .render("quality_gate_config_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -301,7 +301,7 @@ impl QualityGateConfig {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -325,8 +325,7 @@ impl QualityGateConfig {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "quality_gate_config" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'quality_gate_config', found '{}'",
-                level
+                "Expected level 'quality_gate_config', found '{level}'"
             )));
         }
 
@@ -375,8 +374,7 @@ impl QualityGateConfig {
             Some(gray_matter::Pod::Array(arr)) => arr,
             Some(_) => {
                 return Err(DocumentValidationError::InvalidContent(format!(
-                    "{} must be an array",
-                    key
+                    "{key} must be an array"
                 )))
             }
             None => return Ok(Vec::new()),
@@ -495,7 +493,7 @@ impl QualityGateConfig {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -503,7 +501,7 @@ impl QualityGateConfig {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -563,16 +561,16 @@ impl QualityGateConfig {
             .collect();
         context.insert("transition_overrides", &override_maps);
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

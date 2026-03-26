@@ -88,7 +88,7 @@ impl FetchInsightNotesTool {
                     let doc_path = Path::new(&self.project_path)
                         .join(".cadre")
                         .join("docs")
-                        .join(format!("{}.md", sc));
+                        .join(format!("{sc}.md"));
                     let _ = std::fs::write(&doc_path, content);
                 }
             }

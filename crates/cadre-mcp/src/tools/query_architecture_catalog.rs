@@ -39,12 +39,12 @@ impl QueryArchitectureCatalogTool {
 
         if matches.is_empty() {
             let filter_desc = match (&self.language, &self.project_type) {
-                (Some(l), Some(p)) => format!("language='{}', project_type='{}'", l, p),
-                (Some(l), None) => format!("language='{}'", l),
-                (None, Some(p)) => format!("project_type='{}'", p),
+                (Some(l), Some(p)) => format!("language='{l}', project_type='{p}'"),
+                (Some(l), None) => format!("language='{l}'"),
+                (None, Some(p)) => format!("project_type='{p}'"),
                 (None, None) => "no filters".to_string(),
             };
-            let text = format!("No catalog entries found for {}.", filter_desc);
+            let text = format!("No catalog entries found for {filter_desc}.");
             return Ok(CallToolResult {
                 content: vec![TextContent::new(text, None, None).into()],
                 is_error: None,

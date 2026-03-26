@@ -37,15 +37,15 @@ pub enum GateType {
 
 impl GateType {
     /// Returns all 7 gate types in canonical order.
-    pub fn all() -> &'static [GateType] {
+    pub fn all() -> &'static [Self] {
         &[
-            GateType::Entry,
-            GateType::ContextSufficiency,
-            GateType::Solution,
-            GateType::ExecutionReadiness,
-            GateType::Validation,
-            GateType::Completion,
-            GateType::Escalation,
+            Self::Entry,
+            Self::ContextSufficiency,
+            Self::Solution,
+            Self::ExecutionReadiness,
+            Self::Validation,
+            Self::Completion,
+            Self::Escalation,
         ]
     }
 
@@ -94,7 +94,7 @@ impl FromStr for GateType {
             "validation" | "validate" => Ok(Self::Validation),
             "completion" | "complete" => Ok(Self::Completion),
             "escalation" | "escalate" => Ok(Self::Escalation),
-            _ => Err(format!("Unknown gate type: {}", s)),
+            _ => Err(format!("Unknown gate type: {s}")),
         }
     }
 }
@@ -352,7 +352,7 @@ impl GateCheckOutcome {
             behavior: GateFailureBehavior::Warn, // irrelevant for passing
             evidence_present: Vec::new(),
             evidence_missing: Vec::new(),
-            message: format!("{} gate passed", gate_type),
+            message: format!("{gate_type} gate passed"),
         }
     }
 
@@ -408,7 +408,7 @@ mod tests {
 
     #[test]
     fn test_gate_type_identifiers_are_unique() {
-        let ids: Vec<&str> = GateType::all().iter().map(|g| g.identifier()).collect();
+        let ids: Vec<&str> = GateType::all().iter().map(super::GateType::identifier).collect();
         let mut deduped = ids.clone();
         deduped.sort();
         deduped.dedup();

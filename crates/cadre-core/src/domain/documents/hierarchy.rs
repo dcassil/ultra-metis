@@ -36,8 +36,7 @@ impl HierarchyValidator {
             DocumentType::Epic => match parent_type {
                 Some(DocumentType::ProductDoc) => Ok(()),
                 Some(other) => Err(format!(
-                    "Epic parent must be a ProductDoc, found {:?}",
-                    other
+                    "Epic parent must be a ProductDoc, found {other:?}"
                 )),
                 None => Err("Epic requires a ProductDoc parent".to_string()),
             },
@@ -45,7 +44,7 @@ impl HierarchyValidator {
             // Story: parent must be an Epic
             DocumentType::Story => match parent_type {
                 Some(DocumentType::Epic) => Ok(()),
-                Some(other) => Err(format!("Story parent must be an Epic, found {:?}", other)),
+                Some(other) => Err(format!("Story parent must be an Epic, found {other:?}")),
                 None => Err("Story requires an Epic parent".to_string()),
             },
 
@@ -53,8 +52,7 @@ impl HierarchyValidator {
             DocumentType::Task => match parent_type {
                 Some(DocumentType::Story | DocumentType::Epic | DocumentType::Initiative) => Ok(()),
                 Some(other) => Err(format!(
-                    "Task parent must be a Story, Epic, or Initiative, found {:?}",
-                    other
+                    "Task parent must be a Story, Epic, or Initiative, found {other:?}"
                 )),
                 None => Err("Task requires a parent (Story, Epic, or Initiative)".to_string()),
             },
@@ -83,8 +81,7 @@ impl HierarchyValidator {
             DocumentType::Initiative => match parent_type {
                 Some(DocumentType::Vision) | None => Ok(()),
                 Some(other) => Err(format!(
-                    "Initiative parent must be a Vision, found {:?}",
-                    other
+                    "Initiative parent must be a Vision, found {other:?}"
                 )),
             },
         }

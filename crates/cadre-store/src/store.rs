@@ -53,142 +53,142 @@ pub enum AnyDocument {
 impl AnyDocument {
     pub fn short_code(&self) -> &str {
         match self {
-            AnyDocument::Vision(d) => &d.metadata().short_code,
-            AnyDocument::Initiative(d) => &d.metadata().short_code,
-            AnyDocument::Task(d) => &d.metadata().short_code,
-            AnyDocument::ProductDoc(d) => &d.metadata().short_code,
-            AnyDocument::Epic(d) => &d.metadata().short_code,
-            AnyDocument::Story(d) => &d.metadata().short_code,
-            AnyDocument::DesignContext(d) => &d.metadata().short_code,
-            AnyDocument::AnalysisBaseline(d) => &d.metadata().short_code,
-            AnyDocument::QualityRecord(d) => &d.metadata().short_code,
-            AnyDocument::RulesConfig(d) => &d.metadata().short_code,
-            AnyDocument::DurableInsightNote(d) => &d.metadata().short_code,
-            AnyDocument::CrossReference(d) => &d.metadata().short_code,
-            AnyDocument::Architecture(d) => &d.metadata().short_code,
-            AnyDocument::ArchitectureCatalogEntry(d) => &d.metadata().short_code,
-            AnyDocument::ReferenceArchitecture(d) => &d.metadata().short_code,
+            Self::Vision(d) => &d.metadata().short_code,
+            Self::Initiative(d) => &d.metadata().short_code,
+            Self::Task(d) => &d.metadata().short_code,
+            Self::ProductDoc(d) => &d.metadata().short_code,
+            Self::Epic(d) => &d.metadata().short_code,
+            Self::Story(d) => &d.metadata().short_code,
+            Self::DesignContext(d) => &d.metadata().short_code,
+            Self::AnalysisBaseline(d) => &d.metadata().short_code,
+            Self::QualityRecord(d) => &d.metadata().short_code,
+            Self::RulesConfig(d) => &d.metadata().short_code,
+            Self::DurableInsightNote(d) => &d.metadata().short_code,
+            Self::CrossReference(d) => &d.metadata().short_code,
+            Self::Architecture(d) => &d.metadata().short_code,
+            Self::ArchitectureCatalogEntry(d) => &d.metadata().short_code,
+            Self::ReferenceArchitecture(d) => &d.metadata().short_code,
         }
     }
 
     pub fn title(&self) -> &str {
         match self {
-            AnyDocument::Vision(d) => d.title(),
-            AnyDocument::Initiative(d) => d.title(),
-            AnyDocument::Task(d) => d.title(),
-            AnyDocument::ProductDoc(d) => d.title(),
-            AnyDocument::Epic(d) => d.title(),
-            AnyDocument::Story(d) => d.title(),
-            AnyDocument::DesignContext(d) => d.title(),
-            AnyDocument::AnalysisBaseline(d) => d.title(),
-            AnyDocument::QualityRecord(d) => d.title(),
-            AnyDocument::RulesConfig(d) => d.title(),
-            AnyDocument::DurableInsightNote(d) => d.title(),
-            AnyDocument::CrossReference(d) => d.title(),
-            AnyDocument::Architecture(d) => d.title(),
-            AnyDocument::ArchitectureCatalogEntry(d) => d.title(),
-            AnyDocument::ReferenceArchitecture(d) => d.title(),
+            Self::Vision(d) => d.title(),
+            Self::Initiative(d) => d.title(),
+            Self::Task(d) => d.title(),
+            Self::ProductDoc(d) => d.title(),
+            Self::Epic(d) => d.title(),
+            Self::Story(d) => d.title(),
+            Self::DesignContext(d) => d.title(),
+            Self::AnalysisBaseline(d) => d.title(),
+            Self::QualityRecord(d) => d.title(),
+            Self::RulesConfig(d) => d.title(),
+            Self::DurableInsightNote(d) => d.title(),
+            Self::CrossReference(d) => d.title(),
+            Self::Architecture(d) => d.title(),
+            Self::ArchitectureCatalogEntry(d) => d.title(),
+            Self::ReferenceArchitecture(d) => d.title(),
         }
     }
 
     pub fn document_type(&self) -> DocumentType {
         match self {
-            AnyDocument::Vision(d) => d.document_type(),
-            AnyDocument::Initiative(d) => d.document_type(),
-            AnyDocument::Task(d) => d.document_type(),
-            AnyDocument::ProductDoc(d) => d.document_type(),
-            AnyDocument::Epic(d) => d.document_type(),
-            AnyDocument::Story(d) => d.document_type(),
-            AnyDocument::DesignContext(d) => d.document_type(),
-            AnyDocument::AnalysisBaseline(_) => DocumentType::AnalysisBaseline,
-            AnyDocument::QualityRecord(_) => DocumentType::QualityRecord,
-            AnyDocument::RulesConfig(_) => DocumentType::RulesConfig,
-            AnyDocument::DurableInsightNote(_) => DocumentType::DurableInsightNote,
-            AnyDocument::CrossReference(_) => DocumentType::CrossReference,
-            AnyDocument::Architecture(_) => DocumentType::Architecture,
-            AnyDocument::ArchitectureCatalogEntry(_) => DocumentType::ArchitectureCatalogEntry,
-            AnyDocument::ReferenceArchitecture(_) => DocumentType::ReferenceArchitecture,
+            Self::Vision(d) => d.document_type(),
+            Self::Initiative(d) => d.document_type(),
+            Self::Task(d) => d.document_type(),
+            Self::ProductDoc(d) => d.document_type(),
+            Self::Epic(d) => d.document_type(),
+            Self::Story(d) => d.document_type(),
+            Self::DesignContext(d) => d.document_type(),
+            Self::AnalysisBaseline(_) => DocumentType::AnalysisBaseline,
+            Self::QualityRecord(_) => DocumentType::QualityRecord,
+            Self::RulesConfig(_) => DocumentType::RulesConfig,
+            Self::DurableInsightNote(_) => DocumentType::DurableInsightNote,
+            Self::CrossReference(_) => DocumentType::CrossReference,
+            Self::Architecture(_) => DocumentType::Architecture,
+            Self::ArchitectureCatalogEntry(_) => DocumentType::ArchitectureCatalogEntry,
+            Self::ReferenceArchitecture(_) => DocumentType::ReferenceArchitecture,
         }
     }
 
     pub fn phase(&self) -> std::result::Result<Phase, DocumentValidationError> {
         match self {
-            AnyDocument::Vision(d) => d.phase(),
-            AnyDocument::Initiative(d) => d.phase(),
-            AnyDocument::Task(d) => d.phase(),
-            AnyDocument::ProductDoc(d) => d.phase(),
-            AnyDocument::Epic(d) => d.phase(),
-            AnyDocument::Story(d) => d.phase(),
-            AnyDocument::DesignContext(d) => d.phase(),
-            AnyDocument::AnalysisBaseline(d) => d.phase(),
-            AnyDocument::QualityRecord(d) => d.phase(),
-            AnyDocument::RulesConfig(d) => d.phase(),
-            AnyDocument::DurableInsightNote(d) => d.phase(),
-            AnyDocument::CrossReference(d) => d.phase(),
-            AnyDocument::Architecture(d) => d.phase(),
-            AnyDocument::ArchitectureCatalogEntry(d) => d.phase(),
-            AnyDocument::ReferenceArchitecture(d) => d.phase(),
+            Self::Vision(d) => d.phase(),
+            Self::Initiative(d) => d.phase(),
+            Self::Task(d) => d.phase(),
+            Self::ProductDoc(d) => d.phase(),
+            Self::Epic(d) => d.phase(),
+            Self::Story(d) => d.phase(),
+            Self::DesignContext(d) => d.phase(),
+            Self::AnalysisBaseline(d) => d.phase(),
+            Self::QualityRecord(d) => d.phase(),
+            Self::RulesConfig(d) => d.phase(),
+            Self::DurableInsightNote(d) => d.phase(),
+            Self::CrossReference(d) => d.phase(),
+            Self::Architecture(d) => d.phase(),
+            Self::ArchitectureCatalogEntry(d) => d.phase(),
+            Self::ReferenceArchitecture(d) => d.phase(),
         }
     }
 
     pub fn parent_id(&self) -> Option<String> {
         match self {
-            AnyDocument::Vision(d) => d.parent_id().map(|id| id.to_string()),
-            AnyDocument::Initiative(d) => d.parent_id().map(|id| id.to_string()),
-            AnyDocument::Task(d) => d.parent_id().map(|id| id.to_string()),
-            AnyDocument::Epic(d) => d.parent_id().map(|id| id.to_string()),
-            AnyDocument::Story(d) => d.parent_id().map(|id| id.to_string()),
-            AnyDocument::Architecture(d) => d.parent_id().map(|s| s.to_string()),
+            Self::Vision(d) => d.parent_id().map(std::string::ToString::to_string),
+            Self::Initiative(d) => d.parent_id().map(std::string::ToString::to_string),
+            Self::Task(d) => d.parent_id().map(std::string::ToString::to_string),
+            Self::Epic(d) => d.parent_id().map(std::string::ToString::to_string),
+            Self::Story(d) => d.parent_id().map(std::string::ToString::to_string),
+            Self::Architecture(d) => d.parent_id().map(std::string::ToString::to_string),
             // Types without hierarchical parents
-            AnyDocument::ProductDoc(_)
-            | AnyDocument::DesignContext(_)
-            | AnyDocument::AnalysisBaseline(_)
-            | AnyDocument::QualityRecord(_)
-            | AnyDocument::RulesConfig(_)
-            | AnyDocument::DurableInsightNote(_)
-            | AnyDocument::CrossReference(_)
-            | AnyDocument::ArchitectureCatalogEntry(_)
-            | AnyDocument::ReferenceArchitecture(_) => None,
+            Self::ProductDoc(_)
+            | Self::DesignContext(_)
+            | Self::AnalysisBaseline(_)
+            | Self::QualityRecord(_)
+            | Self::RulesConfig(_)
+            | Self::DurableInsightNote(_)
+            | Self::CrossReference(_)
+            | Self::ArchitectureCatalogEntry(_)
+            | Self::ReferenceArchitecture(_) => None,
         }
     }
 
     pub fn archived(&self) -> bool {
         match self {
-            AnyDocument::Vision(d) => d.archived(),
-            AnyDocument::Initiative(d) => d.archived(),
-            AnyDocument::Task(d) => d.archived(),
-            AnyDocument::ProductDoc(d) => d.archived(),
-            AnyDocument::Epic(d) => d.archived(),
-            AnyDocument::Story(d) => d.archived(),
-            AnyDocument::DesignContext(d) => d.archived(),
-            AnyDocument::AnalysisBaseline(d) => d.archived(),
-            AnyDocument::QualityRecord(d) => d.archived(),
-            AnyDocument::RulesConfig(d) => d.archived(),
-            AnyDocument::DurableInsightNote(d) => d.archived(),
-            AnyDocument::CrossReference(d) => d.archived(),
-            AnyDocument::Architecture(d) => d.archived(),
-            AnyDocument::ArchitectureCatalogEntry(d) => d.archived(),
-            AnyDocument::ReferenceArchitecture(d) => d.archived(),
+            Self::Vision(d) => d.archived(),
+            Self::Initiative(d) => d.archived(),
+            Self::Task(d) => d.archived(),
+            Self::ProductDoc(d) => d.archived(),
+            Self::Epic(d) => d.archived(),
+            Self::Story(d) => d.archived(),
+            Self::DesignContext(d) => d.archived(),
+            Self::AnalysisBaseline(d) => d.archived(),
+            Self::QualityRecord(d) => d.archived(),
+            Self::RulesConfig(d) => d.archived(),
+            Self::DurableInsightNote(d) => d.archived(),
+            Self::CrossReference(d) => d.archived(),
+            Self::Architecture(d) => d.archived(),
+            Self::ArchitectureCatalogEntry(d) => d.archived(),
+            Self::ReferenceArchitecture(d) => d.archived(),
         }
     }
 
     pub fn to_content(&self) -> std::result::Result<String, DocumentValidationError> {
         match self {
-            AnyDocument::Vision(d) => d.to_content(),
-            AnyDocument::Initiative(d) => d.to_content(),
-            AnyDocument::Task(d) => d.to_content(),
-            AnyDocument::ProductDoc(d) => d.to_content(),
-            AnyDocument::Epic(d) => d.to_content(),
-            AnyDocument::Story(d) => d.to_content(),
-            AnyDocument::DesignContext(d) => d.to_content(),
-            AnyDocument::AnalysisBaseline(d) => d.to_content(),
-            AnyDocument::QualityRecord(d) => d.to_content(),
-            AnyDocument::RulesConfig(d) => d.to_content(),
-            AnyDocument::DurableInsightNote(d) => d.to_content(),
-            AnyDocument::CrossReference(d) => d.to_content(),
-            AnyDocument::Architecture(d) => d.to_content(),
-            AnyDocument::ArchitectureCatalogEntry(d) => d.to_content(),
-            AnyDocument::ReferenceArchitecture(d) => d.to_content(),
+            Self::Vision(d) => d.to_content(),
+            Self::Initiative(d) => d.to_content(),
+            Self::Task(d) => d.to_content(),
+            Self::ProductDoc(d) => d.to_content(),
+            Self::Epic(d) => d.to_content(),
+            Self::Story(d) => d.to_content(),
+            Self::DesignContext(d) => d.to_content(),
+            Self::AnalysisBaseline(d) => d.to_content(),
+            Self::QualityRecord(d) => d.to_content(),
+            Self::RulesConfig(d) => d.to_content(),
+            Self::DurableInsightNote(d) => d.to_content(),
+            Self::CrossReference(d) => d.to_content(),
+            Self::Architecture(d) => d.to_content(),
+            Self::ArchitectureCatalogEntry(d) => d.to_content(),
+            Self::ReferenceArchitecture(d) => d.to_content(),
         }
     }
 
@@ -197,22 +197,22 @@ impl AnyDocument {
         target: Option<Phase>,
     ) -> std::result::Result<Phase, DocumentValidationError> {
         match self {
-            AnyDocument::Vision(d) => d.transition_phase(target),
-            AnyDocument::Initiative(d) => d.transition_phase(target),
-            AnyDocument::Task(d) => d.transition_phase(target),
-            AnyDocument::ProductDoc(d) => d.transition_phase(target),
-            AnyDocument::Epic(d) => d.transition_phase(target),
-            AnyDocument::Story(d) => d.transition_phase(target),
-            AnyDocument::DesignContext(d) => d.transition_phase(target),
-            AnyDocument::RulesConfig(d) => d.transition_phase(target),
-            AnyDocument::ArchitectureCatalogEntry(d) => d.transition_phase(target),
-            AnyDocument::ReferenceArchitecture(d) => d.transition_phase(target),
+            Self::Vision(d) => d.transition_phase(target),
+            Self::Initiative(d) => d.transition_phase(target),
+            Self::Task(d) => d.transition_phase(target),
+            Self::ProductDoc(d) => d.transition_phase(target),
+            Self::Epic(d) => d.transition_phase(target),
+            Self::Story(d) => d.transition_phase(target),
+            Self::DesignContext(d) => d.transition_phase(target),
+            Self::RulesConfig(d) => d.transition_phase(target),
+            Self::ArchitectureCatalogEntry(d) => d.transition_phase(target),
+            Self::ReferenceArchitecture(d) => d.transition_phase(target),
             // Governance types without built-in transition_phase: use DocumentType-based transitions
-            AnyDocument::Architecture(_)
-            | AnyDocument::AnalysisBaseline(_)
-            | AnyDocument::QualityRecord(_)
-            | AnyDocument::DurableInsightNote(_)
-            | AnyDocument::CrossReference(_) => {
+            Self::Architecture(_)
+            | Self::AnalysisBaseline(_)
+            | Self::QualityRecord(_)
+            | Self::DurableInsightNote(_)
+            | Self::CrossReference(_) => {
                 let doc_type = self.document_type();
                 let current = self.phase()?;
                 let new_phase = match target {
@@ -237,11 +237,11 @@ impl AnyDocument {
     /// Internal helper to update phase tag on governance types
     fn update_phase_tag(&mut self, new_phase: Phase) {
         let core = match self {
-            AnyDocument::Architecture(d) => d.core_mut(),
-            AnyDocument::AnalysisBaseline(d) => d.core_mut(),
-            AnyDocument::QualityRecord(d) => d.core_mut(),
-            AnyDocument::DurableInsightNote(d) => d.core_mut(),
-            AnyDocument::CrossReference(d) => d.core_mut(),
+            Self::Architecture(d) => d.core_mut(),
+            Self::AnalysisBaseline(d) => d.core_mut(),
+            Self::QualityRecord(d) => d.core_mut(),
+            Self::DurableInsightNote(d) => d.core_mut(),
+            Self::CrossReference(d) => d.core_mut(),
             _ => return, // other types have their own transition_phase
         };
         core.tags.retain(|tag| !matches!(tag, Tag::Phase(_)));
@@ -303,7 +303,7 @@ impl DocumentStore {
 
     /// Get the file path for a document by short code
     fn doc_path(&self, short_code: &str) -> PathBuf {
-        self.docs_dir().join(format!("{}.md", short_code))
+        self.docs_dir().join(format!("{short_code}.md"))
     }
 
     /// Initialize a new project
@@ -345,8 +345,7 @@ impl DocumentStore {
         let parts: Vec<&str> = short_code.split('-').collect();
         if parts.len() < 3 {
             return Err(StoreError::InvalidDocumentType(format!(
-                "Invalid short code format: {}",
-                short_code
+                "Invalid short code format: {short_code}"
             )));
         }
         // The type prefix is the second part (may be multi-char like PD, DC, AB, etc.)
@@ -369,8 +368,7 @@ impl DocumentStore {
             "ACE" => Ok(DocumentType::ArchitectureCatalogEntry),
             "RA" => Ok(DocumentType::ReferenceArchitecture),
             other => Err(StoreError::InvalidDocumentType(format!(
-                "Unknown type prefix: {}",
-                other
+                "Unknown type prefix: {other}"
             ))),
         }
     }
@@ -484,8 +482,7 @@ impl DocumentStore {
                 Ok(AnyDocument::DesignContext(doc))
             }
             other => Err(StoreError::InvalidDocumentType(format!(
-                "Unsupported document type for store operations: {}",
-                other
+                "Unsupported document type for store operations: {other}"
             ))),
         }
     }
@@ -509,8 +506,7 @@ impl DocumentStore {
         let parent_type = if let Some(parent_sc) = parent_short_code {
             let parent_doc = self.read_document(parent_sc).map_err(|e| match e {
                 StoreError::DocumentNotFound { short_code } => StoreError::Validation(format!(
-                    "Parent document '{}' not found. Use list_documents to see available documents.",
-                    short_code
+                    "Parent document '{short_code}' not found. Use list_documents to see available documents."
                 )),
                 other => other,
             })?;
@@ -632,7 +628,7 @@ impl DocumentStore {
                 let ar = Architecture::new(
                     title.to_string(),
                     short_code.clone(),
-                    parent_short_code.map(|s| s.to_string()),
+                    parent_short_code.map(std::string::ToString::to_string),
                     None,
                 )
                 .map_err(|e| StoreError::Validation(e.to_string()))?;
@@ -713,8 +709,7 @@ impl DocumentStore {
             }
             other => {
                 return Err(StoreError::InvalidDocumentType(format!(
-                    "Document type '{}' not yet supported for creation",
-                    other
+                    "Document type '{other}' not yet supported for creation"
                 )));
             }
         };
@@ -773,7 +768,7 @@ impl DocumentStore {
             .min_depth(1)
             .max_depth(1)
             .into_iter()
-            .filter_map(|e| e.ok())
+            .filter_map(std::result::Result::ok)
         {
             if entry.path().extension().and_then(|s| s.to_str()) != Some("md") {
                 continue;
@@ -837,8 +832,7 @@ impl DocumentStore {
 
         if doc.archived() {
             return Err(StoreError::Validation(format!(
-                "Document '{}' is already archived",
-                short_code
+                "Document '{short_code}' is already archived"
             )));
         }
 
@@ -884,8 +878,7 @@ impl DocumentStore {
         let content = std::fs::read_to_string(&path)?;
         if !content.contains(search) {
             return Err(StoreError::EditFailed(format!(
-                "Search text not found in document {}",
-                short_code
+                "Search text not found in document {short_code}"
             )));
         }
 
@@ -898,8 +891,7 @@ impl DocumentStore {
         // Validate the edited content still has valid frontmatter
         if let Err(e) = Self::parse_document(&new_content) {
             return Err(StoreError::Validation(format!(
-                "Edit would corrupt document frontmatter: {}. Edit rolled back.",
-                e
+                "Edit would corrupt document frontmatter: {e}. Edit rolled back."
             )));
         }
 
@@ -933,8 +925,7 @@ impl DocumentStore {
                     let doc_type = doc.document_type();
                     if !doc_type.can_transition(old_phase, phase) {
                         return Err(StoreError::Validation(format!(
-                            "Cannot transition from '{}' to '{}' even with force (invalid sequence for {})",
-                            old_phase, phase, doc_type
+                            "Cannot transition from '{old_phase}' to '{phase}' even with force (invalid sequence for {doc_type})"
                         )));
                     }
                     // Directly update the phase tag without exit criteria check
@@ -1046,8 +1037,7 @@ impl DocumentStore {
 
         if old_phase == new_phase {
             return Err(StoreError::Validation(format!(
-                "Document '{}' is already in terminal phase '{}'. No further transitions are possible.",
-                short_code, old_phase
+                "Document '{short_code}' is already in terminal phase '{old_phase}'. No further transitions are possible."
             )));
         }
 
@@ -1057,7 +1047,7 @@ impl DocumentStore {
         let path = self.doc_path(short_code);
         std::fs::write(&path, content)?;
 
-        Ok(format!("{} -> {}", old_phase, new_phase))
+        Ok(format!("{old_phase} -> {new_phase}"))
     }
 
     /// Search documents with filtering options
@@ -1088,7 +1078,7 @@ impl DocumentStore {
             .min_depth(1)
             .max_depth(1)
             .into_iter()
-            .filter_map(|e| e.ok())
+            .filter_map(std::result::Result::ok)
         {
             if entry.path().extension().and_then(|s| s.to_str()) != Some("md") {
                 continue;
@@ -1153,8 +1143,7 @@ impl DocumentStore {
                 DocumentType::Initiative | DocumentType::Epic | DocumentType::Story
             ) {
                 return Err(StoreError::Validation(format!(
-                    "Task parent must be an Initiative, Epic, or Story. '{}' is a {}.",
-                    parent_sc, parent_type
+                    "Task parent must be an Initiative, Epic, or Story. '{parent_sc}' is a {parent_type}."
                 )));
             }
 
@@ -1164,8 +1153,7 @@ impl DocumentStore {
                     && !matches!(phase, Phase::Decompose | Phase::Active)
                 {
                     return Err(StoreError::Validation(format!(
-                        "Target initiative '{}' must be in 'decompose' or 'active' phase (currently '{}').",
-                        parent_sc, phase
+                        "Target initiative '{parent_sc}' must be in 'decompose' or 'active' phase (currently '{phase}')."
                     )));
                 }
             }
@@ -1181,8 +1169,7 @@ impl DocumentStore {
         // 4. Validate the new content still parses
         if let Err(e) = Self::parse_document(&new_content) {
             return Err(StoreError::Validation(format!(
-                "Reassignment would corrupt document: {}. Operation rolled back.",
-                e
+                "Reassignment would corrupt document: {e}. Operation rolled back."
             )));
         }
 
@@ -1192,15 +1179,14 @@ impl DocumentStore {
 
         let new_parent_display = new_parent_id.unwrap_or("backlog");
         Ok(format!(
-            "Task {} reassigned: {} -> {}",
-            short_code, old_parent, new_parent_display
+            "Task {short_code} reassigned: {old_parent} -> {new_parent_display}"
         ))
     }
 
     /// Replace a frontmatter field value in raw document content
     fn replace_frontmatter_field(content: &str, field: &str, new_value: &str) -> Result<String> {
-        let prefix = format!("{}:", field);
-        let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+        let prefix = format!("{field}:");
+        let mut lines: Vec<String> = content.lines().map(std::string::ToString::to_string).collect();
         let mut found = false;
         let mut in_frontmatter = false;
         let mut frontmatter_start_seen = false;
@@ -1217,7 +1203,7 @@ impl DocumentStore {
                 }
             }
             if in_frontmatter && trimmed.starts_with(&prefix) {
-                *line = format!("{}: {}", field, new_value);
+                *line = format!("{field}: {new_value}");
                 found = true;
                 break;
             }
@@ -1225,8 +1211,7 @@ impl DocumentStore {
 
         if !found {
             return Err(StoreError::EditFailed(format!(
-                "Field '{}' not found in document frontmatter",
-                field
+                "Field '{field}' not found in document frontmatter"
             )));
         }
 
@@ -1463,8 +1448,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("not found"),
-            "Error should mention parent not found, got: {}",
-            err
+            "Error should mention parent not found, got: {err}"
         );
     }
 
@@ -1477,8 +1461,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("Vision"),
-            "Error should mention wrong parent type, got: {}",
-            err
+            "Error should mention wrong parent type, got: {err}"
         );
     }
 
@@ -1501,8 +1484,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("corrupt") || err.contains("frontmatter"),
-            "Should mention frontmatter corruption, got: {}",
-            err
+            "Should mention frontmatter corruption, got: {err}"
         );
 
         // Original document should still be readable
@@ -1533,8 +1515,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("already archived"),
-            "Should mention already archived, got: {}",
-            err
+            "Should mention already archived, got: {err}"
         );
     }
 
@@ -1577,8 +1558,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("terminal phase"),
-            "Should mention terminal phase, got: {}",
-            err
+            "Should mention terminal phase, got: {err}"
         );
     }
 
@@ -1595,8 +1575,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("terminal phase"),
-            "Should mention terminal phase, got: {}",
-            err
+            "Should mention terminal phase, got: {err}"
         );
     }
 
@@ -1623,8 +1602,7 @@ mod tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("cannot have a parent") || err.contains("top-level"),
-            "Error should say vision cannot have parent, got: {}",
-            err
+            "Error should say vision cannot have parent, got: {err}"
         );
     }
 
@@ -1660,7 +1638,7 @@ mod tests {
         let result: std::result::Result<_, _> = store.read_document("TEST-V-9999");
         match result {
             Err(StoreError::DocumentNotFound { .. }) => {}
-            Err(other) => panic!("Expected DocumentNotFound, got: {}", other),
+            Err(other) => panic!("Expected DocumentNotFound, got: {other}"),
             Ok(_) => panic!("Expected error, got Ok"),
         }
     }

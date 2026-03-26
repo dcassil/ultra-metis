@@ -85,7 +85,7 @@ impl ArchitectureCatalogEntry {
         let mut tera = Tera::default();
         tera.add_raw_template("architecture_catalog_entry_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -94,7 +94,7 @@ impl ArchitectureCatalogEntry {
         let rendered_content = tera
             .render("architecture_catalog_entry_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -169,7 +169,7 @@ impl ArchitectureCatalogEntry {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -201,8 +201,7 @@ impl ArchitectureCatalogEntry {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "architecture_catalog_entry" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'architecture_catalog_entry', found '{}'",
-                level
+                "Expected level 'architecture_catalog_entry', found '{level}'"
             )));
         }
 
@@ -343,7 +342,7 @@ impl ArchitectureCatalogEntry {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -351,7 +350,7 @@ impl ArchitectureCatalogEntry {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -366,7 +365,7 @@ impl ArchitectureCatalogEntry {
             &self.core.metadata.exit_criteria_met.to_string(),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
         context.insert("language", &self.language);
@@ -381,12 +380,12 @@ impl ArchitectureCatalogEntry {
         context.insert("analysis_expectations", &self.analysis_expectations);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

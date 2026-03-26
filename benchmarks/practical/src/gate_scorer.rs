@@ -160,7 +160,7 @@ mod tests {
     fn make_good_task(id: &str) -> TaskResult {
         TaskResult {
             task_id: id.to_string(),
-            task_title: format!("Design and implement {}", id),
+            task_title: format!("Design and implement {id}"),
             status: TaskStatus::Completed,
             tokens_used: 1500,
             time_elapsed: Duration::from_secs(30),
@@ -179,7 +179,7 @@ mod tests {
         let total_time = tasks.iter().map(|t| t.time_elapsed).sum();
         InitiativeResult {
             initiative_id: id.to_string(),
-            initiative_title: format!("{} Module", id),
+            initiative_title: format!("{id} Module"),
             tasks,
             total_tokens: tokens,
             total_time,

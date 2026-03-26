@@ -27,10 +27,10 @@ pub enum RuleChangeType {
 impl fmt::Display for RuleChangeType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuleChangeType::Add => write!(f, "add"),
-            RuleChangeType::Modify => write!(f, "modify"),
-            RuleChangeType::Remove => write!(f, "remove"),
-            RuleChangeType::Reclassify => write!(f, "reclassify"),
+            Self::Add => write!(f, "add"),
+            Self::Modify => write!(f, "modify"),
+            Self::Remove => write!(f, "remove"),
+            Self::Reclassify => write!(f, "reclassify"),
         }
     }
 }
@@ -40,13 +40,12 @@ impl FromStr for RuleChangeType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "add" => Ok(RuleChangeType::Add),
-            "modify" | "update" | "change" => Ok(RuleChangeType::Modify),
-            "remove" | "delete" => Ok(RuleChangeType::Remove),
-            "reclassify" | "reclassification" => Ok(RuleChangeType::Reclassify),
+            "add" => Ok(Self::Add),
+            "modify" | "update" | "change" => Ok(Self::Modify),
+            "remove" | "delete" => Ok(Self::Remove),
+            "reclassify" | "reclassification" => Ok(Self::Reclassify),
             _ => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown rule change type '{}': expected add/modify/remove/reclassify",
-                s
+                "Unknown rule change type '{s}': expected add/modify/remove/reclassify"
             ))),
         }
     }
@@ -74,12 +73,12 @@ pub enum RuleChangeStatus {
 impl fmt::Display for RuleChangeStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuleChangeStatus::Proposed => write!(f, "proposed"),
-            RuleChangeStatus::UnderReview => write!(f, "under-review"),
-            RuleChangeStatus::Approved => write!(f, "approved"),
-            RuleChangeStatus::Rejected => write!(f, "rejected"),
-            RuleChangeStatus::Applied => write!(f, "applied"),
-            RuleChangeStatus::Superseded => write!(f, "superseded"),
+            Self::Proposed => write!(f, "proposed"),
+            Self::UnderReview => write!(f, "under-review"),
+            Self::Approved => write!(f, "approved"),
+            Self::Rejected => write!(f, "rejected"),
+            Self::Applied => write!(f, "applied"),
+            Self::Superseded => write!(f, "superseded"),
         }
     }
 }
@@ -89,15 +88,14 @@ impl FromStr for RuleChangeStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "proposed" => Ok(RuleChangeStatus::Proposed),
-            "under-review" | "under_review" | "underreview" => Ok(RuleChangeStatus::UnderReview),
-            "approved" => Ok(RuleChangeStatus::Approved),
-            "rejected" => Ok(RuleChangeStatus::Rejected),
-            "applied" => Ok(RuleChangeStatus::Applied),
-            "superseded" => Ok(RuleChangeStatus::Superseded),
+            "proposed" => Ok(Self::Proposed),
+            "under-review" | "under_review" | "underreview" => Ok(Self::UnderReview),
+            "approved" => Ok(Self::Approved),
+            "rejected" => Ok(Self::Rejected),
+            "applied" => Ok(Self::Applied),
+            "superseded" => Ok(Self::Superseded),
             _ => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown rule change status '{}': expected proposed/under-review/approved/rejected/applied/superseded",
-                s
+                "Unknown rule change status '{s}': expected proposed/under-review/approved/rejected/applied/superseded"
             ))),
         }
     }
@@ -106,33 +104,33 @@ impl FromStr for RuleChangeStatus {
 impl RuleChangeStatus {
     pub fn as_str(&self) -> &'static str {
         match self {
-            RuleChangeStatus::Proposed => "proposed",
-            RuleChangeStatus::UnderReview => "under-review",
-            RuleChangeStatus::Approved => "approved",
-            RuleChangeStatus::Rejected => "rejected",
-            RuleChangeStatus::Applied => "applied",
-            RuleChangeStatus::Superseded => "superseded",
+            Self::Proposed => "proposed",
+            Self::UnderReview => "under-review",
+            Self::Approved => "approved",
+            Self::Rejected => "rejected",
+            Self::Applied => "applied",
+            Self::Superseded => "superseded",
         }
     }
 
     /// Returns the valid next statuses from the current status.
-    pub fn valid_transitions(&self) -> Vec<RuleChangeStatus> {
+    pub fn valid_transitions(&self) -> Vec<Self> {
         match self {
-            RuleChangeStatus::Proposed => vec![RuleChangeStatus::UnderReview],
-            RuleChangeStatus::UnderReview => {
-                vec![RuleChangeStatus::Approved, RuleChangeStatus::Rejected]
+            Self::Proposed => vec![Self::UnderReview],
+            Self::UnderReview => {
+                vec![Self::Approved, Self::Rejected]
             }
-            RuleChangeStatus::Approved => {
-                vec![RuleChangeStatus::Applied, RuleChangeStatus::Superseded]
+            Self::Approved => {
+                vec![Self::Applied, Self::Superseded]
             }
-            RuleChangeStatus::Rejected => vec![], // terminal
-            RuleChangeStatus::Applied => vec![RuleChangeStatus::Superseded],
-            RuleChangeStatus::Superseded => vec![], // terminal
+            Self::Rejected => vec![], // terminal
+            Self::Applied => vec![Self::Superseded],
+            Self::Superseded => vec![], // terminal
         }
     }
 
     /// Check if a transition to the target status is valid.
-    pub fn can_transition_to(&self, target: RuleChangeStatus) -> bool {
+    pub fn can_transition_to(&self, target: Self) -> bool {
         self.valid_transitions().contains(&target)
     }
 
@@ -206,7 +204,7 @@ impl RuleChangeProposal {
         let mut tera = Tera::default();
         tera.add_raw_template("rule_change_proposal_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -215,7 +213,7 @@ impl RuleChangeProposal {
         let rendered_content = tera
             .render("rule_change_proposal_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -275,7 +273,7 @@ impl RuleChangeProposal {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -299,8 +297,7 @@ impl RuleChangeProposal {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "rule_change_proposal" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'rule_change_proposal', found '{}'",
-                level
+                "Expected level 'rule_change_proposal', found '{level}'"
             )));
         }
 
@@ -396,8 +393,7 @@ impl RuleChangeProposal {
             Some(s) => {
                 if !current.can_transition_to(s) {
                     return Err(DocumentValidationError::InvalidContent(format!(
-                        "Cannot transition rule change status from {} to {}",
-                        current, s
+                        "Cannot transition rule change status from {current} to {s}"
                     )));
                 }
                 s
@@ -496,7 +492,7 @@ impl RuleChangeProposal {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -504,7 +500,7 @@ impl RuleChangeProposal {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -532,16 +528,16 @@ impl RuleChangeProposal {
             .unwrap_or_else(|| "NULL".to_string());
         context.insert("applied_at", &applied_at_str);
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

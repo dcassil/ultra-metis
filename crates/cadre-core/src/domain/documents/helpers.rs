@@ -14,8 +14,7 @@ impl FrontmatterParser {
         match map.get(key) {
             Some(gray_matter::Pod::String(s)) => Ok(s.clone()),
             Some(_) => Err(DocumentValidationError::InvalidContent(format!(
-                "{} must be a string",
-                key
+                "{key} must be a string"
             ))),
             None => Err(DocumentValidationError::MissingRequiredField(
                 key.to_string(),
@@ -30,8 +29,7 @@ impl FrontmatterParser {
         match map.get(key) {
             Some(gray_matter::Pod::Boolean(b)) => Ok(*b),
             Some(_) => Err(DocumentValidationError::InvalidContent(format!(
-                "{} must be a boolean",
-                key
+                "{key} must be a boolean"
             ))),
             None => Err(DocumentValidationError::MissingRequiredField(
                 key.to_string(),
@@ -46,8 +44,7 @@ impl FrontmatterParser {
         match map.get(key) {
             Some(gray_matter::Pod::Integer(i)) => Ok(*i),
             Some(_) => Err(DocumentValidationError::InvalidContent(format!(
-                "{} must be an integer",
-                key
+                "{key} must be an integer"
             ))),
             None => Err(DocumentValidationError::MissingRequiredField(
                 key.to_string(),
@@ -76,8 +73,7 @@ impl FrontmatterParser {
             .map(|dt| dt.with_timezone(&Utc))
             .map_err(|_| {
                 DocumentValidationError::InvalidContent(format!(
-                    "Invalid datetime format for {}",
-                    key
+                    "Invalid datetime format for {key}"
                 ))
             })
     }
@@ -121,8 +117,7 @@ impl FrontmatterParser {
                 Ok(strings)
             }
             Some(_) => Err(DocumentValidationError::InvalidContent(format!(
-                "{} must be an array",
-                key
+                "{key} must be an array"
             ))),
             None => Err(DocumentValidationError::MissingRequiredField(
                 key.to_string(),

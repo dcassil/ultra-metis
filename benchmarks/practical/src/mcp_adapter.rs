@@ -201,7 +201,7 @@ impl McpSession {
             let response = self.read_response()?;
             if response["id"].as_u64() == Some(request_id) {
                 if response.get("error").is_some() {
-                    return Err(anyhow!("MCP error response: {}", response));
+                    return Err(anyhow!("MCP error response: {response}"));
                 }
                 return Ok(response);
             }

@@ -48,17 +48,17 @@ pub enum PackageManager {
 impl std::fmt::Display for PackageManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PackageManager::Cargo => write!(f, "cargo"),
-            PackageManager::Npm => write!(f, "npm"),
-            PackageManager::Yarn => write!(f, "yarn"),
-            PackageManager::Pnpm => write!(f, "pnpm"),
-            PackageManager::Bun => write!(f, "bun"),
-            PackageManager::GoModules => write!(f, "go-modules"),
-            PackageManager::Pip => write!(f, "pip"),
-            PackageManager::Poetry => write!(f, "poetry"),
-            PackageManager::Maven => write!(f, "maven"),
-            PackageManager::Gradle => write!(f, "gradle"),
-            PackageManager::DotNet => write!(f, "dotnet"),
+            Self::Cargo => write!(f, "cargo"),
+            Self::Npm => write!(f, "npm"),
+            Self::Yarn => write!(f, "yarn"),
+            Self::Pnpm => write!(f, "pnpm"),
+            Self::Bun => write!(f, "bun"),
+            Self::GoModules => write!(f, "go-modules"),
+            Self::Pip => write!(f, "pip"),
+            Self::Poetry => write!(f, "poetry"),
+            Self::Maven => write!(f, "maven"),
+            Self::Gradle => write!(f, "gradle"),
+            Self::DotNet => write!(f, "dotnet"),
         }
     }
 }
@@ -99,20 +99,20 @@ pub enum BuildTool {
 impl std::fmt::Display for BuildTool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BuildTool::CargoBuild => write!(f, "cargo-build"),
-            BuildTool::Make => write!(f, "make"),
-            BuildTool::Just => write!(f, "just"),
-            BuildTool::Turborepo => write!(f, "turborepo"),
-            BuildTool::Nx => write!(f, "nx"),
-            BuildTool::Webpack => write!(f, "webpack"),
-            BuildTool::Vite => write!(f, "vite"),
-            BuildTool::Esbuild => write!(f, "esbuild"),
-            BuildTool::Rollup => write!(f, "rollup"),
-            BuildTool::GradleBuild => write!(f, "gradle"),
-            BuildTool::MavenBuild => write!(f, "maven"),
-            BuildTool::CMake => write!(f, "cmake"),
-            BuildTool::Bazel => write!(f, "bazel"),
-            BuildTool::Docker => write!(f, "docker"),
+            Self::CargoBuild => write!(f, "cargo-build"),
+            Self::Make => write!(f, "make"),
+            Self::Just => write!(f, "just"),
+            Self::Turborepo => write!(f, "turborepo"),
+            Self::Nx => write!(f, "nx"),
+            Self::Webpack => write!(f, "webpack"),
+            Self::Vite => write!(f, "vite"),
+            Self::Esbuild => write!(f, "esbuild"),
+            Self::Rollup => write!(f, "rollup"),
+            Self::GradleBuild => write!(f, "gradle"),
+            Self::MavenBuild => write!(f, "maven"),
+            Self::CMake => write!(f, "cmake"),
+            Self::Bazel => write!(f, "bazel"),
+            Self::Docker => write!(f, "docker"),
         }
     }
 }

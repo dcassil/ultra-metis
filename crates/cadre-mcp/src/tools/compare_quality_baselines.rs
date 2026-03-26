@@ -41,8 +41,7 @@ impl CompareQualityBaselinesTool {
 
         if before_tool != after_tool {
             return Err(tool_error(format!(
-                "Cannot compare baselines from different tools: '{}' vs '{}'",
-                before_tool, after_tool
+                "Cannot compare baselines from different tools: '{before_tool}' vs '{after_tool}'"
             )));
         }
 

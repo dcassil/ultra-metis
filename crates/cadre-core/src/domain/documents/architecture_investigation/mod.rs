@@ -20,10 +20,10 @@ pub enum InvestigationStatus {
 impl InvestigationStatus {
     pub fn as_str(&self) -> &'static str {
         match self {
-            InvestigationStatus::Open => "open",
-            InvestigationStatus::InProgress => "in-progress",
-            InvestigationStatus::Concluded => "concluded",
-            InvestigationStatus::Archived => "archived",
+            Self::Open => "open",
+            Self::InProgress => "in-progress",
+            Self::Concluded => "concluded",
+            Self::Archived => "archived",
         }
     }
 }
@@ -39,11 +39,11 @@ impl std::str::FromStr for InvestigationStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "open" => Ok(InvestigationStatus::Open),
-            "in-progress" | "in_progress" | "inprogress" => Ok(InvestigationStatus::InProgress),
-            "concluded" => Ok(InvestigationStatus::Concluded),
-            "archived" => Ok(InvestigationStatus::Archived),
-            _ => Err(format!("Unknown investigation status: {}", s)),
+            "open" => Ok(Self::Open),
+            "in-progress" | "in_progress" | "inprogress" => Ok(Self::InProgress),
+            "concluded" => Ok(Self::Concluded),
+            "archived" => Ok(Self::Archived),
+            _ => Err(format!("Unknown investigation status: {s}")),
         }
     }
 }
@@ -100,7 +100,7 @@ impl ArchitectureInvestigation {
         let mut tera = Tera::default();
         tera.add_raw_template("architecture_investigation_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -109,7 +109,7 @@ impl ArchitectureInvestigation {
         let rendered_content = tera
             .render("architecture_investigation_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -161,7 +161,7 @@ impl ArchitectureInvestigation {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -185,8 +185,7 @@ impl ArchitectureInvestigation {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "architecture_investigation" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'architecture_investigation', found '{}'",
-                level
+                "Expected level 'architecture_investigation', found '{level}'"
             )));
         }
 
@@ -233,7 +232,7 @@ impl ArchitectureInvestigation {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -241,7 +240,7 @@ impl ArchitectureInvestigation {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -260,23 +259,23 @@ impl ArchitectureInvestigation {
             .core
             .parent_id
             .as_ref()
-            .map(|id| id.to_string())
+            .map(std::string::ToString::to_string)
             .unwrap_or_else(|| "NULL".to_string());
         context.insert("parent_id", &parent_id_str);
 
         context.insert("trigger_refs", &self.trigger_refs);
         context.insert("investigation_status", self.investigation_status.as_str());
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

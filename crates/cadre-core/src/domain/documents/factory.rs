@@ -25,7 +25,7 @@ impl DocumentFactory {
         path: P,
     ) -> Result<Box<dyn Document>, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
 
         let doc_type = Self::extract_document_type(&raw_content)?;
@@ -70,8 +70,7 @@ impl DocumentFactory {
             // Governance/architecture types do not implement Document trait;
             // they are accessed through the store's AnyDocument wrapper instead.
             other => Err(DocumentValidationError::InvalidContent(format!(
-                "Document type '{}' does not support the Document trait factory",
-                other
+                "Document type '{other}' does not support the Document trait factory"
             ))),
         }
     }
@@ -123,8 +122,7 @@ impl DocumentFactory {
             // Governance/architecture types do not implement Document trait;
             // they are accessed through the store's AnyDocument wrapper instead.
             other => Err(DocumentValidationError::InvalidContent(format!(
-                "Document type '{}' does not support the Document trait factory",
-                other
+                "Document type '{other}' does not support the Document trait factory"
             ))),
         }
     }
@@ -163,7 +161,7 @@ impl DocumentFactory {
         };
 
         type_str.parse::<DocumentType>().map_err(|_| {
-            DocumentValidationError::InvalidContent(format!("Unknown document type: {}", type_str))
+            DocumentValidationError::InvalidContent(format!("Unknown document type: {type_str}"))
         })
     }
 }
@@ -174,26 +172,26 @@ mod tests {
 
     #[test]
     fn test_extract_document_type_level_field() {
-        let content = r#"---
+        let content = r"---
 level: vision
 title: Test Vision
 ---
 
 # Test Vision
-"#;
+";
         let doc_type = DocumentFactory::extract_document_type(content).unwrap();
         assert_eq!(doc_type, DocumentType::Vision);
     }
 
     #[test]
     fn test_extract_document_type_document_type_field() {
-        let content = r#"---
+        let content = r"---
 document_type: epic
 title: Test Epic
 ---
 
 # Test Epic
-"#;
+";
         let doc_type = DocumentFactory::extract_document_type(content).unwrap();
         assert_eq!(doc_type, DocumentType::Epic);
     }
@@ -213,33 +211,33 @@ title: Test Epic
         ];
 
         for (level_str, expected_type) in types {
-            let content = format!("---\nlevel: {}\ntitle: Test\n---\n\n# Test\n", level_str);
+            let content = format!("---\nlevel: {level_str}\ntitle: Test\n---\n\n# Test\n");
             let doc_type = DocumentFactory::extract_document_type(&content).unwrap();
-            assert_eq!(doc_type, expected_type, "Failed for level: {}", level_str);
+            assert_eq!(doc_type, expected_type, "Failed for level: {level_str}");
         }
     }
 
     #[test]
     fn test_extract_document_type_missing() {
-        let content = r#"---
+        let content = r"---
 title: Test Document
 ---
 
 # Test Document
-"#;
+";
         let result = DocumentFactory::extract_document_type(content);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_extract_document_type_invalid() {
-        let content = r#"---
+        let content = r"---
 level: unknown_type
 title: Test Document
 ---
 
 # Test Document
-"#;
+";
         let result = DocumentFactory::extract_document_type(content);
         assert!(result.is_err());
     }

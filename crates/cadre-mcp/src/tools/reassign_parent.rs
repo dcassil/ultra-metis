@@ -36,7 +36,7 @@ impl ReassignParentTool {
             )
             .map_err(|e| tool_error(e.user_message()))?;
 
-        let text = format!("## Reassignment\n\n{}", result);
+        let text = format!("## Reassignment\n\n{result}");
         Ok(CallToolResult {
             content: vec![TextContent::new(text, None, None).into()],
             is_error: None,

@@ -70,7 +70,7 @@ impl CaptureQualityBaselineTool {
         let doc_path = Path::new(&self.project_path)
             .join(".cadre")
             .join("docs")
-            .join(format!("{}.md", short_code));
+            .join(format!("{short_code}.md"));
         std::fs::write(&doc_path, content).map_err(tool_error)?;
 
         let text = format!(

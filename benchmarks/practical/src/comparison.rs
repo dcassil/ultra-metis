@@ -180,7 +180,7 @@ impl ComparisonResult {
             "# Benchmark Comparison: {} vs {}\n\n",
             "Original Metis", "Cadre"
         ));
-        md.push_str(&format!("**Mode**: {}\n", mode_label));
+        md.push_str(&format!("**Mode**: {mode_label}\n"));
         md.push_str(&format!("**Scenario**: {}\n", self.config.scenario_id));
         md.push_str(&format!("**Model**: {}\n", self.config.model_id));
         md.push_str(&format!(
@@ -317,7 +317,7 @@ mod tests {
 
     fn make_run(system: SystemUnderTest, tokens: u64, time_ms: u64) -> BenchmarkRun {
         BenchmarkRun {
-            run_id: format!("{:?}", system),
+            run_id: format!("{system:?}"),
             timestamp: chrono::Utc::now(),
             manifest: RunManifest {
                 system_under_test: system,

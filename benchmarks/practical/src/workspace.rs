@@ -106,7 +106,7 @@ impl BenchmarkWorkspace {
                     ],
                 ) {
                     cli_events.push(result.as_trace_event(
-                        format!("seed_initiative_{}", i),
+                        format!("seed_initiative_{i}"),
                         format!(
                             "{} create --type initiative --path {} --parent {} {}",
                             binary.display(),
@@ -175,7 +175,7 @@ fn extract_title(content: &str) -> Option<&str> {
         .lines()
         .find_map(|line| line.strip_prefix("# "))
         .or_else(|| content.lines().find(|line| !line.trim().is_empty()))
-        .map(|s| s.trim())
+        .map(str::trim)
 }
 
 /// Build a default RunManifest for an autonomous or validated run.

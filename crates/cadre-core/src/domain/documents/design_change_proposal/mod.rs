@@ -21,11 +21,11 @@ pub enum ProposalStatus {
 impl ProposalStatus {
     pub fn as_str(&self) -> &'static str {
         match self {
-            ProposalStatus::Proposed => "proposed",
-            ProposalStatus::UnderReview => "under-review",
-            ProposalStatus::Approved => "approved",
-            ProposalStatus::Rejected => "rejected",
-            ProposalStatus::Applied => "applied",
+            Self::Proposed => "proposed",
+            Self::UnderReview => "under-review",
+            Self::Approved => "approved",
+            Self::Rejected => "rejected",
+            Self::Applied => "applied",
         }
     }
 }
@@ -41,12 +41,12 @@ impl std::str::FromStr for ProposalStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "proposed" => Ok(ProposalStatus::Proposed),
-            "under-review" | "under_review" | "underreview" => Ok(ProposalStatus::UnderReview),
-            "approved" => Ok(ProposalStatus::Approved),
-            "rejected" => Ok(ProposalStatus::Rejected),
-            "applied" => Ok(ProposalStatus::Applied),
-            _ => Err(format!("Unknown proposal status: {}", s)),
+            "proposed" => Ok(Self::Proposed),
+            "under-review" | "under_review" | "underreview" => Ok(Self::UnderReview),
+            "approved" => Ok(Self::Approved),
+            "rejected" => Ok(Self::Rejected),
+            "applied" => Ok(Self::Applied),
+            _ => Err(format!("Unknown proposal status: {s}")),
         }
     }
 }
@@ -107,7 +107,7 @@ impl DesignChangeProposal {
         let mut tera = Tera::default();
         tera.add_raw_template("design_change_proposal_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -116,7 +116,7 @@ impl DesignChangeProposal {
         let rendered_content = tera
             .render("design_change_proposal_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -171,7 +171,7 @@ impl DesignChangeProposal {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -195,8 +195,7 @@ impl DesignChangeProposal {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "design_change_proposal" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'design_change_proposal', found '{}'",
-                level
+                "Expected level 'design_change_proposal', found '{level}'"
             )));
         }
 
@@ -247,7 +246,7 @@ impl DesignChangeProposal {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -255,7 +254,7 @@ impl DesignChangeProposal {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -274,7 +273,7 @@ impl DesignChangeProposal {
             .core
             .parent_id
             .as_ref()
-            .map(|id| id.to_string())
+            .map(std::string::ToString::to_string)
             .unwrap_or_else(|| "NULL".to_string());
         context.insert("parent_id", &parent_id_str);
 
@@ -284,16 +283,16 @@ impl DesignChangeProposal {
         let reviewer_str = self.reviewer.as_deref().unwrap_or("NULL");
         context.insert("reviewer", reviewer_str);
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

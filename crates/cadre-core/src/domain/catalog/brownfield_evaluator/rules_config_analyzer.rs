@@ -65,12 +65,12 @@ pub enum Language {
 impl std::fmt::Display for Language {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Language::JsTs => write!(f, "JS/TS"),
-            Language::Rust => write!(f, "Rust"),
-            Language::Python => write!(f, "Python"),
-            Language::Go => write!(f, "Go"),
-            Language::JavaKotlin => write!(f, "Java/Kotlin"),
-            Language::CSharp => write!(f, "C#"),
+            Self::JsTs => write!(f, "JS/TS"),
+            Self::Rust => write!(f, "Rust"),
+            Self::Python => write!(f, "Python"),
+            Self::Go => write!(f, "Go"),
+            Self::JavaKotlin => write!(f, "Java/Kotlin"),
+            Self::CSharp => write!(f, "C#"),
         }
     }
 }
@@ -498,7 +498,7 @@ pub fn detect_configs(file_paths: &[String]) -> DetectedConfigs {
         lang_set.insert(Language::Go);
     }
     let mut languages: Vec<Language> = lang_set.into_iter().collect();
-    languages.sort_by_key(|l| format!("{}", l));
+    languages.sort_by_key(|l| format!("{l}"));
 
     DetectedConfigs {
         configs,
@@ -578,7 +578,7 @@ fn evaluate_jsts_quality(
                     if let Some(strict) = val
                         .get("compilerOptions")
                         .and_then(|co| co.get("strict"))
-                        .and_then(|s| s.as_bool())
+                        .and_then(serde_json::Value::as_bool)
                     {
                         if strict {
                             score = score.max(40.0);
@@ -595,13 +595,12 @@ fn evaluate_jsts_quality(
                         ];
                         let extra_strict_count = strict_flags
                             .iter()
-                            .filter(|f| co.get(**f).and_then(|v| v.as_bool()).unwrap_or(false))
+                            .filter(|f| co.get(**f).and_then(serde_json::Value::as_bool).unwrap_or(false))
                             .count();
                         if extra_strict_count >= 2 {
                             score += 10.0;
                             signals.push(format!(
-                                "tsconfig: {} additional strict flags enabled",
-                                extra_strict_count
+                                "tsconfig: {extra_strict_count} additional strict flags enabled"
                             ));
                         }
                     }
@@ -628,7 +627,7 @@ fn evaluate_jsts_quality(
                         for preset in &strict_presets {
                             if extends_list.iter().any(|e| e.contains(preset)) {
                                 score = score.max(35.0);
-                                signals.push(format!("eslint: extends {}", preset));
+                                signals.push(format!("eslint: extends {preset}"));
                             }
                         }
                         if extends_list.iter().any(|e| e.contains("strict")) {
@@ -656,7 +655,7 @@ fn evaluate_jsts_quality(
                     if let Some(linter) = val.get("linter") {
                         if linter
                             .get("enabled")
-                            .and_then(|v| v.as_bool())
+                            .and_then(serde_json::Value::as_bool)
                             .unwrap_or(false)
                         {
                             score = score.max(30.0);
@@ -665,9 +664,9 @@ fn evaluate_jsts_quality(
                         if let Some(rules) = linter.get("rules") {
                             if rules
                                 .get("recommended")
-                                .and_then(|v| v.as_bool())
+                                .and_then(serde_json::Value::as_bool)
                                 .unwrap_or(false)
-                                || rules.get("all").and_then(|v| v.as_bool()).unwrap_or(false)
+                                || rules.get("all").and_then(serde_json::Value::as_bool).unwrap_or(false)
                             {
                                 score = score.max(45.0);
                                 signals.push("biome: recommended/all rules enabled".to_string());
@@ -725,8 +724,7 @@ fn evaluate_rust_quality(
                 if sections >= 2 {
                     score = score.max(40.0);
                     signals.push(format!(
-                        "cargo-deny: {} policy sections configured",
-                        sections
+                        "cargo-deny: {sections} policy sections configured"
                     ));
                 } else if sections >= 1 {
                     score = score.max(25.0);
@@ -1141,8 +1139,7 @@ fn evaluate_jsts_layering(
                     if pattern_count >= 3 {
                         score = score.max(55.0);
                         signals.push(format!(
-                            "eslint: no-restricted-imports with {} pattern groups",
-                            pattern_count
+                            "eslint: no-restricted-imports with {pattern_count} pattern groups"
                         ));
                     } else if pattern_count >= 1 {
                         score = score.max(40.0);
@@ -1187,14 +1184,12 @@ fn evaluate_rust_layering(
         if member_count >= 4 {
             score = score.max(70.0);
             signals.push(format!(
-                "cargo workspace: {} crates (strong module boundaries)",
-                member_count
+                "cargo workspace: {member_count} crates (strong module boundaries)"
             ));
         } else if member_count >= 2 {
             score = score.max(50.0);
             signals.push(format!(
-                "cargo workspace: {} crates (basic module boundaries)",
-                member_count
+                "cargo workspace: {member_count} crates (basic module boundaries)"
             ));
         }
     }
@@ -1473,7 +1468,7 @@ fn evaluate_go_layering(
             signals.push("golangci-lint: depguard import restrictions configured".to_string());
 
             // Extract allow/deny patterns
-            let list_re = regex::Regex::new(r#"(?:allow|deny)\s*:\s*\n((?:\s+-\s*.+\n?)*)"#).ok();
+            let list_re = regex::Regex::new(r"(?:allow|deny)\s*:\s*\n((?:\s+-\s*.+\n?)*)").ok();
             if let Some(re) = &list_re {
                 for cap in re.captures_iter(&content) {
                     if let Some(block) = cap.get(1) {

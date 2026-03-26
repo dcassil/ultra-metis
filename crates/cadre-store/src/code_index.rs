@@ -33,15 +33,15 @@ pub enum SymbolKind {
 impl std::fmt::Display for SymbolKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SymbolKind::Function => write!(f, "function"),
-            SymbolKind::Struct => write!(f, "struct"),
-            SymbolKind::Trait => write!(f, "trait"),
-            SymbolKind::Enum => write!(f, "enum"),
-            SymbolKind::Impl => write!(f, "impl"),
-            SymbolKind::TypeAlias => write!(f, "type_alias"),
-            SymbolKind::Const => write!(f, "const"),
-            SymbolKind::Static => write!(f, "static"),
-            SymbolKind::Mod => write!(f, "mod"),
+            Self::Function => write!(f, "function"),
+            Self::Struct => write!(f, "struct"),
+            Self::Trait => write!(f, "trait"),
+            Self::Enum => write!(f, "enum"),
+            Self::Impl => write!(f, "impl"),
+            Self::TypeAlias => write!(f, "type_alias"),
+            Self::Const => write!(f, "const"),
+            Self::Static => write!(f, "static"),
+            Self::Mod => write!(f, "mod"),
         }
     }
 }
@@ -50,16 +50,16 @@ impl std::str::FromStr for SymbolKind {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "function" | "fn" => Ok(SymbolKind::Function),
-            "struct" => Ok(SymbolKind::Struct),
-            "trait" => Ok(SymbolKind::Trait),
-            "enum" => Ok(SymbolKind::Enum),
-            "impl" => Ok(SymbolKind::Impl),
-            "type_alias" | "type" => Ok(SymbolKind::TypeAlias),
-            "const" => Ok(SymbolKind::Const),
-            "static" => Ok(SymbolKind::Static),
-            "mod" | "module" => Ok(SymbolKind::Mod),
-            _ => Err(format!("Unknown symbol kind: {}", s)),
+            "function" | "fn" => Ok(Self::Function),
+            "struct" => Ok(Self::Struct),
+            "trait" => Ok(Self::Trait),
+            "enum" => Ok(Self::Enum),
+            "impl" => Ok(Self::Impl),
+            "type_alias" | "type" => Ok(Self::TypeAlias),
+            "const" => Ok(Self::Const),
+            "static" => Ok(Self::Static),
+            "mod" | "module" => Ok(Self::Mod),
+            _ => Err(format!("Unknown symbol kind: {s}")),
         }
     }
 }
@@ -92,7 +92,7 @@ impl CodeIndexer {
         for pattern in patterns {
             let full_pattern = self.project_root.join(pattern).display().to_string();
             let paths = glob::glob(&full_pattern)
-                .map_err(|e| format!("Invalid glob pattern '{}': {}", pattern, e))?;
+                .map_err(|e| format!("Invalid glob pattern '{pattern}': {e}"))?;
 
             for entry in paths.flatten() {
                 if entry.is_file() {
@@ -130,7 +130,7 @@ impl CodeIndexer {
         let language = tree_sitter_rust::LANGUAGE.into();
         parser
             .set_language(&language)
-            .map_err(|e| format!("Failed to set language: {}", e))?;
+            .map_err(|e| format!("Failed to set language: {e}"))?;
 
         let tree = parser
             .parse(&source, None)

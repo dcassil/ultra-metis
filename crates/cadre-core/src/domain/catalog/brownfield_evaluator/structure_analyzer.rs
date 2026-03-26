@@ -48,11 +48,11 @@ pub enum NamingConvention {
 impl std::fmt::Display for NamingConvention {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            NamingConvention::CamelCase => write!(f, "camelCase"),
-            NamingConvention::PascalCase => write!(f, "PascalCase"),
-            NamingConvention::KebabCase => write!(f, "kebab-case"),
-            NamingConvention::SnakeCase => write!(f, "snake_case"),
-            NamingConvention::Mixed => write!(f, "mixed"),
+            Self::CamelCase => write!(f, "camelCase"),
+            Self::PascalCase => write!(f, "PascalCase"),
+            Self::KebabCase => write!(f, "kebab-case"),
+            Self::SnakeCase => write!(f, "snake_case"),
+            Self::Mixed => write!(f, "mixed"),
         }
     }
 }
@@ -73,10 +73,10 @@ pub enum TestPattern {
 impl std::fmt::Display for TestPattern {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TestPattern::CoLocated => write!(f, "co-located"),
-            TestPattern::SeparateDir => write!(f, "separate-directory"),
-            TestPattern::Both => write!(f, "both"),
-            TestPattern::None => write!(f, "none"),
+            Self::CoLocated => write!(f, "co-located"),
+            Self::SeparateDir => write!(f, "separate-directory"),
+            Self::Both => write!(f, "both"),
+            Self::None => write!(f, "none"),
         }
     }
 }
@@ -189,7 +189,7 @@ impl StructureAnalyzer {
         let mut layers: Vec<String> = well_known_layers
             .iter()
             .filter(|layer| dir_set.contains(**layer))
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .collect();
         layers.sort();
         layers
@@ -224,11 +224,11 @@ impl StructureAnalyzer {
                 kebab += 1;
             } else if base.contains('_') {
                 snake += 1;
-            } else if base.chars().next().map_or(false, |c| c.is_uppercase()) {
+            } else if base.chars().next().map_or(false, char::is_uppercase) {
                 pascal += 1;
             } else if base.len() > 1
-                && base.chars().next().map_or(false, |c| c.is_lowercase())
-                && base.chars().any(|c| c.is_uppercase())
+                && base.chars().next().map_or(false, char::is_lowercase)
+                && base.chars().any(char::is_uppercase)
             {
                 camel += 1;
             }
@@ -240,7 +240,7 @@ impl StructureAnalyzer {
         }
 
         let max = camel.max(pascal).max(kebab).max(snake);
-        let dominance = max as f64 / total as f64;
+        let dominance = f64::from(max) / f64::from(total);
 
         if dominance < 0.5 {
             NamingConvention::Mixed

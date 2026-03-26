@@ -274,7 +274,7 @@ mod tests {
     fn test_all_templates_have_unique_work_types() {
         let types: Vec<WorkType> = all_templates().iter().map(|t| t.work_type).collect();
         let mut deduped = types.clone();
-        deduped.sort_by_key(|t| t.identifier());
+        deduped.sort_by_key(super::super::workflow::WorkType::identifier);
         deduped.dedup();
         assert_eq!(types.len(), deduped.len());
     }
@@ -364,7 +364,7 @@ mod tests {
             WorkType::Migration,
         ] {
             let t = template_for_work_type(*wt);
-            assert!(t.is_some(), "no template for {:?}", wt);
+            assert!(t.is_some(), "no template for {wt:?}");
             assert_eq!(t.unwrap().work_type, *wt);
         }
     }

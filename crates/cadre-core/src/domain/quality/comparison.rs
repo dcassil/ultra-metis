@@ -133,8 +133,8 @@ impl BaselineComparisonEngine {
         after: &ParsedToolOutput,
     ) -> (Vec<String>, Vec<String>) {
         let before_keys: HashSet<String> =
-            before.findings.iter().map(|f| f.finding_key()).collect();
-        let after_keys: HashSet<String> = after.findings.iter().map(|f| f.finding_key()).collect();
+            before.findings.iter().map(super::types::FindingEntry::finding_key).collect();
+        let after_keys: HashSet<String> = after.findings.iter().map(super::types::FindingEntry::finding_key).collect();
 
         let new_findings: Vec<String> = after_keys.difference(&before_keys).cloned().collect();
         let resolved_findings: Vec<String> = before_keys.difference(&after_keys).cloned().collect();
@@ -246,7 +246,7 @@ impl BaselineComparisonEngine {
         if !comparison.new_findings.is_empty() {
             body.push_str("## New Findings\n\n");
             for key in &comparison.new_findings {
-                body.push_str(&format!("- {}\n", key));
+                body.push_str(&format!("- {key}\n"));
             }
             body.push('\n');
         }
@@ -255,7 +255,7 @@ impl BaselineComparisonEngine {
         if !comparison.resolved_findings.is_empty() {
             body.push_str("## Resolved Findings\n\n");
             for key in &comparison.resolved_findings {
-                body.push_str(&format!("- {}\n", key));
+                body.push_str(&format!("- {key}\n"));
             }
             body.push('\n');
         }
@@ -266,14 +266,14 @@ impl BaselineComparisonEngine {
             if !comparison.files_improved.is_empty() {
                 body.push_str("### Improved Files\n\n");
                 for file in &comparison.files_improved {
-                    body.push_str(&format!("- {}\n", file));
+                    body.push_str(&format!("- {file}\n"));
                 }
                 body.push('\n');
             }
             if !comparison.files_regressed.is_empty() {
                 body.push_str("### Regressed Files\n\n");
                 for file in &comparison.files_regressed {
-                    body.push_str(&format!("- {}\n", file));
+                    body.push_str(&format!("- {file}\n"));
                 }
                 body.push('\n');
             }

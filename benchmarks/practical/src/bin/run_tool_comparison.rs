@@ -78,13 +78,13 @@ fn main() -> anyhow::Result<()> {
 
     // Save JSON
     let json = serde_json::to_string_pretty(&result)?;
-    let json_path = results_dir.join(format!("tool_comparison_{}.json", ts));
+    let json_path = results_dir.join(format!("tool_comparison_{ts}.json"));
     std::fs::write(&json_path, &json)?;
     std::fs::write(results_dir.join("latest_tool_comparison.json"), &json)?;
 
     // Save markdown report
     let report = practical_benchmark::tool_comparison::format_comparison_report(&result);
-    let report_path = results_dir.join(format!("tool_comparison_{}.md", ts));
+    let report_path = results_dir.join(format!("tool_comparison_{ts}.md"));
     std::fs::write(&report_path, &report)?;
 
     println!("  JSON   : {}", json_path.display());

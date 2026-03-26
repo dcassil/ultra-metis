@@ -65,7 +65,7 @@ impl SelectionOption {
         if !self.dependency_rules.is_empty() {
             s.push_str("    Key rules:\n");
             for rule in self.dependency_rules.iter().take(3) {
-                s.push_str(&format!("      - {}\n", rule));
+                s.push_str(&format!("      - {rule}\n"));
             }
         }
         s
@@ -185,31 +185,31 @@ impl<'a> SelectionFlow<'a> {
             entry
                 .layers
                 .iter()
-                .map(|l| format!("- {}", l))
+                .map(|l| format!("- {l}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
             entry
                 .folder_layout
                 .iter()
-                .map(|f| format!("- `{}`", f))
+                .map(|f| format!("- `{f}`"))
                 .collect::<Vec<_>>()
                 .join("\n"),
             entry
                 .dependency_rules
                 .iter()
-                .map(|r| format!("- {}", r))
+                .map(|r| format!("- {r}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
             entry
                 .naming_conventions
                 .iter()
-                .map(|n| format!("- {}", n))
+                .map(|n| format!("- {n}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
             entry
                 .anti_patterns
                 .iter()
-                .map(|a| format!("- {}", a))
+                .map(|a| format!("- {a}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
         );
@@ -257,8 +257,7 @@ impl<'a> SelectionFlow<'a> {
             .find_exact(language, project_type)
             .ok_or_else(|| {
                 DocumentValidationError::InvalidContent(format!(
-                    "No catalog entry found for {}/{}",
-                    language, project_type
+                    "No catalog entry found for {language}/{project_type}"
                 ))
             })?;
 

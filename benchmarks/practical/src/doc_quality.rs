@@ -29,7 +29,7 @@ impl DocQualityScore {
 /// Score a single markdown document file.
 pub fn score_document(path: &Path) -> anyhow::Result<DocQualityScore> {
     let content = std::fs::read_to_string(path)
-        .map_err(|e| anyhow::anyhow!("Failed to read {:?}: {}", path, e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to read {path:?}: {e}"))?;
     Ok(score_content(&content))
 }
 
@@ -174,7 +174,7 @@ fn is_tracked_section(name: &str) -> bool {
 fn section_is_filled(body: &str) -> bool {
     let meaningful_lines: Vec<&str> = body
         .lines()
-        .map(|l| l.trim())
+        .map(str::trim)
         .filter(|l| {
             !l.is_empty()
                 && !l.starts_with("<!--")
@@ -197,7 +197,7 @@ fn section_is_filled(body: &str) -> bool {
 mod tests {
     use super::*;
 
-    const EMPTY_DOC: &str = r#"---
+    const EMPTY_DOC: &str = r"---
 id: test
 ---
 # Test Initiative
@@ -209,9 +209,9 @@ id: test
 ## Goals **[REQUIRED]**
 
 {Goals go here}
-"#;
+";
 
-    const FILLED_DOC: &str = r#"---
+    const FILLED_DOC: &str = r"---
 id: test
 ---
 # Test Initiative
@@ -232,7 +232,7 @@ It addresses the need to ingest structured data from CSV files.
 - [ ] Auto-detect CSV delimiter (comma, tab, semicolon)
 - [ ] Handle quoted fields with embedded commas
 - [ ] Type inference for numeric, date, and string columns
-"#;
+";
 
     #[test]
     fn test_empty_doc_scores_low() {

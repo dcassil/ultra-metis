@@ -70,8 +70,7 @@ impl InvestigationTriggerEngine {
                 )
             } else {
                 format!(
-                    "Investigate {} blocking quality gate failures",
-                    blocking_count
+                    "Investigate {blocking_count} blocking quality gate failures"
                 )
             };
 

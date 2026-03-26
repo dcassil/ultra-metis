@@ -146,7 +146,7 @@ impl PatternMatcher {
             .iter()
             .chain(analysis.detected_layers.iter())
             .chain(analysis.module_boundaries.iter())
-            .map(|s| s.as_str())
+            .map(std::string::String::as_str)
             .collect();
 
         let mut found = 0;
@@ -156,13 +156,13 @@ impl PatternMatcher {
                 || (analysis.has_src_root && dir == "src")
             {
                 found += 1;
-                matches.push(format!("Found expected directory '{}'", dir));
+                matches.push(format!("Found expected directory '{dir}'"));
             } else {
-                mismatches.push(format!("Missing expected directory '{}'", dir));
+                mismatches.push(format!("Missing expected directory '{dir}'"));
             }
         }
 
-        (found as f64 / expected_dirs.len() as f64) * 100.0
+        (f64::from(found) / expected_dirs.len() as f64) * 100.0
     }
 
     /// Score layer detection overlap.
@@ -200,13 +200,13 @@ impl PatternMatcher {
         for layer in &entry.layers {
             if all_dir_names.contains(layer.as_str()) {
                 found += 1;
-                matches.push(format!("Detected layer '{}'", layer));
+                matches.push(format!("Detected layer '{layer}'"));
             } else {
-                mismatches.push(format!("Missing layer '{}'", layer));
+                mismatches.push(format!("Missing layer '{layer}'"));
             }
         }
 
-        (found as f64 / entry.layers.len() as f64) * 100.0
+        (f64::from(found) / entry.layers.len() as f64) * 100.0
     }
 
     /// Score naming convention match.

@@ -3,7 +3,7 @@
 //! Provides inline documentation for agents using the MCP tools.
 
 /// The system prompt content, kept under ~4000 tokens.
-pub const SYSTEM_PROMPT: &str = r#"# Cadre MCP Server
+pub const SYSTEM_PROMPT: &str = r"# Cadre MCP Server
 
 Repo-native engineering orchestration. All state is file-based markdown+YAML frontmatter.
 
@@ -107,7 +107,7 @@ local_exception, boundary_warning, subsystem_quirk
 
 parent_child, governs, references, derived_from, supersedes,
 conflicts_with, validates, blocks, approved_by
-"#;
+";
 
 /// The prompt name used in MCP prompts/list and prompts/get.
 pub const PROMPT_NAME: &str = "cadre-guide";

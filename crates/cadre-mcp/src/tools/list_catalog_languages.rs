@@ -37,9 +37,9 @@ impl ListCatalogLanguagesTool {
         let mut output = "## Architecture Catalog Languages\n\n".to_string();
         for lang in &languages {
             let types = engine.project_types_for_language(lang);
-            output.push_str(&format!("### {}\n\n", lang));
+            output.push_str(&format!("### {lang}\n\n"));
             for pt in &types {
-                output.push_str(&format!("- {}\n", pt));
+                output.push_str(&format!("- {pt}\n"));
             }
             output.push('\n');
         }

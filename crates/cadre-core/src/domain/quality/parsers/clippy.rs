@@ -112,21 +112,21 @@ impl ToolOutputParser for ClippyParser {
 
         output.metrics.push(MetricEntry::new(
             "total_errors",
-            total_errors as f64,
+            f64::from(total_errors),
             "count",
         ));
         output.metrics.push(MetricEntry::new(
             "total_warnings",
-            total_warnings as f64,
+            f64::from(total_warnings),
             "count",
         ));
 
         output
             .summary
-            .insert("total_errors".to_string(), total_errors as f64);
+            .insert("total_errors".to_string(), f64::from(total_errors));
         output
             .summary
-            .insert("total_warnings".to_string(), total_warnings as f64);
+            .insert("total_warnings".to_string(), f64::from(total_warnings));
 
         Ok(output)
     }

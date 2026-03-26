@@ -4,14 +4,14 @@ level: initiative
 title: "Bulk Pedantic Lint Cleanup: Auto-Fixable and Mechanical Violations"
 short_code: "SMET-I-0092"
 created_at: 2026-03-26T18:47:18.120902+00:00
-updated_at: 2026-03-26T19:24:17.459628+00:00
+updated_at: 2026-03-26T19:26:59.728866+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/active"
 
 
 exit_criteria_met: false

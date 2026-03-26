@@ -57,7 +57,7 @@ pub trait Document {
         append: bool,
     ) -> Result<(), DocumentValidationError> {
         let lines: Vec<&str> = self.core().content.body.lines().collect();
-        let target_heading = format!("## {}", heading);
+        let target_heading = format!("## {heading}");
 
         let section_start = lines.iter().position(|line| line.trim() == target_heading);
 
@@ -95,7 +95,7 @@ pub trait Document {
 
             updated_lines.join("\n")
         } else {
-            let mut updated_lines: Vec<String> = lines.iter().map(|s| s.to_string()).collect();
+            let mut updated_lines: Vec<String> = lines.iter().map(std::string::ToString::to_string).collect();
             if !updated_lines.is_empty() {
                 updated_lines.push("".to_string());
             }

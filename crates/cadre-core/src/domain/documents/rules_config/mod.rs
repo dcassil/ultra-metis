@@ -22,8 +22,8 @@ pub enum ProtectionLevel {
 impl fmt::Display for ProtectionLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ProtectionLevel::Standard => write!(f, "standard"),
-            ProtectionLevel::Protected => write!(f, "protected"),
+            Self::Standard => write!(f, "standard"),
+            Self::Protected => write!(f, "protected"),
         }
     }
 }
@@ -33,11 +33,10 @@ impl FromStr for ProtectionLevel {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "standard" => Ok(ProtectionLevel::Standard),
-            "protected" => Ok(ProtectionLevel::Protected),
+            "standard" => Ok(Self::Standard),
+            "protected" => Ok(Self::Protected),
             _ => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown protection_level '{}': expected 'standard' or 'protected'",
-                s
+                "Unknown protection_level '{s}': expected 'standard' or 'protected'"
             ))),
         }
     }
@@ -57,12 +56,12 @@ pub enum RuleScope {
 impl fmt::Display for RuleScope {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuleScope::Platform => write!(f, "platform"),
-            RuleScope::Organization => write!(f, "org"),
-            RuleScope::Repository => write!(f, "repo"),
-            RuleScope::Package => write!(f, "package"),
-            RuleScope::Component => write!(f, "component"),
-            RuleScope::Task => write!(f, "task"),
+            Self::Platform => write!(f, "platform"),
+            Self::Organization => write!(f, "org"),
+            Self::Repository => write!(f, "repo"),
+            Self::Package => write!(f, "package"),
+            Self::Component => write!(f, "component"),
+            Self::Task => write!(f, "task"),
         }
     }
 }
@@ -72,15 +71,14 @@ impl FromStr for RuleScope {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "platform" => Ok(RuleScope::Platform),
-            "organization" | "org" => Ok(RuleScope::Organization),
-            "repository" | "repo" => Ok(RuleScope::Repository),
-            "package" => Ok(RuleScope::Package),
-            "component" => Ok(RuleScope::Component),
-            "task" => Ok(RuleScope::Task),
+            "platform" => Ok(Self::Platform),
+            "organization" | "org" => Ok(Self::Organization),
+            "repository" | "repo" => Ok(Self::Repository),
+            "package" => Ok(Self::Package),
+            "component" => Ok(Self::Component),
+            "task" => Ok(Self::Task),
             _ => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown scope '{}': expected platform/org/repo/package/component/task",
-                s
+                "Unknown scope '{s}': expected platform/org/repo/package/component/task"
             ))),
         }
     }
@@ -102,14 +100,14 @@ pub enum RuleCategory {
 impl fmt::Display for RuleCategory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuleCategory::Behavioral => write!(f, "behavioral"),
-            RuleCategory::Architectural => write!(f, "architectural"),
-            RuleCategory::Operational => write!(f, "operational"),
-            RuleCategory::InformationHandling => write!(f, "information_handling"),
-            RuleCategory::DecisionMaking => write!(f, "decision_making"),
-            RuleCategory::ValidationQuality => write!(f, "validation_quality"),
-            RuleCategory::ApprovalEscalation => write!(f, "approval_escalation"),
-            RuleCategory::ExecutionSafety => write!(f, "execution_safety"),
+            Self::Behavioral => write!(f, "behavioral"),
+            Self::Architectural => write!(f, "architectural"),
+            Self::Operational => write!(f, "operational"),
+            Self::InformationHandling => write!(f, "information_handling"),
+            Self::DecisionMaking => write!(f, "decision_making"),
+            Self::ValidationQuality => write!(f, "validation_quality"),
+            Self::ApprovalEscalation => write!(f, "approval_escalation"),
+            Self::ExecutionSafety => write!(f, "execution_safety"),
         }
     }
 }
@@ -167,14 +165,14 @@ impl RulesConfig {
         let mut tera = Tera::default();
         tera.add_raw_template("rules_config_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
         context.insert("title", &title);
 
         let rendered_content = tera.render("rules_config_content", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
         })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -227,7 +225,7 @@ impl RulesConfig {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -259,8 +257,7 @@ impl RulesConfig {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "rules_config" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'rules_config', found '{}'",
-                level
+                "Expected level 'rules_config', found '{level}'"
             )));
         }
 
@@ -392,7 +389,7 @@ impl RulesConfig {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -400,7 +397,7 @@ impl RulesConfig {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -415,7 +412,7 @@ impl RulesConfig {
             &self.core.metadata.exit_criteria_met.to_string(),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
         context.insert("protection_level", &self.protection_level.to_string());
@@ -430,12 +427,12 @@ impl RulesConfig {
         );
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

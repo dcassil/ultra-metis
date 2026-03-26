@@ -41,17 +41,17 @@ pub enum EscalationTrigger {
 
 impl EscalationTrigger {
     /// Returns all 9 trigger types in canonical order.
-    pub fn all() -> &'static [EscalationTrigger] {
+    pub fn all() -> &'static [Self] {
         &[
-            EscalationTrigger::InsufficientEvidence,
-            EscalationTrigger::UnresolvedContradiction,
-            EscalationTrigger::PolicyConflict,
-            EscalationTrigger::HighImpactChange,
-            EscalationTrigger::ArchitectureMismatch,
-            EscalationTrigger::SecuritySafetyConcern,
-            EscalationTrigger::FailingRequiredValidation,
-            EscalationTrigger::UncertaintyAboveThreshold,
-            EscalationTrigger::BusinessAmbiguity,
+            Self::InsufficientEvidence,
+            Self::UnresolvedContradiction,
+            Self::PolicyConflict,
+            Self::HighImpactChange,
+            Self::ArchitectureMismatch,
+            Self::SecuritySafetyConcern,
+            Self::FailingRequiredValidation,
+            Self::UncertaintyAboveThreshold,
+            Self::BusinessAmbiguity,
         ]
     }
 
@@ -121,7 +121,7 @@ impl FromStr for EscalationTrigger {
             }
             "uncertainty_above_threshold" | "uncertainty" => Ok(Self::UncertaintyAboveThreshold),
             "business_ambiguity" | "ambiguity" => Ok(Self::BusinessAmbiguity),
-            _ => Err(format!("Unknown escalation trigger: {}", s)),
+            _ => Err(format!("Unknown escalation trigger: {s}")),
         }
     }
 }
@@ -229,14 +229,14 @@ impl EscalationEvent {
         if !self.context.is_empty() {
             lines.push("Context:".into());
             for ctx in &self.context {
-                lines.push(format!("  - {}", ctx));
+                lines.push(format!("  - {ctx}"));
             }
         }
 
         if !self.suggested_actions.is_empty() {
             lines.push("Suggested actions:".into());
             for action in &self.suggested_actions {
-                lines.push(format!("  - {}", action));
+                lines.push(format!("  - {action}"));
             }
         }
 
@@ -350,7 +350,7 @@ impl EscalationDetector {
         thresholds: &EscalationThresholds,
     ) -> Option<EscalationSeverity> {
         let triggers = Self::detect(signals, thresholds);
-        triggers.iter().map(|t| t.default_severity()).max()
+        triggers.iter().map(EscalationTrigger::default_severity).max()
     }
 }
 
@@ -371,7 +371,7 @@ mod tests {
     fn test_trigger_identifiers_are_unique() {
         let ids: Vec<&str> = EscalationTrigger::all()
             .iter()
-            .map(|t| t.identifier())
+            .map(super::EscalationTrigger::identifier)
             .collect();
         let mut deduped = ids.clone();
         deduped.sort();

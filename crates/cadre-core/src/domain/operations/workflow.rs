@@ -41,17 +41,17 @@ pub enum WorkType {
 
 impl WorkType {
     /// Returns all work types in canonical order.
-    pub fn all() -> &'static [WorkType] {
+    pub fn all() -> &'static [Self] {
         &[
-            WorkType::Bugfix,
-            WorkType::Feature,
-            WorkType::Refactor,
-            WorkType::Investigation,
-            WorkType::Migration,
-            WorkType::ArchitectureChange,
-            WorkType::BrownfieldEvaluation,
-            WorkType::Remediation,
-            WorkType::GreenfieldBootstrap,
+            Self::Bugfix,
+            Self::Feature,
+            Self::Refactor,
+            Self::Investigation,
+            Self::Migration,
+            Self::ArchitectureChange,
+            Self::BrownfieldEvaluation,
+            Self::Remediation,
+            Self::GreenfieldBootstrap,
         ]
     }
 
@@ -106,7 +106,7 @@ impl FromStr for WorkType {
             "brownfield_evaluation" | "brownfield" | "eval" => Ok(Self::BrownfieldEvaluation),
             "remediation" | "remediate" | "tech_debt" => Ok(Self::Remediation),
             "greenfield_bootstrap" | "greenfield" | "bootstrap" => Ok(Self::GreenfieldBootstrap),
-            _ => Err(format!("Unknown work type: {}", s)),
+            _ => Err(format!("Unknown work type: {s}")),
         }
     }
 }
@@ -197,8 +197,8 @@ impl fmt::Display for CompletionRule {
                 write!(f, "artifacts_exist({})", artifacts.join(", "))
             }
             Self::AllValidationsPass => write!(f, "all_validations_pass"),
-            Self::GateSatisfied(gate) => write!(f, "gate_satisfied({})", gate),
-            Self::Custom(desc) => write!(f, "custom: {}", desc),
+            Self::GateSatisfied(gate) => write!(f, "gate_satisfied({gate})"),
+            Self::Custom(desc) => write!(f, "custom: {desc}"),
         }
     }
 }
@@ -314,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_work_type_identifiers_are_unique() {
-        let ids: Vec<&str> = WorkType::all().iter().map(|w| w.identifier()).collect();
+        let ids: Vec<&str> = WorkType::all().iter().map(super::WorkType::identifier).collect();
         let mut deduped = ids.clone();
         deduped.sort();
         deduped.dedup();

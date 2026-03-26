@@ -25,9 +25,9 @@ pub enum TemplateCategory {
 impl fmt::Display for TemplateCategory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TemplateCategory::Frontmatter => write!(f, "frontmatter.yaml"),
-            TemplateCategory::Content => write!(f, "content.md"),
-            TemplateCategory::AcceptanceCriteria => write!(f, "acceptance_criteria.md"),
+            Self::Frontmatter => write!(f, "frontmatter.yaml"),
+            Self::Content => write!(f, "content.md"),
+            Self::AcceptanceCriteria => write!(f, "acceptance_criteria.md"),
         }
     }
 }
@@ -333,7 +333,7 @@ impl TemplateRegistry {
             .ok_or_else(|| TemplateError::UnknownDocumentType(doc_type.to_string()))?;
 
         let mut tera = Tera::default();
-        let template_name = format!("{}_content", doc_type);
+        let template_name = format!("{doc_type}_content");
         tera.add_raw_template(&template_name, &template_set.content)
             .map_err(|e| TemplateError::ParseError(e.to_string()))?;
 
@@ -356,7 +356,7 @@ impl TemplateRegistry {
             .ok_or_else(|| TemplateError::UnknownDocumentType(doc_type.to_string()))?;
 
         let mut tera = Tera::default();
-        let template_name = format!("{}_content", doc_type);
+        let template_name = format!("{doc_type}_content");
         tera.add_raw_template(&template_name, &template_set.content)
             .map_err(|e| TemplateError::ParseError(e.to_string()))?;
 
@@ -379,7 +379,7 @@ impl TemplateRegistry {
     /// Get all registered document types.
     pub fn document_types(&self) -> Vec<DocumentType> {
         let mut types: Vec<DocumentType> = self.builtin.keys().copied().collect();
-        types.sort_by_key(|t| t.to_string());
+        types.sort_by_key(std::string::ToString::to_string);
         types
     }
 
@@ -484,8 +484,7 @@ mod tests {
         for doc_type in &expected_types {
             assert!(
                 registry.get(*doc_type).is_some(),
-                "Missing templates for {:?}",
-                doc_type
+                "Missing templates for {doc_type:?}"
             );
         }
     }
@@ -498,14 +497,12 @@ mod tests {
             let set = registry.get(doc_type).unwrap();
             assert!(
                 !set.frontmatter.is_empty(),
-                "Empty frontmatter for {}",
-                doc_type
+                "Empty frontmatter for {doc_type}"
             );
-            assert!(!set.content.is_empty(), "Empty content for {}", doc_type);
+            assert!(!set.content.is_empty(), "Empty content for {doc_type}");
             assert!(
                 !set.acceptance_criteria.is_empty(),
-                "Empty acceptance_criteria for {}",
-                doc_type
+                "Empty acceptance_criteria for {doc_type}"
             );
         }
     }
@@ -551,8 +548,7 @@ mod tests {
             let rendered = result.unwrap();
             assert!(
                 rendered.contains("# Test Title"),
-                "Rendered content for {} missing title heading",
-                doc_type
+                "Rendered content for {doc_type} missing title heading"
             );
         }
     }
@@ -909,7 +905,7 @@ mod tests {
         let ctx = TemplateContext::new().with_project_name("TEST");
         registry
             .render_with_context(doc_type, "Test Document", &ctx)
-            .unwrap_or_else(|e| panic!("Template render failed for {:?}: {}", doc_type, e))
+            .unwrap_or_else(|e| panic!("Template render failed for {doc_type:?}: {e}"))
     }
 
     #[test]
@@ -1008,15 +1004,14 @@ mod tests {
         for doc_type in core_types {
             let raw = registry
                 .get_template(doc_type, TemplateCategory::Content)
-                .unwrap_or_else(|| panic!("Missing content template for {:?}", doc_type));
+                .unwrap_or_else(|| panic!("Missing content template for {doc_type:?}"));
             let has_guidance = raw.contains("DELETE")
                 || raw.contains("CONDITIONAL")
                 || raw.contains("if not applicable")
                 || raw.contains("REQUIRED");
             assert!(
                 has_guidance,
-                "{:?} template has no required/conditional section guidance",
-                doc_type
+                "{doc_type:?} template has no required/conditional section guidance"
             );
         }
     }
@@ -1035,11 +1030,10 @@ mod tests {
         for doc_type in core_types {
             let raw = registry
                 .get_template(doc_type, TemplateCategory::Content)
-                .unwrap_or_else(|| panic!("Missing content template for {:?}", doc_type));
+                .unwrap_or_else(|| panic!("Missing content template for {doc_type:?}"));
             assert!(
                 raw.contains("<!--"),
-                "{:?} template has no HTML comment guidance — add <!-- ... --> comments to guide writers",
-                doc_type
+                "{doc_type:?} template has no HTML comment guidance — add <!-- ... --> comments to guide writers"
             );
         }
     }

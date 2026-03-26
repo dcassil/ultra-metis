@@ -38,7 +38,7 @@ pub async fn load_custom_entries(
         Err(e) => {
             errors.push(CustomLoadError {
                 path: dir.to_path_buf(),
-                error: format!("Failed to read directory: {}", e),
+                error: format!("Failed to read directory: {e}"),
             });
             return (entries, errors);
         }
@@ -50,7 +50,7 @@ pub async fn load_custom_entries(
             Err(e) => {
                 errors.push(CustomLoadError {
                     path: dir.to_path_buf(),
-                    error: format!("Failed to read directory entry: {}", e),
+                    error: format!("Failed to read directory entry: {e}"),
                 });
                 continue;
             }
@@ -69,7 +69,7 @@ pub async fn load_custom_entries(
             Err(e) => {
                 errors.push(CustomLoadError {
                     path: path.clone(),
-                    error: format!("Failed to parse catalog entry: {}", e),
+                    error: format!("Failed to parse catalog entry: {e}"),
                 });
             }
         }
@@ -128,7 +128,7 @@ mod tests {
         ArchitectureCatalogEntry::from_parts(
             title.to_string(),
             DocumentMetadata::new(short_code.to_string()),
-            DocumentContent::new(&format!("# {}", title)),
+            DocumentContent::new(&format!("# {title}")),
             vec![
                 Tag::Label("architecture_catalog_entry".to_string()),
                 Tag::Phase(Phase::Published),

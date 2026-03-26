@@ -4,14 +4,14 @@ level: task
 title: "Auto-Fixable Pedantic Lint Batch"
 short_code: "SMET-T-0186"
 created_at: 2026-03-26T19:24:22.747754+00:00
-updated_at: 2026-03-26T19:24:22.747754+00:00
+updated_at: 2026-03-26T19:27:05.535225+00:00
 parent: SMET-I-0092
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -54,6 +54,8 @@ For each lint (one at a time, in the order listed above):
 5. Run `cargo test --workspace` to verify no regressions
 6. If any auto-fix produces incorrect code, manually fix or add a local `#[allow(clippy::lint_name)]` with a comment explaining why
 7. Commit the changes for that lint
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

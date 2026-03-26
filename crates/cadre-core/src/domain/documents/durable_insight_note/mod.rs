@@ -31,10 +31,10 @@ pub enum NoteStatus {
 impl fmt::Display for NoteStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            NoteStatus::Active => write!(f, "active"),
-            NoteStatus::PruneCandidate => write!(f, "prune_candidate"),
-            NoteStatus::NeedsHumanReview => write!(f, "needs_human_review"),
-            NoteStatus::Archived => write!(f, "archived"),
+            Self::Active => write!(f, "active"),
+            Self::PruneCandidate => write!(f, "prune_candidate"),
+            Self::NeedsHumanReview => write!(f, "needs_human_review"),
+            Self::Archived => write!(f, "archived"),
         }
     }
 }
@@ -44,11 +44,11 @@ impl FromStr for NoteStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "active" => Ok(NoteStatus::Active),
-            "prune_candidate" | "prune-candidate" => Ok(NoteStatus::PruneCandidate),
-            "needs_human_review" | "needs-human-review" => Ok(NoteStatus::NeedsHumanReview),
-            "archived" => Ok(NoteStatus::Archived),
-            _ => Err(format!("Unknown note status: {}", s)),
+            "active" => Ok(Self::Active),
+            "prune_candidate" | "prune-candidate" => Ok(Self::PruneCandidate),
+            "needs_human_review" | "needs-human-review" => Ok(Self::NeedsHumanReview),
+            "archived" => Ok(Self::Archived),
+            _ => Err(format!("Unknown note status: {s}")),
         }
     }
 }
@@ -71,11 +71,11 @@ pub enum ReviewReason {
 impl fmt::Display for ReviewReason {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ReviewReason::ConflictsWithArchitecture => write!(f, "conflicts_with_architecture"),
-            ReviewReason::ConflictsWithNote => write!(f, "conflicts_with_note"),
-            ReviewReason::StaleArchitecture => write!(f, "stale_architecture"),
-            ReviewReason::StaleNoteContent => write!(f, "stale_note_content"),
-            ReviewReason::RiskyToAutoPrune => write!(f, "risky_to_auto_prune"),
+            Self::ConflictsWithArchitecture => write!(f, "conflicts_with_architecture"),
+            Self::ConflictsWithNote => write!(f, "conflicts_with_note"),
+            Self::StaleArchitecture => write!(f, "stale_architecture"),
+            Self::StaleNoteContent => write!(f, "stale_note_content"),
+            Self::RiskyToAutoPrune => write!(f, "risky_to_auto_prune"),
         }
     }
 }
@@ -86,13 +86,13 @@ impl FromStr for ReviewReason {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "conflicts_with_architecture" | "conflicts-with-architecture" => {
-                Ok(ReviewReason::ConflictsWithArchitecture)
+                Ok(Self::ConflictsWithArchitecture)
             }
-            "conflicts_with_note" | "conflicts-with-note" => Ok(ReviewReason::ConflictsWithNote),
-            "stale_architecture" | "stale-architecture" => Ok(ReviewReason::StaleArchitecture),
-            "stale_note_content" | "stale-note-content" => Ok(ReviewReason::StaleNoteContent),
-            "risky_to_auto_prune" | "risky-to-auto-prune" => Ok(ReviewReason::RiskyToAutoPrune),
-            _ => Err(format!("Unknown review reason: {}", s)),
+            "conflicts_with_note" | "conflicts-with-note" => Ok(Self::ConflictsWithNote),
+            "stale_architecture" | "stale-architecture" => Ok(Self::StaleArchitecture),
+            "stale_note_content" | "stale-note-content" => Ok(Self::StaleNoteContent),
+            "risky_to_auto_prune" | "risky-to-auto-prune" => Ok(Self::RiskyToAutoPrune),
+            _ => Err(format!("Unknown review reason: {s}")),
         }
     }
 }
@@ -112,13 +112,13 @@ pub enum InsightCategory {
 impl fmt::Display for InsightCategory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            InsightCategory::HotspotWarning => write!(f, "hotspot_warning"),
-            InsightCategory::RecurringFailure => write!(f, "recurring_failure"),
-            InsightCategory::MisleadingName => write!(f, "misleading_name"),
-            InsightCategory::ValidationHint => write!(f, "validation_hint"),
-            InsightCategory::LocalException => write!(f, "local_exception"),
-            InsightCategory::BoundaryWarning => write!(f, "boundary_warning"),
-            InsightCategory::SubsystemQuirk => write!(f, "subsystem_quirk"),
+            Self::HotspotWarning => write!(f, "hotspot_warning"),
+            Self::RecurringFailure => write!(f, "recurring_failure"),
+            Self::MisleadingName => write!(f, "misleading_name"),
+            Self::ValidationHint => write!(f, "validation_hint"),
+            Self::LocalException => write!(f, "local_exception"),
+            Self::BoundaryWarning => write!(f, "boundary_warning"),
+            Self::SubsystemQuirk => write!(f, "subsystem_quirk"),
         }
     }
 }
@@ -128,14 +128,14 @@ impl FromStr for InsightCategory {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "hotspot_warning" | "hotspot-warning" => Ok(InsightCategory::HotspotWarning),
-            "recurring_failure" | "recurring-failure" => Ok(InsightCategory::RecurringFailure),
-            "misleading_name" | "misleading-name" => Ok(InsightCategory::MisleadingName),
-            "validation_hint" | "validation-hint" => Ok(InsightCategory::ValidationHint),
-            "local_exception" | "local-exception" => Ok(InsightCategory::LocalException),
-            "boundary_warning" | "boundary-warning" => Ok(InsightCategory::BoundaryWarning),
-            "subsystem_quirk" | "subsystem-quirk" => Ok(InsightCategory::SubsystemQuirk),
-            _ => Err(format!("Unknown insight category: {}", s)),
+            "hotspot_warning" | "hotspot-warning" => Ok(Self::HotspotWarning),
+            "recurring_failure" | "recurring-failure" => Ok(Self::RecurringFailure),
+            "misleading_name" | "misleading-name" => Ok(Self::MisleadingName),
+            "validation_hint" | "validation-hint" => Ok(Self::ValidationHint),
+            "local_exception" | "local-exception" => Ok(Self::LocalException),
+            "boundary_warning" | "boundary-warning" => Ok(Self::BoundaryWarning),
+            "subsystem_quirk" | "subsystem-quirk" => Ok(Self::SubsystemQuirk),
+            _ => Err(format!("Unknown insight category: {s}")),
         }
     }
 }
@@ -171,7 +171,7 @@ impl InsightScope {
     }
 
     /// Check if this scope matches a query scope (any overlap counts as a match).
-    pub fn matches(&self, query: &InsightScope) -> bool {
+    pub fn matches(&self, query: &Self) -> bool {
         if let (Some(r), Some(qr)) = (&self.repo, &query.repo) {
             if r == qr {
                 return true;
@@ -226,9 +226,9 @@ pub enum FeedbackSignal {
 impl fmt::Display for FeedbackSignal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FeedbackSignal::Helpful => write!(f, "helpful"),
-            FeedbackSignal::Meh => write!(f, "meh"),
-            FeedbackSignal::Harmful => write!(f, "harmful"),
+            Self::Helpful => write!(f, "helpful"),
+            Self::Meh => write!(f, "meh"),
+            Self::Harmful => write!(f, "harmful"),
         }
     }
 }
@@ -238,10 +238,10 @@ impl FromStr for FeedbackSignal {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "helpful" | "thumbs_up" | "good" => Ok(FeedbackSignal::Helpful),
-            "meh" | "neutral" | "ok" => Ok(FeedbackSignal::Meh),
-            "harmful" | "thumbs_down" | "bad" => Ok(FeedbackSignal::Harmful),
-            _ => Err(format!("Unknown feedback signal: {}", s)),
+            "helpful" | "thumbs_up" | "good" => Ok(Self::Helpful),
+            "meh" | "neutral" | "ok" => Ok(Self::Meh),
+            "harmful" | "thumbs_down" | "bad" => Ok(Self::Harmful),
+            _ => Err(format!("Unknown feedback signal: {s}")),
         }
     }
 }
@@ -325,7 +325,7 @@ impl DurableInsightNote {
         let mut tera = Tera::default();
         tera.add_raw_template("durable_insight_note_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -334,7 +334,7 @@ impl DurableInsightNote {
         let rendered_content = tera
             .render("durable_insight_note_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -447,7 +447,7 @@ impl DurableInsightNote {
         if total == 0 {
             return 0.0;
         }
-        self.thumbs_down_count as f64 / total as f64
+        f64::from(self.thumbs_down_count) / f64::from(total)
     }
 
     /// Ratio of helpful feedback to total feedback (0.0 if no feedback).
@@ -456,7 +456,7 @@ impl DurableInsightNote {
         if total == 0 {
             return 0.0;
         }
-        self.thumbs_up_count as f64 / total as f64
+        f64::from(self.thumbs_up_count) / f64::from(total)
     }
 
     // -----------------------------------------------------------------------
@@ -547,7 +547,7 @@ impl DurableInsightNote {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -571,8 +571,7 @@ impl DurableInsightNote {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "durable_insight_note" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'durable_insight_note', found '{}'",
-                level
+                "Expected level 'durable_insight_note', found '{level}'"
             )));
         }
 
@@ -723,7 +722,7 @@ impl DurableInsightNote {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -731,7 +730,7 @@ impl DurableInsightNote {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -787,16 +786,16 @@ impl DurableInsightNote {
                 .unwrap_or_else(|| "NULL".to_string()),
         );
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

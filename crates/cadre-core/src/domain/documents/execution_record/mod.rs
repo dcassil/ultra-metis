@@ -29,9 +29,9 @@ pub enum ExecutionMode {
 impl fmt::Display for ExecutionMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ExecutionMode::SingleAgent => write!(f, "single_agent"),
-            ExecutionMode::Orchestrated => write!(f, "orchestrated"),
-            ExecutionMode::Manual => write!(f, "manual"),
+            Self::SingleAgent => write!(f, "single_agent"),
+            Self::Orchestrated => write!(f, "orchestrated"),
+            Self::Manual => write!(f, "manual"),
         }
     }
 }
@@ -41,10 +41,10 @@ impl FromStr for ExecutionMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().replace('-', "_").as_str() {
-            "single_agent" | "single" => Ok(ExecutionMode::SingleAgent),
-            "orchestrated" | "multi_agent" => Ok(ExecutionMode::Orchestrated),
-            "manual" | "human" => Ok(ExecutionMode::Manual),
-            _ => Err(format!("Unknown execution mode: {}", s)),
+            "single_agent" | "single" => Ok(Self::SingleAgent),
+            "orchestrated" | "multi_agent" => Ok(Self::Orchestrated),
+            "manual" | "human" => Ok(Self::Manual),
+            _ => Err(format!("Unknown execution mode: {s}")),
         }
     }
 }
@@ -67,11 +67,11 @@ pub enum Disposition {
 impl fmt::Display for Disposition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Disposition::Completed => write!(f, "completed"),
-            Disposition::Failed => write!(f, "failed"),
-            Disposition::Blocked => write!(f, "blocked"),
-            Disposition::Abandoned => write!(f, "abandoned"),
-            Disposition::InProgress => write!(f, "in_progress"),
+            Self::Completed => write!(f, "completed"),
+            Self::Failed => write!(f, "failed"),
+            Self::Blocked => write!(f, "blocked"),
+            Self::Abandoned => write!(f, "abandoned"),
+            Self::InProgress => write!(f, "in_progress"),
         }
     }
 }
@@ -81,12 +81,12 @@ impl FromStr for Disposition {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().replace('-', "_").as_str() {
-            "completed" | "complete" | "done" => Ok(Disposition::Completed),
-            "failed" | "failure" => Ok(Disposition::Failed),
-            "blocked" => Ok(Disposition::Blocked),
-            "abandoned" | "cancelled" => Ok(Disposition::Abandoned),
-            "in_progress" | "running" | "active" => Ok(Disposition::InProgress),
-            _ => Err(format!("Unknown disposition: {}", s)),
+            "completed" | "complete" | "done" => Ok(Self::Completed),
+            "failed" | "failure" => Ok(Self::Failed),
+            "blocked" => Ok(Self::Blocked),
+            "abandoned" | "cancelled" => Ok(Self::Abandoned),
+            "in_progress" | "running" | "active" => Ok(Self::InProgress),
+            _ => Err(format!("Unknown disposition: {s}")),
         }
     }
 }
@@ -230,7 +230,7 @@ impl ExecutionRecord {
         let mut tera = Tera::default();
         tera.add_raw_template("execution_record_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -239,7 +239,7 @@ impl ExecutionRecord {
         let rendered_content = tera
             .render("execution_record_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -332,7 +332,7 @@ impl ExecutionRecord {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -356,8 +356,7 @@ impl ExecutionRecord {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "execution_record" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'execution_record', found '{}'",
-                level
+                "Expected level 'execution_record', found '{level}'"
             )));
         }
 
@@ -583,7 +582,7 @@ impl ExecutionRecord {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -591,7 +590,7 @@ impl ExecutionRecord {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -682,16 +681,16 @@ impl ExecutionRecord {
             .collect();
         context.insert("overrides", &override_maps);
 
-        let tag_strings: Vec<String> = self.core.tags.iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.core.content.body;
         let acceptance_criteria = if let Some(ac) = &self.core.content.acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

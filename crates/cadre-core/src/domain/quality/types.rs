@@ -15,9 +15,9 @@ pub enum Severity {
 impl fmt::Display for Severity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Severity::Error => write!(f, "error"),
-            Severity::Warning => write!(f, "warning"),
-            Severity::Info => write!(f, "info"),
+            Self::Error => write!(f, "error"),
+            Self::Warning => write!(f, "warning"),
+            Self::Info => write!(f, "info"),
         }
     }
 }
@@ -27,10 +27,10 @@ impl FromStr for Severity {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "error" | "err" => Ok(Severity::Error),
-            "warning" | "warn" => Ok(Severity::Warning),
-            "info" | "note" | "suggestion" => Ok(Severity::Info),
-            _ => Err(format!("Unknown severity: {}", s)),
+            "error" | "err" => Ok(Self::Error),
+            "warning" | "warn" => Ok(Self::Warning),
+            "info" | "note" | "suggestion" => Ok(Self::Info),
+            _ => Err(format!("Unknown severity: {s}")),
         }
     }
 }
@@ -111,9 +111,9 @@ pub enum TrendDirection {
 impl fmt::Display for TrendDirection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TrendDirection::Improved => write!(f, "improved"),
-            TrendDirection::Regressed => write!(f, "regressed"),
-            TrendDirection::Unchanged => write!(f, "unchanged"),
+            Self::Improved => write!(f, "improved"),
+            Self::Regressed => write!(f, "regressed"),
+            Self::Unchanged => write!(f, "unchanged"),
         }
     }
 }

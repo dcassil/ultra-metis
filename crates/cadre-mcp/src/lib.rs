@@ -23,7 +23,7 @@ pub fn log(msg: &str) {
         .open(&log_path)
     {
         let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f");
-        let _ = writeln!(f, "[{}] {}", now, msg);
+        let _ = writeln!(f, "[{now}] {msg}");
     }
 }
 
@@ -53,7 +53,7 @@ pub async fn run() -> Result<()> {
             log("tracing initialized to file");
         }
         Err(e) => {
-            log(&format!("failed to open tracing log: {}", e));
+            log(&format!("failed to open tracing log: {e}"));
             let _ = tracing_subscriber::fmt()
                 .with_writer(std::io::stderr)
                 .with_ansi(false)
@@ -94,7 +94,7 @@ pub async fn run() -> Result<()> {
         server_details
             .instructions
             .as_ref()
-            .map(|s| s.len())
+            .map(std::string::String::len)
             .unwrap_or(0)
     ));
     log(&format!(
@@ -109,8 +109,8 @@ pub async fn run() -> Result<()> {
             t
         }
         Err(e) => {
-            log(&format!("FATAL: Failed to create StdioTransport: {}", e));
-            return Err(anyhow::anyhow!("Failed to create transport: {}", e));
+            log(&format!("FATAL: Failed to create StdioTransport: {e}"));
+            return Err(anyhow::anyhow!("Failed to create transport: {e}"));
         }
     };
 
@@ -136,8 +136,8 @@ pub async fn run() -> Result<()> {
             Ok(())
         }
         Err(e) => {
-            log(&format!("server.start() returned Err: {}", e));
-            Err(anyhow::anyhow!("MCP server failed: {}", e))
+            log(&format!("server.start() returned Err: {e}"));
+            Err(anyhow::anyhow!("MCP server failed: {e}"))
         }
     }
 }

@@ -32,13 +32,13 @@ pub enum InferredProjectType {
 impl std::fmt::Display for InferredProjectType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            InferredProjectType::Server => write!(f, "server"),
-            InferredProjectType::WebApp => write!(f, "web-app"),
-            InferredProjectType::CliTool => write!(f, "cli-tool"),
-            InferredProjectType::Library => write!(f, "library"),
-            InferredProjectType::ComponentLibrary => write!(f, "component-library"),
-            InferredProjectType::FullStack => write!(f, "full-stack"),
-            InferredProjectType::Unknown => write!(f, "unknown"),
+            Self::Server => write!(f, "server"),
+            Self::WebApp => write!(f, "web-app"),
+            Self::CliTool => write!(f, "cli-tool"),
+            Self::Library => write!(f, "library"),
+            Self::ComponentLibrary => write!(f, "component-library"),
+            Self::FullStack => write!(f, "full-stack"),
+            Self::Unknown => write!(f, "unknown"),
         }
     }
 }
@@ -237,7 +237,7 @@ impl BootstrapFlow {
 
         // Monorepo facts
         if monorepo.is_monorepo {
-            let tool_names: Vec<String> = monorepo.tools.iter().map(|t| t.to_string()).collect();
+            let tool_names: Vec<String> = monorepo.tools.iter().map(std::string::ToString::to_string).collect();
             facts.push(format!(
                 "Monorepo ({}) with {} packages",
                 if tool_names.is_empty() {
@@ -250,10 +250,10 @@ impl BootstrapFlow {
             let app_count = monorepo.apps().len();
             let lib_count = monorepo.libraries().len();
             if app_count > 0 {
-                facts.push(format!("{} app(s) detected", app_count));
+                facts.push(format!("{app_count} app(s) detected"));
             }
             if lib_count > 0 {
-                facts.push(format!("{} library package(s) detected", lib_count));
+                facts.push(format!("{lib_count} library package(s) detected"));
             }
         }
 
@@ -532,7 +532,7 @@ mod tests {
     #[test]
     fn test_brownfield_detection_by_source_count() {
         let paths: Vec<String> = (0..10)
-            .map(|i| format!("src/module_{}.rs", i))
+            .map(|i| format!("src/module_{i}.rs"))
             .chain(std::iter::once("Cargo.toml".to_string()))
             .collect();
         let result = BootstrapFlow::analyze(&paths);

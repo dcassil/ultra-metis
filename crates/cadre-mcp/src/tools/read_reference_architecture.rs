@@ -51,7 +51,7 @@ impl ReadReferenceArchitectureTool {
         let raw = store
             .read_document_raw(&sc)
             .map_err(|e| tool_error(e.user_message()))?;
-        let text = format!("## Reference Architecture: {}\n\n{}", sc, raw);
+        let text = format!("## Reference Architecture: {sc}\n\n{raw}");
         Ok(CallToolResult {
             content: vec![TextContent::new(text, None, None).into()],
             is_error: None,

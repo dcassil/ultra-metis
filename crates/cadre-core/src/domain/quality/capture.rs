@@ -94,11 +94,11 @@ impl BaselineCaptureService {
             files.sort();
             for file in files {
                 let findings = &by_file[*file];
-                body.push_str(&format!("### {}\n\n", file));
+                body.push_str(&format!("### {file}\n\n"));
                 for finding in findings {
                     let loc = match (finding.line, finding.column) {
-                        (Some(l), Some(c)) => format!("{}:{}", l, c),
-                        (Some(l), None) => format!("{}", l),
+                        (Some(l), Some(c)) => format!("{l}:{c}"),
+                        (Some(l), None) => format!("{l}"),
                         _ => "-".to_string(),
                     };
                     body.push_str(&format!(

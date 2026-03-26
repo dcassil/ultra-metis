@@ -47,9 +47,9 @@ impl TransitionPhaseTool {
                 let idx_current = sequence.iter().position(|s| s == &current_phase);
                 let idx_this = sequence.iter().position(|s| s == p);
                 if idx_this <= idx_current {
-                    format!("\u{25cf} {}", p)
+                    format!("\u{25cf} {p}")
                 } else {
-                    format!("\u{25cb} {}", p)
+                    format!("\u{25cb} {p}")
                 }
             })
             .collect::<Vec<_>>()

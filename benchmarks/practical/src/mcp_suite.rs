@@ -62,8 +62,7 @@ pub fn format_suite_report(result: &McpSuiteResult) -> String {
         }
         SuiteStage::Failed { error } => {
             out.push_str(&format!(
-                "- Planning comparison: failed or skipped ({})\n",
-                error
+                "- Planning comparison: failed or skipped ({error})\n"
             ));
         }
     }
@@ -82,7 +81,7 @@ pub fn format_suite_report(result: &McpSuiteResult) -> String {
         }
         SuiteStage::Failed { error } => {
             out.push_str("Planning comparison did not complete.\n\n");
-            out.push_str(&format!("Error: {}\n", error));
+            out.push_str(&format!("Error: {error}\n"));
         }
     }
 

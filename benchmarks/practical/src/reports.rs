@@ -12,7 +12,7 @@ pub fn save_run(run: &BenchmarkRun, results_dir: &Path) -> anyhow::Result<PathBu
     std::fs::create_dir_all(results_dir)?;
 
     let ts = run.timestamp.format("%Y%m%dT%H%M%SZ");
-    let filename = format!("run_{}.json", ts);
+    let filename = format!("run_{ts}.json");
     let path = results_dir.join(&filename);
 
     let json = serde_json::to_string_pretty(run)?;
@@ -82,7 +82,7 @@ pub fn append_history(run: &BenchmarkRun, history_path: &Path) -> anyhow::Result
     let gate_eff = run
         .total_metrics
         .gate_effectiveness
-        .map(|v| format!("{:.2}", v))
+        .map(|v| format!("{v:.2}"))
         .unwrap_or_default();
 
     writeln!(
@@ -234,13 +234,13 @@ fn format_report(
         .iter()
         .flat_map(|i| i.tasks.iter())
         .filter_map(|t| t.validation_gate.as_ref())
-        .flat_map(|g| g.issues_found.iter().map(|s| s.as_str()))
+        .flat_map(|g| g.issues_found.iter().map(std::string::String::as_str))
         .collect();
 
     if !all_issues.is_empty() {
         out.push_str("### Issues Found by Gates\n\n");
         for issue in &all_issues {
-            out.push_str(&format!("- {}\n", issue));
+            out.push_str(&format!("- {issue}\n"));
         }
         out.push('\n');
     }
@@ -286,8 +286,7 @@ pub fn format_run_detail_report(run: &BenchmarkRun) -> String {
     ));
     if let Some(gate_effectiveness) = run.total_metrics.gate_effectiveness {
         out.push_str(&format!(
-            "- Gate effectiveness: **{:.1}%**\n",
-            gate_effectiveness
+            "- Gate effectiveness: **{gate_effectiveness:.1}%**\n"
         ));
     }
     out.push('\n');
@@ -371,7 +370,7 @@ pub fn format_run_detail_report(run: &BenchmarkRun) -> String {
                 doc.path,
                 doc.short_code
                     .as_ref()
-                    .map(|code| format!(", {}", code))
+                    .map(|code| format!(", {code}"))
                     .unwrap_or_default()
             ));
             out.push_str(&format!("```text\n{}\n```\n", doc.excerpt));
@@ -441,7 +440,7 @@ pub fn save_normalized_result(run: &BenchmarkRun, results_dir: &Path) -> anyhow:
     std::fs::create_dir_all(results_dir)?;
     let result = NormalizedResult::from_run(run);
     let ts = run.timestamp.format("%Y%m%dT%H%M%SZ");
-    let path = results_dir.join(format!("normalized_{}.json", ts));
+    let path = results_dir.join(format!("normalized_{ts}.json"));
     let json = serde_json::to_string_pretty(&result)?;
     std::fs::write(&path, &json)?;
 
@@ -467,7 +466,7 @@ mod tests {
 
     fn make_run(mode: ExecutionMode, tokens: u64) -> BenchmarkRun {
         BenchmarkRun {
-            run_id: format!("{:?}-test", mode),
+            run_id: format!("{mode:?}-test"),
             timestamp: Utc::now(),
             manifest: crate::types::RunManifest::default(),
             scenario: crate::types::ScenarioSummary {

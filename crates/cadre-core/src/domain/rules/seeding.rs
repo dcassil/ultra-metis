@@ -167,9 +167,9 @@ impl RuleSeeder {
     }
 
     fn format_rule_list(heading: &str, items: &[String]) -> String {
-        let mut out = format!("### {}\n", heading);
+        let mut out = format!("### {heading}\n");
         for item in items {
-            out.push_str(&format!("\n- {}", item));
+            out.push_str(&format!("\n- {item}"));
         }
         out
     }
@@ -178,7 +178,7 @@ impl RuleSeeder {
         // Take the first ~50 chars as a title, cleaning up
         let clean: String = hint.chars().take(50).collect::<String>().trim().to_string();
         if clean.len() < hint.len() {
-            format!("{}...", clean)
+            format!("{clean}...")
         } else {
             clean
         }

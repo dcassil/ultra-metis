@@ -75,14 +75,14 @@ impl EvaluateBrownfieldTool {
         let outcome_desc = match &result.outcome {
             cadre_core::EvaluationOutcome::CatalogMatch {
                 catalog_entry_id, ..
-            } => format!("Catalog Match ({})", catalog_entry_id),
+            } => format!("Catalog Match ({catalog_entry_id})"),
             cadre_core::EvaluationOutcome::DerivedArchitecture { .. } => {
                 "Derived Architecture (no catalog match, good quality)".to_string()
             }
             cadre_core::EvaluationOutcome::RecommendCatalogPattern {
                 recommended_entry_id,
                 ..
-            } => format!("Recommend Catalog Pattern ({})", recommended_entry_id),
+            } => format!("Recommend Catalog Pattern ({recommended_entry_id})"),
             cadre_core::EvaluationOutcome::RecordAsIs { .. } => "Record As-Is".to_string(),
         };
 

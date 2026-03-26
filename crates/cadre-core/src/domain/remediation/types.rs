@@ -68,7 +68,7 @@ impl fmt::Display for RemediationTrigger {
                 )
             }
             Self::Manual { triggered_by, .. } => {
-                write!(f, "manual({})", triggered_by)
+                write!(f, "manual({triggered_by})")
             }
         }
     }
@@ -144,16 +144,16 @@ impl fmt::Display for RemediationAction {
             Self::CreateInvestigation {
                 suggested_title, ..
             } => {
-                write!(f, "create_investigation({})", suggested_title)
+                write!(f, "create_investigation({suggested_title})")
             }
             Self::CreateRemediationRecord { problem_type, .. } => {
-                write!(f, "create_remediation_record({})", problem_type)
+                write!(f, "create_remediation_record({problem_type})")
             }
             Self::EscalateToHuman { reason, .. } => {
-                write!(f, "escalate_to_human({})", reason)
+                write!(f, "escalate_to_human({reason})")
             }
             Self::RerunQualityCheck { gate_config_ref } => {
-                write!(f, "rerun_quality_check({})", gate_config_ref)
+                write!(f, "rerun_quality_check({gate_config_ref})")
             }
         }
     }
@@ -196,7 +196,7 @@ impl RemediationLoopPhase {
     }
 
     /// Returns valid next phases from the current phase.
-    pub fn valid_transitions(&self) -> &'static [RemediationLoopPhase] {
+    pub fn valid_transitions(&self) -> &'static [Self] {
         match self {
             Self::Triggered => &[Self::Investigating, Self::Closed],
             Self::Investigating => &[Self::ProposalReady, Self::Closed],
@@ -232,7 +232,7 @@ impl std::str::FromStr for RemediationLoopPhase {
             "verifying" => Ok(Self::Verifying),
             "resolved" => Ok(Self::Resolved),
             "closed" => Ok(Self::Closed),
-            _ => Err(format!("Unknown remediation loop phase: {}", s)),
+            _ => Err(format!("Unknown remediation loop phase: {s}")),
         }
     }
 }
@@ -297,7 +297,7 @@ impl RemediationLoop {
                 "Cannot transition from {} to {} (valid: {:?})",
                 self.phase,
                 to,
-                valid.iter().map(|p| p.as_str()).collect::<Vec<_>>()
+                valid.iter().map(RemediationLoopPhase::as_str).collect::<Vec<_>>()
             ))
         }
     }

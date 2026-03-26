@@ -46,7 +46,7 @@ impl IndexCodeTool {
             let results = CodeIndexer::search_symbols(&index, Some(q), self.kind.as_deref());
 
             if results.is_empty() {
-                let text = format!("No symbols matching '{}'", q);
+                let text = format!("No symbols matching '{q}'");
                 return Ok(CallToolResult {
                     content: vec![TextContent::new(text, None, None).into()],
                     is_error: None,
@@ -56,10 +56,9 @@ impl IndexCodeTool {
             }
 
             let mut output = format!(
-                "## Symbol Search: '{}'\n\n\
+                "## Symbol Search: '{q}'\n\n\
                 | Name | Kind | File | Line | Signature |\n\
-                | ---- | ---- | ---- | ---- | --------- |\n",
-                q
+                | ---- | ---- | ---- | ---- | --------- |\n"
             );
             for sym in &results {
                 output.push_str(&format!(

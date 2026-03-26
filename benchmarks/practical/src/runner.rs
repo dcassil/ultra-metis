@@ -134,7 +134,7 @@ pub fn parse_initiative_response(response: &str) -> Vec<AiInitiative> {
                 .and_then(|v| v.as_array())
                 .map(|arr| {
                     arr.iter()
-                        .filter_map(|t| t.as_str().map(|s| s.to_string()))
+                        .filter_map(|t| t.as_str().map(std::string::ToString::to_string))
                         .collect()
                 })
                 .unwrap_or_default();
@@ -452,9 +452,9 @@ pub async fn execute_autonomous(scenario: &LoadedScenarioPack) -> anyhow::Result
             ));
         }
 
-        let cli_tokens = cli_result.as_ref().map(|r| r.approx_tokens()).unwrap_or(0);
+        let cli_tokens = cli_result.as_ref().map(CliResult::approx_tokens).unwrap_or(0);
         let cli_time = cli_result.as_ref().map(|r| r.elapsed).unwrap_or_default();
-        let task_tokens = ((api_input_tokens + api_output_tokens) / n as u64) + cli_tokens;
+        let task_tokens = ((api_input_tokens + api_output_tokens) / u64::from(n)) + cli_tokens;
         let task_time = (api_time / n) + cli_time;
 
         tracing::info!(

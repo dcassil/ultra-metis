@@ -37,30 +37,27 @@ pub enum EditGuardError {
 impl fmt::Display for EditGuardError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EditGuardError::ProtectedRule {
+            Self::ProtectedRule {
                 rule_short_code,
                 rule_title,
             } => write!(
                 f,
-                "Cannot edit protected rule '{}' ({}). Create a RuleChangeProposal to modify this rule.",
-                rule_title, rule_short_code
+                "Cannot edit protected rule '{rule_title}' ({rule_short_code}). Create a RuleChangeProposal to modify this rule."
             ),
-            EditGuardError::ProposalNotApproved {
+            Self::ProposalNotApproved {
                 rule_short_code,
                 proposal_short_code,
                 current_status,
             } => write!(
                 f,
-                "Cannot apply changes to rule '{}': proposal '{}' has status '{}' (must be 'approved')",
-                rule_short_code, proposal_short_code, current_status
+                "Cannot apply changes to rule '{rule_short_code}': proposal '{proposal_short_code}' has status '{current_status}' (must be 'approved')"
             ),
-            EditGuardError::ForceOverrideUsed {
+            Self::ForceOverrideUsed {
                 rule_short_code,
                 reason,
             } => write!(
                 f,
-                "Force override applied to protected rule '{}': {}",
-                rule_short_code, reason
+                "Force override applied to protected rule '{rule_short_code}': {reason}"
             ),
         }
     }
@@ -87,11 +84,11 @@ pub enum EditDecision {
 
 impl EditDecision {
     pub fn is_permitted(&self) -> bool {
-        !matches!(self, EditDecision::Rejected(_))
+        !matches!(self, Self::Rejected(_))
     }
 
     pub fn is_force_override(&self) -> bool {
-        matches!(self, EditDecision::PermittedViaForceOverride { .. })
+        matches!(self, Self::PermittedViaForceOverride { .. })
     }
 }
 

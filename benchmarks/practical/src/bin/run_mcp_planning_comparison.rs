@@ -35,8 +35,8 @@ async fn main() -> anyhow::Result<()> {
     let result =
         practical_benchmark::mcp_planning_comparison::run_planning_comparison(&scenario).await?;
     let ts = result.timestamp.format("%Y%m%dT%H%M%SZ");
-    let json_path = results_dir.join(format!("mcp_planning_comparison_{}.json", ts));
-    let report_path = results_dir.join(format!("mcp_planning_comparison_{}.md", ts));
+    let json_path = results_dir.join(format!("mcp_planning_comparison_{ts}.json"));
+    let report_path = results_dir.join(format!("mcp_planning_comparison_{ts}.md"));
     let json = serde_json::to_string_pretty(&result)?;
     std::fs::write(&json_path, &json)?;
     std::fs::write(

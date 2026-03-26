@@ -45,19 +45,19 @@ pub enum LoopKind {
 
 impl LoopKind {
     /// Returns all 11 loop kinds in canonical order.
-    pub fn all() -> &'static [LoopKind] {
+    pub fn all() -> &'static [Self] {
         &[
-            LoopKind::ObjectiveFraming,
-            LoopKind::ContextSufficiency,
-            LoopKind::ModelConstruction,
-            LoopKind::FocusNarrowing,
-            LoopKind::Trace,
-            LoopKind::RiskImpact,
-            LoopKind::SolutionShaping,
-            LoopKind::Decomposition,
-            LoopKind::ArtifactProduction,
-            LoopKind::Validation,
-            LoopKind::Adaptation,
+            Self::ObjectiveFraming,
+            Self::ContextSufficiency,
+            Self::ModelConstruction,
+            Self::FocusNarrowing,
+            Self::Trace,
+            Self::RiskImpact,
+            Self::SolutionShaping,
+            Self::Decomposition,
+            Self::ArtifactProduction,
+            Self::Validation,
+            Self::Adaptation,
         ]
     }
 
@@ -172,7 +172,7 @@ impl FromStr for LoopKind {
             "artifact_production" | "artifact" | "production" => Ok(Self::ArtifactProduction),
             "validation" | "validate" => Ok(Self::Validation),
             "adaptation" | "adapt" => Ok(Self::Adaptation),
-            _ => Err(format!("Unknown loop kind: {}", s)),
+            _ => Err(format!("Unknown loop kind: {s}")),
         }
     }
 }
@@ -211,18 +211,18 @@ impl fmt::Display for Condition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Always => write!(f, "always"),
-            Self::ArtifactExists(name) => write!(f, "artifact_exists({})", name),
-            Self::ArtifactValid(name) => write!(f, "artifact_valid({})", name),
+            Self::ArtifactExists(name) => write!(f, "artifact_exists({name})"),
+            Self::ArtifactValid(name) => write!(f, "artifact_valid({name})"),
             Self::ContextSufficient => write!(f, "context_sufficient"),
             Self::OperationsComplete(ops) => {
-                let names: Vec<&str> = ops.iter().map(|o| o.identifier()).collect();
+                let names: Vec<&str> = ops.iter().map(super::operation::CognitiveOperation::identifier).collect();
                 write!(f, "operations_complete({})", names.join(", "))
             }
             Self::RiskAcceptable => write!(f, "risk_acceptable"),
             Self::AllValidationsPass => write!(f, "all_validations_pass"),
             Self::ObjectiveEstablished => write!(f, "objective_established"),
             Self::ModelSufficient => write!(f, "model_sufficient"),
-            Self::Custom(desc) => write!(f, "custom: {}", desc),
+            Self::Custom(desc) => write!(f, "custom: {desc}"),
         }
     }
 }
@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn test_loop_identifiers_are_unique() {
-        let ids: Vec<&str> = LoopKind::all().iter().map(|l| l.identifier()).collect();
+        let ids: Vec<&str> = LoopKind::all().iter().map(super::LoopKind::identifier).collect();
         let mut deduped = ids.clone();
         deduped.sort();
         deduped.dedup();
@@ -415,7 +415,7 @@ mod tests {
     fn test_loop_default_operations_are_nonempty() {
         for kind in LoopKind::all() {
             let ops = kind.default_operations();
-            assert!(!ops.is_empty(), "loop {:?} has no default operations", kind);
+            assert!(!ops.is_empty(), "loop {kind:?} has no default operations");
         }
     }
 

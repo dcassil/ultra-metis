@@ -26,9 +26,9 @@ pub enum ParserError {
 impl std::fmt::Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ParserError::InvalidFormat(msg) => write!(f, "Invalid format: {}", msg),
-            ParserError::MissingField(field) => write!(f, "Missing field: {}", field),
-            ParserError::JsonError(e) => write!(f, "JSON parse error: {}", e),
+            Self::InvalidFormat(msg) => write!(f, "Invalid format: {msg}"),
+            Self::MissingField(field) => write!(f, "Missing field: {field}"),
+            Self::JsonError(e) => write!(f, "JSON parse error: {e}"),
         }
     }
 }
@@ -37,6 +37,6 @@ impl std::error::Error for ParserError {}
 
 impl From<serde_json::Error> for ParserError {
     fn from(e: serde_json::Error) -> Self {
-        ParserError::JsonError(e)
+        Self::JsonError(e)
     }
 }

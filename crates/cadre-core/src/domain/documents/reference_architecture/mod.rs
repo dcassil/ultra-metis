@@ -46,9 +46,9 @@ pub enum ArchitectureStatus {
 impl fmt::Display for ArchitectureStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ArchitectureStatus::Draft => write!(f, "draft"),
-            ArchitectureStatus::Active => write!(f, "active"),
-            ArchitectureStatus::Superseded => write!(f, "superseded"),
+            Self::Draft => write!(f, "draft"),
+            Self::Active => write!(f, "active"),
+            Self::Superseded => write!(f, "superseded"),
         }
     }
 }
@@ -58,12 +58,11 @@ impl FromStr for ArchitectureStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "draft" => Ok(ArchitectureStatus::Draft),
-            "active" => Ok(ArchitectureStatus::Active),
-            "superseded" => Ok(ArchitectureStatus::Superseded),
+            "draft" => Ok(Self::Draft),
+            "active" => Ok(Self::Active),
+            "superseded" => Ok(Self::Superseded),
             _ => Err(DocumentValidationError::InvalidContent(format!(
-                "Unknown architecture status '{}': expected 'draft', 'active', or 'superseded'",
-                s
+                "Unknown architecture status '{s}': expected 'draft', 'active', or 'superseded'"
             ))),
         }
     }
@@ -129,7 +128,7 @@ impl ReferenceArchitecture {
         let mut tera = Tera::default();
         tera.add_raw_template("reference_architecture_content", template_content)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -138,7 +137,7 @@ impl ReferenceArchitecture {
         let rendered_content = tera
             .render("reference_architecture_content", &context)
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template render error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template render error: {e}"))
             })?;
 
         let content = DocumentContent::new(&rendered_content);
@@ -210,7 +209,7 @@ impl ReferenceArchitecture {
 
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, DocumentValidationError> {
         let raw_content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to read file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to read file: {e}"))
         })?;
         Self::from_content(&raw_content)
     }
@@ -242,8 +241,7 @@ impl ReferenceArchitecture {
         let level = FrontmatterParser::extract_string(&fm_map, "level")?;
         if level != "reference_architecture" {
             return Err(DocumentValidationError::InvalidContent(format!(
-                "Expected level 'reference_architecture', found '{}'",
-                level
+                "Expected level 'reference_architecture', found '{level}'"
             )));
         }
 
@@ -393,7 +391,7 @@ impl ReferenceArchitecture {
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {
         let content = self.to_content()?;
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Failed to write file: {}", e))
+            DocumentValidationError::InvalidContent(format!("Failed to write file: {e}"))
         })
     }
 
@@ -401,7 +399,7 @@ impl ReferenceArchitecture {
         let mut tera = Tera::default();
         tera.add_raw_template("frontmatter", include_str!("frontmatter.yaml"))
             .map_err(|e| {
-                DocumentValidationError::InvalidContent(format!("Template error: {}", e))
+                DocumentValidationError::InvalidContent(format!("Template error: {e}"))
             })?;
 
         let mut context = Context::new();
@@ -416,7 +414,7 @@ impl ReferenceArchitecture {
             &self.core.metadata.exit_criteria_met.to_string(),
         );
 
-        let tag_strings: Vec<String> = self.tags().iter().map(|tag| tag.to_str()).collect();
+        let tag_strings: Vec<String> = self.tags().iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);
         context.insert("epic_id", "NULL");
         context.insert(
@@ -451,12 +449,12 @@ impl ReferenceArchitecture {
         context.insert("tolerated_exceptions", &self.tolerated_exceptions);
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
-            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {}", e))
+            DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))
         })?;
 
         let content_body = &self.content().body;
         let acceptance_criteria = if let Some(ac) = &self.content().acceptance_criteria {
-            format!("\n\n## Acceptance Criteria\n\n{}", ac)
+            format!("\n\n## Acceptance Criteria\n\n{ac}")
         } else {
             String::new()
         };

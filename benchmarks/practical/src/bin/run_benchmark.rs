@@ -56,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
     println!("=== Practical Benchmark Suite ===");
     println!("Scenario : {}", scenario_path.display());
     println!("Results  : {}", results_dir.display());
-    println!("Mode     : {:?}", mode);
+    println!("Mode     : {mode:?}");
     println!();
 
     let harness =
@@ -106,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
     if let (Some(auto), Some(val)) = (autonomous_run, validated_run) {
         println!("=== Comparison Report ===");
         let ts = chrono::Utc::now().format("%Y%m%dT%H%M%SZ");
-        let report_path = results_dir.join(format!("comparison_{}.md", ts));
+        let report_path = results_dir.join(format!("comparison_{ts}.md"));
         practical_benchmark::reports::generate_comparison_report(&auto, &val, &report_path)?;
         println!("  Report: {}", report_path.display());
 

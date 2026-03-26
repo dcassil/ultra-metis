@@ -66,7 +66,7 @@ impl TraceAncestryTool {
             } else {
                 String::new()
             };
-            output.push_str(&format!("{}- {} ({})\n", prefix, sc, title));
+            output.push_str(&format!("{prefix}- {sc} ({title})\n"));
         }
 
         Ok(CallToolResult {

@@ -106,7 +106,7 @@ impl EnforcementResult {
         if !blocking.is_empty() {
             lines.push(format!("  Blocking failures ({}): ", blocking.len()));
             for f in &blocking {
-                lines.push(format!("    - {}", f));
+                lines.push(format!("    - {f}"));
             }
         }
 
@@ -114,7 +114,7 @@ impl EnforcementResult {
         if !warnings.is_empty() {
             lines.push(format!("  Warnings ({}): ", warnings.len()));
             for w in &warnings {
-                lines.push(format!("    - {}", w));
+                lines.push(format!("    - {w}"));
             }
         }
 
@@ -125,7 +125,7 @@ impl EnforcementResult {
                 post_failures.len()
             ));
             for f in &post_failures {
-                lines.push(format!("    - {}", f));
+                lines.push(format!("    - {f}"));
             }
         }
 

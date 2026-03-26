@@ -299,13 +299,13 @@ impl BrownfieldEvaluator {
             match_score
                 .match_details
                 .iter()
-                .map(|d| format!("- {}", d))
+                .map(|d| format!("- {d}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
             match_score
                 .mismatch_details
                 .iter()
-                .map(|d| format!("- {}", d))
+                .map(|d| format!("- {d}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
         );
