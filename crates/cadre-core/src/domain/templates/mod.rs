@@ -133,112 +133,41 @@ pub struct TemplateRegistry {
 impl TemplateRegistry {
     /// Create a new registry with all built-in templates.
     pub fn new() -> Self {
-        let mut builtin = HashMap::new();
-
-        // Core planning types (implement Document trait)
-        builtin.insert(
-            DocumentType::ProductDoc,
-            TemplateSet {
-                frontmatter: include_str!("../documents/product_doc/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/product_doc/content.md").to_string(),
-                acceptance_criteria: include_str!(
-                    "../documents/product_doc/acceptance_criteria.md"
-                )
-                .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::DesignContext,
-            TemplateSet {
-                frontmatter: include_str!("../documents/design_context/frontmatter.yaml")
-                    .to_string(),
-                content: include_str!("../documents/design_context/content.md").to_string(),
-                acceptance_criteria: include_str!(
-                    "../documents/design_context/acceptance_criteria.md"
-                )
-                .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Epic,
-            TemplateSet {
-                frontmatter: include_str!("../documents/epic/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/epic/content.md").to_string(),
-                acceptance_criteria: include_str!("../documents/epic/acceptance_criteria.md")
-                    .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Story,
-            TemplateSet {
-                frontmatter: include_str!("../documents/story/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/story/content.md").to_string(),
-                acceptance_criteria: include_str!("../documents/story/acceptance_criteria.md")
-                    .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Task,
-            TemplateSet {
-                frontmatter: include_str!("../documents/task/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/task/content.md").to_string(),
-                acceptance_criteria: include_str!("../documents/task/acceptance_criteria.md")
-                    .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Adr,
-            TemplateSet {
-                frontmatter: include_str!("../documents/adr/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/adr/content.md").to_string(),
-                acceptance_criteria: include_str!("../documents/adr/acceptance_criteria.md")
-                    .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Specification,
-            TemplateSet {
-                frontmatter: include_str!("../documents/specification/frontmatter.yaml")
-                    .to_string(),
-                content: include_str!("../documents/specification/content.md").to_string(),
-                acceptance_criteria: include_str!(
-                    "../documents/specification/acceptance_criteria.md"
-                )
-                .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Vision,
-            TemplateSet {
-                frontmatter: include_str!("../documents/vision/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/vision/content.md").to_string(),
-                acceptance_criteria: include_str!("../documents/vision/acceptance_criteria.md")
-                    .to_string(),
-            },
-        );
-
-        builtin.insert(
-            DocumentType::Initiative,
-            TemplateSet {
-                frontmatter: include_str!("../documents/initiative/frontmatter.yaml").to_string(),
-                content: include_str!("../documents/initiative/content.md").to_string(),
-                acceptance_criteria: include_str!("../documents/initiative/acceptance_criteria.md")
-                    .to_string(),
-            },
-        );
-
+        let builtin = Self::register_builtin_templates();
         Self {
             builtin,
             custom_templates_dir: None,
             custom_cache: HashMap::new(),
         }
+    }
+
+    fn register_builtin_templates() -> HashMap<DocumentType, TemplateSet> {
+        let mut m = HashMap::new();
+
+        macro_rules! register {
+            ($map:ident, $doc_type:expr, $dir:literal) => {
+                $map.insert(
+                    $doc_type,
+                    TemplateSet {
+                        frontmatter: include_str!(concat!("../documents/", $dir, "/frontmatter.yaml")).to_string(),
+                        content: include_str!(concat!("../documents/", $dir, "/content.md")).to_string(),
+                        acceptance_criteria: include_str!(concat!("../documents/", $dir, "/acceptance_criteria.md")).to_string(),
+                    },
+                );
+            };
+        }
+
+        register!(m, DocumentType::ProductDoc, "product_doc");
+        register!(m, DocumentType::DesignContext, "design_context");
+        register!(m, DocumentType::Epic, "epic");
+        register!(m, DocumentType::Story, "story");
+        register!(m, DocumentType::Task, "task");
+        register!(m, DocumentType::Adr, "adr");
+        register!(m, DocumentType::Specification, "specification");
+        register!(m, DocumentType::Vision, "vision");
+        register!(m, DocumentType::Initiative, "initiative");
+
+        m
     }
 
     /// Create a registry with a custom templates directory for project-level overrides.

@@ -265,13 +265,7 @@ async fn resolve_gate_decision(
     total_rework_tokens: &mut u64,
 ) -> Option<ValidationGateResult> {
     if matches!(structural.gate_decision, GateDecision::Rejected) {
-        tracing::info!(
-            "Structural gate rejected initiative {}/{}: '{}' (issues: {})",
-            idx + 1,
-            n,
-            ai_init.title,
-            structural.issues_found.len()
-        );
+        log_structural_rejection(ai_init, idx, n, structural);
         *total_rework_tokens += structural.rework_tokens;
         return Some(structural.clone());
     }
@@ -284,27 +278,9 @@ async fn resolve_gate_decision(
     let api_gate = run_gate_check(&ai_init.title, &initiative_content).await;
     match api_gate {
         Ok(outcome) => {
-            trace.prompt_events.push(outcome.trace_event);
-            let mut api_issues = outcome.issues;
-            api_issues.extend(structural.issues_found.clone());
-            let merged_decision =
-                stricter_decision(outcome.decision, structural.gate_decision.clone());
-            let merged_rework = outcome.rework_tokens + structural.rework_tokens;
-            *total_rework_tokens += merged_rework;
-            tracing::info!(
-                "Gate check {}/{}: '{}' -> {:?} (rework tokens: {})",
-                idx + 1,
-                n,
-                ai_init.title,
-                merged_decision,
-                merged_rework
-            );
-            Some(ValidationGateResult {
-                gate_decision: merged_decision,
-                issues_found: api_issues,
-                rework_tokens: merged_rework,
-                rework_time: outcome.rework_time,
-            })
+            let merged = merge_gate_outcome(outcome, structural, trace, total_rework_tokens);
+            log_gate_result(ai_init, idx, n, &merged);
+            Some(merged)
         }
         Err(e) => {
             tracing::warn!(
@@ -315,6 +291,58 @@ async fn resolve_gate_decision(
             *total_rework_tokens += structural.rework_tokens;
             Some(structural.clone())
         }
+    }
+}
+
+fn log_structural_rejection(
+    ai_init: &runner::AiInitiative,
+    idx: usize,
+    n: u32,
+    structural: &ValidationGateResult,
+) {
+    tracing::info!(
+        "Structural gate rejected initiative {}/{}: '{}' (issues: {})",
+        idx + 1,
+        n,
+        ai_init.title,
+        structural.issues_found.len()
+    );
+}
+
+fn log_gate_result(
+    ai_init: &runner::AiInitiative,
+    idx: usize,
+    n: u32,
+    merged: &ValidationGateResult,
+) {
+    tracing::info!(
+        "Gate check {}/{}: '{}' -> {:?} (rework tokens: {})",
+        idx + 1,
+        n,
+        ai_init.title,
+        merged.gate_decision,
+        merged.rework_tokens
+    );
+}
+
+fn merge_gate_outcome(
+    outcome: GateCheckOutcome,
+    structural: &ValidationGateResult,
+    trace: &mut RunTrace,
+    total_rework_tokens: &mut u64,
+) -> ValidationGateResult {
+    trace.prompt_events.push(outcome.trace_event);
+    let mut api_issues = outcome.issues;
+    api_issues.extend(structural.issues_found.clone());
+    let merged_decision =
+        stricter_decision(outcome.decision, structural.gate_decision.clone());
+    let merged_rework = outcome.rework_tokens + structural.rework_tokens;
+    *total_rework_tokens += merged_rework;
+    ValidationGateResult {
+        gate_decision: merged_decision,
+        issues_found: api_issues,
+        rework_tokens: merged_rework,
+        rework_time: outcome.rework_time,
     }
 }
 

@@ -1,5 +1,5 @@
 use super::types::{MetricDelta, ParsedToolOutput, TrendDirection};
-use crate::domain::documents::quality_record::{QualityRecord, QualityStatus};
+use crate::domain::documents::quality_record::{NewQualityRecordParams, QualityRecord, QualityStatus};
 use crate::domain::documents::traits::DocumentValidationError;
 use crate::domain::documents::types::{Phase, Tag};
 use std::collections::{HashMap, HashSet};
@@ -70,9 +70,11 @@ impl BaselineComparisonEngine {
             tags,
             false,
             short_code.to_string(),
-            linked_baseline,
-            after.timestamp.format("%Y-%m-%d").to_string(),
-            comparison.overall_status,
+            NewQualityRecordParams {
+                linked_baseline,
+                record_date: after.timestamp.format("%Y-%m-%d").to_string(),
+                overall_status: comparison.overall_status,
+            },
             &body,
         )
     }

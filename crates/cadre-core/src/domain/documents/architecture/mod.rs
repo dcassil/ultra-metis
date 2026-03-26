@@ -405,140 +405,135 @@ impl Architecture {
 
     /// Generate checklist items appropriate for the given StoryType.
     pub fn checklist_for_story_type(story_type: StoryType) -> Vec<ChecklistItem> {
-        let mut items = Vec::new();
-
-        // Common questions for most types
-        let boundary_q = ChecklistItem {
-            question: "Does this touch or cross existing module boundaries?".to_string(),
-            answer: None,
-            story_types: vec![
-                StoryType::Feature,
-                StoryType::Bugfix,
-                StoryType::Refactor,
-                StoryType::Migration,
-                StoryType::ArchitectureChange,
-            ],
-        };
-        let anti_pattern_q = ChecklistItem {
-            question: "Are there known anti-patterns relevant to this area?".to_string(),
-            answer: None,
-            story_types: vec![
-                StoryType::Feature,
-                StoryType::Bugfix,
-                StoryType::Investigation,
-                StoryType::Remediation,
-                StoryType::Setup,
-            ],
-        };
-
         match story_type {
-            StoryType::Feature => {
-                items.push(ChecklistItem {
-                    question: "Does this introduce new cross-layer dependencies?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Feature],
-                });
-                items.push(boundary_q);
-                items.push(ChecklistItem {
-                    question: "Does this follow naming conventions for the affected layers?"
-                        .to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Feature],
-                });
-                items.push(anti_pattern_q);
-            }
-            StoryType::Bugfix => {
-                items.push(ChecklistItem {
-                    question: "Does the fix respect existing layer boundaries?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Bugfix],
-                });
-                items.push(ChecklistItem {
-                    question: "Could the root cause indicate an architecture violation?"
-                        .to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Bugfix],
-                });
-            }
-            StoryType::Refactor => {
-                items.push(ChecklistItem {
-                    question: "Does this change any module boundaries?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Refactor],
-                });
-                items.push(ChecklistItem {
-                    question: "Does this alter dependency direction between layers?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Refactor],
-                });
-                items.push(ChecklistItem {
-                    question:
-                        "Should the ReferenceArchitecture be updated to reflect this refactor?"
-                            .to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Refactor],
-                });
-            }
-            StoryType::Migration => {
-                items.push(ChecklistItem {
-                    question: "Does this require updating the ReferenceArchitecture?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Migration],
-                });
-                items.push(ChecklistItem {
-                    question: "Which tolerated exceptions does this affect?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Migration],
-                });
-                items.push(ChecklistItem {
-                    question: "Are there new boundaries or layers introduced?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::Migration],
-                });
-            }
-            StoryType::ArchitectureChange => {
-                // Full checklist — all questions
-                items.push(ChecklistItem {
-                    question: "Does this introduce new cross-layer dependencies?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::ArchitectureChange],
-                });
-                items.push(boundary_q);
-                items.push(ChecklistItem {
-                    question: "Does this alter dependency direction between layers?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::ArchitectureChange],
-                });
-                items.push(ChecklistItem {
-                    question: "What is the expected conformance impact?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::ArchitectureChange],
-                });
-                items.push(ChecklistItem {
-                    question: "Does this require a new ADR?".to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::ArchitectureChange],
-                });
-                items.push(ChecklistItem {
-                    question: "Should the ReferenceArchitecture be updated after this change?"
-                        .to_string(),
-                    answer: None,
-                    story_types: vec![StoryType::ArchitectureChange],
-                });
-                items.push(anti_pattern_q);
-            }
+            StoryType::Feature => Self::feature_checklist(),
+            StoryType::Bugfix => Self::bugfix_checklist(),
+            StoryType::Refactor => Self::refactor_checklist(),
+            StoryType::Migration => Self::migration_checklist(),
+            StoryType::ArchitectureChange => Self::architecture_change_checklist(),
             StoryType::Investigation | StoryType::Remediation | StoryType::Setup => {
-                // Minimal checklist
-                items.push(ChecklistItem {
-                    question: "Does this touch or cross existing module boundaries?".to_string(),
-                    answer: None,
-                    story_types: vec![story_type],
-                });
-                items.push(anti_pattern_q);
+                Self::minimal_checklist(story_type)
             }
         }
+    }
 
-        items
+    fn checklist_item(question: &str, story_types: Vec<StoryType>) -> ChecklistItem {
+        ChecklistItem {
+            question: question.to_string(),
+            answer: None,
+            story_types,
+        }
+    }
+
+    fn boundary_question() -> ChecklistItem {
+        Self::checklist_item(
+            "Does this touch or cross existing module boundaries?",
+            vec![
+                StoryType::Feature, StoryType::Bugfix, StoryType::Refactor,
+                StoryType::Migration, StoryType::ArchitectureChange,
+            ],
+        )
+    }
+
+    fn anti_pattern_question() -> ChecklistItem {
+        Self::checklist_item(
+            "Are there known anti-patterns relevant to this area?",
+            vec![
+                StoryType::Feature, StoryType::Bugfix, StoryType::Investigation,
+                StoryType::Remediation, StoryType::Setup,
+            ],
+        )
+    }
+
+    fn feature_checklist() -> Vec<ChecklistItem> {
+        vec![
+            Self::checklist_item("Does this introduce new cross-layer dependencies?", vec![StoryType::Feature]),
+            Self::boundary_question(),
+            Self::checklist_item("Does this follow naming conventions for the affected layers?", vec![StoryType::Feature]),
+            Self::anti_pattern_question(),
+        ]
+    }
+
+    fn bugfix_checklist() -> Vec<ChecklistItem> {
+        vec![
+            Self::checklist_item("Does the fix respect existing layer boundaries?", vec![StoryType::Bugfix]),
+            Self::checklist_item("Could the root cause indicate an architecture violation?", vec![StoryType::Bugfix]),
+        ]
+    }
+
+    fn refactor_checklist() -> Vec<ChecklistItem> {
+        vec![
+            Self::checklist_item("Does this change any module boundaries?", vec![StoryType::Refactor]),
+            Self::checklist_item("Does this alter dependency direction between layers?", vec![StoryType::Refactor]),
+            Self::checklist_item("Should the ReferenceArchitecture be updated to reflect this refactor?", vec![StoryType::Refactor]),
+        ]
+    }
+
+    fn migration_checklist() -> Vec<ChecklistItem> {
+        vec![
+            Self::checklist_item("Does this require updating the ReferenceArchitecture?", vec![StoryType::Migration]),
+            Self::checklist_item("Which tolerated exceptions does this affect?", vec![StoryType::Migration]),
+            Self::checklist_item("Are there new boundaries or layers introduced?", vec![StoryType::Migration]),
+        ]
+    }
+
+    fn architecture_change_checklist() -> Vec<ChecklistItem> {
+        vec![
+            Self::checklist_item("Does this introduce new cross-layer dependencies?", vec![StoryType::ArchitectureChange]),
+            Self::boundary_question(),
+            Self::checklist_item("Does this alter dependency direction between layers?", vec![StoryType::ArchitectureChange]),
+            Self::checklist_item("What is the expected conformance impact?", vec![StoryType::ArchitectureChange]),
+            Self::checklist_item("Does this require a new ADR?", vec![StoryType::ArchitectureChange]),
+            Self::checklist_item("Should the ReferenceArchitecture be updated after this change?", vec![StoryType::ArchitectureChange]),
+            Self::anti_pattern_question(),
+        ]
+    }
+
+    fn minimal_checklist(story_type: StoryType) -> Vec<ChecklistItem> {
+        vec![
+            Self::checklist_item("Does this touch or cross existing module boundaries?", vec![story_type]),
+            Self::anti_pattern_question(),
+        ]
+    }
+
+    fn serialize_checklist(
+        checklist: &[ChecklistItem],
+    ) -> Vec<std::collections::HashMap<String, serde_json::Value>> {
+        checklist
+            .iter()
+            .map(|item| {
+                let mut map = std::collections::HashMap::new();
+                map.insert(
+                    "question".to_string(),
+                    serde_json::Value::String(item.question.clone()),
+                );
+                map.insert(
+                    "answer".to_string(),
+                    match &item.answer {
+                        Some(a) => serde_json::Value::String(format!("\"{a}\"")),
+                        None => serde_json::Value::String("null".to_string()),
+                    },
+                );
+                let st: Vec<String> = item.story_types.iter().map(std::string::ToString::to_string).collect();
+                map.insert("story_types".to_string(), serde_json::json!(st));
+                map
+            })
+            .collect()
+    }
+
+    fn serialize_unlock_history(
+        unlock_history: &[UnlockRecord],
+    ) -> Vec<std::collections::HashMap<String, String>> {
+        unlock_history
+            .iter()
+            .map(|record| {
+                let mut map = std::collections::HashMap::new();
+                map.insert("actor".to_string(), record.actor.clone());
+                map.insert("timestamp".to_string(), record.timestamp.to_rfc3339());
+                map.insert("reason".to_string(), record.reason.clone());
+                map
+            })
+            .collect()
     }
 
     // --- serialization ---
@@ -617,43 +612,8 @@ impl Architecture {
         );
         context.insert("applicable_anti_patterns", &self.applicable_anti_patterns);
 
-        // Serialize checklist for Tera
-        let checklist_data: Vec<std::collections::HashMap<String, serde_json::Value>> = self
-            .checklist
-            .iter()
-            .map(|item| {
-                let mut map = std::collections::HashMap::new();
-                map.insert(
-                    "question".to_string(),
-                    serde_json::Value::String(item.question.clone()),
-                );
-                map.insert(
-                    "answer".to_string(),
-                    match &item.answer {
-                        Some(a) => serde_json::Value::String(format!("\"{a}\"")),
-                        None => serde_json::Value::String("null".to_string()),
-                    },
-                );
-                let st: Vec<String> = item.story_types.iter().map(std::string::ToString::to_string).collect();
-                map.insert("story_types".to_string(), serde_json::json!(st));
-                map
-            })
-            .collect();
-        context.insert("checklist", &checklist_data);
-
-        // Serialize unlock history for Tera
-        let unlock_data: Vec<std::collections::HashMap<String, String>> = self
-            .unlock_history
-            .iter()
-            .map(|record| {
-                let mut map = std::collections::HashMap::new();
-                map.insert("actor".to_string(), record.actor.clone());
-                map.insert("timestamp".to_string(), record.timestamp.to_rfc3339());
-                map.insert("reason".to_string(), record.reason.clone());
-                map
-            })
-            .collect();
-        context.insert("unlock_history", &unlock_data);
+        context.insert("checklist", &Self::serialize_checklist(&self.checklist));
+        context.insert("unlock_history", &Self::serialize_unlock_history(&self.unlock_history));
 
         let frontmatter = tera.render("frontmatter", &context).map_err(|e| {
             DocumentValidationError::InvalidContent(format!("Frontmatter render error: {e}"))

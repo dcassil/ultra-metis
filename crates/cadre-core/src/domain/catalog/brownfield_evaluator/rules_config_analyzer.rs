@@ -574,106 +574,13 @@ fn evaluate_jsts_quality(
 
         match config.pattern_filename {
             "tsconfig.json" => {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-                    if let Some(strict) = val
-                        .get("compilerOptions")
-                        .and_then(|co| co.get("strict"))
-                        .and_then(serde_json::Value::as_bool)
-                    {
-                        if strict {
-                            score = score.max(40.0);
-                            signals.push("tsconfig: strict mode enabled".to_string());
-                        }
-                    }
-                    // Check for noUncheckedIndexedAccess, noImplicitReturns, etc.
-                    if let Some(co) = val.get("compilerOptions") {
-                        let strict_flags = [
-                            "noUncheckedIndexedAccess",
-                            "noImplicitReturns",
-                            "noFallthroughCasesInSwitch",
-                            "exactOptionalPropertyTypes",
-                        ];
-                        let extra_strict_count = strict_flags
-                            .iter()
-                            .filter(|f| co.get(**f).and_then(serde_json::Value::as_bool).unwrap_or(false))
-                            .count();
-                        if extra_strict_count >= 2 {
-                            score += 10.0;
-                            signals.push(format!(
-                                "tsconfig: {extra_strict_count} additional strict flags enabled"
-                            ));
-                        }
-                    }
-                }
+                evaluate_tsconfig_quality(&content, &mut score, &mut signals);
             }
             pat if pat.starts_with(".eslintrc") || pat.starts_with("eslint.config") => {
-                // For JSON eslint configs, check extends
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-                    if let Some(extends) = val.get("extends") {
-                        let extends_list = match extends {
-                            serde_json::Value::Array(arr) => {
-                                arr.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>()
-                            }
-                            serde_json::Value::String(s) => vec![s.as_str()],
-                            _ => vec![],
-                        };
-                        let strict_presets = [
-                            "eslint:recommended",
-                            "@typescript-eslint/recommended",
-                            "@typescript-eslint/strict",
-                            "plugin:@typescript-eslint/recommended-type-checked",
-                            "plugin:@typescript-eslint/strict-type-checked",
-                        ];
-                        for preset in &strict_presets {
-                            if extends_list.iter().any(|e| e.contains(preset)) {
-                                score = score.max(35.0);
-                                signals.push(format!("eslint: extends {preset}"));
-                            }
-                        }
-                        if extends_list.iter().any(|e| e.contains("strict")) {
-                            score = score.max(45.0);
-                        }
-                    }
-                }
-                // For JS config files, do string matching
-                if content.contains("@typescript-eslint/strict") {
-                    score = score.max(45.0);
-                    if !signals.iter().any(|s| s.contains("strict")) {
-                        signals.push("eslint: extends strict preset".to_string());
-                    }
-                } else if content.contains("eslint:recommended")
-                    || content.contains("@typescript-eslint/recommended")
-                {
-                    score = score.max(35.0);
-                    if !signals.iter().any(|s| s.contains("recommended")) {
-                        signals.push("eslint: extends recommended preset".to_string());
-                    }
-                }
+                evaluate_eslint_quality(&content, &mut score, &mut signals);
             }
             "biome.json" | "biome.jsonc" => {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-                    if let Some(linter) = val.get("linter") {
-                        if linter
-                            .get("enabled")
-                            .and_then(serde_json::Value::as_bool)
-                            .unwrap_or(false)
-                        {
-                            score = score.max(30.0);
-                            signals.push("biome: linter enabled".to_string());
-                        }
-                        if let Some(rules) = linter.get("rules") {
-                            if rules
-                                .get("recommended")
-                                .and_then(serde_json::Value::as_bool)
-                                .unwrap_or(false)
-                                || rules.get("all").and_then(serde_json::Value::as_bool).unwrap_or(false)
-                            {
-                                score = score.max(45.0);
-                                signals.push("biome: recommended/all rules enabled".to_string());
-                            }
-                        }
-                    }
-                }
+                evaluate_biome_quality(&content, &mut score, &mut signals);
             }
             _ => {}
         }
@@ -686,6 +593,112 @@ fn evaluate_jsts_quality(
     }
 
     (score, signals)
+}
+
+fn evaluate_tsconfig_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    let Ok(val) = serde_json::from_str::<serde_json::Value>(content) else {
+        return;
+    };
+    if val
+        .get("compilerOptions")
+        .and_then(|co| co.get("strict"))
+        .and_then(serde_json::Value::as_bool)
+        == Some(true)
+    {
+        *score = score.max(40.0);
+        signals.push("tsconfig: strict mode enabled".to_string());
+    }
+    if let Some(co) = val.get("compilerOptions") {
+        let strict_flags = [
+            "noUncheckedIndexedAccess",
+            "noImplicitReturns",
+            "noFallthroughCasesInSwitch",
+            "exactOptionalPropertyTypes",
+        ];
+        let extra_strict_count = strict_flags
+            .iter()
+            .filter(|f| co.get(**f).and_then(serde_json::Value::as_bool).unwrap_or(false))
+            .count();
+        if extra_strict_count >= 2 {
+            *score += 10.0;
+            signals.push(format!(
+                "tsconfig: {extra_strict_count} additional strict flags enabled"
+            ));
+        }
+    }
+}
+
+fn evaluate_eslint_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    // For JSON eslint configs, check extends
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(content) {
+        if let Some(extends) = val.get("extends") {
+            let extends_list = match extends {
+                serde_json::Value::Array(arr) => {
+                    arr.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>()
+                }
+                serde_json::Value::String(s) => vec![s.as_str()],
+                _ => vec![],
+            };
+            let strict_presets = [
+                "eslint:recommended",
+                "@typescript-eslint/recommended",
+                "@typescript-eslint/strict",
+                "plugin:@typescript-eslint/recommended-type-checked",
+                "plugin:@typescript-eslint/strict-type-checked",
+            ];
+            for preset in &strict_presets {
+                if extends_list.iter().any(|e| e.contains(preset)) {
+                    *score = score.max(35.0);
+                    signals.push(format!("eslint: extends {preset}"));
+                }
+            }
+            if extends_list.iter().any(|e| e.contains("strict")) {
+                *score = score.max(45.0);
+            }
+        }
+    }
+    // For JS config files, do string matching
+    if content.contains("@typescript-eslint/strict") {
+        *score = score.max(45.0);
+        if !signals.iter().any(|s| s.contains("strict")) {
+            signals.push("eslint: extends strict preset".to_string());
+        }
+    } else if content.contains("eslint:recommended")
+        || content.contains("@typescript-eslint/recommended")
+    {
+        *score = score.max(35.0);
+        if !signals.iter().any(|s| s.contains("recommended")) {
+            signals.push("eslint: extends recommended preset".to_string());
+        }
+    }
+}
+
+fn evaluate_biome_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    let Ok(val) = serde_json::from_str::<serde_json::Value>(content) else {
+        return;
+    };
+    let Some(linter) = val.get("linter") else {
+        return;
+    };
+    if linter
+        .get("enabled")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+    {
+        *score = score.max(30.0);
+        signals.push("biome: linter enabled".to_string());
+    }
+    if let Some(rules) = linter.get("rules") {
+        if rules
+            .get("recommended")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false)
+            || rules.get("all").and_then(serde_json::Value::as_bool).unwrap_or(false)
+        {
+            *score = score.max(45.0);
+            signals.push("biome: recommended/all rules enabled".to_string());
+        }
+    }
 }
 
 // --- Rust quality ---
@@ -790,70 +803,16 @@ fn evaluate_python_quality(
 
         match config.pattern_filename {
             "mypy.ini" | ".mypy.ini" => {
-                if content.contains("strict = True")
-                    || content.contains("strict=True")
-                    || content.contains("strict = true")
-                {
-                    score = score.max(45.0);
-                    signals.push("mypy: strict mode enabled".to_string());
-                } else {
-                    score = score.max(25.0);
-                    signals.push("mypy: type checking configured".to_string());
-                }
+                evaluate_mypy_ini_quality(&content, &mut score, &mut signals);
             }
             "pyrightconfig.json" => {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-                    if let Some(mode) = val.get("typeCheckingMode").and_then(|v| v.as_str()) {
-                        match mode {
-                            "strict" => {
-                                score = score.max(50.0);
-                                signals.push("pyright: strict type checking mode".to_string());
-                            }
-                            "standard" => {
-                                score = score.max(35.0);
-                                signals.push("pyright: standard type checking mode".to_string());
-                            }
-                            "basic" => {
-                                score = score.max(20.0);
-                                signals.push("pyright: basic type checking mode".to_string());
-                            }
-                            _ => {}
-                        }
-                    }
-                }
+                evaluate_pyright_quality(&content, &mut score, &mut signals);
             }
             "ruff.toml" | ".ruff.toml" => {
-                if content.contains("select = [\"ALL\"]") || content.contains("select = ['ALL']") {
-                    score = score.max(45.0);
-                    signals.push("ruff: ALL rules selected".to_string());
-                } else if content.contains("[lint]") || content.contains("select") {
-                    score = score.max(30.0);
-                    signals.push("ruff: custom lint rules configured".to_string());
-                }
+                evaluate_ruff_quality(&content, &mut score, &mut signals);
             }
             "pyproject.toml" => {
-                // Check for [tool.ruff] section
-                if content.contains("[tool.ruff") {
-                    if content.contains("select = [\"ALL\"]")
-                        || content.contains("select = ['ALL']")
-                    {
-                        score = score.max(45.0);
-                        signals.push("ruff (pyproject): ALL rules selected".to_string());
-                    } else {
-                        score = score.max(30.0);
-                        signals.push("ruff (pyproject): lint rules configured".to_string());
-                    }
-                }
-                // Check for [tool.mypy] section
-                if content.contains("[tool.mypy]") {
-                    if content.contains("strict = true") {
-                        score = score.max(45.0);
-                        signals.push("mypy (pyproject): strict mode enabled".to_string());
-                    } else {
-                        score = score.max(25.0);
-                        signals.push("mypy (pyproject): type checking configured".to_string());
-                    }
-                }
+                evaluate_pyproject_quality(&content, &mut score, &mut signals);
             }
             ".flake8" => {
                 score = score.max(20.0);
@@ -870,6 +829,74 @@ fn evaluate_python_quality(
     }
 
     (score, signals)
+}
+
+fn evaluate_mypy_ini_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    if content.contains("strict = True")
+        || content.contains("strict=True")
+        || content.contains("strict = true")
+    {
+        *score = score.max(45.0);
+        signals.push("mypy: strict mode enabled".to_string());
+    } else {
+        *score = score.max(25.0);
+        signals.push("mypy: type checking configured".to_string());
+    }
+}
+
+fn evaluate_pyright_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    let Ok(val) = serde_json::from_str::<serde_json::Value>(content) else {
+        return;
+    };
+    let Some(mode) = val.get("typeCheckingMode").and_then(|v| v.as_str()) else {
+        return;
+    };
+    match mode {
+        "strict" => {
+            *score = score.max(50.0);
+            signals.push("pyright: strict type checking mode".to_string());
+        }
+        "standard" => {
+            *score = score.max(35.0);
+            signals.push("pyright: standard type checking mode".to_string());
+        }
+        "basic" => {
+            *score = score.max(20.0);
+            signals.push("pyright: basic type checking mode".to_string());
+        }
+        _ => {}
+    }
+}
+
+fn evaluate_ruff_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    if content.contains("select = [\"ALL\"]") || content.contains("select = ['ALL']") {
+        *score = score.max(45.0);
+        signals.push("ruff: ALL rules selected".to_string());
+    } else if content.contains("[lint]") || content.contains("select") {
+        *score = score.max(30.0);
+        signals.push("ruff: custom lint rules configured".to_string());
+    }
+}
+
+fn evaluate_pyproject_quality(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    if content.contains("[tool.ruff") {
+        if content.contains("select = [\"ALL\"]") || content.contains("select = ['ALL']") {
+            *score = score.max(45.0);
+            signals.push("ruff (pyproject): ALL rules selected".to_string());
+        } else {
+            *score = score.max(30.0);
+            signals.push("ruff (pyproject): lint rules configured".to_string());
+        }
+    }
+    if content.contains("[tool.mypy]") {
+        if content.contains("strict = true") {
+            *score = score.max(45.0);
+            signals.push("mypy (pyproject): strict mode enabled".to_string());
+        } else {
+            *score = score.max(25.0);
+            signals.push("mypy (pyproject): type checking configured".to_string());
+        }
+    }
 }
 
 // --- Go quality ---
@@ -1043,115 +1070,125 @@ fn evaluate_jsts_layering(
 
         match config.pattern_filename {
             pat if pat.starts_with(".dependency-cruiser") => {
-                // Extract forbidden rules: look for "from" and "to" path patterns
-                let forbidden_re =
-                    regex::Regex::new(r#"(?:from|path)\s*:\s*["']([^"']+)["']"#).ok();
-                if let Some(re) = &forbidden_re {
-                    let found_paths: Vec<String> = re
-                        .captures_iter(&content)
-                        .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
-                        .collect();
-
-                    // Extract layer names from path patterns
-                    for p in &found_paths {
-                        let layer = p
-                            .trim_start_matches('^')
-                            .split('/')
-                            .find(|seg| !seg.is_empty() && !seg.contains('(') && !seg.contains('.'))
-                            .unwrap_or("")
-                            .to_string();
-                        if !layer.is_empty() && !layers.contains(&layer) {
-                            layers.push(layer);
-                        }
-                    }
-                }
-
-                // Check for "forbidden" keyword - strong signal
-                if content.contains("forbidden") {
-                    score = score.max(70.0);
-                    signals.push("dependency-cruiser: forbidden rules defined".to_string());
-                }
-                // Check for "allowed" keyword
-                if content.contains("allowed") {
-                    score = score.max(60.0);
-                    if !signals.iter().any(|s| s.contains("dependency-cruiser")) {
-                        signals.push("dependency-cruiser: allowed rules defined".to_string());
-                    }
-                }
-                // Both forbidden AND allowed = very strict
-                if content.contains("forbidden") && content.contains("allowed") {
-                    score = score.max(85.0);
-                    signals
-                        .push("dependency-cruiser: both allowed and forbidden rules".to_string());
-                }
-
-                // Extract boundary rules from forbidden patterns
-                let forbidden_block_re = regex::Regex::new(
-                    r#"from\s*:\s*\{[^}]*path\s*:\s*["']([^"']+)["'][^}]*\}[^}]*to\s*:\s*\{[^}]*path\s*:\s*["']([^"']+)["']"#
-                ).ok();
-                if let Some(re) = &forbidden_block_re {
-                    for cap in re.captures_iter(&content) {
-                        if let (Some(from), Some(to)) = (cap.get(1), cap.get(2)) {
-                            boundaries.push(BoundaryRule {
-                                from: from.as_str().to_string(),
-                                to: to.as_str().to_string(),
-                                kind: BoundaryKind::Forbidden,
-                            });
-                        }
-                    }
-                }
+                evaluate_depcruiser_layering(
+                    &content, &mut score, &mut layers, &mut boundaries, &mut signals,
+                );
             }
             "nx.json" => {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-                    // Check for @nx/enforce-module-boundaries
-                    let has_boundaries = content.contains("enforce-module-boundaries")
-                        || content.contains("@nrwl/nx/enforce-module-boundaries");
-                    if has_boundaries {
-                        score = score.max(70.0);
-                        signals.push("nx: enforce-module-boundaries rule configured".to_string());
-                    }
-
-                    // Try to extract project tags for layer names
-                    if let Some(target_defaults) = val.get("targetDefaults") {
-                        let td_str = serde_json::to_string(target_defaults).unwrap_or_default();
-                        if td_str.contains("tag") {
-                            score = score.max(75.0);
-                            signals.push("nx: module boundary tags defined".to_string());
-                        }
-                    }
-                }
+                evaluate_nx_layering(&content, &mut score, &mut signals);
             }
-            // Check eslint configs for boundary plugins
             pat if pat.starts_with(".eslintrc") || pat.starts_with("eslint.config") => {
-                if content.contains("eslint-plugin-boundaries")
-                    || content.contains("boundaries/element-types")
-                    || content.contains("boundaries/entry-point")
-                {
-                    score = score.max(65.0);
-                    signals.push("eslint: boundaries plugin configured".to_string());
-                }
-
-                // Check for no-restricted-imports with path patterns
-                if content.contains("no-restricted-imports") {
-                    // Count the number of restricted patterns as a proxy for strictness
-                    let pattern_count =
-                        content.matches("patterns").count() + content.matches("paths").count();
-                    if pattern_count >= 3 {
-                        score = score.max(55.0);
-                        signals.push(format!(
-                            "eslint: no-restricted-imports with {pattern_count} pattern groups"
-                        ));
-                    } else if pattern_count >= 1 {
-                        score = score.max(40.0);
-                        signals.push("eslint: no-restricted-imports configured".to_string());
-                    }
-                }
+                evaluate_eslint_layering(&content, &mut score, &mut signals);
             }
             _ => {}
         }
     }
 
     (score, layers, boundaries, signals)
+}
+
+fn evaluate_depcruiser_layering(
+    content: &str,
+    score: &mut f64,
+    layers: &mut Vec<String>,
+    boundaries: &mut Vec<BoundaryRule>,
+    signals: &mut Vec<String>,
+) {
+    // Extract forbidden rules: look for "from" and "to" path patterns
+    let forbidden_re = regex::Regex::new(r#"(?:from|path)\s*:\s*["']([^"']+)["']"#).ok();
+    if let Some(re) = &forbidden_re {
+        let found_paths: Vec<String> = re
+            .captures_iter(content)
+            .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
+            .collect();
+
+        for p in &found_paths {
+            let layer = p
+                .trim_start_matches('^')
+                .split('/')
+                .find(|seg| !seg.is_empty() && !seg.contains('(') && !seg.contains('.'))
+                .unwrap_or("")
+                .to_string();
+            if !layer.is_empty() && !layers.contains(&layer) {
+                layers.push(layer);
+            }
+        }
+    }
+
+    if content.contains("forbidden") {
+        *score = score.max(70.0);
+        signals.push("dependency-cruiser: forbidden rules defined".to_string());
+    }
+    if content.contains("allowed") {
+        *score = score.max(60.0);
+        if !signals.iter().any(|s| s.contains("dependency-cruiser")) {
+            signals.push("dependency-cruiser: allowed rules defined".to_string());
+        }
+    }
+    if content.contains("forbidden") && content.contains("allowed") {
+        *score = score.max(85.0);
+        signals.push("dependency-cruiser: both allowed and forbidden rules".to_string());
+    }
+
+    // Extract boundary rules from forbidden patterns
+    let forbidden_block_re = regex::Regex::new(
+        r#"from\s*:\s*\{[^}]*path\s*:\s*["']([^"']+)["'][^}]*\}[^}]*to\s*:\s*\{[^}]*path\s*:\s*["']([^"']+)["']"#
+    ).ok();
+    if let Some(re) = &forbidden_block_re {
+        for cap in re.captures_iter(content) {
+            if let (Some(from), Some(to)) = (cap.get(1), cap.get(2)) {
+                boundaries.push(BoundaryRule {
+                    from: from.as_str().to_string(),
+                    to: to.as_str().to_string(),
+                    kind: BoundaryKind::Forbidden,
+                });
+            }
+        }
+    }
+}
+
+fn evaluate_nx_layering(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    let Ok(val) = serde_json::from_str::<serde_json::Value>(content) else {
+        return;
+    };
+    let has_boundaries = content.contains("enforce-module-boundaries")
+        || content.contains("@nrwl/nx/enforce-module-boundaries");
+    if has_boundaries {
+        *score = score.max(70.0);
+        signals.push("nx: enforce-module-boundaries rule configured".to_string());
+    }
+
+    if let Some(target_defaults) = val.get("targetDefaults") {
+        let td_str = serde_json::to_string(target_defaults).unwrap_or_default();
+        if td_str.contains("tag") {
+            *score = score.max(75.0);
+            signals.push("nx: module boundary tags defined".to_string());
+        }
+    }
+}
+
+fn evaluate_eslint_layering(content: &str, score: &mut f64, signals: &mut Vec<String>) {
+    if content.contains("eslint-plugin-boundaries")
+        || content.contains("boundaries/element-types")
+        || content.contains("boundaries/entry-point")
+    {
+        *score = score.max(65.0);
+        signals.push("eslint: boundaries plugin configured".to_string());
+    }
+
+    if content.contains("no-restricted-imports") {
+        let pattern_count =
+            content.matches("patterns").count() + content.matches("paths").count();
+        if pattern_count >= 3 {
+            *score = score.max(55.0);
+            signals.push(format!(
+                "eslint: no-restricted-imports with {pattern_count} pattern groups"
+            ));
+        } else if pattern_count >= 1 {
+            *score = score.max(40.0);
+            signals.push("eslint: no-restricted-imports configured".to_string());
+        }
+    }
 }
 
 // --- Rust layering ---
@@ -1329,24 +1366,38 @@ fn extract_import_linter_layers(
         signals.push("import-linter: multiple contract types (comprehensive)".to_string());
     }
 
-    // Extract module names from "layers" or "modules" lines.
-    // Handles both TOML array format and INI-style indented lines.
+    extract_module_names_from_content(content, layers);
+
+    // Create boundary rules from layers contract (each layer can only import from layers below it)
+    if has_layers_contract && layers.len() >= 2 {
+        for i in 0..layers.len() {
+            for j in 0..i {
+                boundaries.push(BoundaryRule {
+                    from: layers[j].clone(),
+                    to: layers[i].clone(),
+                    kind: BoundaryKind::Forbidden,
+                });
+            }
+        }
+    }
+}
+
+/// Extract module names from "layers" or "modules" lines in config content.
+/// Handles both TOML array format and INI-style indented lines.
+fn extract_module_names_from_content(content: &str, layers: &mut Vec<String>) {
     let lines: Vec<&str> = content.lines().collect();
     let mut in_layers_block = false;
 
     for line in &lines {
         let trimmed = line.trim();
 
-        // Detect start of layers/modules block
         if trimmed.starts_with("layers")
             || trimmed.starts_with("modules")
             || trimmed.starts_with("source_modules")
             || trimmed.starts_with("containers")
         {
-            // Check for inline array: layers = ["a", "b"]
             if let Some(bracket_start) = trimmed.find('[') {
                 let after = &trimmed[bracket_start..];
-                // Extract items from inline array
                 for item in after
                     .trim_matches(|c: char| c == '[' || c == ']')
                     .split(',')
@@ -1360,22 +1411,18 @@ fn extract_import_linter_layers(
                     }
                 }
             } else {
-                // Multi-line block follows
                 in_layers_block = true;
             }
             continue;
         }
 
-        // If we're in a layers block, collect indented lines
         if in_layers_block {
             if trimmed.is_empty() || trimmed.starts_with('[') || trimmed.starts_with('#') {
-                // End of indented block
                 if trimmed.starts_with('[') {
                     in_layers_block = false;
                 }
                 continue;
             }
-            // Check if still indented (INI-style) or starts with '-' (YAML-style)
             if line.starts_with(' ') || line.starts_with('\t') || trimmed.starts_with('-') {
                 let module = trimmed
                     .trim_start_matches('-')
@@ -1388,21 +1435,7 @@ fn extract_import_linter_layers(
                     layers.push(module);
                 }
             } else {
-                // No longer indented, end of block
                 in_layers_block = false;
-            }
-        }
-    }
-
-    // Create boundary rules from layers contract (each layer can only import from layers below it)
-    if has_layers_contract && layers.len() >= 2 {
-        for i in 0..layers.len() {
-            for j in 0..i {
-                boundaries.push(BoundaryRule {
-                    from: layers[j].clone(),
-                    to: layers[i].clone(),
-                    kind: BoundaryKind::Forbidden,
-                });
             }
         }
     }

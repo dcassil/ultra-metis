@@ -596,7 +596,12 @@ impl DocumentStore {
             DocumentType::Story => Ok(AnyDocument::Story(
                 Story::new(
                     title.to_string(), vec![Tag::Phase(Phase::Discovery)], false,
-                    short_code.to_string(), parent_id, StoryType::Feature, RiskLevel::Medium, None,
+                    short_code.to_string(), parent_id,
+                    cadre_core::domain::documents::story::NewStoryParams {
+                        story_type: StoryType::Feature,
+                        risk_level: RiskLevel::Medium,
+                        epic_id: None,
+                    },
                 ).map_err(validation_err)?,
             )),
             DocumentType::ProductDoc => Ok(AnyDocument::ProductDoc(
@@ -637,8 +642,12 @@ impl DocumentStore {
                 Ok(AnyDocument::QualityRecord(
                     QualityRecord::new(
                         title.to_string(), vec![Tag::Phase(Phase::Draft)], false,
-                        short_code.to_string(), None, today,
-                        cadre_core::domain::documents::quality_record::QualityStatus::Pass,
+                        short_code.to_string(),
+                        cadre_core::domain::documents::quality_record::NewQualityRecordParams {
+                            linked_baseline: None,
+                            record_date: today,
+                            overall_status: cadre_core::domain::documents::quality_record::QualityStatus::Pass,
+                        },
                     ).map_err(validation_err)?,
                 ))
             }

@@ -51,29 +51,37 @@ pub struct ValidationRecord {
     pub required: bool,
 }
 
+/// Parameters specific to ValidationRecord creation.
+pub struct NewValidationRecordParams {
+    pub validation_type: String,
+    pub result: ValidationResult,
+    pub related_artifact: Option<String>,
+    pub required: bool,
+}
+
+/// Parameters for constructing a ValidationRecord from existing parts.
+pub struct ValidationRecordParts {
+    pub title: String,
+    pub metadata: DocumentMetadata,
+    pub content: DocumentContent,
+    pub tags: Vec<Tag>,
+    pub archived: bool,
+    pub validation_type: String,
+    pub result: ValidationResult,
+    pub related_artifact: Option<String>,
+    pub required: bool,
+}
+
 impl ValidationRecord {
     pub fn new(
         title: String,
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
-        validation_type: String,
-        result: ValidationResult,
-        related_artifact: Option<String>,
-        required: bool,
+        params: NewValidationRecordParams,
     ) -> Result<Self, DocumentValidationError> {
         let template_content = include_str!("content.md");
-        Self::new_with_template(
-            title,
-            tags,
-            archived,
-            short_code,
-            validation_type,
-            result,
-            related_artifact,
-            required,
-            template_content,
-        )
+        Self::new_with_template(title, tags, archived, short_code, params, template_content)
     }
 
     pub fn new_with_template(
@@ -81,10 +89,7 @@ impl ValidationRecord {
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
-        validation_type: String,
-        result: ValidationResult,
-        related_artifact: Option<String>,
-        required: bool,
+        params: NewValidationRecordParams,
         template_content: &str,
     ) -> Result<Self, DocumentValidationError> {
         let metadata = DocumentMetadata::new(short_code);
@@ -118,40 +123,30 @@ impl ValidationRecord {
                 epic_id: None,
                 schema_version: 1,
             },
-            validation_type,
-            result,
-            related_artifact,
-            required,
+            validation_type: params.validation_type,
+            result: params.result,
+            related_artifact: params.related_artifact,
+            required: params.required,
         })
     }
 
-    pub fn from_parts(
-        title: String,
-        metadata: DocumentMetadata,
-        content: DocumentContent,
-        tags: Vec<Tag>,
-        archived: bool,
-        validation_type: String,
-        result: ValidationResult,
-        related_artifact: Option<String>,
-        required: bool,
-    ) -> Self {
+    pub fn from_parts(parts: ValidationRecordParts) -> Self {
         Self {
             core: DocumentCore {
-                title,
-                metadata,
-                content,
+                title: parts.title,
+                metadata: parts.metadata,
+                content: parts.content,
                 parent_id: None,
                 blocked_by: Vec::new(),
-                tags,
-                archived,
+                tags: parts.tags,
+                archived: parts.archived,
                 epic_id: None,
                 schema_version: 1,
             },
-            validation_type,
-            result,
-            related_artifact,
-            required,
+            validation_type: parts.validation_type,
+            result: parts.result,
+            related_artifact: parts.related_artifact,
+            required: parts.required,
         }
     }
 
@@ -209,7 +204,7 @@ impl ValidationRecord {
             FrontmatterParser::extract_optional_string(&fm_map, "related_artifact");
         let required = FrontmatterParser::extract_bool(&fm_map, "required").unwrap_or(false);
 
-        Ok(Self::from_parts(
+        Ok(Self::from_parts(ValidationRecordParts {
             title,
             metadata,
             content,
@@ -219,7 +214,7 @@ impl ValidationRecord {
             result,
             related_artifact,
             required,
-        ))
+        }))
     }
 
     pub fn title(&self) -> &str {
@@ -322,10 +317,12 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "TEST-VR-0001".to_string(),
-            "unit-test".to_string(),
-            ValidationResult::Passed,
-            Some("FEAT-0001".to_string()),
-            true,
+            NewValidationRecordParams {
+                validation_type: "unit-test".to_string(),
+                result: ValidationResult::Passed,
+                related_artifact: Some("FEAT-0001".to_string()),
+                required: true,
+            },
         )
         .unwrap();
 
@@ -343,10 +340,12 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "TEST-VR-0002".to_string(),
-            "lint".to_string(),
-            ValidationResult::Failed,
-            None,
-            false,
+            NewValidationRecordParams {
+                validation_type: "lint".to_string(),
+                result: ValidationResult::Failed,
+                related_artifact: None,
+                required: false,
+            },
         )
         .unwrap();
 

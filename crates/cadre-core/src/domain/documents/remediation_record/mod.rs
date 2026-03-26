@@ -54,29 +54,37 @@ pub struct RemediationRecord {
     pub resolution_status: ResolutionStatus,
 }
 
+/// Parameters specific to RemediationRecord creation.
+pub struct NewRemediationRecordParams {
+    pub problem_type: String,
+    pub affected_scope: String,
+    pub is_systemic: bool,
+    pub resolution_status: ResolutionStatus,
+}
+
+/// Parameters for constructing a RemediationRecord from existing parts.
+pub struct RemediationRecordParts {
+    pub title: String,
+    pub metadata: DocumentMetadata,
+    pub content: DocumentContent,
+    pub tags: Vec<Tag>,
+    pub archived: bool,
+    pub problem_type: String,
+    pub affected_scope: String,
+    pub is_systemic: bool,
+    pub resolution_status: ResolutionStatus,
+}
+
 impl RemediationRecord {
     pub fn new(
         title: String,
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
-        problem_type: String,
-        affected_scope: String,
-        is_systemic: bool,
-        resolution_status: ResolutionStatus,
+        params: NewRemediationRecordParams,
     ) -> Result<Self, DocumentValidationError> {
         let template_content = include_str!("content.md");
-        Self::new_with_template(
-            title,
-            tags,
-            archived,
-            short_code,
-            problem_type,
-            affected_scope,
-            is_systemic,
-            resolution_status,
-            template_content,
-        )
+        Self::new_with_template(title, tags, archived, short_code, params, template_content)
     }
 
     pub fn new_with_template(
@@ -84,10 +92,7 @@ impl RemediationRecord {
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
-        problem_type: String,
-        affected_scope: String,
-        is_systemic: bool,
-        resolution_status: ResolutionStatus,
+        params: NewRemediationRecordParams,
         template_content: &str,
     ) -> Result<Self, DocumentValidationError> {
         let metadata = DocumentMetadata::new(short_code);
@@ -121,40 +126,30 @@ impl RemediationRecord {
                 epic_id: None,
                 schema_version: 1,
             },
-            problem_type,
-            affected_scope,
-            is_systemic,
-            resolution_status,
+            problem_type: params.problem_type,
+            affected_scope: params.affected_scope,
+            is_systemic: params.is_systemic,
+            resolution_status: params.resolution_status,
         })
     }
 
-    pub fn from_parts(
-        title: String,
-        metadata: DocumentMetadata,
-        content: DocumentContent,
-        tags: Vec<Tag>,
-        archived: bool,
-        problem_type: String,
-        affected_scope: String,
-        is_systemic: bool,
-        resolution_status: ResolutionStatus,
-    ) -> Self {
+    pub fn from_parts(parts: RemediationRecordParts) -> Self {
         Self {
             core: DocumentCore {
-                title,
-                metadata,
-                content,
+                title: parts.title,
+                metadata: parts.metadata,
+                content: parts.content,
                 parent_id: None,
                 blocked_by: Vec::new(),
-                tags,
-                archived,
+                tags: parts.tags,
+                archived: parts.archived,
                 epic_id: None,
                 schema_version: 1,
             },
-            problem_type,
-            affected_scope,
-            is_systemic,
-            resolution_status,
+            problem_type: parts.problem_type,
+            affected_scope: parts.affected_scope,
+            is_systemic: parts.is_systemic,
+            resolution_status: parts.resolution_status,
         }
     }
 
@@ -212,7 +207,7 @@ impl RemediationRecord {
             FrontmatterParser::extract_string(&fm_map, "resolution_status")?;
         let resolution_status = resolution_status_str.parse::<ResolutionStatus>()?;
 
-        Ok(Self::from_parts(
+        Ok(Self::from_parts(RemediationRecordParts {
             title,
             metadata,
             content,
@@ -222,7 +217,7 @@ impl RemediationRecord {
             affected_scope,
             is_systemic,
             resolution_status,
-        ))
+        }))
     }
 
     pub fn title(&self) -> &str {
@@ -324,10 +319,12 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "TEST-RR-0001".to_string(),
-            "architecture-drift".to_string(),
-            "crates/cadre-core".to_string(),
-            true,
-            ResolutionStatus::Open,
+            NewRemediationRecordParams {
+                problem_type: "architecture-drift".to_string(),
+                affected_scope: "crates/cadre-core".to_string(),
+                is_systemic: true,
+                resolution_status: ResolutionStatus::Open,
+            },
         )
         .unwrap();
 
@@ -346,10 +343,12 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "TEST-RR-0002".to_string(),
-            "quality-degradation".to_string(),
-            "src/domain".to_string(),
-            false,
-            ResolutionStatus::InProgress,
+            NewRemediationRecordParams {
+                problem_type: "quality-degradation".to_string(),
+                affected_scope: "src/domain".to_string(),
+                is_systemic: false,
+                resolution_status: ResolutionStatus::InProgress,
+            },
         )
         .unwrap();
 

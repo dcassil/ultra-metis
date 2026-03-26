@@ -8,6 +8,28 @@ use gray_matter;
 use std::path::Path;
 use tera::{Context, Tera};
 
+/// Parameters specific to Story creation.
+pub struct NewStoryParams {
+    pub story_type: StoryType,
+    pub risk_level: RiskLevel,
+    pub epic_id: Option<DocumentId>,
+}
+
+/// Parameters for constructing a Story from existing parts.
+pub struct StoryParts {
+    pub title: String,
+    pub metadata: DocumentMetadata,
+    pub content: DocumentContent,
+    pub tags: Vec<Tag>,
+    pub archived: bool,
+    pub parent_id: Option<DocumentId>,
+    pub blocked_by: Vec<DocumentId>,
+    pub story_type: StoryType,
+    pub risk_level: RiskLevel,
+    pub design_context_refs: Vec<DocumentId>,
+    pub epic_id: Option<DocumentId>,
+}
+
 /// A Story is an implementable slice of work within an Epic, typed by purpose.
 ///
 /// Phases: Discovery → Design → Ready → Active → Completed
@@ -28,9 +50,7 @@ impl Story {
         archived: bool,
         short_code: String,
         parent_id: Option<DocumentId>,
-        story_type: StoryType,
-        risk_level: RiskLevel,
-        epic_id: Option<DocumentId>,
+        params: NewStoryParams,
     ) -> Result<Self, DocumentValidationError> {
         let template_content = include_str!("content.md");
         Self::new_with_template(
@@ -39,23 +59,18 @@ impl Story {
             archived,
             short_code,
             parent_id,
-            story_type,
-            risk_level,
-            epic_id,
+            params,
             template_content,
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn new_with_template(
         title: String,
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
         parent_id: Option<DocumentId>,
-        story_type: StoryType,
-        risk_level: RiskLevel,
-        epic_id: Option<DocumentId>,
+        params: NewStoryParams,
         template_content: &str,
     ) -> Result<Self, DocumentValidationError> {
         let metadata = DocumentMetadata::new(short_code);
@@ -84,43 +99,31 @@ impl Story {
                 blocked_by: Vec::new(),
                 tags,
                 archived,
-                epic_id,
+                epic_id: params.epic_id,
                 schema_version: 1,
             },
-            story_type,
-            risk_level,
+            story_type: params.story_type,
+            risk_level: params.risk_level,
             design_context_refs: Vec::new(),
         })
     }
 
-    pub fn from_parts(
-        title: String,
-        metadata: DocumentMetadata,
-        content: DocumentContent,
-        tags: Vec<Tag>,
-        archived: bool,
-        parent_id: Option<DocumentId>,
-        blocked_by: Vec<DocumentId>,
-        story_type: StoryType,
-        risk_level: RiskLevel,
-        design_context_refs: Vec<DocumentId>,
-        epic_id: Option<DocumentId>,
-    ) -> Self {
+    pub fn from_parts(parts: StoryParts) -> Self {
         Self {
             core: DocumentCore {
-                title,
-                metadata,
-                content,
-                parent_id,
-                blocked_by,
-                tags,
-                archived,
-                epic_id,
+                title: parts.title,
+                metadata: parts.metadata,
+                content: parts.content,
+                parent_id: parts.parent_id,
+                blocked_by: parts.blocked_by,
+                tags: parts.tags,
+                archived: parts.archived,
+                epic_id: parts.epic_id,
                 schema_version: 1,
             },
-            story_type,
-            risk_level,
-            design_context_refs,
+            story_type: parts.story_type,
+            risk_level: parts.risk_level,
+            design_context_refs: parts.design_context_refs,
         }
     }
 
@@ -200,7 +203,7 @@ impl Story {
         );
         let content = DocumentContent::from_markdown(&parsed.content);
 
-        Ok(Self::from_parts(
+        Ok(Self::from_parts(StoryParts {
             title,
             metadata,
             content,
@@ -212,7 +215,7 @@ impl Story {
             risk_level,
             design_context_refs,
             epic_id,
-        ))
+        }))
     }
 
     fn next_phase_in_sequence(current: Phase) -> Option<Phase> {
@@ -433,9 +436,11 @@ mod tests {
             false,
             "TEST-S-0001".to_string(),
             Some(DocumentId::new("parent-epic-id")),
-            StoryType::Feature,
-            RiskLevel::Low,
-            Some(DocumentId::new("my-epic-id")),
+            NewStoryParams {
+                story_type: StoryType::Feature,
+                risk_level: RiskLevel::Low,
+                epic_id: Some(DocumentId::new("my-epic-id")),
+            },
         )
         .unwrap()
     }
@@ -462,9 +467,11 @@ mod tests {
             false,
             "TEST-S-0002".to_string(),
             None,
-            StoryType::Bugfix,
-            RiskLevel::Medium,
-            None,
+            NewStoryParams {
+                story_type: StoryType::Bugfix,
+                risk_level: RiskLevel::Medium,
+                epic_id: None,
+            },
         )
         .unwrap();
 

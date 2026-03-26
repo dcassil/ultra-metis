@@ -345,23 +345,11 @@ fn score_template_runs(tool_name: &str, template: &str) -> ToolRunResult {
 pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
     tracing::info!("Starting tool comparison: cadre vs original-metis");
 
-    // Get cadre template
-    tracing::info!("Extracting cadre initiative template...");
-    let ultra_template = get_cadre_template().context("Failed to get cadre template")?;
-    tracing::info!("cadre template: {} chars", ultra_template.len());
+    let ultra_template = fetch_cadre_template()?;
+    let orig_template = fetch_original_metis_template()?;
 
-    // Get original-metis template
-    tracing::info!("Extracting original-metis initiative template...");
-    let orig_template =
-        get_original_metis_template().context("Failed to get original-metis template")?;
-    tracing::info!("original-metis template: {} chars", orig_template.len());
-
-    // Fill and score each template
-    tracing::info!("Filling cadre templates with Claude...");
-    let ultra_result = score_template_runs("cadre", &ultra_template);
-
-    tracing::info!("Filling original-metis templates with Claude...");
-    let orig_result = score_template_runs("original-metis", &orig_template);
+    let ultra_result = run_and_score("cadre", &ultra_template);
+    let orig_result = run_and_score("original-metis", &orig_template);
 
     let completeness_delta =
         ultra_result.avg_completeness_percent - orig_result.avg_completeness_percent;
@@ -374,6 +362,26 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
         completeness_delta,
         placeholder_delta,
     })
+}
+
+fn fetch_cadre_template() -> anyhow::Result<String> {
+    tracing::info!("Extracting cadre initiative template...");
+    let template = get_cadre_template().context("Failed to get cadre template")?;
+    tracing::info!("cadre template: {} chars", template.len());
+    Ok(template)
+}
+
+fn fetch_original_metis_template() -> anyhow::Result<String> {
+    tracing::info!("Extracting original-metis initiative template...");
+    let template =
+        get_original_metis_template().context("Failed to get original-metis template")?;
+    tracing::info!("original-metis template: {} chars", template.len());
+    Ok(template)
+}
+
+fn run_and_score(tool_name: &str, template: &str) -> ToolRunResult {
+    tracing::info!("Filling {} templates with Claude...", tool_name);
+    score_template_runs(tool_name, template)
 }
 
 /// Generate a markdown report from the comparison result.

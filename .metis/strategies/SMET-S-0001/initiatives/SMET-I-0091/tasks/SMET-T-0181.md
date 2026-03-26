@@ -4,14 +4,14 @@ level: task
 title: "cadre-core: Refactor Functions Exceeding Structural Clippy Thresholds"
 short_code: "SMET-T-0181"
 created_at: 2026-03-26T19:20:04.281303+00:00
-updated_at: 2026-03-26T19:20:04.281303+00:00
+updated_at: 2026-03-26T21:37:13.644495+00:00
 parent: SMET-I-0091
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -72,6 +72,8 @@ Refactor all functions in the `cadre-core` crate that violate the structural cli
 | File | Line | Function | Complexity |
 |------|------|----------|------------|
 | `src/domain/catalog/brownfield_evaluator/rules_config_analyzer.rs` | 561 | `evaluate_jsts_quality` | 26/25 |
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

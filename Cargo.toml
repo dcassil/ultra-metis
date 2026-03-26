@@ -41,10 +41,10 @@ nursery = { level = "warn", priority = -1 }
 large_enum_variant = "warn"
 wildcard_imports = "warn"
 
-# --- Structural lints: fix in crate restructuring (SMET-I-0085 to I-0088) ---
-too_many_lines = "allow"            # 45 violations — fix in crate restructuring
-too_many_arguments = "allow"        # 16 violations — fix in crate restructuring
-cognitive_complexity = "allow"      # 8 violations — fix in crate restructuring
+# --- Structural lints (now enforced) ---
+too_many_lines = "warn"
+too_many_arguments = "warn"
+cognitive_complexity = "warn"
 
 # --- Permanent style allows ---
 # Lints where both styles are acceptable; we chose one.

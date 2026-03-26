@@ -307,119 +307,70 @@ impl OperationSpec {
     }
 }
 
+/// Spec tuple type alias for readability.
+type OpSpec = (Vec<String>, OutputKind, Vec<ToolCategory>, Vec<EscalationCondition>);
+
 /// Returns default (inputs, output, tools, escalations) for each operation.
-fn default_spec(
-    op: CognitiveOperation,
-) -> (
-    Vec<String>,
-    OutputKind,
-    Vec<ToolCategory>,
-    Vec<EscalationCondition>,
-) {
+fn default_spec(op: CognitiveOperation) -> OpSpec {
+    type C = CognitiveOperation;
+    type E = EscalationCondition;
+    type O = OutputKind;
+    type T = ToolCategory;
+
     match op {
-        CognitiveOperation::FrameObjective => (
+        C::FrameObjective => (
             vec!["work item or request".into(), "existing context".into()],
-            OutputKind::Objective,
-            vec![ToolCategory::Documentation],
-            vec![EscalationCondition::AmbiguityDetected],
+            O::Objective, vec![T::Documentation], vec![E::AmbiguityDetected],
         ),
-        CognitiveOperation::AcquireContext => (
+        C::AcquireContext => (
             vec!["objective".into(), "repository access".into()],
-            OutputKind::ContextSet,
-            vec![
-                ToolCategory::Search,
-                ToolCategory::VersionControl,
-                ToolCategory::Documentation,
-            ],
-            vec![EscalationCondition::InsufficientContext],
+            O::ContextSet, vec![T::Search, T::VersionControl, T::Documentation],
+            vec![E::InsufficientContext],
         ),
-        CognitiveOperation::BuildModel => (
+        C::BuildModel => (
             vec!["context set".into(), "codebase access".into()],
-            OutputKind::Model,
-            vec![ToolCategory::Search, ToolCategory::Analysis],
-            vec![
-                EscalationCondition::InsufficientContext,
-                EscalationCondition::AmbiguityDetected,
-            ],
+            O::Model, vec![T::Search, T::Analysis],
+            vec![E::InsufficientContext, E::AmbiguityDetected],
         ),
-        CognitiveOperation::LocateFocus => (
+        C::LocateFocus => (
             vec!["model".into(), "objective".into()],
-            OutputKind::FocusArea,
-            vec![ToolCategory::Search, ToolCategory::VersionControl],
-            vec![EscalationCondition::AmbiguityDetected],
+            O::FocusArea, vec![T::Search, T::VersionControl], vec![E::AmbiguityDetected],
         ),
-        CognitiveOperation::AnalyzeStructure => (
+        C::AnalyzeStructure => (
             vec!["focus area".into(), "codebase access".into()],
-            OutputKind::StructuralAnalysis,
-            vec![ToolCategory::Analysis, ToolCategory::Search],
-            vec![EscalationCondition::InsufficientContext],
+            O::StructuralAnalysis, vec![T::Analysis, T::Search], vec![E::InsufficientContext],
         ),
-        CognitiveOperation::TraceFlow => (
+        C::TraceFlow => (
             vec!["focus area".into(), "codebase access".into()],
-            OutputKind::FlowTrace,
-            vec![
-                ToolCategory::Search,
-                ToolCategory::Analysis,
-                ToolCategory::VersionControl,
-            ],
-            vec![EscalationCondition::InsufficientContext],
+            O::FlowTrace, vec![T::Search, T::Analysis, T::VersionControl],
+            vec![E::InsufficientContext],
         ),
-        CognitiveOperation::AssessImpact => (
-            vec![
-                "structural analysis or flow trace".into(),
-                "change description".into(),
-            ],
-            OutputKind::ImpactAssessment,
-            vec![
-                ToolCategory::Analysis,
-                ToolCategory::VersionControl,
-                ToolCategory::Metrics,
-            ],
-            vec![EscalationCondition::RiskThresholdExceeded],
+        C::AssessImpact => (
+            vec!["structural analysis or flow trace".into(), "change description".into()],
+            O::ImpactAssessment, vec![T::Analysis, T::VersionControl, T::Metrics],
+            vec![E::RiskThresholdExceeded],
         ),
-        CognitiveOperation::ShapeSolution => (
-            vec![
-                "objective".into(),
-                "model".into(),
-                "impact assessment".into(),
-            ],
-            OutputKind::SolutionDesign,
-            vec![ToolCategory::Documentation],
-            vec![
-                EscalationCondition::DesignConflict,
-                EscalationCondition::AmbiguityDetected,
-            ],
+        C::ShapeSolution => (
+            vec!["objective".into(), "model".into(), "impact assessment".into()],
+            O::SolutionDesign, vec![T::Documentation],
+            vec![E::DesignConflict, E::AmbiguityDetected],
         ),
-        CognitiveOperation::DecomposeWork => (
+        C::DecomposeWork => (
             vec!["solution design".into(), "codebase model".into()],
-            OutputKind::WorkPlan,
-            vec![ToolCategory::Documentation],
-            vec![EscalationCondition::AmbiguityDetected],
+            O::WorkPlan, vec![T::Documentation], vec![E::AmbiguityDetected],
         ),
-        CognitiveOperation::CreateArtifact => (
+        C::CreateArtifact => (
             vec!["work plan or task".into(), "codebase access".into()],
-            OutputKind::Artifact,
-            vec![ToolCategory::CodeModification, ToolCategory::Build],
-            vec![EscalationCondition::DesignConflict],
+            O::Artifact, vec![T::CodeModification, T::Build], vec![E::DesignConflict],
         ),
-        CognitiveOperation::ValidateReality => (
+        C::ValidateReality => (
             vec!["artifact".into(), "test infrastructure".into()],
-            OutputKind::ValidationResult,
-            vec![
-                ToolCategory::Testing,
-                ToolCategory::Build,
-                ToolCategory::Analysis,
-            ],
-            vec![EscalationCondition::ValidationFailed],
+            O::ValidationResult, vec![T::Testing, T::Build, T::Analysis],
+            vec![E::ValidationFailed],
         ),
-        CognitiveOperation::ReassessAdapt => (
-            vec![
-                "validation results or new information".into(),
-                "current plan".into(),
-            ],
-            OutputKind::AdaptedPlan,
-            vec![ToolCategory::Documentation],
-            vec![EscalationCondition::IterationBudgetExhausted],
+        C::ReassessAdapt => (
+            vec!["validation results or new information".into(), "current plan".into()],
+            O::AdaptedPlan, vec![T::Documentation], vec![E::IterationBudgetExhausted],
         ),
     }
 }

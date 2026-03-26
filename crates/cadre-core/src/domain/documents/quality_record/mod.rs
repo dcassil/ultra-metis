@@ -50,27 +50,35 @@ pub struct QualityRecord {
     pub overall_status: QualityStatus,
 }
 
+/// Parameters specific to QualityRecord creation.
+pub struct NewQualityRecordParams {
+    pub linked_baseline: Option<String>,
+    pub record_date: String,
+    pub overall_status: QualityStatus,
+}
+
+/// Parameters for constructing a QualityRecord from existing parts.
+pub struct QualityRecordParts {
+    pub title: String,
+    pub metadata: DocumentMetadata,
+    pub content: DocumentContent,
+    pub tags: Vec<Tag>,
+    pub archived: bool,
+    pub linked_baseline: Option<String>,
+    pub record_date: String,
+    pub overall_status: QualityStatus,
+}
+
 impl QualityRecord {
     pub fn new(
         title: String,
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
-        linked_baseline: Option<String>,
-        record_date: String,
-        overall_status: QualityStatus,
+        params: NewQualityRecordParams,
     ) -> Result<Self, DocumentValidationError> {
         let template_content = include_str!("content.md");
-        Self::new_with_template(
-            title,
-            tags,
-            archived,
-            short_code,
-            linked_baseline,
-            record_date,
-            overall_status,
-            template_content,
-        )
+        Self::new_with_template(title, tags, archived, short_code, params, template_content)
     }
 
     pub fn new_with_template(
@@ -78,9 +86,7 @@ impl QualityRecord {
         tags: Vec<Tag>,
         archived: bool,
         short_code: String,
-        linked_baseline: Option<String>,
-        record_date: String,
-        overall_status: QualityStatus,
+        params: NewQualityRecordParams,
         template_content: &str,
     ) -> Result<Self, DocumentValidationError> {
         let metadata = DocumentMetadata::new(short_code);
@@ -114,37 +120,28 @@ impl QualityRecord {
                 epic_id: None,
                 schema_version: 1,
             },
-            linked_baseline,
-            record_date,
-            overall_status,
+            linked_baseline: params.linked_baseline,
+            record_date: params.record_date,
+            overall_status: params.overall_status,
         })
     }
 
-    pub fn from_parts(
-        title: String,
-        metadata: DocumentMetadata,
-        content: DocumentContent,
-        tags: Vec<Tag>,
-        archived: bool,
-        linked_baseline: Option<String>,
-        record_date: String,
-        overall_status: QualityStatus,
-    ) -> Self {
+    pub fn from_parts(parts: QualityRecordParts) -> Self {
         Self {
             core: DocumentCore {
-                title,
-                metadata,
-                content,
+                title: parts.title,
+                metadata: parts.metadata,
+                content: parts.content,
                 parent_id: None,
                 blocked_by: Vec::new(),
-                tags,
-                archived,
+                tags: parts.tags,
+                archived: parts.archived,
                 epic_id: None,
                 schema_version: 1,
             },
-            linked_baseline,
-            record_date,
-            overall_status,
+            linked_baseline: parts.linked_baseline,
+            record_date: parts.record_date,
+            overall_status: parts.overall_status,
         }
     }
 
@@ -201,7 +198,7 @@ impl QualityRecord {
         let overall_status_str = FrontmatterParser::extract_string(&fm_map, "overall_status")?;
         let overall_status = overall_status_str.parse::<QualityStatus>()?;
 
-        Ok(Self::from_parts(
+        Ok(Self::from_parts(QualityRecordParts {
             title,
             metadata,
             content,
@@ -210,7 +207,7 @@ impl QualityRecord {
             linked_baseline,
             record_date,
             overall_status,
-        ))
+        }))
     }
 
     pub fn title(&self) -> &str {
@@ -317,9 +314,11 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "TEST-QR-0001".to_string(),
-            Some("TEST-AB-0001".to_string()),
-            "2026-03-16".to_string(),
-            QualityStatus::Pass,
+            NewQualityRecordParams {
+                linked_baseline: Some("TEST-AB-0001".to_string()),
+                record_date: "2026-03-16".to_string(),
+                overall_status: QualityStatus::Pass,
+            },
         )
         .unwrap();
 
@@ -336,9 +335,11 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "TEST-QR-0002".to_string(),
-            Some("TEST-AB-0002".to_string()),
-            "2026-03-16".to_string(),
-            QualityStatus::Warn,
+            NewQualityRecordParams {
+                linked_baseline: Some("TEST-AB-0002".to_string()),
+                record_date: "2026-03-16".to_string(),
+                overall_status: QualityStatus::Warn,
+            },
         )
         .unwrap();
 

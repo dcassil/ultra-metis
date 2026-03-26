@@ -126,6 +126,18 @@ pub struct RulesConfig {
     pub source_architecture_ref: Option<String>,
 }
 
+/// Parameters for constructing a RulesConfig from existing parts.
+pub struct RulesConfigParts {
+    pub title: String,
+    pub metadata: DocumentMetadata,
+    pub content: DocumentContent,
+    pub tags: Vec<Tag>,
+    pub archived: bool,
+    pub protection_level: ProtectionLevel,
+    pub scope: RuleScope,
+    pub source_architecture_ref: Option<String>,
+}
+
 impl RulesConfig {
     pub fn new(
         title: String,
@@ -195,31 +207,22 @@ impl RulesConfig {
         })
     }
 
-    pub fn from_parts(
-        title: String,
-        metadata: DocumentMetadata,
-        content: DocumentContent,
-        tags: Vec<Tag>,
-        archived: bool,
-        protection_level: ProtectionLevel,
-        scope: RuleScope,
-        source_architecture_ref: Option<String>,
-    ) -> Self {
+    pub fn from_parts(parts: RulesConfigParts) -> Self {
         Self {
             core: DocumentCore {
-                title,
-                metadata,
-                content,
+                title: parts.title,
+                metadata: parts.metadata,
+                content: parts.content,
                 parent_id: None,
                 blocked_by: Vec::new(),
-                tags,
-                archived,
+                tags: parts.tags,
+                archived: parts.archived,
                 epic_id: None,
                 schema_version: 1,
             },
-            protection_level,
-            scope,
-            source_architecture_ref,
+            protection_level: parts.protection_level,
+            scope: parts.scope,
+            source_architecture_ref: parts.source_architecture_ref,
         }
     }
 
@@ -279,7 +282,7 @@ impl RulesConfig {
         let source_architecture_ref =
             FrontmatterParser::extract_optional_string(&fm_map, "source_architecture_ref");
 
-        Ok(Self::from_parts(
+        Ok(Self::from_parts(RulesConfigParts {
             title,
             metadata,
             content,
@@ -288,7 +291,7 @@ impl RulesConfig {
             protection_level,
             scope,
             source_architecture_ref,
-        ))
+        }))
     }
 
     // --- accessors ---

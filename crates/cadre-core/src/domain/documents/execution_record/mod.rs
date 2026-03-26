@@ -212,6 +212,26 @@ pub struct ExecutionRecord {
     pub final_disposition: Disposition,
 }
 
+/// Internal helper struct for grouping parsed execution-specific fields.
+struct ParsedExecutionFields {
+    initiating_artifact: String,
+    execution_mode: ExecutionMode,
+    started_at: DateTime<Utc>,
+    completed_at: Option<DateTime<Utc>>,
+    final_disposition: Disposition,
+    context_sources: Vec<String>,
+    architecture_consulted: Option<String>,
+    rules_consulted: Vec<String>,
+    notes_fetched: Vec<String>,
+    files_touched: Vec<String>,
+    artifacts_updated: Vec<String>,
+    decisions_made: Vec<String>,
+    tools_run: Vec<ToolEntry>,
+    validations_run: Vec<ValidationEntry>,
+    escalations: Vec<EscalationEntry>,
+    overrides: Vec<OverrideEntry>,
+}
+
 impl ExecutionRecord {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -360,91 +380,135 @@ impl ExecutionRecord {
             )));
         }
 
-        let title = FrontmatterParser::extract_string(&fm_map, "title")?;
-        let archived = FrontmatterParser::extract_bool(&fm_map, "archived").unwrap_or(false);
-        let created_at = FrontmatterParser::extract_datetime(&fm_map, "created_at")?;
-        let updated_at = FrontmatterParser::extract_datetime(&fm_map, "updated_at")?;
-        let exit_criteria_met =
-            FrontmatterParser::extract_bool(&fm_map, "exit_criteria_met").unwrap_or(false);
-        let tags = FrontmatterParser::extract_tags(&fm_map)?;
-        let short_code = FrontmatterParser::extract_string(&fm_map, "short_code")?;
+        let (title, archived, tags, metadata) = Self::parse_common_fields(&fm_map)?;
+        let content = DocumentContent::from_markdown(&parsed.content);
+        let exec_fields = Self::parse_execution_fields(&fm_map)?;
 
-        let initiating_artifact =
-            FrontmatterParser::extract_string(&fm_map, "initiating_artifact")?;
-        let execution_mode_str = FrontmatterParser::extract_string(&fm_map, "execution_mode")?;
+        Ok(Self::from_parts(
+            title, metadata, content, tags, archived,
+            exec_fields.initiating_artifact, exec_fields.execution_mode,
+            exec_fields.started_at, exec_fields.completed_at,
+            exec_fields.context_sources, exec_fields.architecture_consulted,
+            exec_fields.rules_consulted, exec_fields.notes_fetched,
+            exec_fields.tools_run, exec_fields.files_touched,
+            exec_fields.validations_run, exec_fields.artifacts_updated,
+            exec_fields.decisions_made, exec_fields.escalations,
+            exec_fields.overrides, exec_fields.final_disposition,
+        ))
+    }
+
+    fn parse_common_fields(
+        fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
+    ) -> Result<(String, bool, Vec<Tag>, DocumentMetadata), DocumentValidationError> {
+        let title = FrontmatterParser::extract_string(fm_map, "title")?;
+        let archived = FrontmatterParser::extract_bool(fm_map, "archived").unwrap_or(false);
+        let created_at = FrontmatterParser::extract_datetime(fm_map, "created_at")?;
+        let updated_at = FrontmatterParser::extract_datetime(fm_map, "updated_at")?;
+        let exit_criteria_met =
+            FrontmatterParser::extract_bool(fm_map, "exit_criteria_met").unwrap_or(false);
+        let tags = FrontmatterParser::extract_tags(fm_map)?;
+        let short_code = FrontmatterParser::extract_string(fm_map, "short_code")?;
+        let metadata = DocumentMetadata::from_frontmatter(created_at, updated_at, exit_criteria_met, short_code);
+        Ok((title, archived, tags, metadata))
+    }
+
+    fn parse_execution_fields(
+        fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
+    ) -> Result<ParsedExecutionFields, DocumentValidationError> {
+        let initiating_artifact = FrontmatterParser::extract_string(fm_map, "initiating_artifact")?;
+        let execution_mode_str = FrontmatterParser::extract_string(fm_map, "execution_mode")?;
         let execution_mode = ExecutionMode::from_str(&execution_mode_str)
             .map_err(DocumentValidationError::InvalidContent)?;
 
-        let started_at_str = FrontmatterParser::extract_string(&fm_map, "started_at")?;
+        let started_at_str = FrontmatterParser::extract_string(fm_map, "started_at")?;
         let started_at = DateTime::parse_from_rfc3339(&started_at_str)
             .map(|dt| dt.with_timezone(&Utc))
             .map_err(|_| {
-                DocumentValidationError::InvalidContent(
-                    "Invalid datetime for started_at".to_string(),
-                )
+                DocumentValidationError::InvalidContent("Invalid datetime for started_at".to_string())
             })?;
 
-        let completed_at = FrontmatterParser::extract_optional_string(&fm_map, "completed_at")
+        let completed_at = FrontmatterParser::extract_optional_string(fm_map, "completed_at")
             .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
             .map(|dt| dt.with_timezone(&Utc));
 
-        let final_disposition_str =
-            FrontmatterParser::extract_string(&fm_map, "final_disposition")?;
+        let final_disposition_str = FrontmatterParser::extract_string(fm_map, "final_disposition")?;
         let final_disposition = Disposition::from_str(&final_disposition_str)
             .map_err(DocumentValidationError::InvalidContent)?;
 
-        let context_sources =
-            FrontmatterParser::extract_string_array(&fm_map, "context_sources").unwrap_or_default();
-        let architecture_consulted =
-            FrontmatterParser::extract_optional_string(&fm_map, "architecture_consulted");
-        let rules_consulted =
-            FrontmatterParser::extract_string_array(&fm_map, "rules_consulted").unwrap_or_default();
-        let notes_fetched =
-            FrontmatterParser::extract_string_array(&fm_map, "notes_fetched").unwrap_or_default();
-        let files_touched =
-            FrontmatterParser::extract_string_array(&fm_map, "files_touched").unwrap_or_default();
-        let artifacts_updated =
-            FrontmatterParser::extract_string_array(&fm_map, "artifacts_updated")
-                .unwrap_or_default();
-        let decisions_made =
-            FrontmatterParser::extract_string_array(&fm_map, "decisions_made").unwrap_or_default();
-
-        let tools_run = Self::parse_tool_entries(&fm_map);
-        let validations_run = Self::parse_validation_entries(&fm_map);
-        let escalations = Self::parse_escalation_entries(&fm_map);
-        let overrides = Self::parse_override_entries(&fm_map);
-
-        let metadata = DocumentMetadata::from_frontmatter(
-            created_at,
-            updated_at,
-            exit_criteria_met,
-            short_code,
-        );
-        let content = DocumentContent::from_markdown(&parsed.content);
-
-        Ok(Self::from_parts(
-            title,
-            metadata,
-            content,
-            tags,
-            archived,
+        Ok(ParsedExecutionFields {
             initiating_artifact,
             execution_mode,
             started_at,
             completed_at,
-            context_sources,
-            architecture_consulted,
-            rules_consulted,
-            notes_fetched,
-            tools_run,
-            files_touched,
-            validations_run,
-            artifacts_updated,
-            decisions_made,
-            escalations,
-            overrides,
             final_disposition,
-        ))
+            context_sources: FrontmatterParser::extract_string_array(fm_map, "context_sources").unwrap_or_default(),
+            architecture_consulted: FrontmatterParser::extract_optional_string(fm_map, "architecture_consulted"),
+            rules_consulted: FrontmatterParser::extract_string_array(fm_map, "rules_consulted").unwrap_or_default(),
+            notes_fetched: FrontmatterParser::extract_string_array(fm_map, "notes_fetched").unwrap_or_default(),
+            files_touched: FrontmatterParser::extract_string_array(fm_map, "files_touched").unwrap_or_default(),
+            artifacts_updated: FrontmatterParser::extract_string_array(fm_map, "artifacts_updated").unwrap_or_default(),
+            decisions_made: FrontmatterParser::extract_string_array(fm_map, "decisions_made").unwrap_or_default(),
+            tools_run: Self::parse_tool_entries(fm_map),
+            validations_run: Self::parse_validation_entries(fm_map),
+            escalations: Self::parse_escalation_entries(fm_map),
+            overrides: Self::parse_override_entries(fm_map),
+        })
+    }
+
+    fn insert_sub_structs(
+        context: &mut Context,
+        tools_run: &[ToolEntry],
+        validations_run: &[ValidationEntry],
+        escalations: &[EscalationEntry],
+        overrides: &[OverrideEntry],
+    ) {
+        let tool_maps: Vec<std::collections::HashMap<&str, String>> = tools_run
+            .iter()
+            .map(|t| {
+                let mut m = std::collections::HashMap::new();
+                m.insert("name", t.name.clone());
+                m.insert("arguments", t.arguments.clone());
+                m.insert("result_summary", t.result_summary.clone());
+                m
+            })
+            .collect();
+        context.insert("tools_run", &tool_maps);
+
+        let validation_maps: Vec<serde_json::Value> = validations_run
+            .iter()
+            .map(|v| {
+                serde_json::json!({
+                    "name": v.name,
+                    "passed": v.passed,
+                    "details": v.details,
+                })
+            })
+            .collect();
+        context.insert("validations_run", &validation_maps);
+
+        let escalation_maps: Vec<std::collections::HashMap<&str, String>> = escalations
+            .iter()
+            .map(|e| {
+                let mut m = std::collections::HashMap::new();
+                m.insert("reason", e.reason.clone());
+                m.insert("escalated_to", e.escalated_to.clone());
+                m.insert("resolution", e.resolution.clone());
+                m
+            })
+            .collect();
+        context.insert("escalations", &escalation_maps);
+
+        let override_maps: Vec<std::collections::HashMap<&str, String>> = overrides
+            .iter()
+            .map(|o| {
+                let mut m = std::collections::HashMap::new();
+                m.insert("rule", o.rule.clone());
+                m.insert("reason", o.reason.clone());
+                m.insert("approved_by", o.approved_by.clone());
+                m
+            })
+            .collect();
+        context.insert("overrides", &override_maps);
     }
 
     fn parse_tool_entries(
@@ -628,58 +692,10 @@ impl ExecutionRecord {
         context.insert("artifacts_updated", &self.artifacts_updated);
         context.insert("decisions_made", &self.decisions_made);
 
-        // Serialize complex sub-structs as maps
-        let tool_maps: Vec<std::collections::HashMap<&str, String>> = self
-            .tools_run
-            .iter()
-            .map(|t| {
-                let mut m = std::collections::HashMap::new();
-                m.insert("name", t.name.clone());
-                m.insert("arguments", t.arguments.clone());
-                m.insert("result_summary", t.result_summary.clone());
-                m
-            })
-            .collect();
-        context.insert("tools_run", &tool_maps);
-
-        let validation_maps: Vec<serde_json::Value> = self
-            .validations_run
-            .iter()
-            .map(|v| {
-                serde_json::json!({
-                    "name": v.name,
-                    "passed": v.passed,
-                    "details": v.details,
-                })
-            })
-            .collect();
-        context.insert("validations_run", &validation_maps);
-
-        let escalation_maps: Vec<std::collections::HashMap<&str, String>> = self
-            .escalations
-            .iter()
-            .map(|e| {
-                let mut m = std::collections::HashMap::new();
-                m.insert("reason", e.reason.clone());
-                m.insert("escalated_to", e.escalated_to.clone());
-                m.insert("resolution", e.resolution.clone());
-                m
-            })
-            .collect();
-        context.insert("escalations", &escalation_maps);
-
-        let override_maps: Vec<std::collections::HashMap<&str, String>> = self
-            .overrides
-            .iter()
-            .map(|o| {
-                let mut m = std::collections::HashMap::new();
-                m.insert("rule", o.rule.clone());
-                m.insert("reason", o.reason.clone());
-                m.insert("approved_by", o.approved_by.clone());
-                m
-            })
-            .collect();
-        context.insert("overrides", &override_maps);
+        Self::insert_sub_structs(
+            &mut context, &self.tools_run, &self.validations_run,
+            &self.escalations, &self.overrides,
+        );
 
         let tag_strings: Vec<String> = self.core.tags.iter().map(super::types::Tag::to_str).collect();
         context.insert("tags", &tag_strings);

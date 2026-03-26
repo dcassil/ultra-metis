@@ -4,14 +4,14 @@ level: task
 title: "practical-benchmark: Refactor Functions Exceeding Structural Clippy Thresholds"
 short_code: "SMET-T-0185"
 created_at: 2026-03-26T19:20:24.755198+00:00
-updated_at: 2026-03-26T21:10:48.790106+00:00
+updated_at: 2026-03-26T21:36:43.179507+00:00
 parent: SMET-I-0091
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -58,6 +58,8 @@ None.
 | `src/gated_runner.rs` | 11 | `execute_with_gates` | 49/25 |
 | `src/runner.rs` | 370 | `execute_autonomous` | 27/25 |
 | `src/tool_comparison.rs` | 346 | `run_comparison` | 50/25 |
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

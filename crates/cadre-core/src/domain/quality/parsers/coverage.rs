@@ -26,25 +26,41 @@ impl ToolOutputParser for CoverageParser {
         }
 
         let mut output = ParsedToolOutput::new("coverage");
+        let totals = Self::parse_lcov_lines(trimmed, &mut output);
+        Self::compute_and_insert_coverage(&mut output, &totals);
 
-        let mut total_lines_found: u64 = 0;
-        let mut total_lines_hit: u64 = 0;
-        let mut total_functions_found: u64 = 0;
-        let mut total_functions_hit: u64 = 0;
-        let mut total_branches_found: u64 = 0;
-        let mut total_branches_hit: u64 = 0;
+        Ok(output)
+    }
+}
+
+/// Accumulated LCOV counters.
+struct LcovTotals {
+    lines_found: u64,
+    lines_hit: u64,
+    functions_found: u64,
+    functions_hit: u64,
+    branches_found: u64,
+    branches_hit: u64,
+    file_count: u32,
+}
+
+impl CoverageParser {
+    fn parse_lcov_lines(input: &str, output: &mut ParsedToolOutput) -> LcovTotals {
+        let mut totals = LcovTotals {
+            lines_found: 0, lines_hit: 0, functions_found: 0,
+            functions_hit: 0, branches_found: 0, branches_hit: 0, file_count: 0,
+        };
         let mut current_file: Option<String> = None;
-        let mut file_count: u32 = 0;
 
-        for line in trimmed.lines() {
+        for line in input.lines() {
             let line = line.trim();
 
             if let Some(file) = line.strip_prefix("SF:") {
                 current_file = Some(file.to_string());
-                file_count += 1;
+                totals.file_count += 1;
             } else if let Some(val) = line.strip_prefix("LF:") {
                 if let Ok(n) = val.parse::<u64>() {
-                    total_lines_found += n;
+                    totals.lines_found += n;
                     if let Some(ref file) = current_file {
                         output.metrics.push(
                             MetricEntry::new("lines_found", n as f64, "count").with_file(file),
@@ -53,92 +69,49 @@ impl ToolOutputParser for CoverageParser {
                 }
             } else if let Some(val) = line.strip_prefix("LH:") {
                 if let Ok(n) = val.parse::<u64>() {
-                    total_lines_hit += n;
+                    totals.lines_hit += n;
                     if let Some(ref file) = current_file {
-                        output
-                            .metrics
-                            .push(MetricEntry::new("lines_hit", n as f64, "count").with_file(file));
+                        output.metrics.push(
+                            MetricEntry::new("lines_hit", n as f64, "count").with_file(file),
+                        );
                     }
                 }
             } else if let Some(val) = line.strip_prefix("FNF:") {
-                if let Ok(n) = val.parse::<u64>() {
-                    total_functions_found += n;
-                }
+                if let Ok(n) = val.parse::<u64>() { totals.functions_found += n; }
             } else if let Some(val) = line.strip_prefix("FNH:") {
-                if let Ok(n) = val.parse::<u64>() {
-                    total_functions_hit += n;
-                }
+                if let Ok(n) = val.parse::<u64>() { totals.functions_hit += n; }
             } else if let Some(val) = line.strip_prefix("BRF:") {
-                if let Ok(n) = val.parse::<u64>() {
-                    total_branches_found += n;
-                }
+                if let Ok(n) = val.parse::<u64>() { totals.branches_found += n; }
             } else if let Some(val) = line.strip_prefix("BRH:") {
-                if let Ok(n) = val.parse::<u64>() {
-                    total_branches_hit += n;
-                }
+                if let Ok(n) = val.parse::<u64>() { totals.branches_hit += n; }
             } else if line == "end_of_record" {
                 current_file = None;
             }
         }
 
-        // Compute coverage percentages
-        let line_coverage = if total_lines_found > 0 {
-            (total_lines_hit as f64 / total_lines_found as f64) * 100.0
-        } else {
-            0.0
+        totals
+    }
+
+    fn compute_and_insert_coverage(output: &mut ParsedToolOutput, t: &LcovTotals) {
+        let pct = |hit: u64, found: u64| -> f64 {
+            if found > 0 { (hit as f64 / found as f64) * 100.0 } else { 0.0 }
         };
 
-        let function_coverage = if total_functions_found > 0 {
-            (total_functions_hit as f64 / total_functions_found as f64) * 100.0
-        } else {
-            0.0
-        };
+        let line_cov = pct(t.lines_hit, t.lines_found);
+        let func_cov = pct(t.functions_hit, t.functions_found);
+        let branch_cov = pct(t.branches_hit, t.branches_found);
 
-        let branch_coverage = if total_branches_found > 0 {
-            (total_branches_hit as f64 / total_branches_found as f64) * 100.0
-        } else {
-            0.0
-        };
+        output.metrics.push(MetricEntry::new("line_coverage", line_cov, "percent"));
+        output.metrics.push(MetricEntry::new("function_coverage", func_cov, "percent"));
+        output.metrics.push(MetricEntry::new("branch_coverage", branch_cov, "percent"));
+        output.metrics.push(MetricEntry::new("files_covered", f64::from(t.file_count), "count"));
 
-        output
-            .metrics
-            .push(MetricEntry::new("line_coverage", line_coverage, "percent"));
-        output.metrics.push(MetricEntry::new(
-            "function_coverage",
-            function_coverage,
-            "percent",
-        ));
-        output.metrics.push(MetricEntry::new(
-            "branch_coverage",
-            branch_coverage,
-            "percent",
-        ));
-        output.metrics.push(MetricEntry::new(
-            "files_covered",
-            f64::from(file_count),
-            "count",
-        ));
-
-        output
-            .summary
-            .insert("line_coverage".to_string(), line_coverage);
-        output
-            .summary
-            .insert("function_coverage".to_string(), function_coverage);
-        output
-            .summary
-            .insert("branch_coverage".to_string(), branch_coverage);
-        output
-            .summary
-            .insert("total_lines_found".to_string(), total_lines_found as f64);
-        output
-            .summary
-            .insert("total_lines_hit".to_string(), total_lines_hit as f64);
-        output
-            .summary
-            .insert("files_covered".to_string(), f64::from(file_count));
-
-        Ok(output)
+        output.summary.insert("line_coverage".to_string(), line_cov);
+        output.summary.insert("function_coverage".to_string(), func_cov);
+        output.summary.insert("branch_coverage".to_string(), branch_cov);
+        output.summary.insert("total_lines_found".to_string(), t.lines_found as f64);
+        output.summary.insert("total_lines_hit".to_string(), t.lines_hit as f64);
+        output.summary.insert("files_covered".to_string(), f64::from(t.file_count));
     }
 }
 

@@ -223,9 +223,28 @@ impl BootstrapFlow {
         is_brownfield: bool,
     ) -> BootstrapSummary {
         let mut facts = Vec::new();
-        let mut suggestions = Vec::new();
 
-        // Language facts
+        Self::collect_language_facts(scan, &mut facts);
+        Self::collect_monorepo_facts(monorepo, &mut facts);
+        Self::collect_tool_facts(tools, &mut facts);
+
+        if is_brownfield {
+            facts.push("Existing project (brownfield)".to_string());
+        } else {
+            facts.push("New project (greenfield)".to_string());
+        }
+
+        let suggestions = Self::collect_suggestions(scan, tools);
+        let description = Self::build_description(scan, monorepo, project_type, is_brownfield);
+
+        BootstrapSummary {
+            description,
+            facts,
+            suggestions,
+        }
+    }
+
+    fn collect_language_facts(scan: &RepoScanResult, facts: &mut Vec<String>) {
         if let Some(primary) = scan.primary_language() {
             facts.push(format!("Primary language: {}", primary.name));
         }
@@ -238,30 +257,33 @@ impl BootstrapFlow {
                 .collect();
             facts.push(format!("Additional languages: {}", others.join(", ")));
         }
+    }
 
-        // Monorepo facts
-        if monorepo.is_monorepo {
-            let tool_names: Vec<String> = monorepo.tools.iter().map(std::string::ToString::to_string).collect();
-            facts.push(format!(
-                "Monorepo ({}) with {} packages",
-                if tool_names.is_empty() {
-                    "structural".to_string()
-                } else {
-                    tool_names.join(", ")
-                },
-                monorepo.packages.len()
-            ));
-            let app_count = monorepo.apps().len();
-            let lib_count = monorepo.libraries().len();
-            if app_count > 0 {
-                facts.push(format!("{app_count} app(s) detected"));
-            }
-            if lib_count > 0 {
-                facts.push(format!("{lib_count} library package(s) detected"));
-            }
+    fn collect_monorepo_facts(monorepo: &MonorepoInfo, facts: &mut Vec<String>) {
+        if !monorepo.is_monorepo {
+            return;
         }
+        let tool_names: Vec<String> = monorepo.tools.iter().map(std::string::ToString::to_string).collect();
+        facts.push(format!(
+            "Monorepo ({}) with {} packages",
+            if tool_names.is_empty() {
+                "structural".to_string()
+            } else {
+                tool_names.join(", ")
+            },
+            monorepo.packages.len()
+        ));
+        let app_count = monorepo.apps().len();
+        let lib_count = monorepo.libraries().len();
+        if app_count > 0 {
+            facts.push(format!("{app_count} app(s) detected"));
+        }
+        if lib_count > 0 {
+            facts.push(format!("{lib_count} library package(s) detected"));
+        }
+    }
 
-        // Tool facts
+    fn collect_tool_facts(tools: &ToolDetectionResult, facts: &mut Vec<String>) {
         let linters = tools.linters();
         if !linters.is_empty() {
             let names: Vec<&str> = linters.iter().map(|t| t.name.as_str()).collect();
@@ -282,15 +304,10 @@ impl BootstrapFlow {
             let names: Vec<&str> = ci.iter().map(|t| t.name.as_str()).collect();
             facts.push(format!("CI: {}", names.join(", ")));
         }
+    }
 
-        // Brownfield/greenfield
-        if is_brownfield {
-            facts.push("Existing project (brownfield)".to_string());
-        } else {
-            facts.push("New project (greenfield)".to_string());
-        }
-
-        // Suggestions
+    fn collect_suggestions(scan: &RepoScanResult, tools: &ToolDetectionResult) -> Vec<String> {
+        let mut suggestions = Vec::new();
         if tools.linters().is_empty() {
             if let Some(lang) = scan.primary_language() {
                 let suggestion = match lang.name.as_str() {
@@ -312,8 +329,15 @@ impl BootstrapFlow {
         if tools.ci_systems().is_empty() {
             suggestions.push("Consider setting up CI/CD".to_string());
         }
+        suggestions
+    }
 
-        // Description
+    fn build_description(
+        scan: &RepoScanResult,
+        monorepo: &MonorepoInfo,
+        project_type: &InferredProjectType,
+        is_brownfield: bool,
+    ) -> String {
         let lang_str = scan
             .primary_language()
             .map(|l| l.name.as_str())
@@ -323,19 +347,13 @@ impl BootstrapFlow {
         } else {
             "project"
         };
-        let description = format!(
+        format!(
             "{} {} {} ({})",
             if is_brownfield { "Existing" } else { "New" },
             lang_str,
             mono_str,
             project_type,
-        );
-
-        BootstrapSummary {
-            description,
-            facts,
-            suggestions,
-        }
+        )
     }
 }
 
