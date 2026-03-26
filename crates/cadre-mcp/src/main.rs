@@ -22,7 +22,8 @@ fn main() {
 
     let mut server = McpServer::new();
     let stdin = io::stdin();
-    let mut stdout = io::stdout();
+    let stdout = io::stdout();
+    let mut stdout = stdout.lock();
 
     for line in stdin.lock().lines() {
         let line = match line {
