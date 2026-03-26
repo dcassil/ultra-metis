@@ -4,14 +4,14 @@ level: initiative
 title: "Structural Clippy Compliance: Function Length, Argument Count, and Complexity"
 short_code: "SMET-I-0091"
 created_at: 2026-03-26T18:47:12.508020+00:00
-updated_at: 2026-03-26T18:47:12.508020+00:00
+updated_at: 2026-03-26T19:19:46.750980+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/decompose"
 
 
 exit_criteria_met: false
@@ -30,11 +30,12 @@ SMET-I-0084 established workspace-wide clippy configuration with `clippy.toml` t
 
 | Crate | too_many_lines | too_many_arguments | cognitive_complexity | Total |
 |-------|---------------|--------------------|---------------------|-------|
-| cadre-core | ~60 | ~5 | ~4 | ~69 |
-| cadre-cli | ~20 | ~3 | ~2 | ~25 |
-| cadre-mcp | ~15 | ~8 | ~1 | ~24 |
-| cadre-store | ~5 | ~1 | ~0 | ~6 |
-| practical (benchmarks) | ~25 | ~5 | ~0 | ~30 |
+| cadre-core | 15 | 11 | 1 | 27 |
+| cadre-cli | 2 | 1 | 0 | 3 |
+| cadre-mcp | 2 | 0 | 0 | 2 |
+| cadre-store | 3 | 0 | 0 | 3 |
+| practical (benchmarks) | 11 | 0 | 3 | 14 |
+| **Total** | **33** | **12** | **4** | **49** |
 
 ### Hotspot Files
 - `crates/cadre-core/src/domain/transitions/enforcer.rs` — 50 violations (worst offender)

@@ -4,14 +4,14 @@ level: initiative
 title: "Workspace Linting and Quality Configuration"
 short_code: "SMET-I-0084"
 created_at: 2026-03-26T17:21:33.364334+00:00
-updated_at: 2026-03-26T18:31:33.411482+00:00
+updated_at: 2026-03-26T19:17:56.608743+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false

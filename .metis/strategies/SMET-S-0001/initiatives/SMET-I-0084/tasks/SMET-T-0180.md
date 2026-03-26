@@ -4,14 +4,14 @@ level: task
 title: "Enhance CI Workflow and Makefile with New Lint Targets"
 short_code: "SMET-T-0180"
 created_at: 2026-03-26T18:28:44.281782+00:00
-updated_at: 2026-03-26T18:28:44.281782+00:00
+updated_at: 2026-03-26T19:17:44.814416+00:00
 parent: SMET-I-0084
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,10 @@ initiative_id: SMET-I-0084
 ## Objective
 
 Add a shellcheck CI job to `.github/workflows/ci.yml` and add `lint-shell` and `lint-strict` targets to the Makefile. Update the existing `ci` Make target to include the new lint targets so `make ci` runs the full quality suite locally.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

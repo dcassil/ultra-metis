@@ -4,14 +4,14 @@ level: task
 title: "Fix Existing Clippy Violations Across Workspace"
 short_code: "SMET-T-0178"
 created_at: 2026-03-26T18:28:33.732613+00:00
-updated_at: 2026-03-26T18:43:36.310358+00:00
+updated_at: 2026-03-26T19:12:26.058112+00:00
 parent: SMET-I-0084
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,8 @@ initiative_id: SMET-I-0084
 ## Objective
 
 Fix simple clippy violations that don't require structural refactoring — unused imports, unused variables, redundant closures, manual_strip, collapsible_if, etc. Structural issues (too_many_lines, too_many_arguments, cognitive_complexity) are deferred to SMET-I-0091. Bulk pedantic cleanup (use_self, uninlined_format_args, etc.) is deferred to SMET-I-0092.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

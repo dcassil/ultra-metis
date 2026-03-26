@@ -4,14 +4,14 @@ level: task
 title: "Create clippy.toml and Add Workspace Lint Attributes"
 short_code: "SMET-T-0177"
 created_at: 2026-03-26T18:28:28.462953+00:00
-updated_at: 2026-03-26T18:35:37.327740+00:00
+updated_at: 2026-03-26T19:12:19.507633+00:00
 parent: SMET-I-0084
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: SMET-I-0084
 ## Objective
 
 Create `clippy.toml` at workspace root with complexity thresholds, and add `#![warn(clippy::pedantic)]` plus targeted lint attributes to each crate's `lib.rs`/`main.rs`. This task sets up the lint configuration only — it does NOT fix existing violations (that's SMET-T-0178).
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

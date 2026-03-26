@@ -4,14 +4,14 @@ level: task
 title: "Add .shellcheckrc and Fix Shell Script Violations"
 short_code: "SMET-T-0179"
 created_at: 2026-03-26T18:28:38.837914+00:00
-updated_at: 2026-03-26T18:28:38.837914+00:00
+updated_at: 2026-03-26T19:14:38.261146+00:00
 parent: SMET-I-0084
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,10 @@ initiative_id: SMET-I-0084
 ## Objective
 
 Create `.shellcheckrc` at workspace root and fix all shellcheck violations in the 7 Cadre plugin shell scripts (~812 LOC). Also fix any issues in the 3 repo-level scripts (`benchmarks/run-cadre-bench.sh`, `scripts/package.sh`, `tests/e2e_test.sh`). Vendor scripts under `vendor/` and `reference*/` are excluded.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
