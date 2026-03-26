@@ -5,8 +5,8 @@ pub struct MetricsCollector {
     code_metrics: CodeMetrics,
 }
 
-impl MetricsCollector {
-    pub fn new() -> Self {
+impl Default for MetricsCollector {
+    fn default() -> Self {
         Self {
             code_metrics: CodeMetrics {
                 lines_of_code: 0,
@@ -16,6 +16,12 @@ impl MetricsCollector {
                 instruction_adherence_percent: 0.0,
             },
         }
+    }
+}
+
+impl MetricsCollector {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Count lines of code in generated Rust file

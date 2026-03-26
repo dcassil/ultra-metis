@@ -36,7 +36,7 @@ struct ClippySpan {
 }
 
 impl ToolOutputParser for ClippyParser {
-    fn tool_name(&self) -> &str {
+    fn tool_name(&self) -> &'static str {
         "clippy"
     }
 

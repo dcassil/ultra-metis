@@ -29,7 +29,7 @@ impl DocQualityScore {
 /// Score a single markdown document file.
 pub fn score_document(path: &Path) -> anyhow::Result<DocQualityScore> {
     let content = std::fs::read_to_string(path)
-        .map_err(|e| anyhow::anyhow!("Failed to read {path:?}: {e}"))?;
+        .map_err(|e| anyhow::anyhow!("Failed to read {}: {e}", path.display()))?;
     Ok(score_content(&content))
 }
 

@@ -374,7 +374,7 @@ mod tests {
             .map(super::EscalationTrigger::identifier)
             .collect();
         let mut deduped = ids.clone();
-        deduped.sort();
+        deduped.sort_unstable();
         deduped.dedup();
         assert_eq!(ids.len(), deduped.len());
     }

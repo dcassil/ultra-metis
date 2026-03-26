@@ -9,6 +9,7 @@ use std::path::Path;
 use tera::{Context, Tera};
 
 /// A DesignContext captures design decisions, constraints, and references linked to planning artifacts.
+///
 /// It is a cross-cutting artifact that can be referenced by Epics and Stories.
 /// Phases: Draft → Review → Published → Superseded
 #[derive(Debug)]

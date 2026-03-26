@@ -196,7 +196,7 @@ impl McpSession {
                     "Overall timeout ({:.0}s) exceeded waiting for response to '{}' from {}",
                     MCP_REQUEST_OVERALL_TIMEOUT.as_secs_f64(),
                     method,
-                    system_name(&self.system)
+                    system_name(self.system)
                 ));
             }
             let response = self.read_response()?;
@@ -240,7 +240,7 @@ impl McpSession {
                 return Err(anyhow!(
                     "Timed out after {:.1}s waiting for MCP response from {}",
                     timeout.as_secs_f64(),
-                    system_name(&self.system)
+                    system_name(self.system)
                 ));
             }
             line.clear();
@@ -289,7 +289,7 @@ fn wait_for_stdout(stdout: &BufReader<ChildStdout>, timeout: Duration) -> Result
     Ok((poll_fd.revents & libc::POLLIN) != 0)
 }
 
-fn system_name(system: &SystemUnderTest) -> &'static str {
+fn system_name(system: SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
         SystemUnderTest::CadreMcp => "cadre-mcp",

@@ -99,8 +99,8 @@ impl StructureAnalyzer {
         let structure_quality_score = Self::compute_quality_score(
             &top_level_dirs,
             &detected_layers,
-            &file_naming_convention,
-            &test_pattern,
+            file_naming_convention,
+            test_pattern,
             &depth_distribution,
         );
 
@@ -224,10 +224,10 @@ impl StructureAnalyzer {
                 kebab += 1;
             } else if base.contains('_') {
                 snake += 1;
-            } else if base.chars().next().map_or(false, char::is_uppercase) {
+            } else if base.chars().next().is_some_and(char::is_uppercase) {
                 pascal += 1;
             } else if base.len() > 1
-                && base.chars().next().map_or(false, char::is_lowercase)
+                && base.chars().next().is_some_and(char::is_lowercase)
                 && base.chars().any(char::is_uppercase)
             {
                 camel += 1;
@@ -338,8 +338,8 @@ impl StructureAnalyzer {
     fn compute_quality_score(
         top_level_dirs: &[String],
         detected_layers: &[String],
-        naming: &NamingConvention,
-        test_pattern: &TestPattern,
+        naming: NamingConvention,
+        test_pattern: TestPattern,
         depth_dist: &HashMap<usize, usize>,
     ) -> f64 {
         let mut score = 0.0;

@@ -98,7 +98,7 @@ impl PatternMatcher {
             Self::score_naming(analysis, entry, &mut match_details, &mut mismatch_details);
 
         // Weighted average: folders 40%, layers 40%, naming 20%
-        let overall_score = folder_layout_score * 0.40 + layer_score * 0.40 + naming_score * 0.20;
+        let overall_score = naming_score.mul_add(0.20, folder_layout_score.mul_add(0.40, layer_score * 0.40));
 
         PatternMatchScore {
             catalog_id: entry.metadata().short_code.clone(),

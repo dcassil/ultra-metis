@@ -410,7 +410,7 @@ mod tests {
     fn test_gate_type_identifiers_are_unique() {
         let ids: Vec<&str> = GateType::all().iter().map(super::GateType::identifier).collect();
         let mut deduped = ids.clone();
-        deduped.sort();
+        deduped.sort_unstable();
         deduped.dedup();
         assert_eq!(ids.len(), deduped.len());
     }

@@ -124,7 +124,7 @@ impl Initiative {
     }
 
     fn next_phase_in_sequence(current: Phase) -> Option<Phase> {
-        use Phase::*;
+        use Phase::{Discovery, Design, Ready, Decompose, Active, Completed};
         match current {
             Discovery => Some(Design),
             Design => Some(Ready),

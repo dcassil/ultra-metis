@@ -30,7 +30,7 @@ struct EslintMessage {
 }
 
 impl ToolOutputParser for EslintParser {
-    fn tool_name(&self) -> &str {
+    fn tool_name(&self) -> &'static str {
         "eslint"
     }
 

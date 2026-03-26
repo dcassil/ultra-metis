@@ -9,6 +9,7 @@ use std::path::Path;
 use tera::{Context, Tera};
 
 /// A Task is a concrete unit of work, requiring a parent (Story, Epic, or Initiative).
+///
 /// Phases: Backlog → Todo → Active → Completed
 /// Also supports Blocked state: Active → Blocked, Todo → Blocked, Blocked → Todo/Active
 #[derive(Debug)]

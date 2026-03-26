@@ -1379,7 +1379,6 @@ fn extract_import_linter_layers(
             if line.starts_with(' ') || line.starts_with('\t') || trimmed.starts_with('-') {
                 let module = trimmed
                     .trim_start_matches('-')
-                    .trim()
                     .split_whitespace()
                     .next()
                     .unwrap_or("")
@@ -1637,7 +1636,7 @@ impl RulesConfigAnalyzer {
         };
 
         // Quality score: weighted combination of config scores
-        let structure_quality_score = quality.score * 0.5 + layering.score * 0.5;
+        let structure_quality_score = quality.score.mul_add(0.5, layering.score * 0.5);
 
         StructureAnalysis {
             top_level_dirs: base.top_level_dirs,

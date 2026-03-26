@@ -502,7 +502,7 @@ mod tests {
     fn test_all_entries_have_unique_project_types() {
         let entries = builtin_entries();
         let mut types: Vec<&str> = entries.iter().map(|e| e.project_type.as_str()).collect();
-        types.sort();
+        types.sort_unstable();
         types.dedup();
         assert_eq!(types.len(), 5);
     }

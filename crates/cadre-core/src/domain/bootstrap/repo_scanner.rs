@@ -417,7 +417,13 @@ impl RepoScanner {
         }
         if file_names
             .iter()
-            .any(|f| f.ends_with(".csproj") || f.ends_with(".sln") || f.ends_with(".fsproj"))
+            .any(|f| {
+                Path::new(f.as_str()).extension().is_some_and(|ext| {
+                    ext.eq_ignore_ascii_case("csproj")
+                        || ext.eq_ignore_ascii_case("sln")
+                        || ext.eq_ignore_ascii_case("fsproj")
+                })
+            })
         {
             managers.push(PackageManager::DotNet);
         }

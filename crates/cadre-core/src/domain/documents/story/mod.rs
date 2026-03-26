@@ -9,6 +9,7 @@ use std::path::Path;
 use tera::{Context, Tera};
 
 /// A Story is an implementable slice of work within an Epic, typed by purpose.
+///
 /// Phases: Discovery → Design → Ready → Active → Completed
 /// Also supports Blocked state: Active → Blocked, Blocked → Ready/Active
 /// Parent must be an Epic.

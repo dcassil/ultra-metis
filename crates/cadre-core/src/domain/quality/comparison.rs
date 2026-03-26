@@ -197,10 +197,8 @@ impl BaselineComparisonEngine {
             } else {
                 QualityStatus::Fail
             }
-        } else if has_improvements || has_resolved {
-            QualityStatus::Pass
         } else {
-            QualityStatus::Pass // No changes = pass
+            QualityStatus::Pass // Improvements, resolved findings, or no changes
         }
     }
 

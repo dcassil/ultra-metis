@@ -42,10 +42,10 @@ impl MetricCheckResult {
             }
             ThresholdType::RelativeRegression(max_pct) => {
                 let baseline = self.baseline_value.unwrap_or(0.0);
-                let pct_change = if baseline != 0.0 {
-                    ((self.actual_value - baseline) / baseline) * 100.0
-                } else {
+                let pct_change = if baseline == 0.0 {
                     0.0
+                } else {
+                    ((self.actual_value - baseline) / baseline) * 100.0
                 };
                 format!(
                     "{}: regressed {:.1}% (baseline: {}, current: {}, max allowed: {}%)",
@@ -231,7 +231,7 @@ impl GateCheckEngine {
 
             ThresholdType::Trend(requirement) => {
                 let (passed, delta) =
-                    Self::check_trend(&rule.metric, actual_value, requirement, trend_history);
+                    Self::check_trend(&rule.metric, actual_value, *requirement, trend_history);
 
                 MetricCheckResult {
                     metric: rule.metric.clone(),
@@ -250,7 +250,7 @@ impl GateCheckEngine {
     fn check_trend(
         metric: &str,
         current_value: f64,
-        requirement: &TrendRequirement,
+        requirement: TrendRequirement,
         trend_history: Option<&[HashMap<String, f64>]>,
     ) -> (bool, f64) {
         let history = match trend_history {

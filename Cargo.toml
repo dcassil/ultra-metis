@@ -41,60 +41,38 @@ nursery = { level = "warn", priority = -1 }
 large_enum_variant = "warn"
 wildcard_imports = "warn"
 
-# --- Structural lints: enforced after restructuring (SMET-I-0085 to I-0088) ---
-too_many_lines = "allow"            # 24 violations — fix in crate restructuring
-too_many_arguments = "allow"        # 11 violations — fix in crate restructuring
-cognitive_complexity = "allow"      # 4 violations — fix in crate restructuring
+# --- Structural lints: fix in crate restructuring (SMET-I-0085 to I-0088) ---
+too_many_lines = "allow"            # 45 violations — fix in crate restructuring
+too_many_arguments = "allow"        # 16 violations — fix in crate restructuring
+cognitive_complexity = "allow"      # 8 violations — fix in crate restructuring
 
-# --- Pedantic lints we allow (too noisy for bulk adoption, fix incrementally) ---
-module_name_repetitions = "allow"   # 560 hits — common in domain types
-must_use_candidate = "allow"        # 512 hits — too many constructors/builders/non-pure fns; case-by-case ratio too low to enforce
-missing_errors_doc = "allow"        # 253 hits — docs cleanup is separate effort
-missing_panics_doc = "allow"        # 51 hits — docs cleanup is separate effort
-items_after_statements = "allow"    # Style preference, not a correctness issue
-similar_names = "allow"             # 31 hits — false positives on domain terms
-cast_possible_truncation = "allow"  # 38 hits — needs case-by-case audit
-cast_sign_loss = "allow"            # Safe casts in our context (lengths, counts)
-cast_precision_loss = "allow"       # Safe casts in our context
-doc_markdown = "allow"              # 127 hits — backtick enforcement in docs
-option_if_let_else = "allow"        # 56 hits — nursery, sometimes less readable
-return_self_not_must_use = "allow"  # Builder pattern types
-unreadable_literal = "allow"        # Numeric literals in thresholds/scores
-struct_excessive_bools = "allow"    # Domain types with boolean flags
-match_same_arms = "allow"           # 24 hits — sometimes intentional for clarity
-# --- Additional high-volume allows ---
-missing_const_for_fn = "allow"      # 207 hits — nursery lint with high false-positive rate; many flagged fns allocate or call non-const methods
-manual_let_else = "allow"           # 49 hits — not auto-fixable by cargo clippy --fix
-if_not_else = "allow"               # Style preference — `if !x` is often clearer
-redundant_else = "allow"            # Style preference
-float_cmp = "allow"                 # 28 hits in tests — assert_eq! on f64 is fine in tests
-case_sensitive_file_extension_comparisons = "allow"  # 5 hits — known extensions
-used_underscore_binding = "allow"   # 6 hits — intentional unused markers
-trivially_copy_pass_by_ref = "allow"  # Small Copy types passed by ref
-manual_string_new = "allow"         # String::from("") vs String::new()
-single_match_else = "allow"         # match with one arm + else
-map_unwrap_or = "allow"             # Nursery — sometimes less readable
-redundant_pub_crate = "allow"       # Nursery — visibility is intentional
-significant_drop_tightening = "allow"  # Nursery — false positives
-suboptimal_flops = "allow"          # Nursery — not applicable to our math
-string_lit_as_bytes = "allow"       # b"..." vs "...".as_bytes()
-useless_let_if_seq = "allow"        # Nursery — sometimes clearer with let + if
-format_push_string = "allow"        # 77 hits — push_str vs write! style preference
-unused_async = "allow"              # 62 hits — nursery, async fns needed for trait conformance
-cast_possible_wrap = "allow"        # 16 hits — safe in our u32/i64 context
-stable_sort_primitive = "allow"     # 6 hits — nursery, sort() vs sort_unstable()
-unused_self = "allow"               # 6 hits — methods that take &self for API consistency
-needless_collect = "allow"          # 5 hits — nursery, sometimes needed for borrow checker
-unnecessary_literal_bound = "allow" # 4 hits — nursery
-regex_creation_in_loops = "allow"   # 4 hits — nursery, fix later
-too_long_first_doc_paragraph = "allow"  # 3 hits — docs style
-unnecessary_map_or = "allow"        # Nursery — readability preference
-unnecessary_debug_formatting = "allow"  # Nursery
-missing_fields_in_debug = "allow"   # Nursery
-if_same_then_else = "allow"         # 2 hits — sometimes intentional
-enum_glob_use = "allow"             # 2 hits — `use Enum::*` in match arms
-trim_split_whitespace = "allow"     # Nursery
-future_not_send = "allow"           # Nursery — async fns with non-Send refs in benchmarks
-match_wildcard_for_single_variants = "allow"  # Style preference
-new_without_default = "allow"       # Domain types where Default doesn't apply
-range_plus_one = "allow"            # Style preference
+# --- Permanent style allows ---
+# Lints where both styles are acceptable; we chose one.
+struct_excessive_bools = "allow"    # PERMANENT: domain types legitimately have boolean flag fields
+missing_fields_in_debug = "allow"   # PERMANENT: manual Debug impls intentionally skip closure fields
+future_not_send = "allow"           # PERMANENT: nursery; async fns with non-Send refs in benchmarks are fine
+return_self_not_must_use = "allow"  # PERMANENT: builder-pattern types return Self without #[must_use]
+float_cmp = "allow"                 # PERMANENT: assert_eq! on f64 in tests is fine; 32 hits
+
+# --- High-volume deferred allows ---
+# Lints to revisit in future cleanup passes.
+must_use_candidate = "allow"        # 539 violations — too many constructors/builders; case-by-case ratio too low
+missing_errors_doc = "allow"        # 343 violations — docs cleanup is separate effort
+doc_markdown = "allow"              # 215 violations — backtick enforcement in docs
+missing_const_for_fn = "allow"      # 214 violations — nursery; high false-positive rate on fns that allocate
+format_push_string = "allow"        # 106 violations — push_str vs write! style preference
+module_name_repetitions = "allow"   # 98 violations — common in domain types (e.g., DocType in doc module)
+unused_async = "allow"              # 95 violations — nursery; async fns needed for trait conformance
+option_if_let_else = "allow"        # 69 violations — nursery; often less readable than if-let
+manual_let_else = "allow"           # 67 violations — not auto-fixable by cargo clippy --fix
+map_unwrap_or = "allow"             # 62 violations — nursery; sometimes less readable
+cast_precision_loss = "allow"       # 59 violations — safe casts in our context (f64 from usize counts)
+cast_possible_truncation = "allow"  # 45 violations — needs case-by-case audit
+similar_names = "allow"             # 33 violations — false positives on domain terms
+match_same_arms = "allow"           # 26 violations — sometimes intentional for clarity
+cast_possible_wrap = "allow"        # 18 violations — safe in our u32/i64 context
+unused_self = "allow"               # 12 violations — methods that take &self for API consistency
+cast_sign_loss = "allow"            # 11 violations — safe casts (lengths, counts)
+needless_collect = "allow"          # 10 violations — nursery; sometimes needed for borrow checker
+missing_panics_doc = "allow"        # 7 violations — docs cleanup is separate effort
+regex_creation_in_loops = "allow"   # 6 violations — nursery; needs structural refactor to hoist regex

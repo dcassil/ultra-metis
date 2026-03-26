@@ -51,7 +51,7 @@ impl BenchmarkAnalysis {
                     total_gates += 1;
                     match gate.gate_decision {
                         GateDecision::RequiresRework | GateDecision::Rejected => errors_caught += 1,
-                        _ => {}
+                        GateDecision::Approved => {}
                     }
                 }
             }

@@ -369,7 +369,7 @@ mod tests {
     fn test_loop_identifiers_are_unique() {
         let ids: Vec<&str> = LoopKind::all().iter().map(super::LoopKind::identifier).collect();
         let mut deduped = ids.clone();
-        deduped.sort();
+        deduped.sort_unstable();
         deduped.dedup();
         assert_eq!(ids.len(), deduped.len());
     }

@@ -34,17 +34,14 @@ impl ReadReferenceArchitectureTool {
             let ra = all_docs
                 .iter()
                 .find(|d| d.document_type == "reference_architecture");
-            match ra {
-                Some(d) => d.short_code.clone(),
-                None => {
-                    let text = "No reference architecture found. Create one first.".to_string();
-                    return Ok(CallToolResult {
-                        content: vec![TextContent::new(text, None, None).into()],
-                        is_error: None,
-                        meta: None,
-                        structured_content: None,
-                    });
-                }
+            if let Some(d) = ra { d.short_code.clone() } else {
+                let text = "No reference architecture found. Create one first.".to_string();
+                return Ok(CallToolResult {
+                    content: vec![TextContent::new(text, None, None).into()],
+                    is_error: None,
+                    meta: None,
+                    structured_content: None,
+                });
             }
         };
 

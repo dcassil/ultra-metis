@@ -22,6 +22,7 @@ use std::sync::Arc;
 pub struct CadreServerHandler;
 
 impl CadreServerHandler {
+    #[allow(clippy::new_without_default)] // new() has logging side-effects
     pub fn new() -> Self {
         log("CadreServerHandler::new() called");
         Self

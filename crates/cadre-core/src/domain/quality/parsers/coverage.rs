@@ -15,7 +15,7 @@ use crate::domain::quality::types::{MetricEntry, ParsedToolOutput};
 pub struct CoverageParser;
 
 impl ToolOutputParser for CoverageParser {
-    fn tool_name(&self) -> &str {
+    fn tool_name(&self) -> &'static str {
         "coverage"
     }
 

@@ -115,7 +115,7 @@ fn get_cadre_template() -> anyhow::Result<String> {
         .join("docs")
         .join(format!("{init_code}.md"));
     std::fs::read_to_string(&doc_path)
-        .with_context(|| format!("cadre: could not read {doc_path:?}"))
+        .with_context(|| format!("cadre: could not read {}", doc_path.display()))
 }
 
 /// Get the blank initiative template from original metis.

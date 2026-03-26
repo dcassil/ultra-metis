@@ -187,7 +187,7 @@ fn run_tool_workflow<A: ExecutionAdapter>(
     )?;
 
     Ok(McpToolRun {
-        system: system_name(&adapter.system_under_test()).to_string(),
+        system: system_name(adapter.system_under_test()).to_string(),
         tool_surface: "mcp-stdio".to_string(),
         startup_ok: true,
         tools_available: tool_names,
@@ -257,7 +257,7 @@ fn extract_short_code(text: &str, prefix: &str) -> Option<String> {
         .map(ToString::to_string)
 }
 
-fn system_name(system: &SystemUnderTest) -> &'static str {
+fn system_name(system: SystemUnderTest) -> &'static str {
     match system {
         SystemUnderTest::OriginalMetis => "original-metis",
         SystemUnderTest::CadreMcp => "cadre-mcp",

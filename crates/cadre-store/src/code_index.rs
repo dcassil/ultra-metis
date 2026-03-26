@@ -200,27 +200,24 @@ impl CodeIndexer {
         source: &str,
         kind: &SymbolKind,
     ) -> Option<String> {
-        match kind {
-            SymbolKind::Impl => {
-                // For impl blocks, extract the type name
-                let mut cursor = node.walk();
-                for child in node.children(&mut cursor) {
-                    if child.kind() == "type_identifier" || child.kind() == "generic_type" {
-                        return Some(child.utf8_text(source.as_bytes()).ok()?.to_string());
-                    }
+        if kind == &SymbolKind::Impl {
+            // For impl blocks, extract the type name
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                if child.kind() == "type_identifier" || child.kind() == "generic_type" {
+                    return Some(child.utf8_text(source.as_bytes()).ok()?.to_string());
                 }
-                None
             }
-            _ => {
-                // For most items, the name is in the first "name" or identifier child
-                let mut cursor = node.walk();
-                for child in node.children(&mut cursor) {
-                    if child.kind() == "identifier" || child.kind() == "type_identifier" {
-                        return Some(child.utf8_text(source.as_bytes()).ok()?.to_string());
-                    }
+            None
+        } else {
+            // For most items, the name is in the first "name" or identifier child
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                if child.kind() == "identifier" || child.kind() == "type_identifier" {
+                    return Some(child.utf8_text(source.as_bytes()).ok()?.to_string());
                 }
-                None
             }
+            None
         }
     }
 

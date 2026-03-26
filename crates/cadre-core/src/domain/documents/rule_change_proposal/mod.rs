@@ -389,22 +389,19 @@ impl RuleChangeProposal {
         target: Option<RuleChangeStatus>,
     ) -> Result<RuleChangeStatus, DocumentValidationError> {
         let current = self.proposal_status;
-        let new_status = match target {
-            Some(s) => {
-                if !current.can_transition_to(s) {
-                    return Err(DocumentValidationError::InvalidContent(format!(
-                        "Cannot transition rule change status from {current} to {s}"
-                    )));
-                }
-                s
+        let new_status = if let Some(s) = target {
+            if !current.can_transition_to(s) {
+                return Err(DocumentValidationError::InvalidContent(format!(
+                    "Cannot transition rule change status from {current} to {s}"
+                )));
             }
-            None => {
-                let transitions = current.valid_transitions();
-                if transitions.is_empty() {
-                    return Ok(current);
-                }
-                transitions[0]
+            s
+        } else {
+            let transitions = current.valid_transitions();
+            if transitions.is_empty() {
+                return Ok(current);
             }
+            transitions[0]
         };
 
         self.proposal_status = new_status;
@@ -711,7 +708,7 @@ mod tests {
     #[test]
     fn test_validation_empty_title() {
         let rcp = RuleChangeProposal::new(
-            "".to_string(),
+            String::new(),
             vec![Tag::Phase(Phase::Draft)],
             false,
             "RCP-0002".to_string(),
@@ -732,7 +729,7 @@ mod tests {
             vec![Tag::Phase(Phase::Draft)],
             false,
             "RCP-0003".to_string(),
-            "".to_string(),
+            String::new(),
             RuleChangeType::Modify,
             RuleChangeStatus::Proposed,
             None,

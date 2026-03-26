@@ -69,7 +69,7 @@ pub trait Document {
                 .unwrap_or(lines.len());
 
             let mut updated_lines = Vec::new();
-            updated_lines.extend_from_slice(&lines[..section_start + 1]);
+            updated_lines.extend_from_slice(&lines[..=section_start]);
 
             if append {
                 updated_lines.extend_from_slice(&lines[section_start + 1..section_end]);
@@ -97,11 +97,11 @@ pub trait Document {
         } else {
             let mut updated_lines: Vec<String> = lines.iter().map(std::string::ToString::to_string).collect();
             if !updated_lines.is_empty() {
-                updated_lines.push("".to_string());
+                updated_lines.push(String::new());
             }
             updated_lines.push(target_heading);
             if !content.trim().is_empty() {
-                updated_lines.push("".to_string());
+                updated_lines.push(String::new());
                 for line in content.lines() {
                     updated_lines.push(line.to_string());
                 }

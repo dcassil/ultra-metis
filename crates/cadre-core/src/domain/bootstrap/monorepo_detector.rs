@@ -255,7 +255,10 @@ impl MonorepoDetector {
         }
 
         // .NET solution
-        if all_file_names.iter().any(|f| f.ends_with(".sln")) {
+        if all_file_names
+            .iter()
+            .any(|f| std::path::Path::new(f.as_str()).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("sln")))
+        {
             let has_multiple_projects = file_paths
                 .iter()
                 .filter(|p| {

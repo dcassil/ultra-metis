@@ -1194,13 +1194,12 @@ impl DocumentStore {
         for line in &mut lines {
             let trimmed = line.trim();
             if trimmed == "---" {
-                if !frontmatter_start_seen {
-                    frontmatter_start_seen = true;
-                    in_frontmatter = true;
-                    continue;
-                } else {
+                if frontmatter_start_seen {
                     break; // End of frontmatter
                 }
+                frontmatter_start_seen = true;
+                in_frontmatter = true;
+                continue;
             }
             if in_frontmatter && trimmed.starts_with(&prefix) {
                 *line = format!("{field}: {new_value}");

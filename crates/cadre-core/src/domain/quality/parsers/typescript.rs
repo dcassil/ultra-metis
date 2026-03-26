@@ -9,7 +9,7 @@ use regex::Regex;
 pub struct TypeScriptParser;
 
 impl ToolOutputParser for TypeScriptParser {
-    fn tool_name(&self) -> &str {
+    fn tool_name(&self) -> &'static str {
         "typescript"
     }
 

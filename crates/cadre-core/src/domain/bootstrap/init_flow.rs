@@ -121,7 +121,11 @@ impl BootstrapFlow {
         });
         let has_components = file_paths.iter().any(|p| {
             p.contains("/components/")
-                && (p.ends_with(".tsx") || p.ends_with(".jsx") || p.ends_with(".vue"))
+                && std::path::Path::new(p).extension().is_some_and(|ext| {
+                    ext.eq_ignore_ascii_case("tsx")
+                        || ext.eq_ignore_ascii_case("jsx")
+                        || ext.eq_ignore_ascii_case("vue")
+                })
         });
         let has_features = file_paths.iter().any(|p| p.contains("/features/"));
         let has_stories = file_paths.iter().any(|p| p.contains(".stories."));

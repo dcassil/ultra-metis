@@ -134,8 +134,6 @@ impl GateScorer {
         let rework_tokens = issues.len() as u64 * REWORK_TOKENS_PER_ISSUE;
         let gate_decision = if blocking_failures > 0 {
             GateDecision::Rejected
-        } else if issues.len() > 2 {
-            GateDecision::RequiresRework
         } else if !issues.is_empty() {
             GateDecision::RequiresRework
         } else {
