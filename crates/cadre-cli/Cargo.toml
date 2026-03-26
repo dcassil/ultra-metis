@@ -13,6 +13,8 @@ path = "src/main.rs"
 [dependencies]
 cadre-core = { path = "../cadre-core" }
 cadre-store = { path = "../cadre-store" }
+cadre-mcp = { path = "../cadre-mcp" }
 clap = { version = "4.0", features = ["derive"] }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
+tokio = { workspace = true }

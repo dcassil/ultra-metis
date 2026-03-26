@@ -24,6 +24,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Launch the MCP server for external integrations (e.g., Claude Code)
+    Mcp,
+
     /// Initialize a new Cadre project
     Init {
         /// Project root directory (default: current directory)
@@ -509,10 +512,21 @@ enum TraceCommands {
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
+    // Handle MCP subcommand separately (async, different error type)
+    if matches!(cli.command, Commands::Mcp) {
+        if let Err(e) = cadre_mcp_server::run().await {
+            eprintln!("MCP server error: {}", e);
+            std::process::exit(1);
+        }
+        return;
+    }
+
     let result = match cli.command {
+        Commands::Mcp => unreachable!(),
         Commands::Init { path, prefix } => cmd_init(&path, &prefix),
         Commands::List {
             path,

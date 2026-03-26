@@ -16,18 +16,57 @@ use rust_mcp_sdk::{
     },
     McpServer, StdioTransport, ToMcpServerHandler, TransportOptions,
 };
-use tracing::info;
+use std::io::Write;
+
+pub fn log(msg: &str) {
+    let log_path = std::env::temp_dir().join("cadre-mcp-debug.log");
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_path)
+    {
+        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f");
+        let _ = writeln!(f, "[{}] {}", now, msg);
+    }
+}
 
 /// Run the MCP server
 pub async fn run() -> Result<()> {
-    // Initialize logging to stderr (stdout is reserved for MCP protocol)
-    let _ = tracing_subscriber::fmt()
-        .with_writer(std::io::stderr)
-        .with_ansi(false)
-        .with_max_level(tracing::Level::WARN)
-        .try_init();
+    log("=== cadre-mcp starting ===");
+    log(&format!("PID: {}", std::process::id()));
+    log(&format!("version: {}", env!("CARGO_PKG_VERSION")));
+    log(&format!("args: {:?}", std::env::args().collect::<Vec<_>>()));
 
-    info!("Starting Cadre MCP Server");
+    // Initialize logging to a file (stderr may not be visible, stdout is MCP protocol)
+    let log_path = std::env::temp_dir().join("cadre-mcp-tracing.log");
+    log(&format!("tracing log path: {}", log_path.display()));
+
+    let log_file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_path);
+
+    match log_file {
+        Ok(file) => {
+            let _ = tracing_subscriber::fmt()
+                .with_writer(std::sync::Mutex::new(file))
+                .with_ansi(false)
+                .with_max_level(tracing::Level::DEBUG)
+                .try_init();
+            log("tracing initialized to file");
+        }
+        Err(e) => {
+            log(&format!("failed to open tracing log: {}", e));
+            let _ = tracing_subscriber::fmt()
+                .with_writer(std::io::stderr)
+                .with_ansi(false)
+                .with_max_level(tracing::Level::DEBUG)
+                .try_init();
+        }
+    }
+
+    tracing::info!("Starting Cadre MCP Server");
+    log("building server_details (InitializeResult)");
 
     let server_details = InitializeResult {
         server_info: Implementation {
@@ -49,11 +88,40 @@ pub async fn run() -> Result<()> {
         protocol_version: LATEST_PROTOCOL_VERSION.to_string(),
     };
 
-    let transport = StdioTransport::new(TransportOptions::default())
-        .map_err(|e| anyhow::anyhow!("Failed to create transport: {}", e))?;
+    log(&format!(
+        "protocol_version: {}",
+        server_details.protocol_version
+    ));
+    log(&format!(
+        "instructions length: {} chars",
+        server_details
+            .instructions
+            .as_ref()
+            .map(|s| s.len())
+            .unwrap_or(0)
+    ));
+    log(&format!(
+        "capabilities: tools={:?}",
+        server_details.capabilities.tools.is_some()
+    ));
 
+    log("creating StdioTransport");
+    let transport = match StdioTransport::new(TransportOptions::default()) {
+        Ok(t) => {
+            log("StdioTransport created successfully");
+            t
+        }
+        Err(e) => {
+            log(&format!("FATAL: Failed to create StdioTransport: {}", e));
+            return Err(anyhow::anyhow!("Failed to create transport: {}", e));
+        }
+    };
+
+    log("creating CadreServerHandler");
     let handler = CadreServerHandler::new().to_mcp_server_handler();
+    log("handler created and wrapped");
 
+    log("creating server runtime");
     let server = server_runtime::create_server(McpServerOptions {
         server_details,
         transport,
@@ -62,11 +130,17 @@ pub async fn run() -> Result<()> {
         client_task_store: None,
     });
 
-    info!("MCP Server starting on stdio transport");
-    server
-        .start()
-        .await
-        .map_err(|e| anyhow::anyhow!("MCP server failed to start: {}", e))?;
+    log("calling server.start().await — entering MCP event loop");
+    tracing::info!("MCP Server starting on stdio transport");
 
-    Ok(())
+    match server.start().await {
+        Ok(()) => {
+            log("server.start() returned Ok — clean shutdown");
+            Ok(())
+        }
+        Err(e) => {
+            log(&format!("server.start() returned Err: {}", e));
+            Err(anyhow::anyhow!("MCP server failed: {}", e))
+        }
+    }
 }

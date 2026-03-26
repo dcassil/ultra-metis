@@ -8,6 +8,7 @@ use crate::tools::{
     QueryRulesTool, ReadReferenceArchitectureTool, ReassignParentTool, ReadDocumentTool,
     ScoreInsightNoteTool, SearchDocumentsTool, TraceAncestryTool, TransitionPhaseTool,
 };
+use crate::log;
 use async_trait::async_trait;
 use rust_mcp_sdk::{
     mcp_server::ServerHandler,
@@ -17,13 +18,12 @@ use rust_mcp_sdk::{
     McpServer,
 };
 use std::sync::Arc;
-use tracing::info;
 
 pub struct CadreServerHandler;
 
 impl CadreServerHandler {
     pub fn new() -> Self {
-        info!("Initializing Cadre MCP Server");
+        log("CadreServerHandler::new() called");
         Self
     }
 }
@@ -35,8 +35,10 @@ impl ServerHandler for CadreServerHandler {
         _params: Option<PaginatedRequestParams>,
         _runtime: Arc<dyn McpServer>,
     ) -> Result<ListToolsResult, RpcError> {
+        let tools = CadreTools::tools();
+        log(&format!("handle_list_tools_request: returning {} tools", tools.len()));
         Ok(ListToolsResult {
-            tools: CadreTools::tools(),
+            tools,
             meta: None,
             next_cursor: None,
         })
@@ -48,8 +50,9 @@ impl ServerHandler for CadreServerHandler {
         _runtime: Arc<dyn McpServer>,
     ) -> Result<CallToolResult, rust_mcp_sdk::schema::schema_utils::CallToolError> {
         let args = serde_json::Value::Object(params.arguments.unwrap_or_default());
+        log(&format!("handle_call_tool_request: tool='{}' args_keys={:?}", params.name, args.as_object().map(|o| o.keys().collect::<Vec<_>>())));
 
-        match params.name.as_str() {
+        let result = match params.name.as_str() {
             "initialize_project" => {
                 let tool: InitializeProjectTool = serde_json::from_value(args)
                     .map_err(rust_mcp_sdk::schema::schema_utils::CallToolError::new)?;
@@ -195,9 +198,19 @@ impl ServerHandler for CadreServerHandler {
                     .map_err(rust_mcp_sdk::schema::schema_utils::CallToolError::new)?;
                 tool.call_tool().await
             }
-            _ => Err(
-                rust_mcp_sdk::schema::schema_utils::CallToolError::unknown_tool(params.name),
-            ),
+            _ => {
+                log(&format!("unknown tool: {}", params.name));
+                Err(
+                    rust_mcp_sdk::schema::schema_utils::CallToolError::unknown_tool(params.name),
+                )
+            }
+        };
+
+        match &result {
+            Ok(_) => log(&format!("tool call succeeded")),
+            Err(e) => log(&format!("tool call failed: {:?}", e)),
         }
+
+        result
     }
 }

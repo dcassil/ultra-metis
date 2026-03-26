@@ -240,9 +240,11 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "cadre-core",
+ "cadre-mcp",
  "cadre-store",
  "clap",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -283,6 +285,7 @@ dependencies = [
  "async-trait",
  "cadre-core",
  "cadre-store",
+ "chrono",
  "futures",
  "glob",
  "rust-mcp-sdk",
