@@ -8,6 +8,7 @@ use cadre_core::{
     EslintParser, FeedbackSignal, InsightCategory, InsightScope, NoteStatus, RelationshipType,
     RulesConfig, ToolOutputParser, TraceabilityIndex, TypeScriptParser,
 };
+use cadre_store::store::DocumentSummary;
 use cadre_store::DocumentStore;
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
@@ -525,7 +526,14 @@ async fn main() {
         return;
     }
 
-    let result = match cli.command {
+    if let Err(e) = dispatch_command(cli.command) {
+        eprintln!("Error: {e}");
+        std::process::exit(1);
+    }
+}
+
+fn dispatch_command(command: Commands) -> Result<(), String> {
+    match command {
         Commands::Mcp => unreachable!(),
         Commands::Init { path, prefix } => cmd_init(&path, &prefix),
         Commands::List {
@@ -573,135 +581,145 @@ async fn main() {
             all,
             path,
         } => cmd_validate(&path, short_code.as_deref(), all),
-        Commands::Quality { command } => match command {
-            QualityCommands::Capture {
-                tool,
-                output,
-                linked_rules,
-                path,
-            } => cmd_quality_capture(&path, &tool, &output, linked_rules.as_deref()),
-            QualityCommands::Compare {
-                before,
-                after,
-                path,
-            } => cmd_quality_compare(&path, &before, &after),
-            QualityCommands::List {
-                status,
-                limit,
-                path,
-            } => cmd_quality_list(&path, status.as_deref(), limit),
-        },
-        Commands::Rules { command } => match command {
-            RulesCommands::Query {
-                scope,
-                protection_level,
-                source_arch,
-                include_archived,
-                path,
-            } => cmd_rules_query(
-                &path,
-                scope.as_deref(),
-                protection_level.as_deref(),
-                source_arch.as_deref(),
-                include_archived,
-            ),
-            RulesCommands::Applicable { scope, path } => cmd_rules_applicable(&path, &scope),
-            RulesCommands::Protected { path } => cmd_rules_protected(&path),
-        },
-        Commands::Notes { command } => match command {
-            NotesCommands::Create {
-                title,
-                note,
-                category,
-                scope_repo,
-                scope_package,
-                scope_subsystem,
-                scope_paths,
-                scope_symbols,
-                path,
-            } => cmd_notes_create(
-                &path,
-                &title,
-                &note,
-                &category,
-                scope_repo.as_deref(),
-                scope_package.as_deref(),
-                scope_subsystem.as_deref(),
-                scope_paths.as_deref(),
-                scope_symbols.as_deref(),
-            ),
-            NotesCommands::Fetch {
-                scope_repo,
-                scope_package,
-                scope_subsystem,
-                scope_paths,
-                scope_symbols,
-                limit,
-                path,
-            } => cmd_notes_fetch(
-                &path,
-                scope_repo.as_deref(),
-                scope_package.as_deref(),
-                scope_subsystem.as_deref(),
-                scope_paths.as_deref(),
-                scope_symbols.as_deref(),
-                limit,
-            ),
-            NotesCommands::Score {
-                short_code,
-                signal,
-                path,
-            } => cmd_notes_score(&path, &short_code, &signal),
-            NotesCommands::List {
-                status,
-                category,
-                include_archived,
-                path,
-            } => cmd_notes_list(
-                &path,
-                status.as_deref(),
-                category.as_deref(),
-                include_archived,
-            ),
-        },
-        Commands::Trace { command } => match command {
-            TraceCommands::Create {
-                source,
-                target,
-                rel_type,
-                description,
-                bidirectional,
-                path,
-            } => cmd_trace_create(
-                &path,
-                &source,
-                &target,
-                &rel_type,
-                description.as_deref(),
-                bidirectional,
-            ),
-            TraceCommands::Query {
-                short_code,
-                direction,
-                rel_type,
-                path,
-            } => cmd_trace_query(&path, &short_code, &direction, rel_type.as_deref()),
-            TraceCommands::Ancestry {
-                short_code,
-                direction,
-                path,
-            } => cmd_trace_ancestry(&path, &short_code, &direction),
-            TraceCommands::List {
-                rel_type,
-                involving,
-                path,
-            } => cmd_trace_list(&path, rel_type.as_deref(), involving.as_deref()),
-        },
-    };
+        Commands::Quality { command } => dispatch_quality(command),
+        Commands::Rules { command } => dispatch_rules(command),
+        Commands::Notes { command } => dispatch_notes(command),
+        Commands::Trace { command } => dispatch_trace(command),
+    }
+}
 
-    if let Err(e) = result {
-        eprintln!("Error: {e}");
-        std::process::exit(1);
+fn dispatch_quality(command: QualityCommands) -> Result<(), String> {
+    match command {
+        QualityCommands::Capture {
+            tool,
+            output,
+            linked_rules,
+            path,
+        } => cmd_quality_capture(&path, &tool, &output, linked_rules.as_deref()),
+        QualityCommands::Compare {
+            before,
+            after,
+            path,
+        } => cmd_quality_compare(&path, &before, &after),
+        QualityCommands::List {
+            status,
+            limit,
+            path,
+        } => cmd_quality_list(&path, status.as_deref(), limit),
+    }
+}
+
+fn dispatch_rules(command: RulesCommands) -> Result<(), String> {
+    match command {
+        RulesCommands::Query {
+            scope,
+            protection_level,
+            source_arch,
+            include_archived,
+            path,
+        } => cmd_rules_query(
+            &path,
+            scope.as_deref(),
+            protection_level.as_deref(),
+            source_arch.as_deref(),
+            include_archived,
+        ),
+        RulesCommands::Applicable { scope, path } => cmd_rules_applicable(&path, &scope),
+        RulesCommands::Protected { path } => cmd_rules_protected(&path),
+    }
+}
+
+fn dispatch_notes(command: NotesCommands) -> Result<(), String> {
+    match command {
+        NotesCommands::Create {
+            title,
+            note,
+            category,
+            scope_repo,
+            scope_package,
+            scope_subsystem,
+            scope_paths,
+            scope_symbols,
+            path,
+        } => {
+            let scope_args = ScopeArgs {
+                repo: scope_repo.as_deref(),
+                package: scope_package.as_deref(),
+                subsystem: scope_subsystem.as_deref(),
+                paths: scope_paths.as_deref(),
+                symbols: scope_symbols.as_deref(),
+            };
+            cmd_notes_create(&path, &title, &note, &category, &scope_args)
+        }
+        NotesCommands::Fetch {
+            scope_repo,
+            scope_package,
+            scope_subsystem,
+            scope_paths,
+            scope_symbols,
+            limit,
+            path,
+        } => cmd_notes_fetch(
+            &path,
+            scope_repo.as_deref(),
+            scope_package.as_deref(),
+            scope_subsystem.as_deref(),
+            scope_paths.as_deref(),
+            scope_symbols.as_deref(),
+            limit,
+        ),
+        NotesCommands::Score {
+            short_code,
+            signal,
+            path,
+        } => cmd_notes_score(&path, &short_code, &signal),
+        NotesCommands::List {
+            status,
+            category,
+            include_archived,
+            path,
+        } => cmd_notes_list(
+            &path,
+            status.as_deref(),
+            category.as_deref(),
+            include_archived,
+        ),
+    }
+}
+
+fn dispatch_trace(command: TraceCommands) -> Result<(), String> {
+    match command {
+        TraceCommands::Create {
+            source,
+            target,
+            rel_type,
+            description,
+            bidirectional,
+            path,
+        } => cmd_trace_create(
+            &path,
+            &source,
+            &target,
+            &rel_type,
+            description.as_deref(),
+            bidirectional,
+        ),
+        TraceCommands::Query {
+            short_code,
+            direction,
+            rel_type,
+            path,
+        } => cmd_trace_query(&path, &short_code, &direction, rel_type.as_deref()),
+        TraceCommands::Ancestry {
+            short_code,
+            direction,
+            path,
+        } => cmd_trace_ancestry(&path, &short_code, &direction),
+        TraceCommands::List {
+            rel_type,
+            involving,
+            path,
+        } => cmd_trace_list(&path, rel_type.as_deref(), involving.as_deref()),
     }
 }
 
@@ -889,69 +907,88 @@ fn cmd_status(path: &Path) -> Result<(), String> {
         }
     }
 
-    // Count child tasks per initiative
     let task_docs: Vec<_> = docs.iter().filter(|d| d.document_type == "task").collect();
 
-    // Initiatives section
-    if !initiatives.is_empty() {
-        println!("INITIATIVES");
+    print_initiatives_section(&initiatives, &task_docs);
+    print_active_tasks_section(&active_tasks);
+    print_status_summary(&docs, &type_counts, &phase_counts);
+
+    Ok(())
+}
+
+fn print_initiatives_section(
+    initiatives: &[&DocumentSummary],
+    task_docs: &[&DocumentSummary],
+) {
+    if initiatives.is_empty() {
+        return;
+    }
+
+    println!("INITIATIVES");
+    println!(
+        "{:<16} {:<36} {:<12} {:>5} {:>5} {:>5}",
+        "CODE", "TITLE", "PHASE", "TODO", "ACT", "DONE"
+    );
+    println!("{}", "-".repeat(85));
+    for init in initiatives {
+        let todo = task_docs
+            .iter()
+            .filter(|t| t.parent_id.as_deref() == Some(&*init.short_code) && t.phase == "todo")
+            .count();
+        let active = task_docs
+            .iter()
+            .filter(|t| t.parent_id.as_deref() == Some(&*init.short_code) && t.phase == "active")
+            .count();
+        let done = task_docs
+            .iter()
+            .filter(|t| {
+                t.parent_id.as_deref() == Some(&*init.short_code) && t.phase == "completed"
+            })
+            .count();
+        let title_trunc = if init.title.len() > 35 {
+            format!("{}...", &init.title[..32])
+        } else {
+            init.title.clone()
+        };
         println!(
             "{:<16} {:<36} {:<12} {:>5} {:>5} {:>5}",
-            "CODE", "TITLE", "PHASE", "TODO", "ACT", "DONE"
+            init.short_code, title_trunc, init.phase, todo, active, done
         );
-        println!("{}", "-".repeat(85));
-        for init in &initiatives {
-            let todo = task_docs
-                .iter()
-                .filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "todo")
-                .count();
-            let active = task_docs
-                .iter()
-                .filter(|t| t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "active")
-                .count();
-            let done = task_docs
-                .iter()
-                .filter(|t| {
-                    t.parent_id.as_deref() == Some(&init.short_code) && t.phase == "completed"
-                })
-                .count();
-            let title_trunc = if init.title.len() > 35 {
-                format!("{}...", &init.title[..32])
-            } else {
-                init.title.clone()
-            };
-            println!(
-                "{:<16} {:<36} {:<12} {:>5} {:>5} {:>5}",
-                init.short_code, title_trunc, init.phase, todo, active, done
-            );
-        }
-        println!();
+    }
+    println!();
+}
+
+fn print_active_tasks_section(active_tasks: &[&DocumentSummary]) {
+    if active_tasks.is_empty() {
+        return;
     }
 
-    // Active tasks section
-    if !active_tasks.is_empty() {
-        println!("ACTIVE TASKS");
+    println!("ACTIVE TASKS");
+    println!(
+        "{:<16} {:<40} {:<16} {:<8}",
+        "CODE", "TITLE", "PARENT", "PHASE"
+    );
+    println!("{}", "-".repeat(80));
+    for task in active_tasks {
+        let parent = task.parent_id.as_deref().unwrap_or("-");
+        let title_trunc = if task.title.len() > 39 {
+            format!("{}...", &task.title[..36])
+        } else {
+            task.title.clone()
+        };
         println!(
             "{:<16} {:<40} {:<16} {:<8}",
-            "CODE", "TITLE", "PARENT", "PHASE"
+            task.short_code, title_trunc, parent, task.phase
         );
-        println!("{}", "-".repeat(80));
-        for task in &active_tasks {
-            let parent = task.parent_id.as_deref().unwrap_or("-");
-            let title_trunc = if task.title.len() > 39 {
-                format!("{}...", &task.title[..36])
-            } else {
-                task.title.clone()
-            };
-            println!(
-                "{:<16} {:<40} {:<16} {:<8}",
-                task.short_code, title_trunc, parent, task.phase
-            );
-        }
-        println!();
     }
+    println!();
+}
 
-    // Summary
+fn print_status_summary(
+    docs: &[DocumentSummary],
+    type_counts: &HashMap<String, usize>,
+    phase_counts: &HashMap<String, usize>,
+) {
     println!("SUMMARY");
     let total = docs.len();
     let vision_count = type_counts.get("vision").unwrap_or(&0);
@@ -966,8 +1003,6 @@ fn cmd_status(path: &Path) -> Result<(), String> {
     println!(
         "Phases: {todo} todo, {active} active, {completed} completed"
     );
-
-    Ok(())
 }
 
 fn cmd_validate(path: &Path, short_code: Option<&str>, all: bool) -> Result<(), String> {
@@ -1440,6 +1475,28 @@ fn cmd_rules_protected(path: &Path) -> Result<(), String> {
 // Notes command implementations
 // ===========================================================================
 
+/// Grouped scope arguments for insight note commands
+struct ScopeArgs<'a> {
+    repo: Option<&'a str>,
+    package: Option<&'a str>,
+    subsystem: Option<&'a str>,
+    paths: Option<&'a [String]>,
+    symbols: Option<&'a [String]>,
+}
+
+impl ScopeArgs<'_> {
+    /// Build an InsightScope from grouped CLI arguments
+    fn to_insight_scope(&self) -> InsightScope {
+        let mut scope = InsightScope::new();
+        scope.repo = self.repo.map(std::string::ToString::to_string);
+        scope.package = self.package.map(std::string::ToString::to_string);
+        scope.subsystem = self.subsystem.map(std::string::ToString::to_string);
+        scope.paths = self.paths.map(<[std::string::String]>::to_vec).unwrap_or_default();
+        scope.symbols = self.symbols.map(<[std::string::String]>::to_vec).unwrap_or_default();
+        scope
+    }
+}
+
 /// Build an InsightScope from CLI arguments
 fn build_scope(
     repo: Option<&str>,
@@ -1462,20 +1519,10 @@ fn cmd_notes_create(
     title: &str,
     note_text: &str,
     category_str: &str,
-    scope_repo: Option<&str>,
-    scope_package: Option<&str>,
-    scope_subsystem: Option<&str>,
-    scope_paths: Option<&[String]>,
-    scope_symbols: Option<&[String]>,
+    scope_args: &ScopeArgs<'_>,
 ) -> Result<(), String> {
     let category: InsightCategory = category_str.parse().map_err(|e: String| e)?;
-    let scope = build_scope(
-        scope_repo,
-        scope_package,
-        scope_subsystem,
-        scope_paths,
-        scope_symbols,
-    );
+    let scope = scope_args.to_insight_scope();
 
     let store = DocumentStore::new(path);
     let short_code = store

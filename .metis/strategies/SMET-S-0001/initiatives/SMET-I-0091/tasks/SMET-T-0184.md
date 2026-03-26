@@ -4,14 +4,14 @@ level: task
 title: "cadre-store: Refactor Functions Exceeding Structural Clippy Thresholds"
 short_code: "SMET-T-0184"
 created_at: 2026-03-26T19:20:19.284023+00:00
-updated_at: 2026-03-26T20:57:33.076306+00:00
+updated_at: 2026-03-26T21:04:53.928174+00:00
 parent: SMET-I-0091
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -46,6 +46,8 @@ None.
 ### cognitive_complexity (0 violations)
 
 None.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
