@@ -11,4 +11,5 @@
 
 pub mod evaluator;
 pub mod pattern_matcher;
+pub mod rules_config_analyzer;
 pub mod structure_analyzer;

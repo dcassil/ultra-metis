@@ -17,6 +17,9 @@ use crate::domain::documents::types::{Phase, Tag};
 use crate::domain::quality::types::{FindingEntry, MetricEntry, ParsedToolOutput, Severity};
 
 use super::pattern_matcher::{MatchResult, PatternMatchScore, PatternMatcher};
+use super::rules_config_analyzer::{
+    FileContentReader, RulesConfigAnalysisResult, RulesConfigAnalyzer,
+};
 use super::structure_analyzer::{StructureAnalysis, StructureAnalyzer};
 
 /// The four possible outcomes of a brownfield evaluation.
@@ -69,6 +72,10 @@ pub struct EvaluationResult {
     pub structure_analysis: StructureAnalysis,
     /// Overall quality score (0-100).
     pub quality_score: f64,
+    /// Whether the fast path (rules config analysis) was used.
+    pub fast_path_used: bool,
+    /// Rules config analysis result, if attempted.
+    pub config_analysis: Option<RulesConfigAnalysisResult>,
 }
 
 /// Configuration for the brownfield evaluator.
@@ -115,23 +122,64 @@ impl BrownfieldEvaluator {
     /// Returns an [`EvaluationResult`] indicating whether the repo has
     /// good architecture (matched or derived) or bad architecture
     /// (recommendation needed).
+    ///
+    /// This method does not attempt the rules config fast path.
+    /// Use [`evaluate_with_reader`] to enable the fast path.
     pub fn evaluate(
         &self,
         file_paths: &[String],
         catalog_entries: &[ArchitectureCatalogEntry],
         short_code: String,
     ) -> EvaluationResult {
-        // Step 1: Analyze structure
-        let analysis = StructureAnalyzer::analyze(file_paths);
+        self.evaluate_inner(file_paths, catalog_entries, short_code, None)
+    }
 
-        // Step 2: Compute quality score
+    /// Evaluate a repository's architecture with optional rules config fast path.
+    ///
+    /// When a [`FileContentReader`] is provided, the evaluator first scans for
+    /// rules engine config files. If both quality and layering axes pass threshold,
+    /// the structure analysis is inferred from config declarations — skipping
+    /// file-level structure analysis.
+    pub fn evaluate_with_reader(
+        &self,
+        file_paths: &[String],
+        catalog_entries: &[ArchitectureCatalogEntry],
+        short_code: String,
+        reader: &dyn FileContentReader,
+    ) -> EvaluationResult {
+        self.evaluate_inner(file_paths, catalog_entries, short_code, Some(reader))
+    }
+
+    fn evaluate_inner(
+        &self,
+        file_paths: &[String],
+        catalog_entries: &[ArchitectureCatalogEntry],
+        short_code: String,
+        reader: Option<&dyn FileContentReader>,
+    ) -> EvaluationResult {
+        // Fast path: try rules config analysis if a reader is provided
+        let config_analysis = reader.map(|r| {
+            let analyzer = RulesConfigAnalyzer::new();
+            analyzer.analyze(file_paths, r)
+        });
+
+        let fast_path_analysis = config_analysis
+            .as_ref()
+            .and_then(|ca| ca.inferred_analysis.clone());
+
+        let fast_path_used = fast_path_analysis.is_some();
+
+        // Use config-inferred analysis if available, otherwise fall back to file analysis
+        let analysis = fast_path_analysis.unwrap_or_else(|| StructureAnalyzer::analyze(file_paths));
+
+        // Compute quality score
         let quality_score = analysis.structure_quality_score;
 
-        // Step 3: Match against catalog
+        // Match against catalog
         let matcher = PatternMatcher::new(self.config.match_threshold);
         let match_result = matcher.match_against(&analysis, catalog_entries);
 
-        // Step 4: Determine outcome
+        // Determine outcome
         let outcome = if quality_score >= self.config.quality_threshold {
             // Good architecture path
             if let Some(best_match) = &match_result.best_match {
@@ -185,6 +233,8 @@ impl BrownfieldEvaluator {
             outcome,
             structure_analysis: analysis,
             quality_score,
+            fast_path_used,
+            config_analysis,
         }
     }
 
