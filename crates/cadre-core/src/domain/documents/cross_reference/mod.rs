@@ -441,7 +441,7 @@ pub struct TraceabilityIndex {
 }
 
 /// A lightweight entry in the traceability index (no full document content).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrossReferenceEntry {
     pub source_ref: String,
     pub target_ref: String,

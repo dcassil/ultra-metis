@@ -115,11 +115,11 @@ impl InvestigationTriggerEngine {
     /// Create a remediation loop from trend degradation.
     pub fn trend_trigger(
         loop_id: &str,
-        degrading_metrics: Vec<String>,
+        degrading_metrics: &[String],
         consecutive_regressions: u32,
     ) -> RemediationLoop {
         let trigger = RemediationTrigger::TrendDegradation {
-            degrading_metrics: degrading_metrics.clone(),
+            degrading_metrics: degrading_metrics.to_vec(),
             consecutive_regressions,
         };
 
@@ -259,7 +259,7 @@ mod tests {
     fn test_trend_trigger_with_enough_regressions() {
         let rl = InvestigationTriggerEngine::trend_trigger(
             "RL-003",
-            vec!["errors".to_string(), "warnings".to_string()],
+            &["errors".to_string(), "warnings".to_string()],
             3,
         );
         // Should have investigation action when >= 3 consecutive regressions
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_trend_trigger_few_regressions_no_action() {
-        let rl = InvestigationTriggerEngine::trend_trigger("RL-004", vec!["errors".to_string()], 2);
+        let rl = InvestigationTriggerEngine::trend_trigger("RL-004", &["errors".to_string()], 2);
         // < 3 consecutive regressions: no automatic investigation
         assert!(rl.actions.is_empty());
     }

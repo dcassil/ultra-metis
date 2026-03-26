@@ -14,7 +14,7 @@ use tera::{Context, Tera};
 // ---------------------------------------------------------------------------
 
 /// An alternative that was considered but not chosen.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Alternative {
     /// Title or short name for the alternative.
     pub title: String,
@@ -215,7 +215,7 @@ impl DecisionRecord {
         let related_artifacts =
             FrontmatterParser::extract_string_array(&fm_map, "related_artifacts")
                 .unwrap_or_default();
-        let alternatives = Self::parse_alternatives(&fm_map)?;
+        let alternatives = Self::parse_alternatives(&fm_map);
 
         let metadata = DocumentMetadata::from_frontmatter(
             created_at,
@@ -244,10 +244,10 @@ impl DecisionRecord {
 
     fn parse_alternatives(
         fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
-    ) -> Result<Vec<Alternative>, DocumentValidationError> {
+    ) -> Vec<Alternative> {
         let arr = match fm_map.get("alternatives") {
             Some(gray_matter::Pod::Array(arr)) => arr,
-            _ => return Ok(Vec::new()),
+            _ => return Vec::new(),
         };
 
         let mut entries = Vec::new();
@@ -272,7 +272,7 @@ impl DecisionRecord {
                 });
             }
         }
-        Ok(entries)
+        entries
     }
 
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {

@@ -14,7 +14,7 @@ use tera::{Context, Tera};
 // ---------------------------------------------------------------------------
 
 /// Result of a pre-transition check.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CheckResult {
     /// Name of the check (e.g., "quality_gate", "exit_criteria").
     pub name: String,
@@ -224,7 +224,7 @@ impl TransitionRecord {
             })?;
 
         let reason = FrontmatterParser::extract_optional_string(&fm_map, "reason");
-        let checks_run = Self::parse_check_results(&fm_map)?;
+        let checks_run = Self::parse_check_results(&fm_map);
 
         let metadata = DocumentMetadata::from_frontmatter(
             created_at,
@@ -253,10 +253,10 @@ impl TransitionRecord {
 
     fn parse_check_results(
         fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
-    ) -> Result<Vec<CheckResult>, DocumentValidationError> {
+    ) -> Vec<CheckResult> {
         let arr = match fm_map.get("checks_run") {
             Some(gray_matter::Pod::Array(arr)) => arr,
-            _ => return Ok(Vec::new()),
+            _ => return Vec::new(),
         };
 
         let mut entries = Vec::new();
@@ -281,7 +281,7 @@ impl TransitionRecord {
                 });
             }
         }
-        Ok(entries)
+        entries
     }
 
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {

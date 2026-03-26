@@ -16,7 +16,7 @@ pub struct CodeSymbol {
 }
 
 /// Types of symbols that can be extracted
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum SymbolKind {
     Function,

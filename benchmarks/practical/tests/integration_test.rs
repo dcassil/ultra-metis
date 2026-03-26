@@ -19,7 +19,7 @@ async fn test_autonomous_runner_returns_valid_scaffold() {
     let scenario_path = std::path::PathBuf::from("scenario");
     let results_dir = std::path::PathBuf::from("target/test-results");
 
-    let harness = BenchmarkHarness::new(scenario_path, results_dir);
+    let harness = BenchmarkHarness::new(&scenario_path, results_dir);
     let run = harness.run_autonomous().await.unwrap();
 
     assert_eq!(run.execution_mode, ExecutionMode::Autonomous);
@@ -46,7 +46,7 @@ async fn test_validated_runner_returns_valid_scaffold() {
     let scenario_path = std::path::PathBuf::from("scenario");
     let results_dir = std::path::PathBuf::from("target/test-results");
 
-    let harness = BenchmarkHarness::new(scenario_path, results_dir);
+    let harness = BenchmarkHarness::new(&scenario_path, results_dir);
     let run = harness.run_validated().await.unwrap();
 
     assert_eq!(run.execution_mode, ExecutionMode::Validated);

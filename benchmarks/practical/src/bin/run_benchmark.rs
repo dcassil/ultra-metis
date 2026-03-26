@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
     println!();
 
     let harness =
-        practical_benchmark::BenchmarkHarness::new(scenario_path.clone(), results_dir.clone());
+        practical_benchmark::BenchmarkHarness::new(&scenario_path, results_dir.clone());
 
     let autonomous_run = if matches!(mode, RunMode::Autonomous | RunMode::Both) {
         println!("=== Phase 1: Autonomous Execution (Baseline) ===");

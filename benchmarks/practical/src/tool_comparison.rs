@@ -292,7 +292,7 @@ fn fill_template_with_claude(
 }
 
 /// Score a template filled for all 3 modules.
-fn score_template_runs(tool_name: &str, template: &str) -> anyhow::Result<ToolRunResult> {
+fn score_template_runs(tool_name: &str, template: &str) -> ToolRunResult {
     let start = Instant::now();
     let mut scores: Vec<DocQualityScore> = Vec::new();
     let mut total_tokens = 0u64;
@@ -329,7 +329,7 @@ fn score_template_runs(tool_name: &str, template: &str) -> anyhow::Result<ToolRu
     let total_filled: u32 = scores.iter().map(|s| s.filled_sections.len() as u32).sum();
     let total_empty: u32 = scores.iter().map(|s| s.empty_sections.len() as u32).sum();
 
-    Ok(ToolRunResult {
+    ToolRunResult {
         tool_name: tool_name.to_string(),
         templates_tested: scores.len() as u32,
         avg_completeness_percent: avg_completeness,
@@ -338,7 +338,7 @@ fn score_template_runs(tool_name: &str, template: &str) -> anyhow::Result<ToolRu
         total_empty_sections: total_empty,
         tokens_used: total_tokens,
         time_elapsed: start.elapsed(),
-    })
+    }
 }
 
 /// Run the full tool comparison benchmark.
@@ -358,10 +358,10 @@ pub fn run_comparison() -> anyhow::Result<ToolComparisonResult> {
 
     // Fill and score each template
     tracing::info!("Filling cadre templates with Claude...");
-    let ultra_result = score_template_runs("cadre", &ultra_template)?;
+    let ultra_result = score_template_runs("cadre", &ultra_template);
 
     tracing::info!("Filling original-metis templates with Claude...");
-    let orig_result = score_template_runs("original-metis", &orig_template)?;
+    let orig_result = score_template_runs("original-metis", &orig_template);
 
     let completeness_delta =
         ultra_result.avg_completeness_percent - orig_result.avg_completeness_percent;

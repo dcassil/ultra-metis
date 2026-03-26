@@ -117,7 +117,7 @@ impl FromStr for WorkType {
 
 /// A single step in a workflow, wrapping a loop definition with optional
 /// workflow-specific overrides.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LoopStep {
     /// The loop to execute at this step.
     pub loop_definition: LoopDefinition,
@@ -212,7 +212,7 @@ impl fmt::Display for CompletionRule {
 ///
 /// A workflow is a sequence of loop steps with entry conditions, completion
 /// rules, and escalation rules.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WorkflowTemplate {
     /// What kind of work this workflow addresses.
     pub work_type: WorkType,

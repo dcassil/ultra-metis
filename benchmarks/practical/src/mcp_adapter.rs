@@ -13,7 +13,7 @@ const MCP_NOTIFICATION_TIMEOUT: Duration = Duration::from_millis(250);
 /// when the server sends non-matching responses).
 const MCP_REQUEST_OVERALL_TIMEOUT: Duration = Duration::from_secs(30);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SystemUnderTest {
     OriginalMetis,
     CadreMcp,
@@ -36,7 +36,7 @@ pub trait ExecutionAdapter {
     fn command(&self) -> ServerCommand;
 
     fn start(&self) -> Result<McpSession> {
-        McpSession::start(self.system_under_test(), self.command())
+        McpSession::start(self.system_under_test(), &self.command())
     }
 }
 
@@ -81,7 +81,7 @@ pub struct McpSession {
 }
 
 impl McpSession {
-    pub fn start(system: SystemUnderTest, command: ServerCommand) -> Result<Self> {
+    pub fn start(system: SystemUnderTest, command: &ServerCommand) -> Result<Self> {
         let mut child = Command::new(&command.program)
             .args(&command.args)
             .stdin(Stdio::piped())
@@ -133,6 +133,7 @@ impl McpSession {
             .collect())
     }
 
+    #[allow(clippy::needless_pass_by_value)] // Value is consumed by json! macro
     pub fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
         self.send_request(
             "tools/call",

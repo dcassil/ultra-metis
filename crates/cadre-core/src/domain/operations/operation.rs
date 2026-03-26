@@ -250,7 +250,7 @@ impl fmt::Display for EscalationCondition {
 
 /// Full specification for a cognitive operation, including its metadata,
 /// input requirements, output type, tool hints, and escalation conditions.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OperationSpec {
     /// Which of the 12 operations this spec describes.
     pub operation: CognitiveOperation,

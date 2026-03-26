@@ -233,7 +233,7 @@ impl fmt::Display for Condition {
 
 /// Full definition of a reusable loop, including its operations sequence,
 /// entry/exit conditions, iteration limits, and escalation rules.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LoopDefinition {
     /// Which of the 11 loops this definition describes.
     pub kind: LoopKind,

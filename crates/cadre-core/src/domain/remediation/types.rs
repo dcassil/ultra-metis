@@ -106,7 +106,7 @@ impl FailedMetric {
 // ---------------------------------------------------------------------------
 
 /// An action to be taken as part of remediation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RemediationAction {
     /// Create an architecture investigation document.
     CreateInvestigation {

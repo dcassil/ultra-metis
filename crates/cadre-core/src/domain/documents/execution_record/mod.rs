@@ -96,7 +96,7 @@ impl FromStr for Disposition {
 // ---------------------------------------------------------------------------
 
 /// An entry recording a tool that was run during execution.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ToolEntry {
     pub name: String,
     pub arguments: String,
@@ -114,7 +114,7 @@ impl ToolEntry {
 }
 
 /// An entry recording a validation that was run.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationEntry {
     pub name: String,
     pub passed: bool,
@@ -132,7 +132,7 @@ impl ValidationEntry {
 }
 
 /// An escalation raised during execution.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EscalationEntry {
     pub reason: String,
     pub escalated_to: String,
@@ -150,7 +150,7 @@ impl EscalationEntry {
 }
 
 /// An override applied during execution.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OverrideEntry {
     pub rule: String,
     pub reason: String,
@@ -409,10 +409,10 @@ impl ExecutionRecord {
         let decisions_made =
             FrontmatterParser::extract_string_array(&fm_map, "decisions_made").unwrap_or_default();
 
-        let tools_run = Self::parse_tool_entries(&fm_map)?;
-        let validations_run = Self::parse_validation_entries(&fm_map)?;
-        let escalations = Self::parse_escalation_entries(&fm_map)?;
-        let overrides = Self::parse_override_entries(&fm_map)?;
+        let tools_run = Self::parse_tool_entries(&fm_map);
+        let validations_run = Self::parse_validation_entries(&fm_map);
+        let escalations = Self::parse_escalation_entries(&fm_map);
+        let overrides = Self::parse_override_entries(&fm_map);
 
         let metadata = DocumentMetadata::from_frontmatter(
             created_at,
@@ -449,10 +449,10 @@ impl ExecutionRecord {
 
     fn parse_tool_entries(
         fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
-    ) -> Result<Vec<ToolEntry>, DocumentValidationError> {
+    ) -> Vec<ToolEntry> {
         let arr = match fm_map.get("tools_run") {
             Some(gray_matter::Pod::Array(arr)) => arr,
-            _ => return Ok(Vec::new()),
+            _ => return Vec::new(),
         };
 
         let mut entries = Vec::new();
@@ -477,15 +477,15 @@ impl ExecutionRecord {
                 });
             }
         }
-        Ok(entries)
+        entries
     }
 
     fn parse_validation_entries(
         fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
-    ) -> Result<Vec<ValidationEntry>, DocumentValidationError> {
+    ) -> Vec<ValidationEntry> {
         let arr = match fm_map.get("validations_run") {
             Some(gray_matter::Pod::Array(arr)) => arr,
-            _ => return Ok(Vec::new()),
+            _ => return Vec::new(),
         };
 
         let mut entries = Vec::new();
@@ -510,15 +510,15 @@ impl ExecutionRecord {
                 });
             }
         }
-        Ok(entries)
+        entries
     }
 
     fn parse_escalation_entries(
         fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
-    ) -> Result<Vec<EscalationEntry>, DocumentValidationError> {
+    ) -> Vec<EscalationEntry> {
         let arr = match fm_map.get("escalations") {
             Some(gray_matter::Pod::Array(arr)) => arr,
-            _ => return Ok(Vec::new()),
+            _ => return Vec::new(),
         };
 
         let mut entries = Vec::new();
@@ -543,15 +543,15 @@ impl ExecutionRecord {
                 });
             }
         }
-        Ok(entries)
+        entries
     }
 
     fn parse_override_entries(
         fm_map: &std::collections::HashMap<String, gray_matter::Pod>,
-    ) -> Result<Vec<OverrideEntry>, DocumentValidationError> {
+    ) -> Vec<OverrideEntry> {
         let arr = match fm_map.get("overrides") {
             Some(gray_matter::Pod::Array(arr)) => arr,
-            _ => return Ok(Vec::new()),
+            _ => return Vec::new(),
         };
 
         let mut entries = Vec::new();
@@ -576,7 +576,7 @@ impl ExecutionRecord {
                 });
             }
         }
-        Ok(entries)
+        entries
     }
 
     pub async fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), DocumentValidationError> {

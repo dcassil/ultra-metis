@@ -178,7 +178,7 @@ pub struct DocumentCore {
 }
 
 /// Validation errors for documents
-#[derive(Debug, PartialEq, thiserror::Error)]
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum DocumentValidationError {
     #[error("Invalid title: {0}")]
     InvalidTitle(String),

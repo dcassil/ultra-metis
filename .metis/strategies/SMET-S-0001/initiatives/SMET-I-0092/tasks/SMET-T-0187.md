@@ -4,14 +4,14 @@ level: task
 title: "Mechanical Review Pedantic Lint Batch"
 short_code: "SMET-T-0187"
 created_at: 2026-03-26T19:24:23.774931+00:00
-updated_at: 2026-03-26T19:24:23.774931+00:00
+updated_at: 2026-03-26T19:40:45.557043+00:00
 parent: SMET-I-0092
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -53,6 +53,8 @@ For each lint (one at a time, in the order listed above):
 4. Run `cargo clippy --workspace --all-targets -- -D warnings` to verify no remaining violations
 5. Run `cargo test --workspace` to verify no regressions
 6. Commit the changes for that lint
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

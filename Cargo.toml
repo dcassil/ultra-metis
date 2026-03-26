@@ -48,7 +48,7 @@ cognitive_complexity = "allow"      # 4 violations — fix in crate restructurin
 
 # --- Pedantic lints we allow (too noisy for bulk adoption, fix incrementally) ---
 module_name_repetitions = "allow"   # 560 hits — common in domain types
-must_use_candidate = "allow"        # 457 hits — would need case-by-case review
+must_use_candidate = "allow"        # 512 hits — too many constructors/builders/non-pure fns; case-by-case ratio too low to enforce
 missing_errors_doc = "allow"        # 253 hits — docs cleanup is separate effort
 missing_panics_doc = "allow"        # 51 hits — docs cleanup is separate effort
 items_after_statements = "allow"    # Style preference, not a correctness issue
@@ -63,14 +63,11 @@ unreadable_literal = "allow"        # Numeric literals in thresholds/scores
 struct_excessive_bools = "allow"    # Domain types with boolean flags
 match_same_arms = "allow"           # 24 hits — sometimes intentional for clarity
 # --- Additional high-volume allows ---
-missing_const_for_fn = "allow"      # 207 hits — nursery, const fn not always beneficial
+missing_const_for_fn = "allow"      # 207 hits — nursery lint with high false-positive rate; many flagged fns allocate or call non-const methods
 manual_let_else = "allow"           # 49 hits — not auto-fixable by cargo clippy --fix
 if_not_else = "allow"               # Style preference — `if !x` is often clearer
 redundant_else = "allow"            # Style preference
-needless_pass_by_value = "allow"    # 8 hits — sometimes intentional for API clarity
-unnecessary_wraps = "allow"         # 7 hits — sometimes needed for trait conformance
 float_cmp = "allow"                 # 28 hits in tests — assert_eq! on f64 is fine in tests
-derive_partial_eq_without_eq = "allow"  # 15 hits — domain types where Eq isn't needed
 case_sensitive_file_extension_comparisons = "allow"  # 5 hits — known extensions
 used_underscore_binding = "allow"   # 6 hits — intentional unused markers
 trivially_copy_pass_by_ref = "allow"  # Small Copy types passed by ref

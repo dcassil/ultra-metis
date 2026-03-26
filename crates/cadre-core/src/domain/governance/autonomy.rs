@@ -180,7 +180,7 @@ impl fmt::Display for ToleranceLevel {
 ///
 /// This is persisted as a durable artifact and controls how the system
 /// behaves at gates, escalation points, and decomposition boundaries.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AutonomyConfig {
     /// The operating mode.
     pub mode: AutonomyMode,

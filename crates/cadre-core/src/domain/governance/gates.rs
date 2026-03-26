@@ -166,7 +166,7 @@ impl EvidenceRequirement {
 
 /// Full specification for a gate checkpoint, including evidence requirements,
 /// failure behavior, and mode-dependent configuration.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GateDefinition {
     /// Which gate type this definition describes.
     pub gate_type: GateType,
@@ -327,7 +327,7 @@ fn default_gate(
 // ---------------------------------------------------------------------------
 
 /// The outcome of evaluating a single gate.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GateCheckOutcome {
     /// Which gate was checked.
     pub gate_type: GateType,

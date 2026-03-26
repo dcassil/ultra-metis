@@ -28,8 +28,8 @@ pub struct BenchmarkHarness {
 }
 
 impl BenchmarkHarness {
-    pub fn new(scenario_path: std::path::PathBuf, results_dir: std::path::PathBuf) -> Self {
-        let scenario = crate::scenario_pack::LoadedScenarioPack::load(&scenario_path)
+    pub fn new(scenario_path: &std::path::Path, results_dir: std::path::PathBuf) -> Self {
+        let scenario = crate::scenario_pack::LoadedScenarioPack::load(scenario_path)
             .unwrap_or_else(|err| {
                 panic!(
                     "Failed to load scenario pack {}: {}",

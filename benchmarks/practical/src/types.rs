@@ -158,7 +158,7 @@ pub struct CodeArtifact {
     pub excerpt: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ExecutionMode {
     Autonomous,
     Validated,
