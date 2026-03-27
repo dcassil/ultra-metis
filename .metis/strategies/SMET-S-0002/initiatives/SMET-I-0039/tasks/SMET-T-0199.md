@@ -4,14 +4,14 @@ level: task
 title: "Machine Runner Registration and Heartbeat Client"
 short_code: "SMET-T-0199"
 created_at: 2026-03-27T16:18:41.939939+00:00
-updated_at: 2026-03-27T16:18:41.939939+00:00
+updated_at: 2026-03-27T20:31:34.399074+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Implement the client-side registration and heartbeat logic in the Machine Runner daemon (`apps/machine-runner/`). On startup, the runner registers itself with the Control Service, then enters a periodic heartbeat loop to maintain its online status. If the machine is in `pending` state, the runner enters a waiting mode and does not process commands until approved.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

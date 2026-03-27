@@ -4,14 +4,14 @@ level: task
 title: "Machine Runner Repo Discovery"
 short_code: "SMET-T-0200"
 created_at: 2026-03-27T16:18:42.421306+00:00
-updated_at: 2026-03-27T16:18:42.421306+00:00
+updated_at: 2026-03-27T19:50:13.019465+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Implement the repo/working-directory discovery module in the Machine Runner. This module scans configured directories on the local machine to find git repositories and Cadre-managed projects, producing a list of repo name + path pairs that is sent to the Control Service during registration and heartbeat updates.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

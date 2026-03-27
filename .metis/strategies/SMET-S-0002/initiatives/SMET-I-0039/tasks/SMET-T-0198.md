@@ -4,14 +4,14 @@ level: task
 title: "Control Service Machine Registry API"
 short_code: "SMET-T-0198"
 created_at: 2026-03-27T16:18:40.628462+00:00
-updated_at: 2026-03-27T16:18:40.628462+00:00
+updated_at: 2026-03-27T20:10:20.162180+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Implement the six REST API endpoints in the Control Service (`apps/control-api/`) that form the machine registry: register, heartbeat, list, detail, approve, and revoke. These endpoints are the server-side counterpart to the Machine Runner client and the data source for the Control Dashboard.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

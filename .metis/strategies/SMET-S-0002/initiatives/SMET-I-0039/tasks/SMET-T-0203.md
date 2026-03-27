@@ -4,14 +4,14 @@ level: task
 title: "Multi-Tenancy Scaffolding and Auth Middleware"
 short_code: "SMET-T-0203"
 created_at: 2026-03-27T16:18:45.779031+00:00
-updated_at: 2026-03-27T16:18:45.779031+00:00
+updated_at: 2026-03-27T20:10:19.599933+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Implement the MVP authentication middleware and multi-tenancy data scoping for the Control Service. In MVP mode, all requests are attributed to a single default user (user_id=1). The middleware is designed as a swappable layer so that replacing it with JWT-based auth later requires no changes to endpoint handlers.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

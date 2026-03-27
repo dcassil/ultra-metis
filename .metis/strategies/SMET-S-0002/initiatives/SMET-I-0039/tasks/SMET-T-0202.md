@@ -4,14 +4,14 @@ level: task
 title: "Dashboard Pending Machine Approval Flow"
 short_code: "SMET-T-0202"
 created_at: 2026-03-27T16:18:44.228942+00:00
-updated_at: 2026-03-27T16:18:44.228942+00:00
+updated_at: 2026-03-27T20:31:45.484648+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Build the pending machine approval queue in the Control Dashboard. When a new Machine Runner registers with the Control Service, it starts in `pending` status. This task implements the UI flow for the user to review pending machines and either approve or reject them, which is the core of the trust model.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

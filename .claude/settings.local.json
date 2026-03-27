@@ -19,7 +19,13 @@
       "mcp__plugin_figma_figma__whoami",
       "mcp__plugin_figma_figma__get_design_context",
       "mcp__plugin_cadre_cadre__list_documents",
-      "mcp__plugin_cadre_cadre__create_document"
+      "mcp__plugin_cadre_cadre__create_document",
+      "mcp__plugin_metis_metis__create_document",
+      "mcp__plugin_metis_metis__read_document",
+      "mcp__plugin_metis_metis__edit_document",
+      "mcp__plugin_metis_metis__transition_phase",
+      "Skill(metis:metis-ralph)",
+      "mcp__plugin_metis_metis__list_documents"
     ]
   },
   "enableAllProjectMcpServers": true

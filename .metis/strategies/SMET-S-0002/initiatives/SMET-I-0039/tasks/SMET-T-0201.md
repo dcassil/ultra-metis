@@ -4,14 +4,14 @@ level: task
 title: "Control Dashboard Machine List and Detail Views"
 short_code: "SMET-T-0201"
 created_at: 2026-03-27T16:18:43.376196+00:00
-updated_at: 2026-03-27T16:18:43.376196+00:00
+updated_at: 2026-03-27T20:31:34.873757+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Build the machine list page and machine detail page in the Control Dashboard (`apps/control-dashboard/`). These are the primary UI surfaces for users to see their registered machines, their connectivity status, available repos, and trust levels. The views consume data from the `GET /machines` and `GET /machines/{id}` API endpoints.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
