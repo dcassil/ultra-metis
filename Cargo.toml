@@ -5,6 +5,8 @@ members = [
     "crates/cadre-cli",
     "crates/cadre-mcp",
     "benchmarks/practical",
+    "apps/control-api",
+    "apps/machine-runner",
 ]
 resolver = "2"
 
