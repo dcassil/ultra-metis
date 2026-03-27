@@ -4,14 +4,14 @@ level: task
 title: "Integration Tests for Machine Connectivity and Trust"
 short_code: "SMET-T-0204"
 created_at: 2026-03-27T16:18:46.139288+00:00
-updated_at: 2026-03-27T20:50:13.997053+00:00
+updated_at: 2026-03-27T21:07:51.079923+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Write end-to-end integration tests that validate the complete machine connectivity and trust lifecycle: registration, pending state, approval, heartbeat, revocation, and the runner's response to each state transition. These tests exercise the Control Service API, Machine Runner client, and their interaction together.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
