@@ -152,9 +152,7 @@ fn build_register_request(
     RegisterRequest {
         name: machine_name.to_string(),
         platform,
-        capabilities: serde_json::json!({
-            "claude_code": true,
-        }),
+        capabilities: Some("claude_code".to_string()),
         repos: repos.to_vec(),
     }
 }

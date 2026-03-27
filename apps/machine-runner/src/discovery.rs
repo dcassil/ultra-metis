@@ -3,9 +3,11 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 /// Information about a discovered repository.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RepoInfo {
+    #[serde(rename(serialize = "name"), alias = "name")]
     pub repo_name: String,
+    #[serde(rename(serialize = "path"), alias = "path")]
     pub repo_path: String,
     pub cadre_managed: bool,
 }

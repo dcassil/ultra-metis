@@ -13,7 +13,7 @@ pub struct RegisterResponse {
 pub struct RegisterRequest {
     pub name: String,
     pub platform: String,
-    pub capabilities: serde_json::Value,
+    pub capabilities: Option<String>,
     pub repos: Vec<RepoInfo>,
 }
 
@@ -151,7 +151,7 @@ mod tests {
         let request = RegisterRequest {
             name: "my-machine".to_string(),
             platform: "linux/x86_64".to_string(),
-            capabilities: serde_json::json!({"claude_code": true}),
+            capabilities: Some("claude_code".to_string()),
             repos: vec![RepoInfo {
                 repo_name: "test-repo".to_string(),
                 repo_path: "/home/user/test-repo".to_string(),
@@ -162,8 +162,8 @@ mod tests {
         let json = serde_json::to_value(&request).unwrap();
         assert_eq!(json["name"], "my-machine");
         assert_eq!(json["platform"], "linux/x86_64");
-        assert_eq!(json["capabilities"]["claude_code"], true);
-        assert_eq!(json["repos"][0]["repo_name"], "test-repo");
+        assert_eq!(json["capabilities"], "claude_code");
+        assert_eq!(json["repos"][0]["name"], "test-repo");
         assert_eq!(json["repos"][0]["cadre_managed"], true);
     }
 
@@ -194,7 +194,7 @@ mod tests {
 
         let json = serde_json::to_value(&request).unwrap();
         assert_eq!(json["repos"].as_array().unwrap().len(), 2);
-        assert_eq!(json["repos"][0]["repo_name"], "repo-a");
+        assert_eq!(json["repos"][0]["name"], "repo-a");
         assert_eq!(json["repos"][1]["cadre_managed"], true);
     }
 
