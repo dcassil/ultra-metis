@@ -1,10 +1,9 @@
+//! Domain types for the Control API.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-// ---------------------------------------------------------------------------
-// Enums
-// ---------------------------------------------------------------------------
-
+/// Status of a machine in the fleet.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum MachineStatus {
@@ -24,6 +23,12 @@ impl MachineStatus {
     }
 }
 
+impl std::fmt::Display for MachineStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 impl std::str::FromStr for MachineStatus {
     type Err = String;
 
@@ -37,19 +42,22 @@ impl std::str::FromStr for MachineStatus {
     }
 }
 
+/// Trust tier for a machine.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TrustTier {
-    Trusted,
-    Restricted,
+    Untrusted,
+    Basic,
+    Elevated,
 }
 
 impl TrustTier {
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::Trusted => "trusted",
-            Self::Restricted => "restricted",
+            Self::Untrusted => "untrusted",
+            Self::Basic => "basic",
+            Self::Elevated => "elevated",
         }
     }
 }
@@ -59,285 +67,195 @@ impl std::str::FromStr for TrustTier {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "trusted" => Ok(Self::Trusted),
-            "restricted" => Ok(Self::Restricted),
+            "untrusted" => Ok(Self::Untrusted),
+            "basic" => Ok(Self::Basic),
+            "elevated" => Ok(Self::Elevated),
             other => Err(format!("unknown trust tier: {other}")),
         }
     }
 }
 
+/// Connectivity status derived from heartbeat recency.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ConnectivityStatus {
     Online,
-    Stale,
+    Degraded,
     Offline,
+    Unknown,
 }
 
-// ---------------------------------------------------------------------------
-// Domain types
-// ---------------------------------------------------------------------------
-
+/// A registered machine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Machine {
     pub id: String,
+    pub user_id: String,
     pub name: String,
-    pub platform: Option<String>,
+    pub platform: String,
     pub status: MachineStatus,
     pub trust_tier: TrustTier,
-    pub last_heartbeat: Option<DateTime<Utc>>,
-    pub user_id: String,
-    pub team_id: String,
-    pub org_id: String,
-    pub metadata: serde_json::Value,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub capabilities: Option<String>,
+    pub last_heartbeat: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 impl Machine {
-    /// Compute the connectivity status based on the last heartbeat timestamp.
-    ///
-    /// - `None`            -> `Offline`
-    /// - < 30 s ago        -> `Online`
-    /// - 30 s .. 5 min ago -> `Stale`
-    /// - > 5 min ago       -> `Offline`
+    /// Compute connectivity status from heartbeat timestamp.
     #[must_use]
     pub fn connectivity_status(&self) -> ConnectivityStatus {
-        let Some(hb) = self.last_heartbeat else {
-            return ConnectivityStatus::Offline;
+        let Some(ref hb) = self.last_heartbeat else {
+            return ConnectivityStatus::Unknown;
         };
 
-        let elapsed = Utc::now().signed_duration_since(hb);
-        let secs = elapsed.num_seconds();
+        let Ok(last) = hb.parse::<DateTime<Utc>>() else {
+            return ConnectivityStatus::Unknown;
+        };
 
-        if secs < 30 {
+        let elapsed = Utc::now().signed_duration_since(last);
+        if elapsed.num_seconds() < 120 {
             ConnectivityStatus::Online
-        } else if secs < 300 {
-            ConnectivityStatus::Stale
+        } else if elapsed.num_seconds() < 600 {
+            ConnectivityStatus::Degraded
         } else {
             ConnectivityStatus::Offline
         }
     }
 }
 
+/// A repo tracked on a machine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MachineRepo {
     pub id: String,
     pub machine_id: String,
-    pub repo_name: String,
     pub repo_path: String,
-    pub cadre_managed: bool,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub repo_name: Option<String>,
+    pub last_seen: String,
 }
 
-// ---------------------------------------------------------------------------
-// API request / response types
-// ---------------------------------------------------------------------------
+// -- Request / Response types --
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request body for POST /api/machines/register.
+#[derive(Debug, Deserialize)]
+pub struct RegisterRequest {
+    pub name: String,
+    pub platform: String,
+    pub capabilities: Option<String>,
+    pub repos: Option<Vec<RepoInfo>>,
+}
+
+/// Repo info sent during registration or heartbeat.
+#[derive(Debug, Deserialize)]
+pub struct RepoInfo {
+    pub path: String,
+    pub name: Option<String>,
+}
+
+/// Request body for POST /api/machines/{id}/heartbeat.
+#[derive(Debug, Deserialize)]
+pub struct HeartbeatRequest {
+    pub repos: Option<Vec<RepoInfo>>,
+}
+
+/// Response for a single machine.
+#[derive(Debug, Serialize)]
 pub struct MachineResponse {
     pub id: String,
     pub name: String,
-    pub platform: Option<String>,
+    pub platform: String,
     pub status: MachineStatus,
     pub trust_tier: TrustTier,
     pub connectivity_status: ConnectivityStatus,
-    pub last_heartbeat: Option<DateTime<Utc>>,
-    pub user_id: String,
-    pub team_id: String,
-    pub org_id: String,
-    pub metadata: serde_json::Value,
-    pub repos: Vec<RepoInfo>,
-    pub active_session_count: u32,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub capabilities: Option<String>,
+    pub last_heartbeat: Option<String>,
+    pub repos_count: i64,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
-impl MachineResponse {
-    /// Build a response from a [`Machine`] and its associated repos.
-    #[must_use]
-    pub fn from_machine(machine: &Machine, repos: &[MachineRepo]) -> Self {
-        let connectivity_status = machine.connectivity_status();
-        Self {
-            id: machine.id.clone(),
-            name: machine.name.clone(),
-            platform: machine.platform.clone(),
-            status: machine.status.clone(),
-            trust_tier: machine.trust_tier.clone(),
-            connectivity_status,
-            last_heartbeat: machine.last_heartbeat,
-            user_id: machine.user_id.clone(),
-            team_id: machine.team_id.clone(),
-            org_id: machine.org_id.clone(),
-            metadata: machine.metadata.clone(),
-            repos: repos
-                .iter()
-                .map(|r| RepoInfo {
-                    repo_name: r.repo_name.clone(),
-                    repo_path: r.repo_path.clone(),
-                    cadre_managed: Some(r.cadre_managed),
-                })
-                .collect(),
-            active_session_count: 0,
-            created_at: machine.created_at,
-            updated_at: machine.updated_at,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct RegisterRequest {
+/// Response for a machine with full repo detail.
+#[derive(Debug, Serialize)]
+pub struct MachineDetailResponse {
+    pub id: String,
     pub name: String,
-    pub platform: Option<String>,
-    pub capabilities: Option<serde_json::Value>,
-    pub repos: Vec<RepoInfo>,
+    pub platform: String,
+    pub status: MachineStatus,
+    pub trust_tier: TrustTier,
+    pub connectivity_status: ConnectivityStatus,
+    pub capabilities: Option<String>,
+    pub last_heartbeat: Option<String>,
+    pub repos: Vec<MachineRepo>,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RepoInfo {
-    pub repo_name: String,
-    pub repo_path: String,
-    pub cadre_managed: Option<bool>,
+/// Minimal response after registration.
+#[derive(Debug, Serialize)]
+pub struct RegisterResponse {
+    pub id: String,
+    pub status: MachineStatus,
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+/// Generic JSON error body.
+#[derive(Debug, Serialize)]
+pub struct ErrorBody {
+    pub error: String,
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Duration;
 
-    fn make_machine(last_heartbeat: Option<DateTime<Utc>>) -> Machine {
-        Machine {
-            id: "m-1".to_string(),
-            name: "test-machine".to_string(),
-            platform: Some("linux".to_string()),
+    #[test]
+    fn test_machine_status_roundtrip() {
+        for status in [MachineStatus::Pending, MachineStatus::Trusted, MachineStatus::Revoked] {
+            let s = status.as_str();
+            let parsed: MachineStatus = s.parse().unwrap();
+            assert_eq!(parsed, status);
+        }
+    }
+
+    #[test]
+    fn test_trust_tier_roundtrip() {
+        for tier in [TrustTier::Untrusted, TrustTier::Basic, TrustTier::Elevated] {
+            let s = tier.as_str();
+            let parsed: TrustTier = s.parse().unwrap();
+            assert_eq!(parsed, tier);
+        }
+    }
+
+    #[test]
+    fn test_connectivity_unknown_when_no_heartbeat() {
+        let machine = Machine {
+            id: "m1".into(),
+            user_id: "u1".into(),
+            name: "test".into(),
+            platform: "linux".into(),
             status: MachineStatus::Trusted,
-            trust_tier: TrustTier::Trusted,
-            last_heartbeat,
-            user_id: "u-1".to_string(),
-            team_id: "t-1".to_string(),
-            org_id: "o-1".to_string(),
-            metadata: serde_json::json!({}),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
+            trust_tier: TrustTier::Basic,
+            capabilities: None,
+            last_heartbeat: None,
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        assert_eq!(machine.connectivity_status(), ConnectivityStatus::Unknown);
     }
 
     #[test]
-    fn connectivity_no_heartbeat_is_offline() {
-        let m = make_machine(None);
-        assert_eq!(m.connectivity_status(), ConnectivityStatus::Offline);
-    }
-
-    #[test]
-    fn connectivity_recent_heartbeat_is_online() {
-        let hb = Utc::now() - Duration::seconds(10);
-        let m = make_machine(Some(hb));
-        assert_eq!(m.connectivity_status(), ConnectivityStatus::Online);
-    }
-
-    #[test]
-    fn connectivity_stale_heartbeat() {
-        let hb = Utc::now() - Duration::seconds(60);
-        let m = make_machine(Some(hb));
-        assert_eq!(m.connectivity_status(), ConnectivityStatus::Stale);
-    }
-
-    #[test]
-    fn connectivity_old_heartbeat_is_offline() {
-        let hb = Utc::now() - Duration::seconds(600);
-        let m = make_machine(Some(hb));
-        assert_eq!(m.connectivity_status(), ConnectivityStatus::Offline);
-    }
-
-    #[test]
-    fn serde_machine_status_roundtrip() {
-        let statuses = vec![
-            MachineStatus::Pending,
-            MachineStatus::Trusted,
-            MachineStatus::Revoked,
-        ];
-        for s in statuses {
-            let json = serde_json::to_string(&s).unwrap();
-            let back: MachineStatus = serde_json::from_str(&json).unwrap();
-            assert_eq!(s, back);
-        }
-    }
-
-    #[test]
-    fn serde_trust_tier_roundtrip() {
-        let tiers = vec![TrustTier::Trusted, TrustTier::Restricted];
-        for t in tiers {
-            let json = serde_json::to_string(&t).unwrap();
-            let back: TrustTier = serde_json::from_str(&json).unwrap();
-            assert_eq!(t, back);
-        }
-    }
-
-    #[test]
-    fn serde_connectivity_status_roundtrip() {
-        let statuses = vec![
-            ConnectivityStatus::Online,
-            ConnectivityStatus::Stale,
-            ConnectivityStatus::Offline,
-        ];
-        for s in statuses {
-            let json = serde_json::to_string(&s).unwrap();
-            let back: ConnectivityStatus = serde_json::from_str(&json).unwrap();
-            assert_eq!(s, back);
-        }
-    }
-
-    #[test]
-    fn machine_status_snake_case_serialization() {
-        assert_eq!(
-            serde_json::to_string(&MachineStatus::Pending).unwrap(),
-            "\"pending\""
-        );
-        assert_eq!(
-            serde_json::to_string(&MachineStatus::Trusted).unwrap(),
-            "\"trusted\""
-        );
-        assert_eq!(
-            serde_json::to_string(&MachineStatus::Revoked).unwrap(),
-            "\"revoked\""
-        );
-    }
-
-    #[test]
-    fn trust_tier_snake_case_serialization() {
-        assert_eq!(
-            serde_json::to_string(&TrustTier::Trusted).unwrap(),
-            "\"trusted\""
-        );
-        assert_eq!(
-            serde_json::to_string(&TrustTier::Restricted).unwrap(),
-            "\"restricted\""
-        );
-    }
-
-    #[test]
-    fn machine_response_from_machine() {
-        let m = make_machine(Some(Utc::now()));
-        let repos = vec![MachineRepo {
-            id: "r-1".to_string(),
-            machine_id: "m-1".to_string(),
-            repo_name: "my-project".to_string(),
-            repo_path: "/home/user/my-project".to_string(),
-            cadre_managed: true,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }];
-
-        let resp = MachineResponse::from_machine(&m, &repos);
-        assert_eq!(resp.id, "m-1");
-        assert_eq!(resp.repos.len(), 1);
-        assert_eq!(resp.repos[0].repo_name, "my-project");
-        assert_eq!(resp.active_session_count, 0);
-        assert_eq!(resp.connectivity_status, ConnectivityStatus::Online);
+    fn test_connectivity_online_when_recent() {
+        let now = Utc::now().to_rfc3339();
+        let machine = Machine {
+            id: "m1".into(),
+            user_id: "u1".into(),
+            name: "test".into(),
+            platform: "linux".into(),
+            status: MachineStatus::Trusted,
+            trust_tier: TrustTier::Basic,
+            capabilities: None,
+            last_heartbeat: Some(now),
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        assert_eq!(machine.connectivity_status(), ConnectivityStatus::Online);
     }
 }
