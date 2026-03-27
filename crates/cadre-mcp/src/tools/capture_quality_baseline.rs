@@ -1,4 +1,4 @@
-use super::helpers::{store_for, tool_error};
+use super::helpers::{project_root_from, store_for, tool_error};
 use cadre_core::{
     BaselineCaptureService, ClippyParser, CoverageParser, EslintParser, ToolOutputParser,
     TypeScriptParser,
@@ -8,7 +8,6 @@ use rust_mcp_sdk::{
     schema::{schema_utils::CallToolError, CallToolResult, TextContent},
 };
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 
 #[mcp_tool(
     name = "capture_quality_baseline",
@@ -67,7 +66,8 @@ impl CaptureQualityBaselineTool {
                 .map_err(tool_error)?;
 
         let content = baseline.to_content().map_err(tool_error)?;
-        let doc_path = Path::new(&self.project_path)
+        let project_root = project_root_from(&self.project_path);
+        let doc_path = project_root
             .join(".cadre")
             .join("docs")
             .join(format!("{short_code}.md"));

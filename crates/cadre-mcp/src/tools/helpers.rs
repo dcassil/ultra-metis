@@ -11,6 +11,23 @@ pub fn store_for(project_path: &str) -> DocumentStore {
     DocumentStore::new(Path::new(project_path))
 }
 
+/// Derive the project root directory from a `.cadre` path.
+/// If `project_path` ends with `.cadre`, returns its parent. Otherwise returns as-is.
+pub fn project_root_from(project_path: &str) -> std::path::PathBuf {
+    let p = Path::new(project_path);
+    match p.file_name().and_then(|f| f.to_str()) {
+        Some(".cadre") => p.parent().unwrap_or(p).to_path_buf(),
+        _ => p.to_path_buf(),
+    }
+}
+
+/// Derive the `.cadre` internal directory from a project path.
+/// Returns `{project_root}/.cadre/.cadre/`.
+pub fn cadre_internal_dir(project_path: &str) -> std::path::PathBuf {
+    let root = project_root_from(project_path);
+    root.join(".cadre").join(".cadre")
+}
+
 pub fn build_scope_from_args(
     scope_repo: &Option<String>,
     scope_package: &Option<String>,

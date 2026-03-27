@@ -1,11 +1,10 @@
-use super::helpers::tool_error;
+use super::helpers::{cadre_internal_dir, project_root_from, tool_error};
 use cadre_store::CodeIndexer;
 use rust_mcp_sdk::{
     macros::{mcp_tool, JsonSchema},
     schema::{schema_utils::CallToolError, CallToolResult, TextContent},
 };
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 
 #[mcp_tool(
     name = "index_code",
@@ -29,9 +28,9 @@ pub struct IndexCodeTool {
 
 impl IndexCodeTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
-        let index_path = Path::new(&self.project_path)
-            .join(".cadre")
-            .join("code-index.json");
+        let project_root = project_root_from(&self.project_path);
+        let internal_dir = cadre_internal_dir(&self.project_path);
+        let index_path = internal_dir.join("code-index.json");
 
         // If query is provided, search existing index
         if let Some(q) = &self.query {
@@ -74,14 +73,25 @@ impl IndexCodeTool {
             });
         }
 
-        // Otherwise, build the index
-        let patterns = self
-            .patterns
-            .clone()
-            .unwrap_or_else(|| vec!["src/**/*.rs".to_string()]);
+        // Resolve source directory: use cached source_dir from index, or try src/, or ask agent
+        let source_dir = self.resolve_source_dir(&project_root, &index_path)?;
 
-        let indexer = CodeIndexer::new(Path::new(&self.project_path));
-        let index = indexer.index(&patterns).map_err(tool_error)?;
+        // Build patterns relative to project root using resolved source dir
+        let patterns = self.patterns.clone().unwrap_or_else(|| {
+            let rel_source = source_dir
+                .strip_prefix(&project_root)
+                .unwrap_or(&source_dir);
+            vec![format!("{}/**/*.rs", rel_source.display())]
+        });
+
+        let indexer = CodeIndexer::new(&project_root);
+        let mut index = indexer.index(&patterns).map_err(tool_error)?;
+
+        // Store the resolved source_dir in the index for future calls
+        let rel_source = source_dir
+            .strip_prefix(&project_root)
+            .unwrap_or(&source_dir);
+        index.source_dir = Some(rel_source.display().to_string());
 
         let symbol_count = index.symbols.len();
         let file_count = index.indexed_files;
@@ -105,5 +115,49 @@ impl IndexCodeTool {
             meta: None,
             structured_content: None,
         })
+    }
+
+    /// Resolve the source directory for indexing.
+    /// Priority: 1) cached source_dir from existing index, 2) src/ if it exists, 3) error asking agent
+    fn resolve_source_dir(
+        &self,
+        project_root: &std::path::Path,
+        index_path: &std::path::Path,
+    ) -> Result<std::path::PathBuf, CallToolError> {
+        // If patterns were explicitly provided, skip resolution
+        if self.patterns.is_some() {
+            return Ok(project_root.to_path_buf());
+        }
+
+        // Check existing index for cached source_dir
+        if index_path.exists() {
+            if let Ok(content) = std::fs::read_to_string(index_path) {
+                if let Ok(existing_index) =
+                    serde_json::from_str::<cadre_store::CodeIndex>(&content)
+                {
+                    if let Some(ref cached_dir) = existing_index.source_dir {
+                        let resolved = project_root.join(cached_dir);
+                        if resolved.is_dir() {
+                            return Ok(resolved);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Try src/ relative to project root
+        let src_dir = project_root.join("src");
+        if src_dir.is_dir() {
+            return Ok(src_dir);
+        }
+
+        // No source directory found — ask the agent for help
+        Err(tool_error(format!(
+            "Could not find source directory. No `src/` directory found at `{}`. \
+            Please provide explicit `patterns` parameter with glob patterns pointing to your source files \
+            (e.g., [\"lib/**/*.rs\"] or [\"app/**/*.ts\"]). \
+            The resolved path will be cached in code-index.json for future calls.",
+            project_root.display()
+        )))
     }
 }

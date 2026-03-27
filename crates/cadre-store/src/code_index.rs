@@ -70,6 +70,9 @@ pub struct CodeIndex {
     pub symbols: Vec<CodeSymbol>,
     pub indexed_files: usize,
     pub indexed_at: String,
+    /// Cached source directory relative to project root (resolved on first index)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_dir: Option<String>,
 }
 
 /// Code indexer using tree-sitter
@@ -118,6 +121,7 @@ impl CodeIndexer {
             symbols: all_symbols,
             indexed_files: file_count,
             indexed_at: chrono::Utc::now().to_rfc3339(),
+            source_dir: None,
         })
     }
 
