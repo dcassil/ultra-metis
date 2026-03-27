@@ -38,10 +38,10 @@ impl StoreError {
         match self {
             Self::Io(e) => format!("File system error: {e}. Check file permissions and disk space."),
             Self::NotInitialized { path } => format!(
-                "No Metis workspace found at '{path}'. Run initialize_project first."
+                "No Cadre workspace found at '{path}'. Run initialize_project first."
             ),
             Self::AlreadyInitialized { path } => format!(
-                "A Metis workspace already exists at '{path}'. Use the existing workspace or choose a different directory."
+                "A Cadre workspace already exists at '{path}'. Use the existing workspace or choose a different directory."
             ),
             Self::DocumentNotFound { short_code } => format!(
                 "Document '{short_code}' not found. Use list_documents to see available documents."

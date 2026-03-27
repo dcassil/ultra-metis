@@ -79,4 +79,13 @@ Create the `dcassil/cadre-architecture-docs` GitHub repo, migrate all existing b
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-27
+- Created GitHub repo `dcassil/cadre-architecture-docs` (was empty, already existed)
+- Migrated all 9 architecture entries with full YAML frontmatter:
+  - JavaScript: server, react-app, component-lib, cli-tool, node-util (data from builtin_entries.rs)
+  - Rust: cli-tool, web-service (new structured data created)
+  - Python: web-app, cli-tool (new structured data created)
+- Organized as `{language}/{project-type}.md`
+- Created README with schema docs, contribution guidelines, and entry table
+- Created GitHub Actions CI workflow to validate frontmatter on PRs
+- Pushed to main, CI validation workflow queued

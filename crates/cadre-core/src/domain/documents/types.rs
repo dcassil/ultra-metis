@@ -148,7 +148,7 @@ pub enum DocumentType {
     Epic,
     Story,
 
-    // Retained from Metis
+    // Retained from the legacy planning model
     Task,
     Adr,
     Specification,
@@ -436,7 +436,7 @@ impl DocumentType {
         )
     }
 
-    /// Returns true if this is a legacy Metis type retained for migration
+    /// Returns true if this is a legacy type retained for migration
     pub fn is_legacy_type(&self) -> bool {
         matches!(self, Self::Vision | Self::Initiative)
     }

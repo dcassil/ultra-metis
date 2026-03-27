@@ -169,7 +169,7 @@ case "$STORY_TYPE" in
 esac
 
 # Build the full prompt
-METIS_PATH="$PROJECT_PATH/.metis"
+PROJECT_STATE_PATH="$PROJECT_PATH/.metis"
 PROMPT="Execute Cadre document: $SHORT_CODE
 
 ## Document Content
@@ -179,8 +179,8 @@ $DOC_RAW
 
 ## Execution Instructions
 
-1. Read the document using mcp__cadre__read_document(project_path=\"$METIS_PATH\", short_code=\"$SHORT_CODE\") to get current state
-2. Transition to active using mcp__cadre__transition_phase(project_path=\"$METIS_PATH\", short_code=\"$SHORT_CODE\")
+1. Read the document using mcp__cadre__read_document(project_path=\"$PROJECT_STATE_PATH\", short_code=\"$SHORT_CODE\") to get current state
+2. Transition to active using mcp__cadre__transition_phase(project_path=\"$PROJECT_STATE_PATH\", short_code=\"$SHORT_CODE\")
 3. Follow the REQUIRED SKILLS above - invoke each one using the Skill tool before starting implementation
 4. Implement what the document describes
 5. Log progress to the document using mcp__cadre__edit_document after each significant step

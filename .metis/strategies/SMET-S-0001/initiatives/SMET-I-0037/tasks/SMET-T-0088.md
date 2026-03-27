@@ -81,7 +81,7 @@ Each `content.md` is a Tera template rendered by `TemplateRegistry` in `cadre-co
 - `parent_title` / `parent_short_code` — if parent document exists
 - Document-type-specific fields
 
-**Patterns to apply from original metis:**
+**Patterns to apply from original cadre:**
 
 1. **Required vs Conditional markers:**
 ```markdown

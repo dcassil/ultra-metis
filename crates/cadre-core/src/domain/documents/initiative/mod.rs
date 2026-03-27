@@ -9,7 +9,7 @@ use std::path::Path;
 use tera::{Context, Tera};
 
 /// An Initiative groups related Epics under an optional Vision.
-/// Retained from original Metis codebase for migration compatibility.
+/// Retained for legacy compatibility.
 /// Phases: Discovery → Design → Ready → Decompose → Active → Completed
 #[derive(Debug)]
 pub struct Initiative {

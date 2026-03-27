@@ -34,7 +34,7 @@ The cadre plugin (SMET-I-0067) implements Ralph loop execution commands that del
 2. **setup-cadre-ralph.sh** line 204: Fixed `CLAUDE_CODE_SESSION_ID` → `CLAUDE_SESSION_ID`
 3. **setup-cadre-decompose.sh** line 171: Fixed `CLAUDE_CODE_SESSION_ID` → `CLAUDE_SESSION_ID`
 
-**Upstream Metis fix** (separate, more involved): PR https://github.com/colliery-io/metis/pull/7 — Metis uses its own stop hook and state files, so it needed session-scoped filenames (`.claude/metis-ralph-active-{SESSION_ID}.yaml`) with backwards-compatible fallback.
+**Upstream Metis fix** (separate, more involved): PR https://github.com/colliery-io/metis/pull/7 — Metis uses its own stop hook and state files, so it needed session-scoped filenames (`.claude/cadre-ralph-active-{SESSION_ID}.yaml`) with backwards-compatible fallback.
 
 ### Architecture Difference
 
@@ -69,7 +69,7 @@ Cadre delegates iteration to the **ralph-loop plugin** (from claude-plugins-offi
 ### Upstream Metis (different architecture)
 
 Metis uses its own stop hook and state files. The fix there was more involved:
-- Session-scoped filenames: `.claude/metis-ralph-active-{SESSION_ID}.yaml`
+- Session-scoped filenames: `.claude/cadre-ralph-active-{SESSION_ID}.yaml`
 - Stop hook does filename lookup by session_id first, then legacy fallback with ownership check
 - PR: https://github.com/colliery-io/metis/pull/7
 

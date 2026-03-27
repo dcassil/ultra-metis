@@ -9,7 +9,7 @@ use std::path::Path;
 use tera::{Context, Tera};
 
 /// A Vision document defines the top-level product intent, scope, and success criteria.
-/// Retained from original Metis codebase for migration compatibility.
+/// Retained for legacy compatibility.
 /// Phases: Draft → Review → Published
 #[derive(Debug)]
 pub struct Vision {

@@ -1922,19 +1922,19 @@ mod tests {
     }
 
     #[test]
-    fn test_path_normalization_strips_metis_suffix() {
+    fn test_path_normalization_strips_legacy_suffix() {
         let dir = tempdir().unwrap();
         // Initialize using a path that has .metis as the last component
         // First init normally
         let store = DocumentStore::new(dir.path());
         store.initialize("NORM2").unwrap();
 
-        // Create a .metis directory to simulate the old layout
-        let metis_path = dir.path().join(".metis");
-        std::fs::create_dir_all(&metis_path).unwrap();
+        // Create a .metis directory to simulate the legacy layout
+        let legacy_path = dir.path().join(".metis");
+        std::fs::create_dir_all(&legacy_path).unwrap();
 
         // Store created with .metis path should normalize to parent
-        let store2 = DocumentStore::new(&metis_path);
+        let store2 = DocumentStore::new(&legacy_path);
         assert!(store2.is_initialized());
     }
 }

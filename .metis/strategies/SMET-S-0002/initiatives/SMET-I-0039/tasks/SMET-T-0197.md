@@ -4,14 +4,14 @@ level: task
 title: "Machine Data Model and Database Schema"
 short_code: "SMET-T-0197"
 created_at: 2026-03-27T16:18:36.490306+00:00
-updated_at: 2026-03-27T16:18:36.490306+00:00
+updated_at: 2026-03-27T19:46:58.641050+00:00
 parent: SMET-I-0039
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0039
 ## Objective
 
 Define and implement the core data model and database schema for machines, repos, and the multi-tenancy scaffolding tables (orgs, teams, users, roles). This is the foundational data layer that all other tasks in this initiative depend on.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

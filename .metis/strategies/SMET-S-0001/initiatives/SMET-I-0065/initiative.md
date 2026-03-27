@@ -24,12 +24,12 @@ initiative_id: cadre-plugin-guidance-agent
 
 ## Context
 
-Metis has a `metis:flight-levels` agent — a specialized subagent that provides methodology guidance for document type selection, work decomposition, phase transitions, and Flight Levels best practices. This agent is spawned by Claude Code when users need help with Metis workflow decisions. It has access to Metis MCP tools and can read/search/create documents autonomously to provide contextual guidance.
+Metis has a `cadre:flight-levels` agent — a specialized subagent that provides methodology guidance for document type selection, work decomposition, phase transitions, and Flight Levels best practices. This agent is spawned by Claude Code when users need help with Metis workflow decisions. It has access to Metis MCP tools and can read/search/create documents autonomously to provide contextual guidance.
 
 Cadre has no equivalent agent. When users ask methodology questions ("what document type should I create?", "how do I decompose this initiative?", "when should I transition phases?"), there's no specialized agent to handle these queries using cadre tools.
 
 **What Metis has:**
-- `metis:flight-levels` agent with access to: Read, Grep, Glob, and all `mcp__metis__*` tools
+- `cadre:flight-levels` agent with access to: Read, Grep, Glob, and all `mcp__cadre__*` tools
 - Triggers on: document type selection, work decomposition, phase transitions, Flight Levels best practices
 - Provides autonomous methodology guidance using live project state
 

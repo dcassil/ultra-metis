@@ -26,9 +26,9 @@ initiative_id: replace-hand-rolled-mcp-server
 
 The current `cadre-mcp` crate implements a hand-rolled MCP server that speaks raw JSON-RPC 2.0 over bare stdio lines. It reads newline-delimited JSON from stdin and writes newline-delimited JSON to stdout. **This does not work** because Claude Code's MCP client expects the proper MCP stdio transport protocol as implemented by the `rust-mcp-sdk` library, which uses content-length framed messages (similar to LSP).
 
-The reference implementation (`metis-docs-mcp` in `super-metis/metis/crates/metis-docs-mcp/`) uses `rust-mcp-sdk v0.8.0` with `StdioTransport`, an async tokio runtime, the `ServerHandler` trait, and proper `schemars`-derived JSON schemas for tool input validation. The cadre-mcp binary starts, reads stdin, but never produces any output because the framing protocols are incompatible — the client sends MCP-framed messages that the bare `serde_json::from_str` parser cannot parse.
+The reference implementation (`metis-docs-mcp` in `super-metis/metis/crates/cadre-docs-mcp/`) uses `rust-mcp-sdk v0.8.0` with `StdioTransport`, an async tokio runtime, the `ServerHandler` trait, and proper `schemars`-derived JSON schemas for tool input validation. The cadre-mcp binary starts, reads stdin, but never produces any output because the framing protocols are incompatible — the client sends MCP-framed messages that the bare `serde_json::from_str` parser cannot parse.
 
-### Reference implementation (working): `super-metis/metis/crates/metis-docs-mcp/`
+### Reference implementation (working): `super-metis/metis/crates/cadre-docs-mcp/`
 ### Current broken implementation: `crates/cadre-mcp/`
 
 ## Goals & Non-Goals

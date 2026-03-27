@@ -109,7 +109,7 @@ DOC_RAW=$(cadre read "$SHORT_CODE" -p "$PROJECT_PATH" 2>&1) || {
 }
 
 # Build decomposition prompt
-METIS_PATH="$PROJECT_PATH/.metis"
+PROJECT_STATE_PATH="$PROJECT_PATH/.metis"
 PROMPT="Decompose Cadre epic: $SHORT_CODE
 
 ## Epic Content
@@ -121,8 +121,8 @@ $DOC_RAW
 
 ## Decomposition Instructions
 
-1. Read the epic using mcp__cadre__read_document(project_path=\"$METIS_PATH\", short_code=\"$SHORT_CODE\")
-2. Transition to decompose using mcp__cadre__transition_phase(project_path=\"$METIS_PATH\", short_code=\"$SHORT_CODE\")
+1. Read the epic using mcp__cadre__read_document(project_path=\"$PROJECT_STATE_PATH\", short_code=\"$SHORT_CODE\")
+2. Transition to decompose using mcp__cadre__transition_phase(project_path=\"$PROJECT_STATE_PATH\", short_code=\"$SHORT_CODE\")
 3. Invoke the REQUIRED SKILLS above using the Skill tool
 4. Analyze the epic requirements and break into typed stories
 5. Present the proposed story breakdown to the human for review BEFORE creating

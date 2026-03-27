@@ -37,7 +37,7 @@ The current coupling is mostly in the agent-facing surface layer. `plugins/cadre
 
 This makes OpenAI support look harder than it actually is. The MCP server is already the shared execution surface. The real work is extracting provider-neutral workflow assets from the Claude plugin, then implementing thin adapters for Claude and OpenAI/Codex-style hosts.
 
-This initiative captures that refactor and the first OpenAI adapter so Cadre can support both providers without duplicating workflow logic or reintroducing namespace drift (`mcp__metis__...` vs `mcp__cadre__...`) across prompt assets.
+This initiative captures that refactor and the first OpenAI adapter so Cadre can support both providers without duplicating workflow logic or reintroducing namespace drift (`mcp__cadre__...` vs `mcp__cadre__...`) across prompt assets.
 
 ## Goals & Non-Goals
 
@@ -281,7 +281,7 @@ Explicitly defer Claude-only ergonomics unless the OpenAI host exposes equivalen
 1. Inventory all provider-specific workflow assets in `plugins/cadre/` and classify each as shared vs Claude-only
 2. Create a shared workflow core for context text, logical tool aliases, workflow recipes, and story-type methodology mappings
 3. Refactor the Claude adapter to render from the shared workflow core without changing user-visible behavior
-4. Fix existing namespace drift in provider assets while doing the extraction (`mcp__metis__...` remnants, stale naming, provider-specific hardcoding)
+4. Fix existing namespace drift in provider assets while doing the extraction (`mcp__cadre__...` remnants, stale naming, provider-specific hardcoding)
 5. Create the first OpenAI adapter with shared session instructions, task execution guidance, and decomposition guidance
 6. Validate both adapters against the same representative workflows: session start, task execution, initiative decomposition, and document updates
 7. Document capability differences explicitly where host features diverge

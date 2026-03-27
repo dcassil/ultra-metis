@@ -1,7 +1,7 @@
 ---
 description: "Execute all tasks under a Cadre initiative with fresh subagent per task"
 argument-hint: "SHORT_CODE [--review]"
-allowed-tools: ["Agent", "mcp__metis__read_document", "mcp__metis__list_documents", "mcp__metis__edit_document", "mcp__metis__transition_phase"]
+allowed-tools: ["Agent", "mcp__cadre__read_document", "mcp__cadre__list_documents", "mcp__cadre__edit_document", "mcp__cadre__transition_phase"]
 hide-from-slash-command-tool: "true"
 ---
 
@@ -14,11 +14,11 @@ Parse the SHORT_CODE and flags from: `$ARGUMENTS`
 - `SHORT_CODE`: Required. Initiative short code (e.g., PROJ-I-0001)
 - `--review`: Optional. Dispatch code review subagent after each task.
 
-1. Use `mcp__metis__read_document` to verify the initiative exists and is in `active` or `decompose` phase
-2. Use `mcp__metis__list_documents` to find all child tasks under this initiative
+1. Use `mcp__cadre__read_document` to verify the initiative exists and is in `active` or `decompose` phase
+2. Use `mcp__cadre__list_documents` to find all child tasks under this initiative
 3. Filter to tasks in `todo` phase (not yet started)
 
-**If no tasks found**: Tell the user to run `/metis-decompose` first. Stop here.
+**If no tasks found**: Tell the user to run `/cadre-decompose` first. Stop here.
 
 **If initiative is not in active phase**: Transition it to active first.
 
@@ -27,7 +27,7 @@ Parse the SHORT_CODE and flags from: `$ARGUMENTS`
 For EACH task in `todo` phase (in order):
 
 ### 2a. Read the task
-Use `mcp__metis__read_document` to get the full task content.
+Use `mcp__cadre__read_document` to get the full task content.
 
 ### 2b. Determine superpowers skills
 Map the task's story_type (or default to generic) to required superpowers skills:
@@ -45,7 +45,7 @@ Map the task's story_type (or default to generic) to required superpowers skills
 | (default/task) | superpowers:test-driven-development → superpowers:verification-before-completion |
 
 ### 2c. Transition task to active
-Use `mcp__metis__transition_phase` to move the task from `todo` → `active`.
+Use `mcp__cadre__transition_phase` to move the task from `todo` → `active`.
 
 ### 2d. Dispatch fresh Agent
 Use the Agent tool to dispatch a fresh subagent with this prompt:
@@ -65,7 +65,7 @@ Execute Cadre task: {SHORT_CODE}
 1. Read the task requirements above carefully
 2. Invoke the Required Skills above using the Skill tool
 3. Implement what the task describes
-4. Update the task document with progress using mcp__metis__edit_document
+4. Update the task document with progress using mcp__cadre__edit_document
 5. Commit your work with a descriptive message
 6. Report what you accomplished when done
 
@@ -78,8 +78,8 @@ Execute Cadre task: {SHORT_CODE}
 
 ### 2e. Handle Agent result
 When the Agent returns:
-- Log the result summary to the initiative document via `mcp__metis__edit_document`
-- Transition the task to `completed` via `mcp__metis__transition_phase`
+- Log the result summary to the initiative document via `mcp__cadre__edit_document`
+- Transition the task to `completed` via `mcp__cadre__transition_phase`
 
 ### 2f. Optional review (if --review flag)
 If `--review` was specified:
@@ -97,7 +97,7 @@ Report: approved or issues found.
 3. If approved: proceed to next task
 
 ### 2g. Update initiative
-Use `mcp__metis__edit_document` to log progress to the initiative document's Status Updates section.
+Use `mcp__cadre__edit_document` to log progress to the initiative document's Status Updates section.
 
 ## Step 3: Complete
 

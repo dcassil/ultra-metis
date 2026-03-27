@@ -35,14 +35,14 @@ Audit the entire codebase for stale references to the old "metis" naming that sh
 - [x] P2 - Medium (nice to have)
 
 ### Technical Debt Impact
-- **Current Problems**: After the metis→cadre rename (SMET-I-0074), some references to the old naming may remain — particularly in string literals, MCP tool name prefixes (`mcp__metis__` vs `mcp__cadre__`), plugin registration, and comments.
+- **Current Problems**: After the metis→cadre rename (SMET-I-0074), some references to the old naming may remain — particularly in string literals, MCP tool name prefixes (`mcp__cadre__` vs `mcp__cadre__`), plugin registration, and comments.
 - **Benefits of Fixing**: Consistent naming throughout, avoids confusion when onboarding or reading code, prevents bugs from mismatched tool name prefixes.
 - **Risk Assessment**: Low risk if left unaddressed short-term, but stale names compound confusion over time.
 
 ## Acceptance Criteria
 
 - [ ] `rg -i metis` across `crates/` returns zero hits outside of `.metis/` directory references and the Metis plugin integration (which is the upstream plugin, not our code)
-- [ ] All MCP tool name prefixes in Cadre source code use `mcp__cadre__` not `mcp__metis__`
+- [ ] All MCP tool name prefixes in Cadre source code use `mcp__cadre__` not `mcp__cadre__`
 - [ ] All user-facing strings (error messages, help text, CLI output) reference "cadre" not "metis"
 - [ ] Plugin config files (`.mcp.json`, `plugin.json`) use correct cadre binary names and prefixes
 - [ ] Comments and doc strings updated where they reference the old name
@@ -62,7 +62,7 @@ Search patterns to audit:
 
 Exclude from changes:
 - `.metis/` directory (this is the Metis data store, not our code — its naming is correct)
-- References to the upstream Metis plugin itself (e.g., `plugin:metis:metis` MCP server name)
+- References to the upstream Metis plugin itself (e.g., `plugin:cadre:metis` MCP server name)
 - Benchmark code that intentionally compares Metis vs Cadre (e.g., comparative execution modes, scoring reports)
 - Original Metis source kept as reference material
 - Git history / commit messages

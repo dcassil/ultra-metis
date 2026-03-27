@@ -32,11 +32,11 @@ fi
 # Build concise context (~300 tokens)
 read -r -d '' CONTEXT << 'EOF'
 This is a Cadre project (.metis directory). Use Cadre MCP tools for all work tracking:
-- mcp__metis__read_document / mcp__metis__edit_document - Read and update documents
-- mcp__metis__list_documents / mcp__metis__search_documents - Find documents
-- mcp__metis__transition_phase - Move documents through phases
-- mcp__metis__create_document - Create new documents (MUST populate content after creation)
-Do NOT use TodoWrite - use mcp__metis__edit_document to update active Cadre documents instead.
+- mcp__cadre__read_document / mcp__cadre__edit_document - Read and update documents
+- mcp__cadre__list_documents / mcp__cadre__search_documents - Find documents
+- mcp__cadre__transition_phase - Move documents through phases
+- mcp__cadre__create_document - Create new documents (MUST populate content after creation)
+Do NOT use TodoWrite - use mcp__cadre__edit_document to update active Cadre documents instead.
 When working on a task, update its Status Updates section with progress regularly.
 EOF
 

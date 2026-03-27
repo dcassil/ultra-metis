@@ -1,0 +1,19 @@
+# Cadre Machine Runner Configuration
+#
+# Copy this file to ~/.config/cadre/machine-runner.toml and adjust values.
+
+# URL of the Cadre control service
+control_service_url = "http://localhost:3000"
+
+# Human-readable name for this machine
+machine_name = "my-machine"
+
+# API token for authenticating with the control service
+api_token = "cadre-mvp-static-token"
+
+# How often (in seconds) to send heartbeats to the control service
+heartbeat_interval_secs = 20
+
+# Directories to scan for git repositories (one level deep)
+# Use ~ for home directory expansion
+repo_directories = ["~/projects"]

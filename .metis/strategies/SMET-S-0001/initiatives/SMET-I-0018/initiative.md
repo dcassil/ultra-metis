@@ -132,7 +132,7 @@ Phase 7: Comprehensive unit tests
 
 ## Codebase Audit Results
 
-**Completed audit of `metis/crates/metis-docs-core/src/`**
+**Completed audit of `metis/crates/cadre-docs-core/src/`**
 
 ### Current Architecture (Key Files)
 - `domain/documents/types.rs` — DocumentType enum (Vision, Initiative, Task, Adr, Specification), Phase enum (15 phases), DocumentId

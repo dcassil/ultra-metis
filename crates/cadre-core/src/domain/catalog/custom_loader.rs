@@ -11,9 +11,9 @@ use std::path::{Path, PathBuf};
 /// Default subdirectory under `.metis/` for custom catalog entries.
 pub const CATALOG_DIR_NAME: &str = "catalog";
 
-/// Resolves the catalog directory path from a `.metis` project path.
-pub fn catalog_dir(metis_path: &Path) -> PathBuf {
-    metis_path.join(CATALOG_DIR_NAME)
+/// Resolves the catalog directory path from a project state path.
+pub fn catalog_dir(project_state_path: &Path) -> PathBuf {
+    project_state_path.join(CATALOG_DIR_NAME)
 }
 
 /// Load all custom catalog entries from the given directory.
@@ -94,9 +94,9 @@ impl std::fmt::Display for CustomLoadError {
 }
 
 /// Build a [`CatalogQueryEngine`](super::query_engine::CatalogQueryEngine) with
-/// both built-in entries and any custom entries found in the given metis path.
+/// both built-in entries and any custom entries found in the given project state path.
 pub async fn build_engine_with_custom(
-    metis_path: &Path,
+    project_state_path: &Path,
 ) -> Result<
     (
         super::query_engine::CatalogQueryEngine,
@@ -104,7 +104,7 @@ pub async fn build_engine_with_custom(
     ),
     DocumentValidationError,
 > {
-    let custom_dir = catalog_dir(metis_path);
+    let custom_dir = catalog_dir(project_state_path);
     let (custom_entries, errors) = load_custom_entries(&custom_dir).await;
     let engine = super::query_engine::CatalogQueryEngine::with_builtins_and_custom(custom_entries);
     Ok((engine, errors))
@@ -149,8 +149,11 @@ mod tests {
 
     #[test]
     fn test_catalog_dir_path() {
-        let metis = Path::new("/project/.metis");
-        assert_eq!(catalog_dir(metis), PathBuf::from("/project/.metis/catalog"));
+        let project_state_path = Path::new("/project/.metis");
+        assert_eq!(
+            catalog_dir(project_state_path),
+            PathBuf::from("/project/.metis/catalog")
+        );
     }
 
     #[tokio::test]
@@ -236,8 +239,8 @@ mod tests {
     #[tokio::test]
     async fn test_build_engine_with_custom() {
         let dir = tempdir().unwrap();
-        let metis_dir = dir.path().join(".metis");
-        let catalog_path = metis_dir.join("catalog");
+        let project_state_dir = dir.path().join(".metis");
+        let catalog_path = project_state_dir.join("catalog");
         std::fs::create_dir_all(&catalog_path).unwrap();
 
         let entry = make_custom_entry("Rust Workspace", "CUSTOM-AC-RS-WS", "rust", "workspace");
@@ -246,7 +249,7 @@ mod tests {
             .await
             .unwrap();
 
-        let (engine, errors) = build_engine_with_custom(&metis_dir).await.unwrap();
+        let (engine, errors) = build_engine_with_custom(&project_state_dir).await.unwrap();
         assert!(errors.is_empty());
         // 5 built-in + 1 custom
         assert_eq!(engine.all_entries().len(), 6);

@@ -38,7 +38,7 @@ Add a `Stop` hook (specifically a `SubagentStop` hook) that detects when a subag
 
 ## Acceptance Criteria
 - [ ] TodoWrite tool is blocked in Cadre projects with a clear explanation
-- [ ] Block message tells the agent to use `mcp__metis__edit_document` or `mcp__metis__create_document` instead
+- [ ] Block message tells the agent to use `mcp__cadre__edit_document` or `mcp__cadre__create_document` instead
 - [ ] Hook only activates in Cadre projects (has `.metis` directory)
 - [ ] Non-Cadre projects are unaffected
 

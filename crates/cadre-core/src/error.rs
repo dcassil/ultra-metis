@@ -2,10 +2,10 @@
 
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, MetisError>;
+pub type Result<T> = std::result::Result<T, CadreError>;
 
 #[derive(Debug, Error)]
-pub enum MetisError {
+pub enum CadreError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
 

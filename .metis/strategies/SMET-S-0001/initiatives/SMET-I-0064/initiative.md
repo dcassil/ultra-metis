@@ -29,13 +29,13 @@ The original Metis plugin provides rich contextual guidance through skills: `dec
 Cadre has no equivalent. The `.claude-plugin/` directory exists with only a `marketplace.json`. Without skills, agents using cadre MCP tools must improvise methodology decisions instead of following structured guidance. This is the single highest-impact gap for usability.
 
 **What Metis has that we need to port:**
-- `metis:decomposition` — guidance on breaking initiatives into vertical-slice tasks, sizing, granularity
-- `metis:phase-transitions` — when to transition, exit criteria per phase, what each phase means
-- `metis:document-selection` — which document type fits (vision vs initiative vs task vs ADR vs backlog)
-- `metis:project-patterns` — patterns for greenfield, tech debt, incident response, feature development
-- `metis:help` — overview of the system and available commands
+- `cadre:decomposition` — guidance on breaking initiatives into vertical-slice tasks, sizing, granularity
+- `cadre:phase-transitions` — when to transition, exit criteria per phase, what each phase means
+- `cadre:document-selection` — which document type fits (vision vs initiative vs task vs ADR vs backlog)
+- `cadre:project-patterns` — patterns for greenfield, tech debt, incident response, feature development
+- `cadre:help` — overview of the system and available commands
 
-**Strategy**: Port these as cadre plugin skills that reference cadre MCP tools (`mcp__cadre__*`) instead of metis tools (`mcp__metis__*`). Adapt content for cadre's document types and phase models.
+**Strategy**: Port these as cadre plugin skills that reference cadre MCP tools (`mcp__cadre__*`) instead of metis tools (`mcp__cadre__*`). Adapt content for cadre's document types and phase models.
 
 ## Goals & Non-Goals
 
@@ -147,7 +147,7 @@ All 5 skills implemented in `plugins/cadre/skills/`:
 
 All skills:
 - Have proper YAML frontmatter with name and description
-- Reference `mcp__cadre__*` tools (not `mcp__metis__*`)
+- Reference `mcp__cadre__*` tools (not `mcp__cadre__*`)
 - Are adapted for cadre document hierarchy
 - Are consistent with each other on phase models, document types, and methodology
 
