@@ -6,13 +6,14 @@ import {
   ClockIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
+import { usePendingCount } from '../hooks/usePendingCount';
 
 const navigation = [
-  { name: 'Machines', href: '/machines', icon: ServerIcon },
-  { name: 'Sessions', href: '/sessions', icon: PlayIcon },
-  { name: 'Monitoring', href: '/monitoring', icon: ChartBarIcon },
-  { name: 'History', href: '/history', icon: ClockIcon },
-  { name: 'Policies', href: '/policies', icon: ShieldCheckIcon },
+  { name: 'Machines', href: '/machines', icon: ServerIcon, showPendingBadge: true },
+  { name: 'Sessions', href: '/sessions', icon: PlayIcon, showPendingBadge: false },
+  { name: 'Monitoring', href: '/monitoring', icon: ChartBarIcon, showPendingBadge: false },
+  { name: 'History', href: '/history', icon: ClockIcon, showPendingBadge: false },
+  { name: 'Policies', href: '/policies', icon: ShieldCheckIcon, showPendingBadge: false },
 ];
 
 interface SidebarProps {
@@ -20,6 +21,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onClose }: SidebarProps) {
+  const pendingCount = usePendingCount();
+
   return (
     <nav className="flex flex-1 flex-col px-3 py-4">
       <ul className="flex flex-1 flex-col gap-y-1">
@@ -49,6 +52,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
                     aria-hidden="true"
                   />
                   {item.name}
+                  {item.showPendingBadge && pendingCount > 0 && (
+                    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning-500 px-1.5 text-xs font-semibold text-white">
+                      {pendingCount}
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>

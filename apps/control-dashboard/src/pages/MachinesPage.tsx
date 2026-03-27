@@ -1,124 +1,170 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { listMachines } from '../api/machines'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Machine } from '../api/machines'
-import { Table } from '../components/ui/Table'
-import { Button } from '../components/ui/Button'
-import { StatusBadge } from '../components/StatusBadge'
-import { TrustTierBadge } from '../components/TrustTierBadge'
-import { RelativeTime } from '../components/RelativeTime'
+import { listMachines } from '../api/machines'
+import { Table, Badge } from '../components/ui'
+import PendingMachinesBanner from '../components/PendingMachinesBanner'
+import PendingMachineCard from '../components/PendingMachineCard'
 
-const connectivityOrder: Record<Machine['connectivity_status'], number> = {
-  online: 0,
-  stale: 1,
-  offline: 2,
-  unknown: 3,
+type StatusVariant = 'online' | 'offline' | 'pending' | 'error'
+const statusVariant: Record<string, StatusVariant> = {
+  online: 'online',
+  stale: 'pending',
+  offline: 'offline',
+  pending: 'pending',
 }
 
-function sortByConnectivity(machines: Machine[]): Machine[] {
-  return [...machines].sort((a, b) => connectivityOrder[a.connectivity_status] - connectivityOrder[b.connectivity_status])
+type TrustVariant = 'online' | 'pending' | 'error'
+const trustVariant: Record<string, TrustVariant> = {
+  trusted: 'online',
+  restricted: 'pending',
+  pending: 'error',
 }
 
 const columns = [
+  { key: 'name', header: 'Name' },
   {
-    key: 'name',
-    header: 'Name',
-    render: (row: Machine) => <span className="font-medium text-primary-700">{row.name}</span>,
+    key: 'platform',
+    header: 'Platform',
   },
-  { key: 'platform', header: 'Platform' },
   {
-    key: 'connectivity_status',
+    key: 'status',
     header: 'Status',
-    render: (row: Machine) => <StatusBadge status={row.connectivity_status} />,
+    render: (row: Record<string, unknown>) => (
+      <Badge variant={statusVariant[row.status as string] ?? 'offline'}>
+        {String(row.status)}
+      </Badge>
+    ),
   },
   {
     key: 'trust_tier',
     header: 'Trust Tier',
-    render: (row: Machine) => <TrustTierBadge tier={row.trust_tier} />,
+    render: (row: Record<string, unknown>) => (
+      <Badge variant={trustVariant[row.trust_tier as string] ?? 'offline'}>
+        {String(row.trust_tier)}
+      </Badge>
+    ),
   },
   {
     key: 'repos_count',
     header: 'Repos',
-    render: (row: Machine) => String(row.repos_count),
-  },
-  {
-    key: 'last_heartbeat',
-    header: 'Last Heartbeat',
-    render: (row: Machine) => <RelativeTime timestamp={row.last_heartbeat} />,
+    render: (row: Record<string, unknown>) => {
+      const count = row.repos_count as number
+      return count > 0 ? String(count) : '\u2014'
+    },
   },
 ]
 
 export default function MachinesPage() {
-  const navigate = useNavigate()
   const [machines, setMachines] = useState<Machine[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showPending, setShowPending] = useState(false)
+  const pendingSectionRef = useRef<HTMLDivElement>(null)
 
   const fetchMachines = useCallback(async () => {
     try {
       const data = await listMachines()
-      setMachines(sortByConnectivity(data))
+      setMachines(data)
       setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load machines')
+    } catch {
+      setError('Failed to load machines')
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    void fetchMachines()
-    const interval = setInterval(() => void fetchMachines(), 10_000)
-    return () => clearInterval(interval)
+    fetchMachines()
   }, [fetchMachines])
+
+  const pendingMachines = useMemo(
+    () => machines.filter((m) => m.status === 'pending'),
+    [machines],
+  )
+
+  const activeMachines = useMemo(
+    () => machines.filter((m) => m.status !== 'pending') as (Machine & Record<string, unknown>)[],
+    [machines],
+  )
+
+  function handleViewPending() {
+    setShowPending(true)
+    // Scroll to the pending section after render
+    setTimeout(() => {
+      pendingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
+
+  function handlePendingAction() {
+    fetchMachines()
+  }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <svg className="h-8 w-8 animate-spin text-primary-600" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
+        <div className="text-sm text-secondary-500">Loading machines...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <p className="text-danger-600">{error}</p>
-        <Button variant="secondary" onClick={() => { setLoading(true); void fetchMachines() }}>
-          Retry
-        </Button>
-      </div>
-    )
-  }
-
-  if (machines.length === 0) {
-    return (
       <div className="flex items-center justify-center py-24">
-        <div className="rounded-lg border border-secondary-200 bg-white px-8 py-12 text-center shadow-sm">
-          <h2 className="text-2xl font-semibold text-secondary-900">No Machines</h2>
-          <p className="mt-2 text-secondary-500">
-            No machines registered. Install the Machine Runner to get started.
-          </p>
+        <div className="rounded-lg border border-danger-200 bg-danger-50 px-8 py-12 text-center">
+          <p className="text-sm text-danger-700">{error}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true)
+              fetchMachines()
+            }}
+            className="mt-3 text-sm font-medium text-primary-600 hover:text-primary-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-secondary-900">Machines</h1>
-        <span className="text-sm text-secondary-500">{machines.length} registered</span>
+        <h2 className="text-2xl font-semibold text-secondary-900">Machines</h2>
       </div>
+
+      <PendingMachinesBanner count={pendingMachines.length} onViewPending={handleViewPending} />
+
+      {showPending && pendingMachines.length > 0 && (
+        <div ref={pendingSectionRef} className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-secondary-900">Pending Approval</h3>
+            <button
+              type="button"
+              onClick={() => setShowPending(false)}
+              className="text-sm text-secondary-500 hover:text-secondary-700"
+            >
+              Hide
+            </button>
+          </div>
+          {pendingMachines.map((machine) => (
+            <PendingMachineCard
+              key={machine.id}
+              machine={machine}
+              onAction={handlePendingAction}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="rounded-lg border border-secondary-200 bg-white shadow-sm">
-        <Table<Machine>
-          columns={columns}
-          data={machines}
-          onRowClick={(row) => navigate(`/machines/${row.id}`)}
-        />
+        {activeMachines.length === 0 ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-sm text-secondary-500">No machines registered yet.</p>
+          </div>
+        ) : (
+          <Table columns={columns} data={activeMachines} />
+        )}
       </div>
     </div>
   )
