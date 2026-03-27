@@ -85,7 +85,7 @@ fn messy_repo() -> Vec<String> {
 #[test]
 fn test_full_flow_express_server_catalog_match() {
     let evaluator = BrownfieldEvaluator::new();
-    let entries = builtin_entries::builtin_entries();
+    let entries = builtin_entries::test_builtin_entries();
 
     let result = evaluator.evaluate(&express_server_repo(), &entries, "RA-INT-001".to_string());
 
@@ -132,7 +132,7 @@ fn test_full_flow_express_server_catalog_match() {
 #[test]
 fn test_full_flow_react_spa_catalog_match() {
     let evaluator = BrownfieldEvaluator::new();
-    let entries = builtin_entries::builtin_entries();
+    let entries = builtin_entries::test_builtin_entries();
 
     let result = evaluator.evaluate(&react_spa_repo(), &entries, "RA-INT-002".to_string());
 
@@ -155,7 +155,7 @@ fn test_full_flow_react_spa_catalog_match() {
 #[test]
 fn test_full_flow_messy_repo_recommend_then_decline() {
     let evaluator = BrownfieldEvaluator::new();
-    let entries = builtin_entries::builtin_entries();
+    let entries = builtin_entries::test_builtin_entries();
 
     let result = evaluator.evaluate(&messy_repo(), &entries, "RA-INT-003".to_string());
 
@@ -238,7 +238,7 @@ fn test_structure_analysis_details() {
 #[test]
 fn test_pattern_matcher_ranking() {
     let analysis = StructureAnalyzer::analyze(&express_server_repo());
-    let entries = builtin_entries::builtin_entries();
+    let entries = builtin_entries::test_builtin_entries();
     let matcher = PatternMatcher::with_default_threshold();
 
     let result = matcher.match_against(&analysis, &entries);
@@ -258,7 +258,7 @@ fn test_pattern_matcher_ranking() {
 /// Custom evaluator config changes behavior.
 #[test]
 fn test_custom_config_thresholds() {
-    let entries = builtin_entries::builtin_entries();
+    let entries = builtin_entries::test_builtin_entries();
 
     // Very strict quality threshold -- even good repos are "bad"
     let strict = BrownfieldEvaluator::with_config(EvaluatorConfig {

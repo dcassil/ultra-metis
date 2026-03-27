@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[mcp_tool(
     name = "query_architecture_catalog",
-    description = "Search the architecture catalog by language and project type.",
+    description = "Search the architecture catalog by language and project type. Fetches entries from the remote catalog repository.",
     idempotent_hint = true,
     destructive_hint = false,
     open_world_hint = false,
@@ -25,7 +25,7 @@ pub struct QueryArchitectureCatalogTool {
 
 impl QueryArchitectureCatalogTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = CatalogQueryEngine::with_remote().await;
 
         let mut query = CatalogQuery::new();
         if let Some(lang) = &self.language {

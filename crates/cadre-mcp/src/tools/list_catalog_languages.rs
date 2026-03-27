@@ -21,7 +21,7 @@ pub struct ListCatalogLanguagesTool {
 
 impl ListCatalogLanguagesTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = CatalogQueryEngine::with_remote().await;
         let languages = engine.languages();
 
         if languages.is_empty() {

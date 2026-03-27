@@ -1,27 +1,37 @@
-// Stub API module for Machine management — SMET-I-0039
+import { apiClient } from './client'
 
 export interface Machine {
   id: string
   name: string
   platform: string
-  status: 'online' | 'stale' | 'offline' | 'pending'
-  trustTier: 'trusted' | 'restricted' | 'pending'
-  lastHeartbeat: string
-  repos: string[]
+  status: 'pending' | 'trusted' | 'revoked'
+  trust_tier: string
+  connectivity_status: 'online' | 'stale' | 'offline' | 'unknown'
+  repos_count: number
+  last_heartbeat: string | null
+  created_at: string
 }
 
-export function listMachines(): Promise<Machine[]> {
-  throw new Error('Not implemented — see SMET-I-0039')
+export interface MachineDetail extends Machine {
+  metadata: Record<string, unknown>
+  repos: Array<{ id: string; repo_name: string; repo_path: string; cadre_managed: boolean }>
+  active_sessions: unknown[]
 }
 
-export function getMachine(_id: string): Promise<Machine> {
-  throw new Error('Not implemented — see SMET-I-0039')
+export async function listMachines(): Promise<Machine[]> {
+  const response = await apiClient.get<Machine[]>('/api/machines')
+  return response.data
 }
 
-export function approveMachine(_id: string): Promise<void> {
-  throw new Error('Not implemented — see SMET-I-0039')
+export async function getMachine(id: string): Promise<MachineDetail> {
+  const response = await apiClient.get<MachineDetail>(`/api/machines/${id}`)
+  return response.data
 }
 
-export function revokeMachine(_id: string): Promise<void> {
-  throw new Error('Not implemented — see SMET-I-0039')
+export async function approveMachine(id: string): Promise<void> {
+  await apiClient.post(`/api/machines/${id}/approve`)
+}
+
+export async function revokeMachine(id: string): Promise<void> {
+  await apiClient.post(`/api/machines/${id}/revoke`)
 }

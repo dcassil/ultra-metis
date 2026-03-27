@@ -4,14 +4,14 @@ level: task
 title: "Replace Builtin Entries with Remote Catalog in Query Engine and MCP"
 short_code: "SMET-T-0214"
 created_at: 2026-03-27T19:23:06.414636+00:00
-updated_at: 2026-03-27T19:23:06.414636+00:00
+updated_at: 2026-03-27T20:09:36.644492+00:00
 parent: SMET-I-0097
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0097
 ## Objective
 
 Wire the remote fetcher into the `CatalogQueryEngine` and MCP `query_architecture_catalog` tool so entries come from the external repo at runtime. Remove the hardcoded `builtin_entries.rs` and `builtin_data/` directory from the binary.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -87,4 +91,13 @@ Wire the remote fetcher into the `CatalogQueryEngine` and MCP `query_architectur
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-27
+- **query_engine.rs**: Added `with_remote()` and `with_remote_and_custom()` async constructors
+- **builtin_entries.rs**: `builtin_entries()` now returns empty vec; added `test_builtin_entries()` gated behind `cfg(any(test, feature = "test-utils"))` with all 5 JS entries preserved for tests
+- **builtin_data/**: Deleted all 9 markdown files and directory — no more `include_str!()`
+- **custom_loader.rs**: `build_engine_with_custom()` now uses `RemoteCatalogFetcher::with_defaults().fetch()` + local custom entries
+- **MCP tools**: All 3 tools (`query_architecture_catalog`, `evaluate_brownfield`, `list_catalog_languages`) switched from `with_builtins()` to `with_remote().await`
+- **lib.rs**: Added `RemoteCatalogFetcher`, `FetchError`, `DEFAULT_REPO_URL`, `default_cache_dir` to public exports
+- **All tests updated**: ~30+ test references switched from `builtin_entries()` to `test_builtin_entries()` across query_engine, selection_flow, evaluator, pattern_matcher, and integration tests
+- **Cargo.toml**: Added `cadre-core = { path = ".", features = ["test-utils"] }` to dev-dependencies so integration tests can access test entries
+- Full workspace: 0 failures, 804+ tests pass, release build succeeds

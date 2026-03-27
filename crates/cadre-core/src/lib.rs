@@ -82,6 +82,9 @@ pub use domain::catalog::brownfield_evaluator::structure_analyzer::{
     NamingConvention, StructureAnalysis, StructureAnalyzer, TestPattern,
 };
 pub use domain::catalog::builtin_entries;
+pub use domain::catalog::remote_fetcher::{
+    default_cache_dir, RemoteCatalogFetcher, FetchError, DEFAULT_REPO_URL,
+};
 pub use domain::catalog::custom_loader::{
     build_engine_with_custom, catalog_dir, load_custom_entries, CustomLoadError, CATALOG_DIR_NAME,
 };

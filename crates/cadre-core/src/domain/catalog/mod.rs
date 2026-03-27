@@ -8,4 +8,5 @@ pub mod brownfield_evaluator;
 pub mod builtin_entries;
 pub mod custom_loader;
 pub mod query_engine;
+pub mod remote_fetcher;
 pub mod selection_flow;

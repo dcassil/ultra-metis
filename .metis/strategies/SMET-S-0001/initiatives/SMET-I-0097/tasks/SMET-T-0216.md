@@ -4,14 +4,14 @@ level: task
 title: "Evaluate Brownfield and Contribute Architecture Doc Plugin Skill"
 short_code: "SMET-T-0216"
 created_at: 2026-03-27T19:23:07.913206+00:00
-updated_at: 2026-03-27T19:23:07.913206+00:00
+updated_at: 2026-03-27T20:28:40.580244+00:00
 parent: SMET-I-0097
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0097
 ## Objective
 
 Create a Cadre plugin skill that evaluates brownfield codebases and, when the architecture is high-quality and unique, generates an architecture catalog document and submits it as a PR to the public catalog repo. This enables community-driven catalog growth from real-world codebases.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -95,4 +99,13 @@ Compare the candidate architecture against existing catalog entries:
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-27
+- Created `plugins/cadre/skills/contribute-brownfield-architecture/SKILL.md`
+- Skill orchestrates: evaluate_brownfield -> quality gate (70%) -> uniqueness check -> generate doc -> PR submission
+- Quality gate stops and reports findings if score < 70%
+- Uniqueness check compares layers with existing catalog entries (>80% overlap = duplicate)
+- Generated doc maps real evaluation data to ArchitectureCatalogEntry schema
+- Includes anonymization guidance for project-specific names
+- PR body includes evaluation metrics table, architecture highlights
+- Trigger description covers: "contribute architecture", "submit architecture to catalog", "brownfield contribute", "share this architecture"
+- Plugin uses auto-discovery — skill registered automatically

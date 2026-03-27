@@ -12,7 +12,7 @@ interface TableProps<T> {
   onRowClick?: (row: T) => void
 }
 
-export function Table<T extends Record<string, unknown>>({ columns, data, onRowClick }: TableProps<T>) {
+export function Table<T extends object>({ columns, data, onRowClick }: TableProps<T>) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-secondary-200">
@@ -37,7 +37,7 @@ export function Table<T extends Record<string, unknown>>({ columns, data, onRowC
             >
               {columns.map((col) => (
                 <td key={col.key} className="whitespace-nowrap px-4 py-3">
-                  {col.render ? col.render(row) : String(row[col.key] ?? '')}
+                  {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '')}
                 </td>
               ))}
             </tr>

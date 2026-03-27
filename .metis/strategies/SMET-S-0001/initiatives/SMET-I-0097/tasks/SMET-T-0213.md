@@ -4,14 +4,14 @@ level: task
 title: "Catalog Remote Fetcher Module in cadre-core"
 short_code: "SMET-T-0213"
 created_at: 2026-03-27T19:23:05.521265+00:00
-updated_at: 2026-03-27T19:23:05.521265+00:00
+updated_at: 2026-03-27T19:54:02.791284+00:00
 parent: SMET-I-0097
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0097
 ## Objective
 
 Add a new `remote_fetcher` module to `cadre-core` that clones/pulls the `dcassil/cadre-architecture-docs` repo into a local cache directory and loads all architecture catalog entries from it. This replaces the compile-time `include_str!()` approach with runtime fetching.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -87,4 +91,14 @@ impl RemoteCatalogFetcher {
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-27
+- Created `crates/cadre-core/src/domain/catalog/remote_fetcher.rs`
+- `RemoteCatalogFetcher` with `new()`, `with_defaults()`, `fetch()`, `fetch_cached_only()`
+- Shallow clone on first use, `git pull --ff-only` on subsequent uses
+- Falls back to stale cache on pull failure, empty vec on no cache
+- Re-clones if pull fails with conflicts
+- Respects `XDG_CACHE_HOME`, defaults to `~/.cadre/catalog-cache/`
+- Walks `{language}/{project-type}.md` structure, skips README and invalid files
+- 7 tests all passing: cache path resolution, entry loading, multi-language, invalid file skipping
+- Registered module in `mod.rs`
+- Full workspace compiles clean

@@ -1,45 +1,64 @@
-//! Built-in architecture catalog entries for JavaScript/TypeScript projects.
+//! Built-in architecture catalog entries.
 //!
-//! These entries ship with the Cadre binary and represent curated,
-//! known-good architecture patterns for common JS/TS project types.
+//! Production: returns an empty vec (entries are fetched from the remote catalog).
+//! Tests: provides `test_builtin_entries()` with 5 JavaScript patterns for
+//! deterministic testing without network access.
 
 use crate::domain::documents::architecture_catalog_entry::ArchitectureCatalogEntry;
+
+#[cfg(any(test, feature = "test-utils"))]
 use crate::domain::documents::content::DocumentContent;
+#[cfg(any(test, feature = "test-utils"))]
 use crate::domain::documents::metadata::DocumentMetadata;
+#[cfg(any(test, feature = "test-utils"))]
 use crate::domain::documents::types::{Phase, Tag};
 
+/// All built-in catalog entries.
+///
+/// Returns an empty vec — catalog entries are now fetched at runtime from the
+/// external `dcassil/cadre-architecture-docs` repository via [`super::remote_fetcher`].
+pub fn builtin_entries() -> Vec<ArchitectureCatalogEntry> {
+    vec![]
+}
+
+// --- Test utilities ---
+
 /// Convert a slice of string slices into owned String vec.
+#[cfg(any(test, feature = "test-utils"))]
 fn strs(items: &[&str]) -> Vec<String> {
     items.iter().map(|s| (*s).to_string()).collect()
 }
 
-/// Common tags for all builtin entries.
-fn builtin_tags() -> Vec<Tag> {
+/// Common tags for all test entries.
+#[cfg(any(test, feature = "test-utils"))]
+fn test_tags() -> Vec<Tag> {
     vec![
         Tag::Label("architecture_catalog_entry".to_string()),
         Tag::Phase(Phase::Published),
     ]
 }
 
-/// All built-in catalog entries.
-pub fn builtin_entries() -> Vec<ArchitectureCatalogEntry> {
+/// Test-only catalog entries for deterministic testing without network access.
+///
+/// Returns the same 5 JavaScript patterns that were previously embedded in the binary.
+#[cfg(any(test, feature = "test-utils"))]
+pub fn test_builtin_entries() -> Vec<ArchitectureCatalogEntry> {
     vec![
-        javascript_server(),
-        javascript_react_app(),
-        javascript_component_lib(),
-        javascript_cli_tool(),
-        javascript_node_util(),
+        test_javascript_server(),
+        test_javascript_react_app(),
+        test_javascript_component_lib(),
+        test_javascript_cli_tool(),
+        test_javascript_node_util(),
     ]
 }
 
-/// Express/Fastify/Hono backend server pattern.
-pub fn javascript_server() -> ArchitectureCatalogEntry {
-    let content = DocumentContent::new(include_str!("builtin_data/server.md"));
+#[cfg(any(test, feature = "test-utils"))]
+pub fn test_javascript_server() -> ArchitectureCatalogEntry {
     ArchitectureCatalogEntry::from_parts(
         "JavaScript Server (Express/Fastify/Hono)".to_string(),
         DocumentMetadata::new("BUILTIN-AC-JS-SERVER".to_string()),
-        content,
-        builtin_tags(),
+        DocumentContent::new("# JavaScript Server\n\nLayered backend server architecture."),
+        test_tags(),
         false,
         "javascript".to_string(),
         "server".to_string(),
@@ -77,14 +96,13 @@ pub fn javascript_server() -> ArchitectureCatalogEntry {
     )
 }
 
-/// React SPA or Next.js application pattern.
-pub fn javascript_react_app() -> ArchitectureCatalogEntry {
-    let content = DocumentContent::new(include_str!("builtin_data/react_app.md"));
+#[cfg(any(test, feature = "test-utils"))]
+pub fn test_javascript_react_app() -> ArchitectureCatalogEntry {
     ArchitectureCatalogEntry::from_parts(
         "JavaScript React App (SPA / Next.js)".to_string(),
         DocumentMetadata::new("BUILTIN-AC-JS-REACT".to_string()),
-        content,
-        builtin_tags(),
+        DocumentContent::new("# JavaScript React App\n\nFeature-based React architecture."),
+        test_tags(),
         false,
         "javascript".to_string(),
         "react-app".to_string(),
@@ -127,14 +145,13 @@ pub fn javascript_react_app() -> ArchitectureCatalogEntry {
     )
 }
 
-/// Shared UI component library pattern.
-pub fn javascript_component_lib() -> ArchitectureCatalogEntry {
-    let content = DocumentContent::new(include_str!("builtin_data/component_lib.md"));
+#[cfg(any(test, feature = "test-utils"))]
+pub fn test_javascript_component_lib() -> ArchitectureCatalogEntry {
     ArchitectureCatalogEntry::from_parts(
         "JavaScript Component Library".to_string(),
         DocumentMetadata::new("BUILTIN-AC-JS-COMPLIB".to_string()),
-        content,
-        builtin_tags(),
+        DocumentContent::new("# JavaScript Component Library\n\nShared UI library."),
+        test_tags(),
         false,
         "javascript".to_string(),
         "component-lib".to_string(),
@@ -176,14 +193,13 @@ pub fn javascript_component_lib() -> ArchitectureCatalogEntry {
     )
 }
 
-/// Node.js CLI tool pattern.
-pub fn javascript_cli_tool() -> ArchitectureCatalogEntry {
-    let content = DocumentContent::new(include_str!("builtin_data/cli_tool.md"));
+#[cfg(any(test, feature = "test-utils"))]
+pub fn test_javascript_cli_tool() -> ArchitectureCatalogEntry {
     ArchitectureCatalogEntry::from_parts(
         "JavaScript CLI Tool".to_string(),
         DocumentMetadata::new("BUILTIN-AC-JS-CLI".to_string()),
-        content,
-        builtin_tags(),
+        DocumentContent::new("# JavaScript CLI Tool\n\nCommand-based CLI architecture."),
+        test_tags(),
         false,
         "javascript".to_string(),
         "cli-tool".to_string(),
@@ -219,14 +235,13 @@ pub fn javascript_cli_tool() -> ArchitectureCatalogEntry {
     )
 }
 
-/// Node.js utility/library package pattern.
-pub fn javascript_node_util() -> ArchitectureCatalogEntry {
-    let content = DocumentContent::new(include_str!("builtin_data/node_util.md"));
+#[cfg(any(test, feature = "test-utils"))]
+pub fn test_javascript_node_util() -> ArchitectureCatalogEntry {
     ArchitectureCatalogEntry::from_parts(
         "JavaScript Node Utility Library".to_string(),
         DocumentMetadata::new("BUILTIN-AC-JS-NODEUTIL".to_string()),
-        content,
-        builtin_tags(),
+        DocumentContent::new("# JavaScript Node Utility Library\n\nUtility package for Node.js."),
+        test_tags(),
         false,
         "javascript".to_string(),
         "node-util".to_string(),
@@ -267,30 +282,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_builtin_entries_count() {
+    fn test_builtin_entries_returns_empty() {
         let entries = builtin_entries();
+        assert!(entries.is_empty(), "production builtin_entries() should return empty vec");
+    }
+
+    #[test]
+    fn test_test_builtin_entries_count() {
+        let entries = test_builtin_entries();
         assert_eq!(entries.len(), 5);
     }
 
     #[test]
-    fn test_all_entries_are_javascript() {
-        let entries = builtin_entries();
+    fn test_all_test_entries_are_javascript() {
+        let entries = test_builtin_entries();
         for entry in &entries {
             assert_eq!(entry.language, "javascript");
         }
     }
 
     #[test]
-    fn test_all_entries_are_published() {
-        let entries = builtin_entries();
+    fn test_all_test_entries_are_published() {
+        let entries = test_builtin_entries();
         for entry in &entries {
             assert_eq!(entry.phase().unwrap(), Phase::Published);
         }
     }
 
     #[test]
-    fn test_all_entries_have_unique_project_types() {
-        let entries = builtin_entries();
+    fn test_all_test_entries_have_unique_project_types() {
+        let entries = test_builtin_entries();
         let mut types: Vec<&str> = entries.iter().map(|e| e.project_type.as_str()).collect();
         types.sort_unstable();
         types.dedup();
@@ -298,46 +319,22 @@ mod tests {
     }
 
     #[test]
-    fn test_all_entries_have_content() {
-        let entries = builtin_entries();
+    fn test_all_test_entries_have_content() {
+        let entries = test_builtin_entries();
         for entry in &entries {
-            assert!(
-                !entry.folder_layout.is_empty(),
-                "{} missing folder_layout",
-                entry.title()
-            );
+            assert!(!entry.folder_layout.is_empty(), "{} missing folder_layout", entry.title());
             assert!(!entry.layers.is_empty(), "{} missing layers", entry.title());
-            assert!(
-                !entry.dependency_rules.is_empty(),
-                "{} missing dependency_rules",
-                entry.title()
-            );
-            assert!(
-                !entry.naming_conventions.is_empty(),
-                "{} missing naming_conventions",
-                entry.title()
-            );
-            assert!(
-                !entry.anti_patterns.is_empty(),
-                "{} missing anti_patterns",
-                entry.title()
-            );
-            assert!(
-                !entry.rules_seed_hints.is_empty(),
-                "{} missing rules_seed_hints",
-                entry.title()
-            );
-            assert!(
-                !entry.analysis_expectations.is_empty(),
-                "{} missing analysis_expectations",
-                entry.title()
-            );
+            assert!(!entry.dependency_rules.is_empty(), "{} missing dependency_rules", entry.title());
+            assert!(!entry.naming_conventions.is_empty(), "{} missing naming_conventions", entry.title());
+            assert!(!entry.anti_patterns.is_empty(), "{} missing anti_patterns", entry.title());
+            assert!(!entry.rules_seed_hints.is_empty(), "{} missing rules_seed_hints", entry.title());
+            assert!(!entry.analysis_expectations.is_empty(), "{} missing analysis_expectations", entry.title());
         }
     }
 
     #[test]
     fn test_server_entry_details() {
-        let entry = javascript_server();
+        let entry = test_javascript_server();
         assert_eq!(entry.project_type, "server");
         assert!(entry.layers.contains(&"routes".to_string()));
         assert!(entry.layers.contains(&"handlers".to_string()));
@@ -346,41 +343,8 @@ mod tests {
     }
 
     #[test]
-    fn test_react_app_entry_details() {
-        let entry = javascript_react_app();
-        assert_eq!(entry.project_type, "react-app");
-        assert!(entry.layers.contains(&"components".to_string()));
-        assert!(entry.layers.contains(&"hooks".to_string()));
-        assert!(entry.layers.contains(&"services".to_string()));
-    }
-
-    #[test]
-    fn test_component_lib_entry_details() {
-        let entry = javascript_component_lib();
-        assert_eq!(entry.project_type, "component-lib");
-        assert!(entry.layers.contains(&"components".to_string()));
-        assert!(entry.layers.contains(&"utils".to_string()));
-    }
-
-    #[test]
-    fn test_cli_tool_entry_details() {
-        let entry = javascript_cli_tool();
-        assert_eq!(entry.project_type, "cli-tool");
-        assert!(entry.layers.contains(&"commands".to_string()));
-        assert!(entry.layers.contains(&"core".to_string()));
-    }
-
-    #[test]
-    fn test_node_util_entry_details() {
-        let entry = javascript_node_util();
-        assert_eq!(entry.project_type, "node-util");
-        assert!(entry.layers.contains(&"public".to_string()));
-        assert!(entry.layers.contains(&"internal".to_string()));
-    }
-
-    #[test]
     fn test_entries_roundtrip_serialization() {
-        let entries = builtin_entries();
+        let entries = test_builtin_entries();
         for entry in &entries {
             let serialized = entry.to_content().unwrap();
             let loaded = ArchitectureCatalogEntry::from_content(&serialized).unwrap();

@@ -4,14 +4,14 @@ level: task
 title: "Generate Architecture Doc from Best Practices Plugin Skill"
 short_code: "SMET-T-0215"
 created_at: 2026-03-27T19:23:07.340033+00:00
-updated_at: 2026-03-27T19:23:07.340033+00:00
+updated_at: 2026-03-27T20:21:29.029299+00:00
 parent: SMET-I-0097
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0097
 ## Objective
 
 Create a Cadre plugin skill that generates high-quality architecture catalog documents from industry best practices, given a language and project type. The skill guides Claude through researching patterns, generating the document in the correct schema, and optionally submitting it as a PR to the public catalog repo.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -91,4 +95,12 @@ gh pr create --repo dcassil/cadre-architecture-docs --title "Add {language} {pro
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-27
+- Created `plugins/cadre/skills/generate-architecture-doc/SKILL.md`
+- Skill accepts language + project type, checks for duplicates via `query_architecture_catalog`
+- Generates full YAML frontmatter matching `ArchitectureCatalogEntry` schema exactly
+- Markdown body includes Overview, Structure, Dependency Rules, Anti-Patterns, Quality Expectations
+- Saves locally to user-specified path or default
+- Optional PR submission flow using `gh` CLI to `dcassil/cadre-architecture-docs`
+- Trigger description covers: "generate architecture doc", "create catalog entry", "new architecture pattern", "add architecture to catalog"
+- Plugin uses auto-discovery — skill registered automatically

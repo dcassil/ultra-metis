@@ -286,6 +286,7 @@ name = "cadre-core"
 version = "0.3.0"
 dependencies = [
  "anyhow",
+ "cadre-core",
  "chrono",
  "diesel",
  "diesel_migrations",

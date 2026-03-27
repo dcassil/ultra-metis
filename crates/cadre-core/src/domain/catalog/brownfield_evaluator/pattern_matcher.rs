@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn test_server_matches_server_pattern() {
         let analysis = StructureAnalyzer::analyze(&server_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);
@@ -346,7 +346,7 @@ mod tests {
     #[test]
     fn test_react_matches_react_pattern() {
         let analysis = StructureAnalyzer::analyze(&react_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);
@@ -369,7 +369,7 @@ mod tests {
     #[test]
     fn test_cli_matches_cli_pattern() {
         let analysis = StructureAnalyzer::analyze(&cli_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);
@@ -389,7 +389,7 @@ mod tests {
             "scripts/run.py".to_string(),
         ];
         let analysis = StructureAnalyzer::analyze(&paths);
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::new(60.0); // Higher threshold
 
         let result = matcher.match_against(&analysis, &entries);
@@ -400,7 +400,7 @@ mod tests {
     #[test]
     fn test_scores_are_sorted_descending() {
         let analysis = StructureAnalyzer::analyze(&server_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);
@@ -413,7 +413,7 @@ mod tests {
     #[test]
     fn test_match_details_populated() {
         let analysis = StructureAnalyzer::analyze(&server_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);
@@ -425,7 +425,7 @@ mod tests {
     #[test]
     fn test_empty_analysis() {
         let analysis = StructureAnalyzer::analyze(&[]);
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);
@@ -436,7 +436,7 @@ mod tests {
     #[test]
     fn test_custom_threshold() {
         let analysis = StructureAnalyzer::analyze(&server_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         // Very high threshold -- should not match
         let strict = PatternMatcher::new(99.0);
@@ -452,7 +452,7 @@ mod tests {
     #[test]
     fn test_server_has_higher_layer_score_than_react_for_server_paths() {
         let analysis = StructureAnalyzer::analyze(&server_paths());
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let matcher = PatternMatcher::with_default_threshold();
 
         let result = matcher.match_against(&analysis, &entries);

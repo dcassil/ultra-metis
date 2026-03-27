@@ -41,6 +41,7 @@ regex = "1.12.2"
 tempfile = { workspace = true, optional = true }
 
 [dev-dependencies]
+cadre-core = { path = ".", features = ["test-utils"] }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }
 

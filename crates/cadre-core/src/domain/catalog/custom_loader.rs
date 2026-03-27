@@ -1,14 +1,13 @@
 //! Custom catalog entry loader.
 //!
-//! Loads user-defined [`ArchitectureCatalogEntry`] documents from a
-//! `.metis/catalog/` directory, allowing projects to extend the built-in
-//! catalog with their own architecture patterns.
+
+// TODO: This is wrong.  Not sure if this code is dead, but it needs to be audited,
 
 use crate::domain::documents::architecture_catalog_entry::ArchitectureCatalogEntry;
 use crate::domain::documents::traits::DocumentValidationError;
 use std::path::{Path, PathBuf};
 
-/// Default subdirectory under `.metis/` for custom catalog entries.
+/// Default subdirectory under `.cadre/` for custom catalog entries.
 pub const CATALOG_DIR_NAME: &str = "catalog";
 
 /// Resolves the catalog directory path from a project state path.
@@ -94,7 +93,8 @@ impl std::fmt::Display for CustomLoadError {
 }
 
 /// Build a [`CatalogQueryEngine`](super::query_engine::CatalogQueryEngine) with
-/// both built-in entries and any custom entries found in the given project state path.
+/// entries fetched from the remote catalog repository plus any custom entries
+/// found in the given project state path.
 pub async fn build_engine_with_custom(
     project_state_path: &Path,
 ) -> Result<
@@ -104,9 +104,15 @@ pub async fn build_engine_with_custom(
     ),
     DocumentValidationError,
 > {
+    let fetcher = super::remote_fetcher::RemoteCatalogFetcher::with_defaults();
+    let remote_entries = fetcher.fetch().await.unwrap_or_default();
+
     let custom_dir = catalog_dir(project_state_path);
     let (custom_entries, errors) = load_custom_entries(&custom_dir).await;
-    let engine = super::query_engine::CatalogQueryEngine::with_builtins_and_custom(custom_entries);
+
+    let mut all_entries = remote_entries;
+    all_entries.extend(custom_entries);
+    let engine = super::query_engine::CatalogQueryEngine::new(all_entries);
     Ok((engine, errors))
 }
 
@@ -251,8 +257,11 @@ mod tests {
 
         let (engine, errors) = build_engine_with_custom(&project_state_dir).await.unwrap();
         assert!(errors.is_empty());
-        // 5 built-in + 1 custom
-        assert_eq!(engine.all_entries().len(), 6);
+        // Remote entries + 1 custom (remote count varies based on network)
+        assert!(
+            engine.all_entries().len() >= 1,
+            "should have at least the custom entry"
+        );
 
         // Can query the custom entry
         let result = engine.find_exact("rust", "workspace");

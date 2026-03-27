@@ -565,7 +565,7 @@ mod tests {
     #[test]
     fn test_good_architecture_catalog_match() {
         let evaluator = BrownfieldEvaluator::new();
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         let result = evaluator.evaluate(&server_paths(), &entries, "RA-BF-001".to_string());
 
@@ -598,7 +598,7 @@ mod tests {
             match_threshold: 70.0, // High match threshold so nothing matches
         };
         let evaluator = BrownfieldEvaluator::with_config(config);
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         let result = evaluator.evaluate(&custom_good_paths(), &entries, "RA-BF-002".to_string());
 
@@ -620,7 +620,7 @@ mod tests {
     #[test]
     fn test_bad_architecture_recommendation() {
         let evaluator = BrownfieldEvaluator::new();
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         let result = evaluator.evaluate(&poor_paths(), &entries, "RA-BF-003".to_string());
 
@@ -675,7 +675,7 @@ mod tests {
     #[test]
     fn test_accept_recommendation() {
         let evaluator = BrownfieldEvaluator::new();
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
         let analysis = StructureAnalyzer::analyze(&poor_paths());
         let matcher = PatternMatcher::new(0.0); // Accept any match
         let match_result = matcher.match_against(&analysis, &entries);
@@ -691,7 +691,7 @@ mod tests {
     #[test]
     fn test_quality_findings_content() {
         let evaluator = BrownfieldEvaluator::new();
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         let result = evaluator.evaluate(&poor_paths(), &entries, "RA-BF-007".to_string());
 
@@ -719,7 +719,7 @@ mod tests {
     #[test]
     fn test_catalog_match_ra_has_content() {
         let evaluator = BrownfieldEvaluator::new();
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         let result = evaluator.evaluate(&server_paths(), &entries, "RA-BF-008".to_string());
 
@@ -739,7 +739,7 @@ mod tests {
     #[test]
     fn test_empty_file_paths() {
         let evaluator = BrownfieldEvaluator::new();
-        let entries = builtin_entries::builtin_entries();
+        let entries = builtin_entries::test_builtin_entries();
 
         let result = evaluator.evaluate(&[], &entries, "RA-BF-009".to_string());
 

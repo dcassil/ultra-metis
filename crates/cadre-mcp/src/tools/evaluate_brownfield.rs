@@ -26,7 +26,7 @@ pub struct EvaluateBrownfieldTool {
 
 impl EvaluateBrownfieldTool {
     pub async fn call_tool(&self) -> Result<CallToolResult, CallToolError> {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = CatalogQueryEngine::with_remote().await;
         let all_entries = engine.all_entries();
 
         if engine

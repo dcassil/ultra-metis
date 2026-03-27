@@ -270,7 +270,8 @@ mod tests {
     use super::*;
 
     fn setup_engine() -> CatalogQueryEngine {
-        CatalogQueryEngine::with_builtins()
+        use crate::domain::catalog::builtin_entries::test_builtin_entries;
+        CatalogQueryEngine::new(test_builtin_entries())
     }
 
     #[test]

@@ -3,6 +3,7 @@ import { UserProvider } from './auth';
 import { HealthProvider } from './contexts/HealthContext';
 import DashboardLayout from './layouts/DashboardLayout';
 import MachinesPage from './pages/MachinesPage';
+import MachineDetailPage from './pages/MachineDetailPage';
 import SessionsPage from './pages/SessionsPage';
 import MonitoringPage from './pages/MonitoringPage';
 import HistoryPage from './pages/HistoryPage';
@@ -18,6 +19,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route index element={<Navigate to="/machines" replace />} />
             <Route path="machines" element={<MachinesPage />} />
+            <Route path="machines/:id" element={<MachineDetailPage />} />
             <Route path="sessions" element={<SessionsPage />} />
             <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="history" element={<HistoryPage />} />

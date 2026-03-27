@@ -66,6 +66,10 @@ impl CatalogQueryEngine {
     }
 
     /// Create a new engine pre-loaded with built-in entries.
+    ///
+    /// In production this returns an empty engine — use [`Self::with_remote`] or
+    /// [`super::custom_loader::build_engine_with_custom`] to load entries from
+    /// the external catalog repository.
     pub fn with_builtins() -> Self {
         Self::new(super::builtin_entries::builtin_entries())
     }
@@ -73,6 +77,21 @@ impl CatalogQueryEngine {
     /// Create a new engine with built-in entries plus additional custom entries.
     pub fn with_builtins_and_custom(custom: Vec<ArchitectureCatalogEntry>) -> Self {
         let mut entries = super::builtin_entries::builtin_entries();
+        entries.extend(custom);
+        Self::new(entries)
+    }
+
+    /// Create a new engine loaded from the remote catalog repository.
+    pub async fn with_remote() -> Self {
+        let fetcher = super::remote_fetcher::RemoteCatalogFetcher::with_defaults();
+        let entries = fetcher.fetch().await.unwrap_or_default();
+        Self::new(entries)
+    }
+
+    /// Create a new engine with remote entries plus additional custom entries.
+    pub async fn with_remote_and_custom(custom: Vec<ArchitectureCatalogEntry>) -> Self {
+        let fetcher = super::remote_fetcher::RemoteCatalogFetcher::with_defaults();
+        let mut entries = fetcher.fetch().await.unwrap_or_default();
         entries.extend(custom);
         Self::new(entries)
     }
@@ -175,16 +194,27 @@ impl CatalogQueryEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::catalog::builtin_entries::test_builtin_entries;
+
+    fn test_engine() -> CatalogQueryEngine {
+        CatalogQueryEngine::new(test_builtin_entries())
+    }
 
     #[test]
-    fn test_engine_with_builtins() {
-        let engine = CatalogQueryEngine::with_builtins();
+    fn test_engine_with_test_entries() {
+        let engine = test_engine();
         assert_eq!(engine.all_entries().len(), 5);
     }
 
     #[test]
-    fn test_query_all_javascript() {
+    fn test_production_builtins_empty() {
         let engine = CatalogQueryEngine::with_builtins();
+        assert_eq!(engine.all_entries().len(), 0);
+    }
+
+    #[test]
+    fn test_query_all_javascript() {
+        let engine = test_engine();
         let query = CatalogQuery::new().with_language("javascript");
         let results = engine.query(&query);
         assert_eq!(results.len(), 5);
@@ -192,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_query_by_project_type() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let query = CatalogQuery::new()
             .with_language("javascript")
             .with_project_type("server");
@@ -203,7 +233,7 @@ mod tests {
 
     #[test]
     fn test_query_case_insensitive() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let query = CatalogQuery::new()
             .with_language("JavaScript")
             .with_project_type("React-App");
@@ -214,7 +244,7 @@ mod tests {
 
     #[test]
     fn test_query_no_match() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let query = CatalogQuery::new().with_language("rust");
         let results = engine.query(&query);
         assert_eq!(results.len(), 0);
@@ -222,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_find_exact() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let entry = engine.find_exact("javascript", "cli-tool");
         assert!(entry.is_some());
         assert_eq!(entry.unwrap().project_type, "cli-tool");
@@ -230,21 +260,21 @@ mod tests {
 
     #[test]
     fn test_find_exact_no_match() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let entry = engine.find_exact("python", "django");
         assert!(entry.is_none());
     }
 
     #[test]
     fn test_languages() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let langs = engine.languages();
         assert_eq!(langs, vec!["javascript"]);
     }
 
     #[test]
     fn test_project_types_for_language() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let types = engine.project_types_for_language("javascript");
         assert_eq!(types.len(), 5);
         assert!(types.contains(&"server".to_string()));
@@ -256,15 +286,14 @@ mod tests {
 
     #[test]
     fn test_project_types_for_unknown_language() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let types = engine.project_types_for_language("rust");
         assert!(types.is_empty());
     }
 
     #[test]
     fn test_query_phase_filter() {
-        let engine = CatalogQueryEngine::with_builtins();
-        // All builtins are Published, so Draft query should return 0
+        let engine = test_engine();
         let query = CatalogQuery::new()
             .with_language("javascript")
             .with_phase(Phase::Draft);
@@ -274,14 +303,14 @@ mod tests {
 
     #[test]
     fn test_empty_query_returns_all_published() {
-        let engine = CatalogQueryEngine::with_builtins();
+        let engine = test_engine();
         let query = CatalogQuery::new();
         let results = engine.query(&query);
         assert_eq!(results.len(), 5);
     }
 
     #[test]
-    fn test_with_builtins_and_custom() {
+    fn test_with_custom_entries() {
         use crate::domain::documents::content::DocumentContent;
         use crate::domain::documents::metadata::DocumentMetadata;
         use crate::domain::documents::types::Tag;
@@ -304,7 +333,9 @@ mod tests {
             vec![],
         );
 
-        let engine = CatalogQueryEngine::with_builtins_and_custom(vec![custom]);
+        let mut entries = test_builtin_entries();
+        entries.push(custom);
+        let engine = CatalogQueryEngine::new(entries);
         assert_eq!(engine.all_entries().len(), 6);
 
         let query = CatalogQuery::new().with_language("rust");

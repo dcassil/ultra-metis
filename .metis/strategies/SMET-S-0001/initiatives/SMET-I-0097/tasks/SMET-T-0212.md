@@ -4,14 +4,14 @@ level: task
 title: "Set Up External Catalog Repo and Migrate Builtin Entries"
 short_code: "SMET-T-0212"
 created_at: 2026-03-27T19:23:04.321976+00:00
-updated_at: 2026-03-27T19:29:10.630591+00:00
+updated_at: 2026-03-27T19:50:55.688168+00:00
 parent: SMET-I-0097
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: SMET-I-0097
 ## Objective
 
 Create the `dcassil/cadre-architecture-docs` GitHub repo, migrate all existing builtin architecture catalog entries into it with proper organization, and set up CI validation. This establishes the external source of truth for the architecture catalog.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
