@@ -4,14 +4,14 @@ level: initiative
 title: "Externalize Architecture Catalog to Public Repo with Community Contribution Skills"
 short_code: "SMET-I-0097"
 created_at: 2026-03-27T18:36:07.181157+00:00
-updated_at: 2026-03-27T18:36:07.181157+00:00
+updated_at: 2026-03-27T19:28:51.381391+00:00
 parent: SMET-S-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/active"
 
 
 exit_criteria_met: false

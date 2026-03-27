@@ -4,7 +4,7 @@ level: task
 title: "Fix capture_quality_baseline directory resolution in cadre-mcp"
 short_code: "SMET-T-0211"
 created_at: 2026-03-27T18:20:33.039714+00:00
-updated_at: 2026-03-27T18:59:47.395619+00:00
+updated_at: 2026-03-27T19:21:44.569272+00:00
 parent: 
 blocked_by: []
 archived: false
@@ -12,7 +12,7 @@ archived: false
 tags:
   - "#task"
   - "#bug"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -41,6 +41,8 @@ Fix `capture_quality_baseline` (and related tools like `index_code`) in `cadre-m
   2. Call `capture_quality_baseline` with `project_path` pointing to the `.cadre` folder
   3. Tool fails with "No such file or directory (os error 2)"
 - **Expected vs Actual**: Should resolve source files relative to the project root (parent of `.cadre/`). Instead fails because it can't find the directory to scan.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
