@@ -57,6 +57,18 @@ if [ "$TODO_COUNT" != "0" ]; then
 fi
 STATE_SUMMARY="${STATE_SUMMARY:-No actionable items}"
 
+# Check for incomplete setup (initialized but no ProductDoc)
+PRODUCT_DOC_COUNT=$(cadre list 2>/dev/null | grep -c "product_doc" || true)
+SETUP_INCOMPLETE_MSG=""
+if [ "$PRODUCT_DOC_COUNT" -eq 0 ]; then
+    read -r -d '' SETUP_INCOMPLETE_MSG << 'SETUPEOF'
+
+## Setup Incomplete
+This project has been initialized but has no ProductDoc.
+Run `/cadre-setup` to complete the guided project setup.
+SETUPEOF
+fi
+
 # Build context message
 read -r -d '' CONTEXT << EOF
 This is an **Cadre project** (detected \`.metis\` directory).
@@ -76,7 +88,7 @@ ${STATE_SUMMARY}
 \`\`\`
 ${ACTIVE_WORK:-No active or ready items found}
 \`\`\`
-
+${SETUP_INCOMPLETE_MSG}
 ## MCP Tools (Preferred)
 Use these MCP tools for all Cadre operations:
 - \`mcp__cadre__list_documents\` - List all documents with short codes and phases

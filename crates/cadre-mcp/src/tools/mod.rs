@@ -1,4 +1,5 @@
 pub mod all_tools;
+pub mod analyze_project;
 pub mod archive_document;
 pub mod capture_quality_baseline;
 pub mod check_architecture_conformance;
@@ -31,6 +32,7 @@ pub mod trace_ancestry;
 pub mod transition_phase;
 
 pub use all_tools::CadreTools;
+pub use analyze_project::*;
 pub use archive_document::*;
 pub use capture_quality_baseline::*;
 pub use check_architecture_conformance::*;

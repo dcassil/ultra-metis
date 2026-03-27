@@ -67,12 +67,20 @@ Repo-native engineering orchestration. All state is file-based markdown+YAML fro
 - **read_reference_architecture** — Read the project's selected architecture.
 - **evaluate_brownfield** — Score how well the repo matches a catalog entry.
 
-## Code Tools
+## Project & Code Tools
 
+- **initialize_project** — Create .cadre/ structure. For brownfield repos, returns bootstrap analysis (languages, tools, project type). For greenfield, returns suggested next steps.
+- **analyze_project** — Detect languages, build tools, project type, and monorepo structure for any directory. Returns bootstrap analysis without modifying the repo.
 - **index_code** — Index source symbols with tree-sitter. Query by name/kind.
-- **initialize_project** — Initialize a new .cadre directory.
 
 ## Workflow Recipes
+
+### Setting up a new project
+1. `initialize_project` — creates .cadre/ and returns bootstrap analysis
+2. If brownfield: review analysis, then `evaluate_brownfield` for architecture matching
+3. Create a vision document to capture the product direction
+4. If architecture match: create a `reference_architecture` document
+5. `index_code` to build the symbol index
 
 ### Start a task with context
 1. `fetch_insight_notes` with scope matching your work area
