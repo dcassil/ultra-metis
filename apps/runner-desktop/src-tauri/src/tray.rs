@@ -8,6 +8,7 @@ use tauri::Manager;
 /// - Enable/Disable — toggles the runner on/off
 /// - Settings — opens the settings window
 /// - View Sessions — opens the dashboard URL in the default browser
+/// - Uninstall... — opens the uninstall confirmation dialog
 /// - Quit — exits the application
 pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let toggle = MenuItemBuilder::with_id("toggle", "Disable")
@@ -15,6 +16,8 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let settings = MenuItemBuilder::with_id("settings", "Settings...")
         .build(app)?;
     let sessions = MenuItemBuilder::with_id("sessions", "View Sessions")
+        .build(app)?;
+    let uninstall = MenuItemBuilder::with_id("uninstall", "Uninstall...")
         .build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Quit")
         .build(app)?;
@@ -25,6 +28,7 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .item(&settings)
         .item(&sessions)
         .separator()
+        .item(&uninstall)
         .item(&quit)
         .build()?;
 
@@ -71,6 +75,24 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                             tracing::error!(error = %e, "Failed to open dashboard URL");
                         }
                     });
+                }
+                "uninstall" => {
+                    // Open or create the main window with #uninstall to show the
+                    // uninstall confirmation dialog.
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let _ = window.eval("window.location.hash = 'uninstall'");
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    } else {
+                        let _window = tauri::WebviewWindowBuilder::new(
+                            app_handle,
+                            "main",
+                            tauri::WebviewUrl::App("index.html#uninstall".into()),
+                        )
+                        .title("Cadre Machine Runner — Uninstall")
+                        .inner_size(600.0, 500.0)
+                        .build();
+                    }
                 }
                 "quit" => {
                     // Gracefully stop the runner and exit.

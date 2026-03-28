@@ -2,6 +2,7 @@ use cadre_machine_runner::{RunnerHandle, RunnerStatus, Settings};
 use tauri::State;
 use tauri_plugin_autostart::ManagerExt as AutostartManagerExt;
 use tauri_plugin_notification::NotificationExt;
+use tauri_plugin_updater::UpdaterExt;
 
 use crate::AppState;
 
@@ -184,4 +185,98 @@ pub async fn send_notification(
         .show()
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// Uninstall the runner: stop it, disable auto-start, optionally deregister
+/// from the server, clean up keychain and settings, then exit the app.
+///
+/// Every cleanup step is best-effort — we never fail the uninstall because
+/// one step couldn't complete.
+#[tauri::command]
+pub async fn uninstall(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    deregister: bool,
+) -> Result<(), String> {
+    // 1. Stop the runner if running.
+    let mut runner_guard = state.runner.write().await;
+    if let Some(ref mut handle) = *runner_guard {
+        let _ = handle.stop().await;
+    }
+    *runner_guard = None;
+    drop(runner_guard);
+
+    // 2. Disable auto-start.
+    let _ = app.autolaunch().disable();
+
+    // 3. Optionally deregister from server (best-effort).
+    if deregister {
+        let settings = state.settings.read().await;
+        let token = state.token.read().await;
+        if !token.is_empty() && !settings.control_service_url.is_empty() {
+            let client = reqwest::Client::new();
+            let _ = client
+                .post(format!(
+                    "{}/api/machines/{}/revoke",
+                    settings.control_service_url, settings.machine_name
+                ))
+                .bearer_auth(&*token)
+                .send()
+                .await;
+        }
+    }
+
+    // 4. Delete keychain token.
+    {
+        let settings = state.settings.read().await;
+        let _ = cadre_machine_runner::delete_token(&settings.machine_name);
+    }
+
+    // 5. Delete settings file.
+    let settings_path = Settings::settings_path();
+    let _ = std::fs::remove_file(&settings_path);
+
+    // 6. Delete log file if it exists.
+    let log_path = settings_path.with_file_name("runner.log");
+    let _ = std::fs::remove_file(&log_path);
+
+    // 7. Exit the app.
+    app.exit(0);
+
+    Ok(())
+}
+
+/// Check for application updates using the Tauri updater plugin.
+#[tauri::command]
+pub async fn check_for_updates(app: tauri::AppHandle) -> Result<String, String> {
+    let current_version = app.package_info().version.to_string();
+
+    let updater = app.updater().map_err(|e| e.to_string())?;
+
+    match updater.check().await {
+        Ok(Some(update)) => {
+            let version = update.version.clone();
+            let body = update.body.clone().unwrap_or_default();
+            Ok(serde_json::json!({
+                "available": true,
+                "current_version": current_version,
+                "latest_version": version,
+                "notes": body,
+                "message": format!("Update available: v{version}")
+            })
+            .to_string())
+        }
+        Ok(None) => Ok(serde_json::json!({
+            "available": false,
+            "current_version": current_version,
+            "message": "You're up to date"
+        })
+        .to_string()),
+        Err(e) => Ok(serde_json::json!({
+            "available": false,
+            "current_version": current_version,
+            "message": format!("Could not check for updates: {e}")
+        })
+        .to_string()),
+    }
 }

@@ -4,14 +4,14 @@ level: task
 title: "Cross-Platform Installer Build and Auto-Update"
 short_code: "SMET-T-0270"
 created_at: 2026-03-28T16:52:42.109064+00:00
-updated_at: 2026-03-28T16:52:42.109064+00:00
+updated_at: 2026-03-28T17:49:06.480711+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 Configure the Tauri bundler to produce installable packages for all three platforms, set up the auto-update mechanism via Tauri's updater plugin, and create the GitHub Actions CI pipeline for release builds.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

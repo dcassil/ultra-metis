@@ -25,6 +25,12 @@
     },
     "notification": {
       "enabled": true
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/dcassil/ultra-metis/releases/latest/download/latest.json"
+      ],
+      "pubkey": ""
     }
   },
   "bundle": {

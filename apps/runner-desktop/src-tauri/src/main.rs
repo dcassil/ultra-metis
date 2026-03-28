@@ -33,6 +33,7 @@ fn main() {
             Some(vec!["--minimized"]),
         ))
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(app_state)
         .setup(move |app| {
             tray::create_tray(app)?;
@@ -72,6 +73,8 @@ fn main() {
             commands::set_auto_start,
             commands::get_auto_start,
             commands::send_notification,
+            commands::check_for_updates,
+            commands::uninstall,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

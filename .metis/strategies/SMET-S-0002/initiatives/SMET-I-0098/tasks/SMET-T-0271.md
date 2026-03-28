@@ -4,14 +4,14 @@ level: task
 title: "End-to-End Testing and Uninstall Flow"
 short_code: "SMET-T-0271"
 created_at: 2026-03-28T16:52:43.079053+00:00
-updated_at: 2026-03-28T16:52:43.079053+00:00
+updated_at: 2026-03-28T17:49:06.831241+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 End-to-end testing of the full installable runner workflow plus implementing the uninstall flow that cleans up config, credentials, auto-start entries, and optionally deregisters from the server.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

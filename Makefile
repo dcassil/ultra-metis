@@ -1,5 +1,6 @@
 .PHONY: build build-mcp build-cli install install-binary test clean \
-       ci lint lint-shell fmt fmt-check release-local package
+       ci lint lint-shell fmt fmt-check release-local package \
+       build-desktop dev-desktop
 
 INSTALL_DIR ?= $(HOME)/.local/bin
 
@@ -69,6 +70,18 @@ fmt-check:
 release-local: build
 	@echo "Release binaries built:"
 	@ls -lh target/release/cadre target/release/cadre-mcp
+
+# --------------------------------------------------------------------------
+# Desktop app targets
+# --------------------------------------------------------------------------
+
+# Build the Tauri desktop app for the current platform
+build-desktop:
+	cd apps/runner-desktop && npm ci && npm run tauri build
+
+# Run the Tauri desktop app in dev mode
+dev-desktop:
+	cd apps/runner-desktop && npm run tauri dev
 
 # Package release binaries into distributable archive
 package: release-local
