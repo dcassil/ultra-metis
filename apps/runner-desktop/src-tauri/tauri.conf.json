@@ -19,6 +19,14 @@
       "iconAsTemplate": true
     }
   },
+  "plugins": {
+    "autostart": {
+      "enabled": true
+    },
+    "notification": {
+      "enabled": true
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

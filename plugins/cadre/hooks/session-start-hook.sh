@@ -1,9 +1,9 @@
 #!/bin/bash
 # SessionStart hook for Cadre projects
-# Detects .metis directory and provides comprehensive project context
+# Detects .cadre directory and provides comprehensive project context
 
-# Read hook input from stdin to extract session_id
-HOOK_INPUT=$(cat)
+# Read hook input from stdin to extract session_id (timeout prevents orphaned processes)
+HOOK_INPUT=$(timeout 5 cat 2>/dev/null || true)
 
 # Export session ID so Bash tool commands can use it for session-scoped state files
 SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id // empty')
@@ -11,8 +11,8 @@ if [ -n "$CLAUDE_ENV_FILE" ] && [ -n "$SESSION_ID" ]; then
     echo "export CLAUDE_SESSION_ID='$SESSION_ID'" >> "$CLAUDE_ENV_FILE"
 fi
 
-# Exit silently if not in an Cadre project
-if [ ! -d "$CLAUDE_PROJECT_DIR/.metis" ]; then
+# Exit silently if not in a Cadre project
+if [ ! -d "$CLAUDE_PROJECT_DIR/.cadre" ]; then
     exit 0
 fi
 
@@ -22,7 +22,7 @@ if ! command -v cadre &> /dev/null; then
 {
     "hookSpecificOutput": {
         "hookEventName": "SessionStart",
-        "additionalContext": "WARNING: This is an Cadre project (`.metis` directory found) but the `cadre` command is not installed or not in PATH. Run `make install` from the cadre repo root."
+        "additionalContext": "WARNING: This is a Cadre project (`.cadre` directory found) but the `cadre` command is not installed or not in PATH. Run `make install` from the cadre repo root."
     }
 }
 ENDJSON
@@ -71,7 +71,7 @@ fi
 
 # Build context message
 read -r -d '' CONTEXT << EOF
-This is an **Cadre project** (detected \`.metis\` directory).
+This is a **Cadre project** (detected \`.cadre\` directory).
 
 ## Planning Hierarchy
 ProductDoc -> Epic -> Story -> Task

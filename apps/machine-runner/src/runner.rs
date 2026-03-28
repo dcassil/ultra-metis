@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,6 +10,7 @@ use crate::client::{ClientError, CommandResponse, ControlClient, HeartbeatReques
 use crate::discovery;
 use crate::handle::RunnerStatus;
 use crate::injection;
+use crate::local_enforcement::{self, ApprovalRequest, ApprovalResponse};
 use crate::output_capture::{OutputCapture, OutputEvent};
 use crate::policy::LocalPolicyCache;
 use crate::settings::Settings;
@@ -39,6 +41,17 @@ pub struct Runner {
     policy_cache: LocalPolicyCache,
     output_event_tx: tokio::sync::mpsc::Sender<(String, Vec<OutputEvent>)>,
     status_tx: watch::Sender<RunnerStatus>,
+    /// Optional channel for requesting local user approval before starting a session.
+    ///
+    /// When `local_approval_required` is true and this sender is set, the runner
+    /// sends an `ApprovalRequest` and waits for the response. The receiving end
+    /// is owned by the UI host (e.g., Tauri desktop app) which presents a dialog.
+    ///
+    /// If `None` (headless/CLI mode), approval is auto-granted when the setting
+    /// is enabled with a log warning.
+    approval_tx: Option<tokio::sync::mpsc::Sender<(ApprovalRequest, tokio::sync::oneshot::Sender<ApprovalResponse>)>>,
+    /// Abort handles for session timeout watchdog tasks, keyed by session ID.
+    session_timeout_handles: std::collections::HashMap<String, tokio::task::AbortHandle>,
 }
 
 impl Runner {
@@ -98,8 +111,22 @@ impl Runner {
             policy_cache,
             output_event_tx: output_tx,
             status_tx,
+            approval_tx: None,
+            session_timeout_handles: HashMap::new(),
         };
         (runner, event_rx)
+    }
+
+    /// Set the approval channel sender.
+    ///
+    /// The UI host (e.g., Tauri app) should call this before starting the
+    /// runner to enable the local approval dialog flow. Each request sends
+    /// an `ApprovalRequest` and a oneshot sender for the response.
+    pub fn set_approval_channel(
+        &mut self,
+        tx: tokio::sync::mpsc::Sender<(ApprovalRequest, tokio::sync::oneshot::Sender<ApprovalResponse>)>,
+    ) {
+        self.approval_tx = Some(tx);
     }
 
     /// Returns the current state of the runner.
@@ -417,17 +444,49 @@ impl Runner {
             .and_then(serde_json::Value::as_str)
             .unwrap_or("normal");
 
-        // Enforce local policy: validate autonomy level
+        // ------------------------------------------------------------------
+        // Phase 1: Local settings enforcement (owner's machine-level policy)
+        // ------------------------------------------------------------------
+        {
+            let settings = self.settings.read().await;
+            if let Err(violation) = local_enforcement::validate_session_command(&settings, payload) {
+                tracing::warn!(
+                    command_id = %cmd.command_id,
+                    session_id = session_id,
+                    setting = %violation.setting,
+                    reason = %violation.reason,
+                    "Session rejected by local settings enforcement"
+                );
+
+                let _ = self
+                    .client
+                    .report_session_state(
+                        session_id,
+                        "failed",
+                        Some(serde_json::json!({
+                            "reason": "local_policy_violation",
+                            "detail": violation.reason,
+                            "setting": violation.setting
+                        })),
+                    )
+                    .await;
+
+                return Ok(());
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Phase 2: Server-side policy enforcement (autonomy level check)
+        // ------------------------------------------------------------------
         if let Err(detail) = self.policy_cache.validate_autonomy(autonomy_level) {
             tracing::warn!(
                 command_id = %cmd.command_id,
                 session_id = session_id,
                 autonomy = autonomy_level,
                 detail = %detail,
-                "Session rejected by local policy"
+                "Session rejected by server policy"
             );
 
-            // Report failure to the control service
             let _ = self
                 .client
                 .report_session_state(
@@ -443,6 +502,100 @@ impl Runner {
             return Ok(());
         }
 
+        // ------------------------------------------------------------------
+        // Phase 3: Local approval gate
+        // ------------------------------------------------------------------
+        {
+            let needs_approval = {
+                let settings = self.settings.read().await;
+                local_enforcement::requires_local_approval(&settings)
+            };
+
+            if needs_approval {
+                if let Some(ref approval_tx) = self.approval_tx {
+                    let (response_tx, response_rx) = tokio::sync::oneshot::channel();
+                    let request = ApprovalRequest {
+                        session_id: session_id.to_string(),
+                        repo_path: repo_path.to_string(),
+                        autonomy_level: autonomy_level.to_string(),
+                        instructions_preview: instructions.chars().take(200).collect(),
+                    };
+
+                    tracing::info!(
+                        session_id = session_id,
+                        "Requesting local user approval for session"
+                    );
+
+                    if approval_tx.send((request, response_tx)).await.is_err() {
+                        tracing::error!(
+                            session_id = session_id,
+                            "Approval channel closed, denying session"
+                        );
+                        let _ = self
+                            .client
+                            .report_session_state(
+                                session_id,
+                                "failed",
+                                Some(serde_json::json!({
+                                    "reason": "local_approval_denied",
+                                    "detail": "Approval channel closed"
+                                })),
+                            )
+                            .await;
+                        return Ok(());
+                    }
+
+                    match response_rx.await {
+                        Ok(ApprovalResponse::Approved) => {
+                            tracing::info!(session_id = session_id, "Local approval granted");
+                        }
+                        Ok(ApprovalResponse::Denied) => {
+                            tracing::info!(session_id = session_id, "Local approval denied by user");
+                            let _ = self
+                                .client
+                                .report_session_state(
+                                    session_id,
+                                    "failed",
+                                    Some(serde_json::json!({
+                                        "reason": "local_approval_denied",
+                                        "detail": "User denied the session via local approval dialog"
+                                    })),
+                                )
+                                .await;
+                            return Ok(());
+                        }
+                        Err(_) => {
+                            tracing::warn!(
+                                session_id = session_id,
+                                "Approval response channel dropped, denying session"
+                            );
+                            let _ = self
+                                .client
+                                .report_session_state(
+                                    session_id,
+                                    "failed",
+                                    Some(serde_json::json!({
+                                        "reason": "local_approval_denied",
+                                        "detail": "Approval response channel dropped"
+                                    })),
+                                )
+                                .await;
+                            return Ok(());
+                        }
+                    }
+                } else {
+                    // No approval channel set (headless mode) -- auto-approve with warning
+                    tracing::warn!(
+                        session_id = session_id,
+                        "local_approval_required is true but no approval channel is set (headless mode), auto-approving"
+                    );
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Phase 4: Start the session
+        // ------------------------------------------------------------------
         tracing::info!(
             command_id = %cmd.command_id,
             session_id = session_id,
@@ -470,6 +623,56 @@ impl Runner {
             "Output capture started for session"
         );
 
+        // ------------------------------------------------------------------
+        // Phase 5: Session timeout watchdog
+        // ------------------------------------------------------------------
+        {
+            let timeout_minutes = {
+                let settings = self.settings.read().await;
+                settings.session_timeout_minutes
+            };
+
+            if timeout_minutes > 0 {
+                let timeout_duration = Duration::from_secs(u64::from(timeout_minutes) * 60);
+                let session_id_owned = session_id.to_string();
+                let client = Arc::clone(&self.client);
+
+                // Get the PID so the watchdog can SIGKILL the process if it
+                // outlives the timeout.
+                let session_pid = self.supervisor.session_pid(session_id);
+
+                let handle = tokio::spawn(async move {
+                    tokio::time::sleep(timeout_duration).await;
+                    tracing::warn!(
+                        session_id = %session_id_owned,
+                        timeout_minutes = timeout_minutes,
+                        "Session timeout reached, killing process"
+                    );
+
+                    // Kill the process directly via its PID
+                    if let Some(raw_pid) = session_pid {
+                        let pid = Pid::from_raw(raw_pid as i32);
+                        let _ = signal::kill(pid, Signal::SIGKILL);
+                    }
+
+                    // Report the timeout to the control service
+                    let _ = client
+                        .report_session_state(
+                            &session_id_owned,
+                            "failed",
+                            Some(serde_json::json!({
+                                "reason": "session_timeout",
+                                "timeout_minutes": timeout_minutes
+                            })),
+                        )
+                        .await;
+                });
+
+                self.session_timeout_handles
+                    .insert(session_id.to_string(), handle.abort_handle());
+            }
+        }
+
         Ok(())
     }
 
@@ -492,11 +695,27 @@ impl Runner {
             "Executing session command via supervisor"
         );
 
+        // Cancel any active timeout watchdog for stop/force_stop actions
+        if matches!(action, SessionAction::Stop | SessionAction::ForceStop) {
+            self.cancel_session_timeout(session_id);
+        }
+
         match action {
             SessionAction::Stop => self.supervisor.stop_session(session_id).await,
             SessionAction::ForceStop => self.supervisor.force_stop_session(session_id).await,
             SessionAction::Pause => self.supervisor.pause_session(session_id),
             SessionAction::Resume => self.supervisor.resume_session(session_id),
+        }
+    }
+
+    /// Cancel and remove the timeout watchdog task for the given session, if any.
+    fn cancel_session_timeout(&mut self, session_id: &str) {
+        if let Some(abort_handle) = self.session_timeout_handles.remove(session_id) {
+            tracing::debug!(
+                session_id = session_id,
+                "Cancelling session timeout watchdog"
+            );
+            abort_handle.abort();
         }
     }
 

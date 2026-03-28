@@ -4,15 +4,15 @@ level: task
 title: "Replace Metis references with Cadre in cadre-store/store.rs"
 short_code: "SMET-T-0219"
 created_at: 2026-03-27T19:43:37.842565+00:00
-updated_at: 2026-03-27T19:43:37.842565+00:00
+updated_at: 2026-03-28T16:47:48.646288+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -38,6 +38,12 @@ Audit `crates/cadre-store/src/store.rs` for any remaining Metis references (tool
 - **Current Problems**: Leftover Metis naming in Cadre codebase creates confusion and inconsistency after the rename (ADR SMET-A-0001)
 - **Benefits of Fixing**: Clean, consistent naming throughout the codebase
 - **Risk Assessment**: Low — straightforward find-and-replace, but must verify all callers and tests still pass
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

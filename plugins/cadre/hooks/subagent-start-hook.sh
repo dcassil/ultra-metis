@@ -4,13 +4,13 @@
 # MCP tools, active work items, and the no-TodoWrite rule.
 
 # Exit silently if not in a Cadre project
-if [ ! -d "$CLAUDE_PROJECT_DIR/.metis" ]; then
+if [ ! -d "$CLAUDE_PROJECT_DIR/.cadre" ]; then
     exit 0
 fi
 
 # Read hook input from stdin
 # shellcheck disable=SC2034
-HOOK_INPUT=$(cat)
+HOOK_INPUT=$(timeout 5 cat 2>/dev/null || true)
 
 # Get active work items if cadre CLI is available
 ACTIVE_WORK=""
@@ -31,7 +31,7 @@ fi
 
 # Build concise context (~300 tokens)
 read -r -d '' CONTEXT << 'EOF'
-This is a Cadre project (.metis directory). Use Cadre MCP tools for all work tracking:
+This is a Cadre project (.cadre directory). Use Cadre MCP tools for all work tracking:
 - mcp__cadre__read_document / mcp__cadre__edit_document - Read and update documents
 - mcp__cadre__list_documents / mcp__cadre__search_documents - Find documents
 - mcp__cadre__transition_phase - Move documents through phases

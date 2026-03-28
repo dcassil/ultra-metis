@@ -90,14 +90,14 @@ fi
 if [[ -z "$PROJECT_PATH" ]]; then
   SEARCH_DIR="$(pwd)"
   while [[ "$SEARCH_DIR" != "/" ]]; do
-    if [[ -d "$SEARCH_DIR/.metis" ]]; then
+    if [[ -d "$SEARCH_DIR/.cadre" ]]; then
       PROJECT_PATH="$SEARCH_DIR"
       break
     fi
     SEARCH_DIR="$(dirname "$SEARCH_DIR")"
   done
   if [[ -z "$PROJECT_PATH" ]]; then
-    echo "Error: Could not find .metis directory" >&2
+    echo "Error: Could not find .cadre directory" >&2
     exit 1
   fi
 fi
@@ -169,7 +169,7 @@ case "$STORY_TYPE" in
 esac
 
 # Build the full prompt
-PROJECT_STATE_PATH="$PROJECT_PATH/.metis"
+PROJECT_STATE_PATH="$PROJECT_PATH/.cadre"
 PROMPT="Execute Cadre document: $SHORT_CODE
 
 ## Document Content

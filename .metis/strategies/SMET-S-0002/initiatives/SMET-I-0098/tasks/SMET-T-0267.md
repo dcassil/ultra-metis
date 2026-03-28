@@ -4,14 +4,14 @@ level: task
 title: "Settings Window and First-Run Setup Wizard UI"
 short_code: "SMET-T-0267"
 created_at: 2026-03-28T16:52:38.931013+00:00
-updated_at: 2026-03-28T16:52:38.931013+00:00
+updated_at: 2026-03-28T17:44:34.311740+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 Build the React settings window with all configuration options organized into sections, and the first-run setup wizard that guides new users through initial configuration.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -155,10 +155,10 @@ mod tests {
 
     #[test]
     fn test_catalog_dir_path() {
-        let project_state_path = Path::new("/project/.metis");
+        let project_state_path = Path::new("/project/.cadre");
         assert_eq!(
             catalog_dir(project_state_path),
-            PathBuf::from("/project/.metis/catalog")
+            PathBuf::from("/project/.cadre/catalog")
         );
     }
 
@@ -245,7 +245,7 @@ mod tests {
     #[tokio::test]
     async fn test_build_engine_with_custom() {
         let dir = tempdir().unwrap();
-        let project_state_dir = dir.path().join(".metis");
+        let project_state_dir = dir.path().join(".cadre");
         let catalog_path = project_state_dir.join("catalog");
         std::fs::create_dir_all(&catalog_path).unwrap();
 

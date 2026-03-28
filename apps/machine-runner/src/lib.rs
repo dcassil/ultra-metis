@@ -4,6 +4,7 @@ pub mod discovery;
 pub mod handle;
 pub mod injection;
 pub mod keychain;
+pub mod local_enforcement;
 pub mod output_capture;
 pub mod policy;
 pub mod runner;

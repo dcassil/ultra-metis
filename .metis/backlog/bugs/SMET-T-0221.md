@@ -4,15 +4,15 @@ level: task
 title: "Investigate subagent-start-hook.sh spawning orphaned processes"
 short_code: "SMET-T-0221"
 created_at: 2026-03-27T19:46:31.695255+00:00
-updated_at: 2026-03-27T19:46:31.695255+00:00
+updated_at: 2026-03-28T16:47:49.489114+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#bug"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -42,6 +42,12 @@ Investigate why `plugins/cadre/hooks/subagent-start-hook.sh` leaves orphaned she
   3. Run `ps aux | grep subagent-start-hook`
   4. Observe orphaned paired processes still running
 - **Expected vs Actual**: Hook processes should exit when the subagent ends. Instead they linger indefinitely, accumulating over time.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

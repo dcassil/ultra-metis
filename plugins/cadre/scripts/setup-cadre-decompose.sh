@@ -89,14 +89,14 @@ fi
 if [[ -z "$PROJECT_PATH" ]]; then
   SEARCH_DIR="$(pwd)"
   while [[ "$SEARCH_DIR" != "/" ]]; do
-    if [[ -d "$SEARCH_DIR/.metis" ]]; then
+    if [[ -d "$SEARCH_DIR/.cadre" ]]; then
       PROJECT_PATH="$SEARCH_DIR"
       break
     fi
     SEARCH_DIR="$(dirname "$SEARCH_DIR")"
   done
   if [[ -z "$PROJECT_PATH" ]]; then
-    echo "Error: Could not find .metis directory" >&2
+    echo "Error: Could not find .cadre directory" >&2
     exit 1
   fi
 fi
@@ -109,7 +109,7 @@ DOC_RAW=$(cadre read "$SHORT_CODE" -p "$PROJECT_PATH" 2>&1) || {
 }
 
 # Build decomposition prompt
-PROJECT_STATE_PATH="$PROJECT_PATH/.metis"
+PROJECT_STATE_PATH="$PROJECT_PATH/.cadre"
 PROMPT="Decompose Cadre epic: $SHORT_CODE
 
 ## Epic Content

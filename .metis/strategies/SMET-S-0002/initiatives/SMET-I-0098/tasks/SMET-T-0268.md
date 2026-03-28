@@ -4,14 +4,14 @@ level: task
 title: "Local Security Enforcement and Session Approval Dialog"
 short_code: "SMET-T-0268"
 created_at: 2026-03-28T16:52:40.278229+00:00
-updated_at: 2026-03-28T16:52:40.278229+00:00
+updated_at: 2026-03-28T17:44:35.064407+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 Implement local security enforcement from the desktop settings and the native session approval dialog. When `local_approval_required` is enabled, the runner must pop up a native OS dialog before starting any session.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -318,13 +318,13 @@ impl DocumentStore {
     }
 
     /// Get the `.cadre/` directory
-    fn metis_dir(&self) -> PathBuf {
+    fn cadre_dir(&self) -> PathBuf {
         ProjectConfig::project_dir(&self.project_path)
     }
 
     /// Get the docs directory
     fn docs_dir(&self) -> PathBuf {
-        self.metis_dir().join(DOCS_DIR)
+        self.cadre_dir().join(DOCS_DIR)
     }
 
     /// Get the file path for a document by short code
@@ -334,14 +334,14 @@ impl DocumentStore {
 
     /// Initialize a new project
     pub fn initialize(&self, prefix: &str) -> Result<()> {
-        let metis_dir = self.metis_dir();
-        if metis_dir.exists() {
+        let cadre_dir = self.cadre_dir();
+        if cadre_dir.exists() {
             return Err(StoreError::AlreadyInitialized {
                 path: self.project_path.display().to_string(),
             });
         }
 
-        std::fs::create_dir_all(&metis_dir)?;
+        std::fs::create_dir_all(&cadre_dir)?;
         std::fs::create_dir_all(self.docs_dir())?;
 
         let config = ProjectConfig::new(prefix);
@@ -352,7 +352,7 @@ impl DocumentStore {
 
     /// Check if the project is initialized
     pub fn is_initialized(&self) -> bool {
-        self.metis_dir().exists()
+        self.cadre_dir().exists()
     }
 
     /// Load the project config

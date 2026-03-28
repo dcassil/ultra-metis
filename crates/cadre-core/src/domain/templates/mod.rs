@@ -3,7 +3,7 @@
 //! Provides a single entry point for looking up templates by [`DocumentType`],
 //! rendering content with Tera, and supporting context-aware rendering with
 //! parent document data. Also supports project-level template overrides from
-//! a `.metis/templates/` directory.
+//! a `.cadre/templates/` directory.
 
 use super::documents::types::DocumentType;
 use std::collections::HashMap;

@@ -40,7 +40,7 @@ export function useSessionEventStream(sessionId: string): UseSessionEventStreamR
       retryDelay.current = INITIAL_RETRY_MS
     }
 
-    es.onmessage = (msg) => {
+    es.addEventListener('session_event', (msg) => {
       try {
         const event = JSON.parse(msg.data as string) as SessionOutputEvent
         setEvents((prev) => {
@@ -54,7 +54,7 @@ export function useSessionEventStream(sessionId: string): UseSessionEventStreamR
       } catch {
         // Ignore unparseable messages
       }
-    }
+    })
 
     es.onerror = () => {
       setIsConnected(false)

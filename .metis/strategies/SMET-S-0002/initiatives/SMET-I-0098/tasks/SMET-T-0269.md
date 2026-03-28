@@ -4,14 +4,14 @@ level: task
 title: "Auto-Start on Login and Platform Service Integration"
 short_code: "SMET-T-0269"
 created_at: 2026-03-28T16:52:41.193612+00:00
-updated_at: 2026-03-28T16:52:41.193612+00:00
+updated_at: 2026-03-28T17:44:35.612680+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 Implement auto-start on system login for all three platforms, plus toast notifications for key runner events (session started, approval needed, connection lost).
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

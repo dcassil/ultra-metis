@@ -4,15 +4,15 @@ level: task
 title: "Investigate setup-cadre-decompose.sh drift from architecture repo"
 short_code: "SMET-T-0222"
 created_at: 2026-03-27T19:46:32.720691+00:00
-updated_at: 2026-03-27T19:46:32.720691+00:00
+updated_at: 2026-03-28T16:47:49.705133+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -38,6 +38,12 @@ Compare `plugins/cadre/scripts/setup-cadre-decompose.sh` against the architectur
 - **Current Problems**: Script may have diverged from the architecture repo and may contain leftover Metis naming
 - **Benefits of Fixing**: Consistent naming and behavior aligned with architecture repo
 - **Risk Assessment**: Low — script changes, but must verify decompose workflow still works
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

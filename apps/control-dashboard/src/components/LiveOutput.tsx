@@ -21,6 +21,36 @@ function categoryClasses(category: string | null): string {
   }
 }
 
+interface ClaudeResult {
+  type: 'result'
+  subtype: string
+  is_error: boolean
+  duration_ms: number
+  total_cost_usd: number
+  result: string
+  num_turns: number
+}
+
+/** Try to parse a content string as a Claude CLI JSON result. */
+function parseClaudeResult(content: string): ClaudeResult | null {
+  const trimmed = content.trim()
+  if (!trimmed.startsWith('{')) return null
+  try {
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>
+    if (parsed.type === 'result' && typeof parsed.result === 'string') {
+      return parsed as unknown as ClaudeResult
+    }
+  } catch {
+    // not JSON
+  }
+  return null
+}
+
+/** Lines to suppress from the terminal output. */
+function isSuppressedLine(content: string): boolean {
+  return content.includes('no stdin data received') && content.includes('proceeding without it')
+}
+
 function formatTimestamp(ts: string): string {
   try {
     const d = new Date(ts)
@@ -90,7 +120,40 @@ export function LiveOutput({ events, isConnected, error }: LiveOutputProps) {
           </p>
         ) : (
           events.map((evt) => {
+            if (isSuppressedLine(evt.content)) return null
+
             const isGuidance = evt.event_type === 'guidance_injected'
+            const claudeResult = parseClaudeResult(evt.content)
+
+            if (claudeResult) {
+              const durationSec = (claudeResult.duration_ms / 1000).toFixed(1)
+              const cost = claudeResult.total_cost_usd.toFixed(4)
+              return (
+                <div key={evt.id} className="py-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="shrink-0 text-secondary-600 select-none">
+                      {formatTimestamp(evt.timestamp)}
+                    </span>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                      claudeResult.is_error
+                        ? 'bg-red-900/50 text-red-300'
+                        : 'bg-green-900/50 text-green-300'
+                    }`}>
+                      {claudeResult.is_error ? 'Error' : 'Complete'}
+                    </span>
+                    <span className="text-xs text-secondary-500">
+                      {durationSec}s &middot; {claudeResult.num_turns} turns &middot; ${cost}
+                    </span>
+                  </div>
+                  <div className="ml-[4.5rem] rounded-md border border-secondary-700 bg-secondary-900 p-3">
+                    <pre className="whitespace-pre-wrap text-secondary-200 text-sm leading-relaxed">
+                      {claudeResult.result}
+                    </pre>
+                  </div>
+                </div>
+              )
+            }
+
             return (
               <div key={evt.id} className={`flex gap-3 py-0.5 hover:bg-secondary-900/50 ${isGuidance ? 'bg-indigo-950/30' : ''}`}>
                 <span className="shrink-0 text-secondary-600 select-none">
