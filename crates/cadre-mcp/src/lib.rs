@@ -132,6 +132,7 @@ pub async fn run() -> Result<()> {
         handler,
         task_store: None,
         client_task_store: None,
+        message_observer: None,
     });
 
     log("calling server.start().await — entering MCP event loop");
