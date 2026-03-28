@@ -4,14 +4,14 @@ level: task
 title: "Command Routing via Heartbeat Polling"
 short_code: "SMET-T-0227"
 created_at: 2026-03-27T21:00:37.514186+00:00
-updated_at: 2026-03-27T21:00:37.514186+00:00
+updated_at: 2026-03-27T23:59:17.261755+00:00
 parent: SMET-I-0040
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,40 @@ initiative_id: SMET-I-0040
 
 # Command Routing via Heartbeat Polling
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+## Parent Initiative
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+[[SMET-I-0040]] — Remote Session Lifecycle
 
-[[SMET-I-0040]]
+## Objective
 
-## Objective **[REQUIRED]**
+Implement the command routing mechanism between the Control Service and Machine Runner. The runner polls for pending commands during its heartbeat cycle, and the control service delivers queued commands.
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+## Acceptance Criteria
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
+- [ ] Heartbeat response extended to include `pending_commands` array: `command_id`, `command_type` (start_session, stop, force_stop, pause, resume), `payload` (JSON)
+- [ ] `GET /api/machines/{id}/commands` — Returns pending commands for a machine. Requires `MachineTokenAuth`.
+- [ ] `POST /api/machines/{id}/commands/{cmd_id}/ack` — Runner acknowledges receipt, marking command as `delivered`. Requires `MachineTokenAuth`.
+- [ ] Session creation inserts a `start_session` command with payload containing `session_id`, `repo_path`, `title`, `instructions`, `autonomy_level`, `context`
+- [ ] Machine Runner `client.rs` updated: after heartbeat, fetch pending commands, process each, acknowledge receipt
+- [ ] Machine Runner `runner.rs` updated: command dispatch loop routing received commands to handlers
+- [ ] Commands not acknowledged within 5 minutes are re-delivered on next poll
+- [ ] Unit tests for command queue operations and runner command dispatch
 
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+- Piggyback on existing heartbeat cycle: after heartbeat, runner calls `GET /commands` and processes pending commands
+- Commands use simple SQLite queue: insert `pending`, runner fetches and acks to `delivered`, marks `executed` after state report
+- Polling interval is heartbeat interval (15-30s) — acceptable for MVP
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0224 (session_commands table), SMET-T-0226 (control actions insert commands)
+- Existing heartbeat in runner `client.rs` and `runner.rs`
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

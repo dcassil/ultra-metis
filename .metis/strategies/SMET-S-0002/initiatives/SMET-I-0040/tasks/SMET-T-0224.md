@@ -4,14 +4,14 @@ level: task
 title: "Session Data Model and Database Schema"
 short_code: "SMET-T-0224"
 created_at: 2026-03-27T21:00:34.871701+00:00
-updated_at: 2026-03-27T21:00:34.871701+00:00
+updated_at: 2026-03-27T23:50:01.372716+00:00
 parent: SMET-I-0040
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0040
 ## Objective
 
 Define the session data model and extend the SQLite schema in `apps/control-api/` to support sessions. This is the foundation all other session tasks build on — the state enum, database tables, and Rust model types.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

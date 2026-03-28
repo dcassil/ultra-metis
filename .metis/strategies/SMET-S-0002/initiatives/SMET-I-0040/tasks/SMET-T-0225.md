@@ -4,14 +4,14 @@ level: task
 title: "Control Service Session CRUD API"
 short_code: "SMET-T-0225"
 created_at: 2026-03-27T21:00:35.655039+00:00
-updated_at: 2026-03-27T21:00:35.655039+00:00
+updated_at: 2026-03-27T23:53:04.635266+00:00
 parent: SMET-I-0040
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0040
 ## Objective
 
 Implement the core session CRUD endpoints in the Control Service: create a session, get session detail, and list sessions with filtering. These endpoints are the primary interface for the dashboard and runner to manage sessions.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

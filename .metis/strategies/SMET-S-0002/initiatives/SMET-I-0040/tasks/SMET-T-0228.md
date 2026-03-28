@@ -4,14 +4,14 @@ level: task
 title: "Machine Runner Process Supervisor"
 short_code: "SMET-T-0228"
 created_at: 2026-03-27T21:00:38.334647+00:00
-updated_at: 2026-03-27T21:00:38.334647+00:00
+updated_at: 2026-03-28T00:07:17.504966+00:00
 parent: SMET-I-0040
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,46 @@ initiative_id: SMET-I-0040
 
 # Machine Runner Process Supervisor
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+## Parent Initiative
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+[[SMET-I-0040]] — Remote Session Lifecycle
 
-[[SMET-I-0040]]
+## Objective
 
-## Objective **[REQUIRED]**
+Implement the process supervisor in the Machine Runner that spawns, monitors, and controls Claude Code AI processes for sessions.
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+## Acceptance Criteria
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
+- [ ] New `supervisor.rs` module in `apps/machine-runner/src/` with `ProcessSupervisor` struct
+- [ ] `start_session()` — Spawns Claude Code process in configured repo directory with instructions. Captures stdout/stderr. Returns session handle.
+- [ ] `stop_session(session_id)` — SIGTERM, wait 10s, then SIGKILL if still running
+- [ ] `force_stop_session(session_id)` — SIGKILL immediately
+- [ ] `pause_session(session_id)` — SIGSTOP to suspend process
+- [ ] `resume_session(session_id)` — SIGCONT to resume suspended process
+- [ ] Process exit monitoring: detects clean/crash exit, captures exit code
+- [ ] Active session tracking: `HashMap<SessionId, ProcessHandle>` with PID, start time, state
+- [ ] Graceful shutdown: on runner SIGTERM, stops all active sessions before exiting
+- [ ] Autonomy level maps to CLI flags (`--allowedTools` for stricter, `--dangerously-skip-permissions` for autonomous)
+- [ ] Working directory set to session's `repo_path`
+- [ ] Unit tests for supervisor state tracking
 
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+- `tokio::process::Command` for async process spawning
+- Supervisor as tokio task, receiving commands via `mpsc` channel
+- `child.wait()` for process monitoring
+- Claude Code invocation: `claude --print --output-format json -p "<instructions>"`
+- MVP: one session per machine at a time
+- `nix::sys::signal` crate for SIGSTOP/SIGCONT
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0227 (Command Routing), `nix` crate
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

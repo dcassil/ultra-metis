@@ -31,12 +31,27 @@ pub fn build_app(state: AppState) -> Router {
         .route("/{id}", get(routes::get_machine))
         .route("/{id}/heartbeat", post(routes::heartbeat))
         .route("/{id}/approve", post(routes::approve_machine))
-        .route("/{id}/revoke", post(routes::revoke_machine));
+        .route("/{id}/revoke", post(routes::revoke_machine))
+        .route("/{id}/commands", get(routes::get_machine_commands))
+        .route(
+            "/{id}/commands/{cmd_id}/ack",
+            post(routes::ack_command),
+        );
+
+    let session_routes = Router::new()
+        .route("/{id}", get(routes::get_session))
+        .route("/{id}/stop", post(routes::stop_session))
+        .route("/{id}/force-stop", post(routes::force_stop_session))
+        .route("/{id}/pause", post(routes::pause_session))
+        .route("/{id}/resume", post(routes::resume_session))
+        .route("/{id}/state", post(routes::report_session_state));
 
     Router::new()
         .route("/health", get(routes::health))
         .route("/api/machines", get(routes::list_machines))
         .nest("/api/machines", machine_routes)
+        .route("/api/sessions", get(routes::list_sessions).post(routes::create_session))
+        .nest("/api/sessions", session_routes)
         .layer(cors)
         .with_state(state)
 }

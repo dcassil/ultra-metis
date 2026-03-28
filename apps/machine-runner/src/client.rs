@@ -23,10 +23,26 @@ pub struct HeartbeatResponse {
     pub status: String,
 }
 
+/// A command received from the control service.
+#[derive(Debug, Clone, Deserialize)]
+pub struct CommandResponse {
+    pub command_id: String,
+    pub command_type: String,
+    pub payload: Option<serde_json::Value>,
+}
+
 /// Request body for sending a heartbeat to the control service.
 #[derive(Debug, Serialize)]
 pub struct HeartbeatRequest {
     pub repos: Vec<RepoInfo>,
+}
+
+/// Request body for reporting session state to the control service.
+#[derive(Debug, Clone, Serialize)]
+pub struct ReportStateRequest {
+    pub state: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<serde_json::Value>,
 }
 
 /// Error types specific to control service communication.
@@ -117,6 +133,109 @@ impl ControlClient {
             .await?;
 
         handle_heartbeat_response(response).await
+    }
+
+    /// Fetch pending commands for the given machine.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ClientError` on HTTP failures or unexpected status codes.
+    pub async fn fetch_commands(
+        &self,
+        machine_id: &str,
+    ) -> Result<Vec<CommandResponse>, ClientError> {
+        let url = format!("{}/api/machines/{machine_id}/commands", self.base_url);
+
+        let response = self
+            .http
+            .get(&url)
+            .bearer_auth(&self.token)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let commands = response.json::<Vec<CommandResponse>>().await?;
+            Ok(commands)
+        } else {
+            let body = response.text().await.unwrap_or_default();
+            Err(ClientError::UnexpectedStatus {
+                status: status.as_u16(),
+                body,
+            })
+        }
+    }
+
+    /// Acknowledge receipt of a command, marking it as delivered.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ClientError` on HTTP failures or unexpected status codes.
+    pub async fn ack_command(
+        &self,
+        machine_id: &str,
+        command_id: &str,
+    ) -> Result<(), ClientError> {
+        let url = format!(
+            "{}/api/machines/{machine_id}/commands/{command_id}/ack",
+            self.base_url
+        );
+
+        let response = self
+            .http
+            .post(&url)
+            .bearer_auth(&self.token)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            let body = response.text().await.unwrap_or_default();
+            Err(ClientError::UnexpectedStatus {
+                status: status.as_u16(),
+                body,
+            })
+        }
+    }
+
+    /// Report the state of a session to the control service.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ClientError` on HTTP failures or unexpected status codes.
+    pub async fn report_session_state(
+        &self,
+        session_id: &str,
+        new_state: &str,
+        metadata: Option<serde_json::Value>,
+    ) -> Result<(), ClientError> {
+        let url = format!("{}/api/sessions/{session_id}/state", self.base_url);
+
+        let request = ReportStateRequest {
+            state: new_state.to_string(),
+            metadata,
+        };
+
+        let response = self
+            .http
+            .post(&url)
+            .bearer_auth(&self.token)
+            .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            let body = response.text().await.unwrap_or_default();
+            Err(ClientError::UnexpectedStatus {
+                status: status.as_u16(),
+                body,
+            })
+        }
     }
 }
 
@@ -209,5 +328,54 @@ mod tests {
     fn test_control_client_trims_trailing_slash() {
         let client = ControlClient::new("https://api.example.com/", "token");
         assert_eq!(client.base_url, "https://api.example.com");
+    }
+
+    #[test]
+    fn test_command_response_deserialization() {
+        let json = r#"[
+            {"command_id": "cmd-1", "command_type": "start_session", "payload": {"session_id": "s-1"}},
+            {"command_id": "cmd-2", "command_type": "stop", "payload": null}
+        ]"#;
+        let commands: Vec<CommandResponse> = serde_json::from_str(json).unwrap();
+        assert_eq!(commands.len(), 2);
+        assert_eq!(commands[0].command_id, "cmd-1");
+        assert_eq!(commands[0].command_type, "start_session");
+        assert!(commands[0].payload.is_some());
+        assert_eq!(commands[0].payload.as_ref().unwrap()["session_id"], "s-1");
+        assert_eq!(commands[1].command_id, "cmd-2");
+        assert_eq!(commands[1].command_type, "stop");
+        assert!(commands[1].payload.is_none());
+    }
+
+    #[test]
+    fn test_command_response_empty_array() {
+        let json = "[]";
+        let commands: Vec<CommandResponse> = serde_json::from_str(json).unwrap();
+        assert!(commands.is_empty());
+    }
+
+    #[test]
+    fn test_report_state_request_serialization_with_metadata() {
+        let request = ReportStateRequest {
+            state: "completed".to_string(),
+            metadata: Some(serde_json::json!({ "exit_code": 0 })),
+        };
+
+        let json = serde_json::to_value(&request).unwrap();
+        assert_eq!(json["state"], "completed");
+        assert_eq!(json["metadata"]["exit_code"], 0);
+    }
+
+    #[test]
+    fn test_report_state_request_serialization_without_metadata() {
+        let request = ReportStateRequest {
+            state: "running".to_string(),
+            metadata: None,
+        };
+
+        let json = serde_json::to_value(&request).unwrap();
+        assert_eq!(json["state"], "running");
+        // metadata should be absent (not null) due to skip_serializing_if
+        assert!(json.get("metadata").is_none());
     }
 }

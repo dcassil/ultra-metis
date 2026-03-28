@@ -4,14 +4,14 @@ level: task
 title: "Session State Machine and Control Actions API"
 short_code: "SMET-T-0226"
 created_at: 2026-03-27T21:00:36.584572+00:00
-updated_at: 2026-03-27T21:00:36.584572+00:00
+updated_at: 2026-03-27T23:54:50.240504+00:00
 parent: SMET-I-0040
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,40 @@ initiative_id: SMET-I-0040
 
 # Session State Machine and Control Actions API
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+## Parent Initiative
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+[[SMET-I-0040]] — Remote Session Lifecycle
 
-[[SMET-I-0040]]
+## Objective
 
-## Objective **[REQUIRED]**
+Implement the session state machine validation logic and control action endpoints (stop, force-stop, pause, resume). The state machine enforces valid transitions and the control actions allow users to manage running sessions.
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+## Acceptance Criteria
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
+- [ ] State transition validation function: `fn is_valid_transition(from: &SessionState, to: &SessionState) -> bool` enforcing allowed transitions: `starting→running`, `running→waiting_for_input`, `running→paused`, `running→completed`, `running→failed`, `running→stopped`, `waiting_for_input→running`, `paused→running`, `starting→failed`
+- [ ] `POST /api/sessions/{id}/stop` — Validates session is `running` or `waiting_for_input`. Inserts `stop` command into `session_commands`. Returns 200.
+- [ ] `POST /api/sessions/{id}/force-stop` — Inserts `force_stop` command. If `starting` with no process, transitions directly to `stopped`.
+- [ ] `POST /api/sessions/{id}/pause` — Validates session is `running`. Inserts `pause` command. Returns 200.
+- [ ] `POST /api/sessions/{id}/resume` — Validates session is `paused` or `waiting_for_input`. Inserts `resume` command. Returns 200.
+- [ ] `POST /api/sessions/{id}/state` — Internal endpoint for runner to report state transitions. Validates transition is legal, updates session state, inserts `session_event`. Requires `MachineTokenAuth`.
+- [ ] Invalid state transitions return 409 Conflict with descriptive error
+- [ ] All control actions validate session belongs to current user
+- [ ] Unit tests for state machine (all valid and invalid transitions) and each control endpoint
 
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+- Control action endpoints don't change state directly — they queue commands for the runner. The runner executes the action and reports back via `POST /api/sessions/{id}/state`.
+- Exception: `force-stop` on a `starting` session can transition directly since no process exists yet
+- The `/state` endpoint uses `MachineTokenAuth` since it's called by the runner
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0224 (Session Data Model), SMET-T-0225 (Session CRUD API)
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

@@ -5,6 +5,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import MachinesPage from './pages/MachinesPage';
 import MachineDetailPage from './pages/MachineDetailPage';
 import SessionsPage from './pages/SessionsPage';
+import NewSessionPage from './pages/NewSessionPage';
+import SessionDetailPage from './pages/SessionDetailPage';
 import MonitoringPage from './pages/MonitoringPage';
 import HistoryPage from './pages/HistoryPage';
 import PoliciesPage from './pages/PoliciesPage';
@@ -21,6 +23,8 @@ function App() {
             <Route path="machines" element={<MachinesPage />} />
             <Route path="machines/:id" element={<MachineDetailPage />} />
             <Route path="sessions" element={<SessionsPage />} />
+            <Route path="sessions/new" element={<NewSessionPage />} />
+            <Route path="sessions/:id" element={<SessionDetailPage />} />
             <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="policies" element={<PoliciesPage />} />

@@ -1,8 +1,9 @@
 use std::time::Duration;
 
-use crate::client::{ClientError, ControlClient, HeartbeatRequest, RegisterRequest};
+use crate::client::{ClientError, CommandResponse, ControlClient, HeartbeatRequest, RegisterRequest};
 use crate::config::RunnerConfig;
 use crate::discovery;
+use crate::supervisor::ProcessSupervisor;
 
 /// The possible states of the machine runner lifecycle.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,18 +20,24 @@ pub struct Runner {
     client: ControlClient,
     state: RunnerState,
     machine_id: Option<String>,
+    supervisor: ProcessSupervisor,
 }
 
 impl Runner {
     /// Create a new runner from the given configuration.
-    pub fn new(config: RunnerConfig) -> Self {
+    ///
+    /// Returns the runner and a receiver for supervisor lifecycle events.
+    pub fn new(config: RunnerConfig) -> (Self, tokio::sync::mpsc::Receiver<crate::supervisor::SupervisorEvent>) {
         let client = ControlClient::new(&config.control_service_url, &config.api_token);
-        Self {
+        let (supervisor, event_rx) = ProcessSupervisor::new();
+        let runner = Self {
             config,
             client,
             state: RunnerState::Registering,
             machine_id: None,
-        }
+            supervisor,
+        };
+        (runner, event_rx)
     }
 
     /// Returns the current state of the runner.
@@ -95,6 +102,10 @@ impl Runner {
             match result {
                 Ok(()) => {
                     backoff.reset();
+                    // Poll for and process commands when active
+                    if self.state == RunnerState::Active {
+                        self.poll_and_process_commands().await;
+                    }
                 }
                 Err(HeartbeatOutcome::Revoked) => {
                     tracing::warn!("Machine revoked by control service, stopping");
@@ -142,6 +153,143 @@ impl Runner {
             Err(e) => Err(HeartbeatOutcome::NetworkError(e.to_string())),
         }
     }
+
+    async fn poll_and_process_commands(&mut self) {
+        let machine_id = self
+            .machine_id
+            .as_deref()
+            .expect("machine_id must be set before polling commands")
+            .to_string();
+
+        let commands = match self.client.fetch_commands(&machine_id).await {
+            Ok(cmds) => cmds,
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to fetch commands");
+                return;
+            }
+        };
+
+        for cmd in commands {
+            self.process_command(&machine_id, &cmd).await;
+        }
+    }
+
+    async fn process_command(&mut self, machine_id: &str, cmd: &CommandResponse) {
+        tracing::info!(
+            command_id = %cmd.command_id,
+            command_type = %cmd.command_type,
+            "Received command"
+        );
+
+        let result = match cmd.command_type.as_str() {
+            "start_session" => self.handle_start_session(cmd).await,
+            "stop" => self.handle_session_command(cmd, SessionAction::Stop).await,
+            "force_stop" => self.handle_session_command(cmd, SessionAction::ForceStop).await,
+            "pause" => self.handle_session_command(cmd, SessionAction::Pause).await,
+            "resume" => self.handle_session_command(cmd, SessionAction::Resume).await,
+            other => {
+                tracing::warn!(
+                    command_id = %cmd.command_id,
+                    command_type = other,
+                    "Unknown command type, acknowledging anyway"
+                );
+                Ok(())
+            }
+        };
+
+        if let Err(e) = &result {
+            tracing::error!(
+                command_id = %cmd.command_id,
+                command_type = %cmd.command_type,
+                error = %e,
+                "Failed to execute command"
+            );
+        }
+
+        // Acknowledge the command regardless of outcome
+        if let Err(e) = self.client.ack_command(machine_id, &cmd.command_id).await {
+            tracing::warn!(
+                command_id = %cmd.command_id,
+                error = %e,
+                "Failed to acknowledge command"
+            );
+        }
+    }
+
+    async fn handle_start_session(&mut self, cmd: &CommandResponse) -> anyhow::Result<()> {
+        let payload = cmd
+            .payload
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("start_session command missing payload"))?;
+
+        let session_id = payload
+            .get("session_id")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("start_session payload missing session_id"))?;
+
+        let repo_path = payload
+            .get("repo_path")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("start_session payload missing repo_path"))?;
+
+        let instructions = payload
+            .get("instructions")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+
+        let autonomy_level = payload
+            .get("autonomy_level")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("normal");
+
+        tracing::info!(
+            command_id = %cmd.command_id,
+            session_id = session_id,
+            repo_path = repo_path,
+            autonomy = autonomy_level,
+            "Starting session via supervisor"
+        );
+
+        self.supervisor
+            .start_session(session_id, repo_path, instructions, autonomy_level)
+            .await
+    }
+
+    async fn handle_session_command(
+        &mut self,
+        cmd: &CommandResponse,
+        action: SessionAction,
+    ) -> anyhow::Result<()> {
+        let session_id = cmd
+            .payload
+            .as_ref()
+            .and_then(|p| p.get("session_id"))
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("{:?} command missing session_id in payload", action))?;
+
+        tracing::info!(
+            command_id = %cmd.command_id,
+            session_id = session_id,
+            action = ?action,
+            "Executing session command via supervisor"
+        );
+
+        match action {
+            SessionAction::Stop => self.supervisor.stop_session(session_id).await,
+            SessionAction::ForceStop => self.supervisor.force_stop_session(session_id).await,
+            SessionAction::Pause => self.supervisor.pause_session(session_id),
+            SessionAction::Resume => self.supervisor.resume_session(session_id),
+        }
+    }
+}
+
+/// Actions that can be performed on a supervised session.
+#[derive(Debug)]
+enum SessionAction {
+    Stop,
+    ForceStop,
+    Pause,
+    Resume,
 }
 
 fn build_register_request(
@@ -207,7 +355,7 @@ mod tests {
     #[test]
     fn test_initial_state_is_registering() {
         let config = test_config();
-        let runner = Runner::new(config);
+        let (runner, _rx) = Runner::new(config);
         assert_eq!(*runner.state(), RunnerState::Registering);
         assert!(runner.machine_id().is_none());
     }

@@ -74,6 +74,43 @@ fn create_tables(conn: &Connection) -> Result<()> {
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             expires_at TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS sessions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            machine_id TEXT NOT NULL REFERENCES machines(id),
+            repo_path TEXT NOT NULL,
+            title TEXT NOT NULL,
+            instructions TEXT NOT NULL,
+            autonomy_level TEXT NOT NULL DEFAULT 'normal',
+            work_item_id TEXT,
+            context TEXT,
+            state TEXT NOT NULL DEFAULT 'starting',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            started_at TEXT,
+            completed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS session_events (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id),
+            from_state TEXT,
+            to_state TEXT NOT NULL,
+            timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+            metadata TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS session_commands (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id),
+            machine_id TEXT NOT NULL REFERENCES machines(id),
+            command_type TEXT NOT NULL,
+            payload TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            delivered_at TEXT
+        );
         ",
     )?;
     Ok(())

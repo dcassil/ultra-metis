@@ -1,10 +1,11 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   ServerIcon,
   PlayIcon,
   ChartBarIcon,
   ClockIcon,
   ShieldCheckIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { usePendingCount } from '../hooks/usePendingCount';
 
@@ -25,6 +26,16 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   return (
     <nav className="flex flex-1 flex-col px-3 py-4">
+      <div className="mb-4">
+        <Link
+          to="/sessions/new"
+          onClick={onClose}
+          className="flex items-center justify-center gap-2 rounded-md bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors"
+        >
+          <PlusIcon className="h-4 w-4" aria-hidden="true" />
+          Start Session
+        </Link>
+      </div>
       <ul className="flex flex-1 flex-col gap-y-1">
         {navigation.map((item) => (
           <li key={item.name}>

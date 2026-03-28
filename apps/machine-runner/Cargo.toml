@@ -18,6 +18,7 @@ reqwest = { version = "0.12", features = ["json"] }
 toml = "0.8"
 dirs = "5"
 uuid = { version = "1.0", features = ["v4", "serde"] }
+nix = { version = "0.29", features = ["signal"] }
 
 [dev-dependencies]
 tokio-test = { workspace = true }
