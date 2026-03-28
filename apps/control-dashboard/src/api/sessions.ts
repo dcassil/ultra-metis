@@ -27,6 +27,7 @@ export interface SessionResponse {
   work_item_id?: string
   context?: string
   state: string
+  outcome_status?: string | null
   created_at: string
   updated_at: string
   started_at?: string
@@ -44,6 +45,12 @@ export interface ListSessionsParams {
   state?: string
   limit?: number
   offset?: number
+  outcome?: string
+  search?: string
+  from_date?: string
+  to_date?: string
+  sort_by?: string
+  sort_order?: string
 }
 
 // --- API Functions ---

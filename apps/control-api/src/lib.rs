@@ -93,7 +93,8 @@ pub fn build_app_with_planning(state: AppState, planning_state: PlanningState) -
         .route("/{id}/events/stream", get(routes::event_stream))
         .route("/{id}/approvals", get(routes::list_pending_approvals))
         .route("/{id}/respond", post(routes::respond_to_approval))
-        .route("/{id}/inject", post(routes::inject_guidance));
+        .route("/{id}/inject", post(routes::inject_guidance))
+        .route("/{id}/outcome", get(routes::get_session_outcome));
 
     let planning_routes = Router::new()
         .route("/documents", get(planning::list_documents))

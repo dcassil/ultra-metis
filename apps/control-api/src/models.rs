@@ -752,6 +752,12 @@ pub struct ListSessionsQuery {
     pub machine_id: Option<String>,
     pub repo_path: Option<String>,
     pub state: Option<String>,
+    pub outcome: Option<String>,
+    pub search: Option<String>,
+    pub from_date: Option<String>,
+    pub to_date: Option<String>,
+    pub sort_by: Option<String>,
+    pub sort_order: Option<String>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
 }
@@ -779,6 +785,7 @@ pub struct SessionResponse {
     pub updated_at: String,
     pub started_at: Option<String>,
     pub completed_at: Option<String>,
+    pub outcome_status: Option<String>,
 }
 
 /// Response for session list.
@@ -1043,6 +1050,21 @@ pub struct QueryEventsParams {
     pub since_sequence: Option<i64>,
     pub limit: Option<i64>,
     pub event_type: Option<String>,
+}
+
+/// Outcome record written when a session reaches a terminal state.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionOutcome {
+    pub id: String,
+    pub session_id: String,
+    pub status: String,
+    pub summary: String,
+    pub artifacts: String,
+    pub next_steps: String,
+    pub event_count: i64,
+    pub intervention_count: i64,
+    pub duration_seconds: i64,
+    pub created_at: String,
 }
 
 #[cfg(test)]

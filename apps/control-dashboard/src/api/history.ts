@@ -1,24 +1,33 @@
-// Stub API module for Session History — SMET-I-0043
+import { apiClient } from './client'
+import type { SessionResponse } from './sessions'
 
-export interface HistoryEntry {
+// --- Types ---
+
+export interface SessionOutcome {
   id: string
-  sessionId: string
-  machineId: string
-  action: string
-  timestamp: string
+  session_id: string
+  status: string // success, failure, partial
+  summary: string
+  artifacts: unknown
+  next_steps: unknown
+  event_count: number
+  intervention_count: number
+  duration_seconds: number
+  created_at: string
 }
 
-export interface HistoryFilters {
-  machineId?: string
-  sessionId?: string
-  from?: string
-  to?: string
+// --- API Functions ---
+
+export async function getSessionOutcome(sessionId: string): Promise<SessionOutcome> {
+  const response = await apiClient.get<SessionOutcome>(
+    `/api/sessions/${sessionId}/outcome`,
+  )
+  return response.data
 }
 
-export function listHistoryEntries(_filters: HistoryFilters): Promise<HistoryEntry[]> {
-  throw new Error('Not implemented — see SMET-I-0043')
-}
-
-export function getHistoryEntry(_id: string): Promise<HistoryEntry> {
-  throw new Error('Not implemented — see SMET-I-0043')
+export async function getHistorySession(sessionId: string): Promise<SessionResponse> {
+  const response = await apiClient.get<SessionResponse>(
+    `/api/sessions/${sessionId}`,
+  )
+  return response.data
 }

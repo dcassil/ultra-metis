@@ -4,14 +4,14 @@ level: initiative
 title: "Session History, Audit, and Replay"
 short_code: "SMET-I-0043"
 created_at: 2026-03-17T19:56:55.575481+00:00
-updated_at: 2026-03-17T19:56:55.575481+00:00
+updated_at: 2026-03-28T02:08:25.427071+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -107,12 +107,14 @@ No changes needed for: #2 (peer dependency is install-level), #4 (worktree usage
 
 ## Implementation Plan
 
-1. Confirm event log schema from SMET-I-0041 includes all necessary fields for history
-2. Implement session outcome writer (triggered on terminal state transition)
-3. Implement session history list API with filtering and search
-4. Implement session event log API (paginated chronological events)
-5. Build session history list view in dashboard with filter chips
-6. Build session replay view: timeline with user/AI event distinction
-7. Build outcome card component (status, summary, artifacts, next steps)
-8. Test: run session → complete → verify history list shows it → open replay → see all events in order
-9. Test search: find sessions by title keyword, filter by outcome=failed
+### Task Decomposition (5 tasks)
+
+| Order | Task | Title | Dependencies |
+|-------|------|-------|-------------|
+| 1 | SMET-T-0254 | Session Outcome Model, Storage, and API | None (foundation) |
+| 2 | SMET-T-0255 | Session History List API with Advanced Filtering and Search | T-0254 |
+| 3 | SMET-T-0256 | Dashboard Session History List and Filter UI | T-0255 |
+| 4 | SMET-T-0257 | Dashboard Session Replay View and Outcome Card | T-0254 |
+| 5 | SMET-T-0258 | Integration Tests for Session History and Replay | T-0254 through T-0257 |
+
+**Note:** ~70% of infrastructure already exists from I-0041 (session_output_events table, event ingestion, SSE streaming, SessionTimeline component, LiveOutput component). Main new work is outcome persistence, advanced filtering, and the HistoryPage UI.

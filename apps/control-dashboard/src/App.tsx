@@ -9,6 +9,7 @@ import NewSessionPage from './pages/NewSessionPage';
 import SessionDetailPage from './pages/SessionDetailPage';
 import MonitoringPage from './pages/MonitoringPage';
 import HistoryPage from './pages/HistoryPage';
+import HistoryDetailPage from './pages/HistoryDetailPage';
 import PoliciesPage from './pages/PoliciesPage';
 import ViolationsPage from './pages/ViolationsPage';
 import DocumentsPage from './pages/planning/DocumentsPage';
@@ -38,6 +39,7 @@ function App() {
             <Route path="planning/rules" element={<RulesPage />} />
             <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="history" element={<HistoryPage />} />
+            <Route path="history/:id" element={<HistoryDetailPage />} />
             <Route path="policies" element={<PoliciesPage />} />
             <Route path="violations" element={<ViolationsPage />} />
             <Route path="*" element={<NotFoundPage />} />

@@ -172,6 +172,19 @@ fn create_tables(conn: &Connection) -> Result<()> {
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             responded_at TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS session_outcomes (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL UNIQUE REFERENCES sessions(id),
+            status TEXT NOT NULL,
+            summary TEXT NOT NULL DEFAULT '',
+            artifacts TEXT NOT NULL DEFAULT '[]',
+            next_steps TEXT NOT NULL DEFAULT '',
+            event_count INTEGER NOT NULL DEFAULT 0,
+            intervention_count INTEGER NOT NULL DEFAULT 0,
+            duration_seconds INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
         ",
     )?;
     Ok(())

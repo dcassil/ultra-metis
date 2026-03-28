@@ -22,8 +22,9 @@ use crate::models::{
     MachineDetailResponse, MachinePolicy, MachineRepo, MachineResponse, MachineStatus,
     PendingApproval, PolicyViolationRecord, QueryEventsParams, RegisterRequest, RegisterResponse,
     RepoInfo, RepoPolicy, RepoPolicyQuery, ReportStateRequest, RespondToApprovalRequest, Session,
-    SessionListResponse, SessionMode, SessionOutputEvent, SessionOutputEventType, SessionResponse,
-    SessionState, UpdateMachinePolicyRequest, UpdateRepoPolicyRequest, ViolationsListResponse,
+    SessionListResponse, SessionMode, SessionOutcome, SessionOutputEvent, SessionOutputEventType,
+    SessionResponse, SessionState, UpdateMachinePolicyRequest, UpdateRepoPolicyRequest,
+    ViolationsListResponse,
 };
 use crate::AppState;
 
@@ -666,7 +667,7 @@ fn load_session(
     }
 }
 
-#[allow(clippy::significant_drop_tightening)]
+#[allow(clippy::significant_drop_tightening, clippy::too_many_lines)]
 fn query_sessions(
     state: &AppState,
     user_id: &str,
@@ -674,129 +675,176 @@ fn query_sessions(
 ) -> Result<SessionListResponse, rusqlite::Error> {
     let db = state.db.lock().expect("db lock poisoned");
 
-    // Build WHERE clause dynamically
-    let mut conditions = vec!["user_id = ?1".to_string()];
-    let mut param_idx = 2;
+    // Determine if we need a JOIN on session_outcomes
+    let needs_outcome_join = query.outcome.is_some();
 
-    if query.machine_id.is_some() {
-        conditions.push(format!("machine_id = ?{param_idx}"));
+    // Build WHERE clause dynamically with a params vec
+    let mut conditions: Vec<String> = vec!["s.user_id = ?1".to_string()];
+    let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> =
+        vec![Box::new(user_id.to_string())];
+    let mut param_idx: usize = 2;
+
+    if let Some(ref mid) = query.machine_id {
+        conditions.push(format!("s.machine_id = ?{param_idx}"));
+        param_values.push(Box::new(mid.clone()));
         param_idx += 1;
     }
-    if query.repo_path.is_some() {
-        conditions.push(format!("repo_path = ?{param_idx}"));
+    if let Some(ref rp) = query.repo_path {
+        conditions.push(format!("s.repo_path = ?{param_idx}"));
+        param_values.push(Box::new(rp.clone()));
         param_idx += 1;
     }
-    if query.state.is_some() {
-        conditions.push(format!("state = ?{param_idx}"));
+    if let Some(ref st) = query.state {
+        conditions.push(format!("s.state = ?{param_idx}"));
+        param_values.push(Box::new(st.clone()));
+        param_idx += 1;
+    }
+    if let Some(ref outcome) = query.outcome {
+        conditions.push(format!("so.status = ?{param_idx}"));
+        param_values.push(Box::new(outcome.clone()));
+        param_idx += 1;
+    }
+    if let Some(ref search) = query.search {
+        let pattern = format!("%{search}%");
+        conditions.push(format!(
+            "(s.title LIKE ?{pi1} OR s.instructions LIKE ?{pi2})",
+            pi1 = param_idx,
+            pi2 = param_idx + 1
+        ));
+        param_values.push(Box::new(pattern.clone()));
+        param_values.push(Box::new(pattern));
+        param_idx += 2;
+    }
+    if let Some(ref from_date) = query.from_date {
+        conditions.push(format!("s.created_at >= ?{param_idx}"));
+        param_values.push(Box::new(from_date.clone()));
+        param_idx += 1;
+    }
+    if let Some(ref to_date) = query.to_date {
+        conditions.push(format!("s.created_at <= ?{param_idx}"));
+        param_values.push(Box::new(to_date.clone()));
         param_idx += 1;
     }
 
     let where_clause = conditions.join(" AND ");
 
+    // Validate and build ORDER BY
+    let sort_col = match query.sort_by.as_deref() {
+        Some("updated_at") => "s.updated_at",
+        Some("title") => "s.title",
+        Some("created_at") | None => "s.created_at",
+        Some(_) => "s.created_at", // ignore invalid values, fall back to default
+    };
+    let sort_dir = match query.sort_order.as_deref() {
+        Some("asc") | Some("ASC") => "ASC",
+        Some("desc") | Some("DESC") | None => "DESC",
+        Some(_) => "DESC",
+    };
+
+    let join_clause = if needs_outcome_join {
+        "INNER JOIN session_outcomes so ON so.session_id = s.id"
+    } else {
+        "LEFT JOIN session_outcomes so ON so.session_id = s.id"
+    };
+
     // Count query
-    let count_sql = format!("SELECT COUNT(*) FROM sessions WHERE {where_clause}");
-    let list_sql = format!(
-        "SELECT id, user_id, machine_id, repo_path, title, instructions, autonomy_level,
-                work_item_id, context, state, created_at, updated_at, started_at, completed_at
-         FROM sessions WHERE {where_clause}
-         ORDER BY created_at DESC
-         LIMIT ?{} OFFSET ?{}",
-        param_idx,
-        param_idx + 1
+    let count_sql = format!(
+        "SELECT COUNT(*) FROM sessions s {join_clause} WHERE {where_clause}"
     );
 
     let limit = query.limit.unwrap_or(50);
     let offset = query.offset.unwrap_or(0);
 
-    // Execute count
-    let total: i64 = match (&query.machine_id, &query.repo_path, &query.state) {
-        (None, None, None) => {
-            db.query_row(&count_sql, [user_id], |row| row.get(0))?
-        }
-        (Some(mid), None, None) => {
-            db.query_row(&count_sql, params![user_id, mid], |row| row.get(0))?
-        }
-        (None, Some(rp), None) => {
-            db.query_row(&count_sql, params![user_id, rp], |row| row.get(0))?
-        }
-        (None, None, Some(st)) => {
-            db.query_row(&count_sql, params![user_id, st], |row| row.get(0))?
-        }
-        (Some(mid), Some(rp), None) => {
-            db.query_row(&count_sql, params![user_id, mid, rp], |row| row.get(0))?
-        }
-        (Some(mid), None, Some(st)) => {
-            db.query_row(&count_sql, params![user_id, mid, st], |row| row.get(0))?
-        }
-        (None, Some(rp), Some(st)) => {
-            db.query_row(&count_sql, params![user_id, rp, st], |row| row.get(0))?
-        }
-        (Some(mid), Some(rp), Some(st)) => {
-            db.query_row(&count_sql, params![user_id, mid, rp, st], |row| row.get(0))?
-        }
-    };
+    // Build list query
+    let list_sql = format!(
+        "SELECT s.id, s.user_id, s.machine_id, s.repo_path, s.title, s.instructions,
+                s.autonomy_level, s.work_item_id, s.context, s.state,
+                s.created_at, s.updated_at, s.started_at, s.completed_at,
+                so.status AS outcome_status
+         FROM sessions s
+         {join_clause}
+         WHERE {where_clause}
+         ORDER BY {sort_col} {sort_dir}
+         LIMIT ?{param_idx} OFFSET ?{}",
+        param_idx + 1
+    );
 
-    // Execute list
-    let sessions: Vec<Session> = match (&query.machine_id, &query.repo_path, &query.state) {
-        (None, None, None) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, limit, offset])?
-        }
-        (Some(mid), None, None) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, mid, limit, offset])?
-        }
-        (None, Some(rp), None) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, rp, limit, offset])?
-        }
-        (None, None, Some(st)) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, st, limit, offset])?
-        }
-        (Some(mid), Some(rp), None) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, mid, rp, limit, offset])?
-        }
-        (Some(mid), None, Some(st)) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, mid, st, limit, offset])?
-        }
-        (None, Some(rp), Some(st)) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, rp, st, limit, offset])?
-        }
-        (Some(mid), Some(rp), Some(st)) => {
-            query_sessions_rows(&db, &list_sql, params![user_id, mid, rp, st, limit, offset])?
-        }
-    };
+    // Build params refs for the count query
+    let count_params: Vec<&dyn rusqlite::types::ToSql> =
+        param_values.iter().map(|b| b.as_ref()).collect();
+    let total: i64 = db.query_row(&count_sql, count_params.as_slice(), |row| row.get(0))?;
+
+    // Build params for the list query (add limit and offset)
+    param_values.push(Box::new(limit));
+    param_values.push(Box::new(offset));
+    let list_params: Vec<&dyn rusqlite::types::ToSql> =
+        param_values.iter().map(|b| b.as_ref()).collect();
+
+    let sessions = query_sessions_rows(&db, &list_sql, list_params.as_slice())?;
 
     Ok(SessionListResponse {
-        sessions: sessions.into_iter().map(session_to_response).collect(),
+        sessions: sessions.into_iter().map(Into::into).collect(),
         total,
     })
+}
+
+/// A row from the sessions list query including the optional outcome_status.
+struct SessionWithOutcome {
+    session: Session,
+    outcome_status: Option<String>,
+}
+
+impl From<SessionWithOutcome> for SessionResponse {
+    fn from(s: SessionWithOutcome) -> Self {
+        SessionResponse {
+            id: s.session.id,
+            machine_id: s.session.machine_id,
+            repo_path: s.session.repo_path,
+            title: s.session.title,
+            instructions: s.session.instructions,
+            autonomy_level: s.session.autonomy_level,
+            work_item_id: s.session.work_item_id,
+            context: s.session.context,
+            state: s.session.state,
+            created_at: s.session.created_at,
+            updated_at: s.session.updated_at,
+            started_at: s.session.started_at,
+            completed_at: s.session.completed_at,
+            outcome_status: s.outcome_status,
+        }
+    }
 }
 
 #[allow(clippy::significant_drop_tightening)]
 fn query_sessions_rows(
     db: &rusqlite::Connection,
     sql: &str,
-    params: impl rusqlite::Params,
-) -> Result<Vec<Session>, rusqlite::Error> {
+    params: &[&dyn rusqlite::types::ToSql],
+) -> Result<Vec<SessionWithOutcome>, rusqlite::Error> {
     let mut stmt = db.prepare(sql)?;
     let rows = stmt.query_map(params, |row| {
-        Ok(Session {
-            id: row.get(0)?,
-            user_id: row.get(1)?,
-            machine_id: row.get(2)?,
-            repo_path: row.get(3)?,
-            title: row.get(4)?,
-            instructions: row.get(5)?,
-            autonomy_level: row.get::<_, String>(6)?
-                .parse()
-                .unwrap_or(crate::models::AutonomyLevel::Normal),
-            work_item_id: row.get(7)?,
-            context: row.get(8)?,
-            state: row.get::<_, String>(9)?
-                .parse()
-                .unwrap_or(SessionState::Starting),
-            created_at: row.get(10)?,
-            updated_at: row.get(11)?,
-            started_at: row.get(12)?,
-            completed_at: row.get(13)?,
+        Ok(SessionWithOutcome {
+            session: Session {
+                id: row.get(0)?,
+                user_id: row.get(1)?,
+                machine_id: row.get(2)?,
+                repo_path: row.get(3)?,
+                title: row.get(4)?,
+                instructions: row.get(5)?,
+                autonomy_level: row.get::<_, String>(6)?
+                    .parse()
+                    .unwrap_or(crate::models::AutonomyLevel::Normal),
+                work_item_id: row.get(7)?,
+                context: row.get(8)?,
+                state: row.get::<_, String>(9)?
+                    .parse()
+                    .unwrap_or(SessionState::Starting),
+                created_at: row.get(10)?,
+                updated_at: row.get(11)?,
+                started_at: row.get(12)?,
+                completed_at: row.get(13)?,
+            },
+            outcome_status: row.get(14)?,
         })
     })?;
 
@@ -867,6 +915,7 @@ pub async fn force_stop_session(
         if let Err(e) = insert_session_event(&state, &session_id, Some("starting"), "stopped", &now, None) {
             tracing::error!("failed to insert event: {e}");
         }
+        write_session_outcome(&state, &session_id, &SessionState::Stopped);
         return Json(serde_json::json!({"status": "stopped", "session_id": session_id})).into_response();
     }
 
@@ -983,6 +1032,11 @@ pub async fn report_session_state(
         metadata_str.as_deref(),
     ) {
         tracing::error!("failed to insert event: {e}");
+    }
+
+    // Write outcome record when session reaches a terminal state
+    if body.state.is_terminal() {
+        write_session_outcome(&state, &session_id, &body.state);
     }
 
     Json(serde_json::json!({"status": "ok", "state": body.state})).into_response()
@@ -1150,6 +1204,7 @@ fn session_to_response(session: Session) -> SessionResponse {
         updated_at: session.updated_at,
         started_at: session.started_at,
         completed_at: session.completed_at,
+        outcome_status: None,
     }
 }
 
@@ -2568,6 +2623,176 @@ fn update_approval_response(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Session outcome helpers
+// ---------------------------------------------------------------------------
+
+/// Map a terminal session state to an outcome status string.
+fn outcome_status_for_state(state: &SessionState) -> &'static str {
+    match state {
+        SessionState::Completed => "success",
+        SessionState::Failed => "failure",
+        SessionState::Stopped => "partial",
+        _ => "partial",
+    }
+}
+
+/// Write a session outcome record after the session reaches a terminal state.
+///
+/// Collects event_count, intervention_count, a summary from the last output events,
+/// and the duration from started_at to now.
+fn write_session_outcome(
+    state: &AppState,
+    session_id: &str,
+    terminal_state: &SessionState,
+) {
+    let db = state.db.lock().expect("db lock poisoned");
+
+    // Check if outcome already exists (idempotent)
+    let existing: Result<i64, _> = db.query_row(
+        "SELECT COUNT(*) FROM session_outcomes WHERE session_id = ?1",
+        params![session_id],
+        |row| row.get(0),
+    );
+    if existing.unwrap_or(0) > 0 {
+        return;
+    }
+
+    let outcome_id = uuid::Uuid::new_v4().to_string();
+    let status = outcome_status_for_state(terminal_state);
+
+    // Count total output events
+    let event_count: i64 = db
+        .query_row(
+            "SELECT COUNT(*) FROM session_output_events WHERE session_id = ?1",
+            params![session_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    // Count intervention events (approval_response, guidance_injected)
+    let intervention_count: i64 = db
+        .query_row(
+            "SELECT COUNT(*) FROM session_output_events
+             WHERE session_id = ?1 AND event_type IN ('approval_response', 'guidance_injected')",
+            params![session_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    // Build summary from the last few output events
+    let summary: String = {
+        let mut stmt = db
+            .prepare(
+                "SELECT content FROM session_output_events
+                 WHERE session_id = ?1 AND content != ''
+                 ORDER BY sequence_num DESC LIMIT 5",
+            )
+            .unwrap_or_else(|e| {
+                tracing::error!("failed to prepare summary query: {e}");
+                // Return a dummy statement that will produce no rows
+                db.prepare("SELECT '' WHERE 0").unwrap()
+            });
+        let rows: Vec<String> = stmt
+            .query_map(params![session_id], |row| row.get::<_, String>(0))
+            .ok()
+            .map(|iter| iter.filter_map(Result::ok).collect())
+            .unwrap_or_default();
+        // Reverse to chronological order and join
+        let mut reversed = rows;
+        reversed.reverse();
+        reversed.join("\n")
+    };
+
+    // Calculate duration_seconds from session.started_at to now
+    let duration_seconds: i64 = db
+        .query_row(
+            "SELECT started_at FROM sessions WHERE id = ?1",
+            params![session_id],
+            |row| row.get::<_, Option<String>>(0),
+        )
+        .ok()
+        .flatten()
+        .and_then(|started_at| {
+            started_at.parse::<chrono::DateTime<Utc>>().ok().map(|start| {
+                Utc::now().signed_duration_since(start).num_seconds().max(0)
+            })
+        })
+        .unwrap_or(0);
+
+    if let Err(e) = db.execute(
+        "INSERT INTO session_outcomes
+         (id, session_id, status, summary, artifacts, next_steps, event_count, intervention_count, duration_seconds)
+         VALUES (?1, ?2, ?3, ?4, '[]', '', ?5, ?6, ?7)",
+        params![
+            outcome_id,
+            session_id,
+            status,
+            summary,
+            event_count,
+            intervention_count,
+            duration_seconds,
+        ],
+    ) {
+        tracing::error!("failed to write session outcome: {e}");
+    }
+}
+
+fn load_session_outcome(
+    state: &AppState,
+    session_id: &str,
+) -> Result<Option<SessionOutcome>, rusqlite::Error> {
+    let result = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT id, session_id, status, summary, artifacts, next_steps,
+                event_count, intervention_count, duration_seconds, created_at
+         FROM session_outcomes WHERE session_id = ?1",
+        params![session_id],
+        |row| {
+            Ok(SessionOutcome {
+                id: row.get(0)?,
+                session_id: row.get(1)?,
+                status: row.get(2)?,
+                summary: row.get(3)?,
+                artifacts: row.get(4)?,
+                next_steps: row.get(5)?,
+                event_count: row.get(6)?,
+                intervention_count: row.get(7)?,
+                duration_seconds: row.get(8)?,
+                created_at: row.get(9)?,
+            })
+        },
+    );
+
+    match result {
+        Ok(outcome) => Ok(Some(outcome)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/sessions/{id}/outcome
+// ---------------------------------------------------------------------------
+
+pub async fn get_session_outcome(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+) -> impl IntoResponse {
+    // Verify session exists and belongs to user
+    match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    match load_session_outcome(&state, &session_id) {
+        Ok(Some(outcome)) => Json(serde_json::to_value(outcome).unwrap_or_default()).into_response(),
+        Ok(None) => not_found("no outcome recorded for this session"),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2809,6 +3034,12 @@ mod tests {
             machine_id: None,
             repo_path: None,
             state: None,
+            outcome: None,
+            search: None,
+            from_date: None,
+            to_date: None,
+            sort_by: None,
+            sort_order: None,
             limit: None,
             offset: None,
         };
@@ -2821,6 +3052,12 @@ mod tests {
             machine_id: Some("m-1".into()),
             repo_path: None,
             state: None,
+            outcome: None,
+            search: None,
+            from_date: None,
+            to_date: None,
+            sort_by: None,
+            sort_order: None,
             limit: None,
             offset: None,
         };
@@ -2832,6 +3069,12 @@ mod tests {
             machine_id: None,
             repo_path: None,
             state: None,
+            outcome: None,
+            search: None,
+            from_date: None,
+            to_date: None,
+            sort_by: None,
+            sort_order: None,
             limit: Some(1),
             offset: Some(0),
         };
