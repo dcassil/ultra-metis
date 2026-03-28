@@ -31,6 +31,7 @@ async fn start_planning_test_server(
     let state = AppState {
         db: Arc::new(Mutex::new(conn)),
         event_channels: Arc::new(Mutex::new(HashMap::new())),
+        log_channels: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let planning_state = init_planning_state(Some(project_dir.to_path_buf()));

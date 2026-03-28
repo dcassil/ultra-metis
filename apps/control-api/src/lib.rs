@@ -23,6 +23,9 @@ pub struct AppState {
     /// Per-session broadcast channels for live event streaming (SSE).
     /// Key is session_id, value is broadcast sender.
     pub event_channels: Arc<Mutex<HashMap<String, broadcast::Sender<String>>>>,
+    /// Per-machine broadcast channels for live log streaming (SSE).
+    /// Key is machine_id, value is broadcast sender.
+    pub log_channels: Arc<Mutex<HashMap<String, broadcast::Sender<String>>>>,
 }
 
 /// State for planning data endpoints (backed by cadre-store).
@@ -76,7 +79,12 @@ pub fn build_app_with_planning(state: AppState, planning_state: PlanningState) -
         .route(
             "/{id}/repo-policy",
             get(routes::get_repo_policy).put(routes::update_repo_policy),
-        );
+        )
+        .route(
+            "/{id}/logs",
+            post(routes::ingest_logs).get(routes::query_logs),
+        )
+        .route("/{id}/logs/stream", get(routes::log_stream));
 
     let session_routes = Router::new()
         .route("/{id}", get(routes::get_session))

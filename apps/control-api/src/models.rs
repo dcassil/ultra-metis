@@ -1115,6 +1115,46 @@ pub struct UnreadCountResponse {
     pub count: i64,
 }
 
+// -- Machine log types --
+
+/// A machine-level log entry.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MachineLogEntry {
+    pub id: String,
+    pub machine_id: String,
+    pub timestamp: String,
+    pub level: String,
+    pub target: String,
+    pub message: String,
+    pub fields_json: Option<String>,
+}
+
+/// Single log in an ingestion batch.
+#[derive(Debug, Deserialize)]
+pub struct IngestLogItem {
+    pub level: String,
+    pub target: String,
+    pub message: String,
+    pub fields: Option<serde_json::Value>,
+    pub timestamp: Option<String>,
+}
+
+/// Request body for POST /api/machines/{id}/logs.
+#[derive(Debug, Deserialize)]
+pub struct IngestLogsRequest {
+    pub logs: Vec<IngestLogItem>,
+}
+
+/// Query params for GET /api/machines/{id}/logs.
+#[derive(Debug, Deserialize)]
+pub struct QueryLogsParams {
+    pub level: Option<String>,
+    pub since: Option<String>,
+    pub target: Option<String>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

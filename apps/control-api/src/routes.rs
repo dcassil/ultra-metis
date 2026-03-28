@@ -18,14 +18,15 @@ use axum::extract::Query;
 use crate::models::{
     ActionCategory, ApprovalStatus, AutonomyLevel, CommandResponse, CreateSessionRequest,
     CreateSessionResponse, EffectivePolicy, EffectivePolicyQuery, ErrorBody, HeartbeatRequest,
-    IngestEventsRequest, InjectGuidanceRequest, ListNotificationsQuery, ListSessionsQuery,
-    ListViolationsQuery, Machine, MachineDetailResponse, MachinePolicy, MachineRepo,
-    MachineResponse, MachineStatus, Notification, PendingApproval, PolicyViolationRecord,
-    QueryEventsParams, RegisterDeviceRequest, RegisterRequest, RegisterResponse, RepoInfo,
-    RepoPolicy, RepoPolicyQuery, ReportStateRequest, RespondToApprovalRequest, Session,
-    SessionListResponse, SessionMode, SessionOutcome, SessionOutputEvent, SessionOutputEventType,
-    SessionResponse, SessionState, UnreadCountResponse, UpdateMachinePolicyRequest,
-    UpdateRepoPolicyRequest, ViolationsListResponse,
+    IngestEventsRequest, IngestLogsRequest, InjectGuidanceRequest, ListNotificationsQuery,
+    ListSessionsQuery, ListViolationsQuery, Machine, MachineDetailResponse, MachineLogEntry,
+    MachinePolicy, MachineRepo, MachineResponse, MachineStatus, Notification, PendingApproval,
+    PolicyViolationRecord, QueryEventsParams, QueryLogsParams, RegisterDeviceRequest,
+    RegisterRequest, RegisterResponse, RepoInfo, RepoPolicy, RepoPolicyQuery, ReportStateRequest,
+    RespondToApprovalRequest, Session, SessionListResponse, SessionMode, SessionOutcome,
+    SessionOutputEvent, SessionOutputEventType, SessionResponse, SessionState,
+    UnreadCountResponse, UpdateMachinePolicyRequest, UpdateRepoPolicyRequest,
+    ViolationsListResponse,
 };
 use crate::AppState;
 
@@ -2061,6 +2062,254 @@ fn merge_policies(
 }
 
 // ---------------------------------------------------------------------------
+// POST /api/machines/{id}/logs  (runner ingests machine logs)
+// ---------------------------------------------------------------------------
+
+pub async fn ingest_logs(
+    State(state): State<AppState>,
+    MachineTokenAuth(auth): MachineTokenAuth,
+    Path(machine_id): Path<String>,
+    Json(body): Json<IngestLogsRequest>,
+) -> impl IntoResponse {
+    // Validate machine exists and belongs to the authenticated user
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    let now = Utc::now().to_rfc3339();
+    let mut inserted = 0i64;
+
+    for item in &body.logs {
+        let log_id = uuid::Uuid::new_v4().to_string();
+        let ts = item.timestamp.as_deref().unwrap_or(&now);
+        let fields_str = item.fields.as_ref().map(std::string::ToString::to_string);
+
+        if let Err(e) = insert_machine_log(
+            &state,
+            &log_id,
+            &machine_id,
+            ts,
+            &item.level,
+            &item.target,
+            &item.message,
+            fields_str.as_deref(),
+        ) {
+            return internal_error(&format!("failed to insert log: {e}"));
+        }
+
+        // Broadcast to SSE subscribers
+        let log_entry = MachineLogEntry {
+            id: log_id,
+            machine_id: machine_id.clone(),
+            timestamp: ts.to_string(),
+            level: item.level.clone(),
+            target: item.target.clone(),
+            message: item.message.clone(),
+            fields_json: fields_str.clone(),
+        };
+        if let Ok(json) = serde_json::to_string(&log_entry) {
+            broadcast_log(&state, &machine_id, &json);
+        }
+
+        inserted += 1;
+    }
+
+    Json(serde_json::json!({"ingested": inserted})).into_response()
+}
+
+#[allow(clippy::too_many_arguments)]
+fn insert_machine_log(
+    state: &AppState,
+    log_id: &str,
+    machine_id: &str,
+    timestamp: &str,
+    level: &str,
+    target: &str,
+    message: &str,
+    fields_json: Option<&str>,
+) -> Result<(), rusqlite::Error> {
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "INSERT INTO machine_logs (id, machine_id, timestamp, level, target, message, fields_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![log_id, machine_id, timestamp, level, target, message, fields_json],
+        )?;
+    Ok(())
+}
+
+fn broadcast_log(state: &AppState, machine_id: &str, json: &str) {
+    let channels = state.log_channels.lock().expect("log_channels lock poisoned");
+    if let Some(tx) = channels.get(machine_id) {
+        let _ = tx.send(json.to_string());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/machines/{id}/logs  (dashboard queries log history)
+// ---------------------------------------------------------------------------
+
+pub async fn query_logs(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+    Query(query): Query<QueryLogsParams>,
+) -> impl IntoResponse {
+    // Validate machine ownership
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    match query_machine_logs(&state, &machine_id, &query) {
+        Ok(logs) => Json(serde_json::to_value(logs).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+fn level_rank(level: &str) -> u8 {
+    match level {
+        "debug" => 0,
+        "info" => 1,
+        "warn" => 2,
+        "error" => 3,
+        _ => 0,
+    }
+}
+
+fn levels_at_or_above(min_level: &str) -> Vec<&'static str> {
+    let rank = level_rank(min_level);
+    ["debug", "info", "warn", "error"]
+        .iter()
+        .filter(|l| level_rank(l) >= rank)
+        .copied()
+        .collect()
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_machine_logs(
+    state: &AppState,
+    machine_id: &str,
+    query: &QueryLogsParams,
+) -> Result<Vec<MachineLogEntry>, rusqlite::Error> {
+    let db = state.db.lock().expect("db lock poisoned");
+    let limit = query.limit.unwrap_or(100);
+    let offset = query.offset.unwrap_or(0);
+
+    // Build dynamic SQL based on filters
+    let mut conditions = vec!["machine_id = ?1".to_string()];
+    let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![Box::new(machine_id.to_string())];
+    let mut param_idx = 2;
+
+    // Level filtering: include levels at or above the specified minimum
+    let allowed_levels = query.level.as_ref().map(|l| levels_at_or_above(l));
+    if let Some(ref levels) = allowed_levels {
+        let placeholders: Vec<String> = levels
+            .iter()
+            .enumerate()
+            .map(|(i, _)| format!("?{}", param_idx + i))
+            .collect();
+        conditions.push(format!("level IN ({})", placeholders.join(", ")));
+        for level in levels {
+            param_values.push(Box::new(level.to_string()));
+        }
+        param_idx += levels.len();
+    }
+
+    if let Some(ref since) = query.since {
+        conditions.push(format!("timestamp > ?{param_idx}"));
+        param_values.push(Box::new(since.clone()));
+        param_idx += 1;
+    }
+
+    if let Some(ref target) = query.target {
+        conditions.push(format!("target LIKE ?{param_idx}"));
+        param_values.push(Box::new(format!("{target}%")));
+        param_idx += 1;
+    }
+
+    let where_clause = conditions.join(" AND ");
+    let sql = format!(
+        "SELECT id, machine_id, timestamp, level, target, message, fields_json
+         FROM machine_logs
+         WHERE {where_clause}
+         ORDER BY timestamp ASC
+         LIMIT ?{} OFFSET ?{}",
+        param_idx,
+        param_idx + 1
+    );
+
+    param_values.push(Box::new(limit));
+    param_values.push(Box::new(offset));
+
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = param_values.iter().map(|p| p.as_ref()).collect();
+    let mut stmt = db.prepare(&sql)?;
+    let rows = stmt.query_map(param_refs.as_slice(), parse_machine_log_row)?;
+    let mut logs = Vec::new();
+    for row in rows {
+        logs.push(row?);
+    }
+    Ok(logs)
+}
+
+fn parse_machine_log_row(row: &rusqlite::Row<'_>) -> Result<MachineLogEntry, rusqlite::Error> {
+    Ok(MachineLogEntry {
+        id: row.get(0)?,
+        machine_id: row.get(1)?,
+        timestamp: row.get(2)?,
+        level: row.get(3)?,
+        target: row.get(4)?,
+        message: row.get(5)?,
+        fields_json: row.get(6)?,
+    })
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/machines/{id}/logs/stream  (SSE live log stream)
+// ---------------------------------------------------------------------------
+
+pub async fn log_stream(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+) -> impl IntoResponse {
+    // Validate machine ownership
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return Err(not_found("machine not found")),
+        Err(e) => return Err(internal_error(&format!("db error: {e}"))),
+    }
+
+    // Get or create the broadcast channel for this machine
+    let rx = {
+        let mut channels = state.log_channels.lock().expect("log_channels lock poisoned");
+        let tx = channels
+            .entry(machine_id)
+            .or_insert_with(|| {
+                let (tx, _rx) = tokio::sync::broadcast::channel(256);
+                tx
+            });
+        let rx = tx.subscribe();
+        drop(channels);
+        rx
+    };
+
+    let log_event_stream = BroadcastStream::new(rx).filter_map(|result| match result {
+        Ok(json) => Some(Ok::<_, std::convert::Infallible>(
+            Event::default().event("machine_log").data(json),
+        )),
+        Err(_) => None,
+    });
+
+    Ok(Sse::new(log_event_stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(15))))
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/sessions/{id}/events  (runner ingests output events)
 // ---------------------------------------------------------------------------
 
@@ -3044,6 +3293,7 @@ mod tests {
         AppState {
             db: Arc::new(Mutex::new(conn)),
             event_channels: Arc::new(Mutex::new(HashMap::new())),
+            log_channels: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -4725,5 +4975,165 @@ mod tests {
             )
             .unwrap();
         assert_eq!(count, 1);
+    }
+
+    // -----------------------------------------------------------------------
+    // Machine Logs tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_ingest_and_query_machine_logs() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Insert 3 logs
+        insert_machine_log(&state, "l-1", "m-1", &now, "info", "cadre::runner", "Starting runner", None).unwrap();
+        insert_machine_log(&state, "l-2", "m-1", &now, "warn", "cadre::runner", "Low memory", None).unwrap();
+        insert_machine_log(
+            &state, "l-3", "m-1", &now, "error", "cadre::session", "Session crashed",
+            Some(r#"{"code":42}"#),
+        )
+        .unwrap();
+
+        // Query all
+        let query = QueryLogsParams {
+            level: None,
+            since: None,
+            target: None,
+            limit: None,
+            offset: None,
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 3);
+        assert_eq!(logs[0].level, "info");
+        assert_eq!(logs[0].target, "cadre::runner");
+        assert_eq!(logs[0].message, "Starting runner");
+        assert_eq!(logs[2].fields_json, Some(r#"{"code":42}"#.to_string()));
+    }
+
+    #[test]
+    fn test_machine_logs_level_filtering() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        insert_machine_log(&state, "l-1", "m-1", &now, "debug", "cadre::runner", "Trace info", None).unwrap();
+        insert_machine_log(&state, "l-2", "m-1", &now, "info", "cadre::runner", "Normal info", None).unwrap();
+        insert_machine_log(&state, "l-3", "m-1", &now, "warn", "cadre::runner", "A warning", None).unwrap();
+        insert_machine_log(&state, "l-4", "m-1", &now, "error", "cadre::runner", "An error", None).unwrap();
+
+        // Query with level=warn → only warn + error
+        let query = QueryLogsParams {
+            level: Some("warn".into()),
+            since: None,
+            target: None,
+            limit: None,
+            offset: None,
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 2);
+        assert_eq!(logs[0].level, "warn");
+        assert_eq!(logs[1].level, "error");
+
+        // Query with level=info → info + warn + error
+        let query = QueryLogsParams {
+            level: Some("info".into()),
+            since: None,
+            target: None,
+            limit: None,
+            offset: None,
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 3);
+    }
+
+    #[test]
+    fn test_machine_logs_target_filtering() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        insert_machine_log(&state, "l-1", "m-1", &now, "info", "cadre::runner::loop", "In the loop", None).unwrap();
+        insert_machine_log(&state, "l-2", "m-1", &now, "info", "cadre::runner::init", "Initializing", None).unwrap();
+        insert_machine_log(&state, "l-3", "m-1", &now, "info", "cadre::session::mgr", "Managing", None).unwrap();
+
+        // Query with target=cadre::runner → matches runner::loop and runner::init
+        let query = QueryLogsParams {
+            level: None,
+            since: None,
+            target: Some("cadre::runner".into()),
+            limit: None,
+            offset: None,
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 2);
+        assert!(logs.iter().all(|l| l.target.starts_with("cadre::runner")));
+
+        // Query with target=cadre::session → matches session::mgr only
+        let query = QueryLogsParams {
+            level: None,
+            since: None,
+            target: Some("cadre::session".into()),
+            limit: None,
+            offset: None,
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0].target, "cadre::session::mgr");
+    }
+
+    #[test]
+    fn test_machine_logs_pagination() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        for i in 0..10 {
+            insert_machine_log(
+                &state,
+                &format!("l-{i}"),
+                "m-1",
+                &now,
+                "info",
+                "cadre::runner",
+                &format!("Log entry {i}"),
+                None,
+            )
+            .unwrap();
+        }
+
+        // Query with limit=3
+        let query = QueryLogsParams {
+            level: None,
+            since: None,
+            target: None,
+            limit: Some(3),
+            offset: None,
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 3);
+
+        // Query with limit=3, offset=3
+        let query = QueryLogsParams {
+            level: None,
+            since: None,
+            target: None,
+            limit: Some(3),
+            offset: Some(3),
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 3);
+
+        // Query with offset=8 → only 2 remaining
+        let query = QueryLogsParams {
+            level: None,
+            since: None,
+            target: None,
+            limit: Some(100),
+            offset: Some(8),
+        };
+        let logs = query_machine_logs(&state, "m-1", &query).unwrap();
+        assert_eq!(logs.len(), 2);
     }
 }

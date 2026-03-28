@@ -21,6 +21,7 @@ async fn main() -> anyhow::Result<()> {
     let state = AppState {
         db: Arc::new(Mutex::new(conn)),
         event_channels: Arc::new(Mutex::new(HashMap::new())),
+        log_channels: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let app = build_app(state);

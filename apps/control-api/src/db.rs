@@ -216,6 +216,16 @@ fn create_tables(conn: &Connection) -> Result<()> {
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             UNIQUE(user_id, notification_type)
         );
+
+        CREATE TABLE IF NOT EXISTS machine_logs (
+            id TEXT PRIMARY KEY,
+            machine_id TEXT NOT NULL REFERENCES machines(id),
+            timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+            level TEXT NOT NULL,
+            target TEXT NOT NULL DEFAULT '',
+            message TEXT NOT NULL DEFAULT '',
+            fields_json TEXT
+        );
         ",
     )?;
     Ok(())

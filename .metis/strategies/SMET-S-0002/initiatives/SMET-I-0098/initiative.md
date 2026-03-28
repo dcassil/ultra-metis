@@ -4,14 +4,14 @@ level: initiative
 title: "Installable Machine Runner with System Tray UI"
 short_code: "SMET-I-0098"
 created_at: 2026-03-28T16:41:33.224702+00:00
-updated_at: 2026-03-28T17:24:26.731814+00:00
+updated_at: 2026-03-28T17:49:21.543652+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
