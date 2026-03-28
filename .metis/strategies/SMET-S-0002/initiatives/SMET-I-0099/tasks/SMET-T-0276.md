@@ -4,14 +4,14 @@ level: task
 title: "Integration Tests for Log Pipeline"
 short_code: "SMET-T-0276"
 created_at: 2026-03-28T17:50:00.377309+00:00
-updated_at: 2026-03-28T17:50:00.377309+00:00
+updated_at: 2026-03-28T18:07:09.426532+00:00
 parent: SMET-I-0099
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0099
 ## Objective
 
 Write integration tests validating the full log pipeline: ingestion, query, SSE streaming, and level filtering.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

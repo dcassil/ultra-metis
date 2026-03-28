@@ -4,14 +4,14 @@ level: task
 title: "Custom Tracing Layer with Batched API Forwarding"
 short_code: "SMET-T-0273"
 created_at: 2026-03-28T17:49:57.636463+00:00
-updated_at: 2026-03-28T17:49:57.636463+00:00
+updated_at: 2026-03-28T18:01:29.814238+00:00
 parent: SMET-I-0099
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0099
 ## Objective
 
 Implement a custom `tracing_subscriber::Layer` in the machine-runner crate that captures log events and forwards them in batches to the Control Service API. This layer is the bridge between Rust's tracing ecosystem and the remote log viewer.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

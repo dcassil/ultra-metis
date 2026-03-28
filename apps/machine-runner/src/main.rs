@@ -1,8 +1,36 @@
+use std::sync::Arc;
+
+use tokio::sync::RwLock;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::EnvFilter;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
-
     let (settings, token) = load_settings_and_token()?;
+
+    // Shared state for the log forwarding layer. The machine_id starts as None
+    // and is populated by RunnerHandle after successful registration.
+    let shared_settings = Arc::new(RwLock::new(settings.clone()));
+    let machine_id: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
+
+    // Create the log forwarding layer that batches events to the control API.
+    let (forwarding_layer, _forwarder_handle) = cadre_machine_runner::log_forwarder::create_layer(
+        &settings.control_service_url,
+        &token,
+        Arc::clone(&machine_id),
+        Arc::clone(&shared_settings),
+    );
+
+    // Compose: EnvFilter (RUST_LOG) + fmt (stderr) + forwarding (API)
+    tracing_subscriber::registry()
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info")),
+        )
+        .with(tracing_subscriber::fmt::layer().with_target(true))
+        .with(forwarding_layer)
+        .init();
 
     tracing::info!(
         name = %settings.machine_name,
@@ -10,7 +38,11 @@ async fn main() -> anyhow::Result<()> {
         "Starting machine runner"
     );
 
-    let mut handle = cadre_machine_runner::RunnerHandle::new(settings, token);
+    let mut handle = cadre_machine_runner::RunnerHandle::with_shared_machine_id(
+        settings,
+        token,
+        machine_id,
+    );
     handle.start().await?;
 
     // Wait for Ctrl+C

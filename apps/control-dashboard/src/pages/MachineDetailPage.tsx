@@ -19,6 +19,14 @@ import { TrustTierBadge } from '../components/TrustTierBadge'
 import { SessionModeBadge } from '../components/SessionModeBadge'
 import { PolicyEditor } from '../components/PolicyEditor'
 import { RelativeTime } from '../components/RelativeTime'
+import { MachineLogViewer } from '../components/MachineLogViewer'
+
+type TabId = 'details' | 'logs'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'details', label: 'Details' },
+  { id: 'logs', label: 'Logs' },
+]
 
 type Repo = MachineDetail['repos'][number]
 
@@ -56,6 +64,7 @@ export default function MachineDetailPage() {
   const [expandedRepoPolicy, setExpandedRepoPolicy] = useState<string | null>(null)
   const [repoPolicies, setRepoPolicies] = useState<Record<string, MachinePolicy>>({})
   const [repoPolicyLoading, setRepoPolicyLoading] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabId>('details')
 
   const fetchMachine = useCallback(async () => {
     if (!id) return
@@ -162,6 +171,34 @@ export default function MachineDetailPage() {
       {error && (
         <div className="rounded-md bg-danger-50 p-3 text-sm text-danger-700">{error}</div>
       )}
+
+      {/* Tab Navigation */}
+      <div className="border-b border-secondary-200 overflow-x-auto">
+        <nav className="-mb-px flex gap-6" aria-label="Tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`whitespace-nowrap border-b-2 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-secondary-500 hover:border-secondary-300 hover:text-secondary-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Logs Tab */}
+      {activeTab === 'logs' && (
+        <MachineLogViewer machineId={id!} />
+      )}
+
+      {/* Details Tab */}
+      {activeTab === 'details' && (<>
 
       <Card title="Machine Details">
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
@@ -321,6 +358,8 @@ export default function MachineDetailPage() {
           </pre>
         )}
       </Card>
+
+      </>)}
 
       <Modal
         isOpen={showRevokeModal}

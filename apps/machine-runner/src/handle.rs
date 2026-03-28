@@ -39,6 +39,11 @@ pub enum RunnerStatus {
 pub struct RunnerHandle {
     settings: Arc<RwLock<Settings>>,
     token: Arc<RwLock<String>>,
+    /// Shared machine ID that is populated after successful registration.
+    ///
+    /// External consumers (e.g. the `LogForwardingLayer`) can hold a clone of
+    /// this `Arc` and will see the value appear once the runner registers.
+    machine_id: Arc<RwLock<Option<String>>>,
     status_tx: watch::Sender<RunnerStatus>,
     status_rx: watch::Receiver<RunnerStatus>,
     task_handle: Option<JoinHandle<()>>,
@@ -52,11 +57,50 @@ impl RunnerHandle {
         Self {
             settings: Arc::new(RwLock::new(settings)),
             token: Arc::new(RwLock::new(token)),
+            machine_id: Arc::new(RwLock::new(None)),
             status_tx,
             status_rx,
             task_handle: None,
             shutdown_tx: None,
         }
+    }
+
+    /// Create a new handle that uses an externally-provided `machine_id` Arc.
+    ///
+    /// This allows callers (e.g. the tracing setup code) to create the
+    /// `machine_id` Arc before the handle exists and share it with
+    /// components like the `LogForwardingLayer`. The runner will populate
+    /// the value after successful registration.
+    pub fn with_shared_machine_id(
+        settings: Settings,
+        token: String,
+        machine_id: Arc<RwLock<Option<String>>>,
+    ) -> Self {
+        let (status_tx, status_rx) = watch::channel(RunnerStatus::Stopped);
+        Self {
+            settings: Arc::new(RwLock::new(settings)),
+            token: Arc::new(RwLock::new(token)),
+            machine_id,
+            status_tx,
+            status_rx,
+            task_handle: None,
+            shutdown_tx: None,
+        }
+    }
+
+    /// Return a clone of the shared machine ID `Arc`.
+    ///
+    /// The contained value starts as `None` and is populated after the runner
+    /// successfully registers with the control service. This is useful for
+    /// consumers like the `LogForwardingLayer` that need to reference the
+    /// machine ID without tight coupling to the runner lifecycle.
+    pub fn shared_machine_id(&self) -> Arc<RwLock<Option<String>>> {
+        Arc::clone(&self.machine_id)
+    }
+
+    /// Return a clone of the shared settings `Arc`.
+    pub fn shared_settings(&self) -> Arc<RwLock<Settings>> {
+        Arc::clone(&self.settings)
     }
 
     /// Spawn the runner lifecycle as a background tokio task.
@@ -77,10 +121,11 @@ impl RunnerHandle {
 
         let settings = Arc::clone(&self.settings);
         let token = Arc::clone(&self.token);
+        let machine_id = Arc::clone(&self.machine_id);
         let status_tx = self.status_tx.clone();
 
         let handle = tokio::spawn(async move {
-            run_lifecycle(settings, token, status_tx, shutdown_rx).await;
+            run_lifecycle(settings, token, machine_id, status_tx, shutdown_rx).await;
         });
 
         self.task_handle = Some(handle);
@@ -147,6 +192,7 @@ impl RunnerHandle {
 async fn run_lifecycle(
     settings: Arc<RwLock<Settings>>,
     token: Arc<RwLock<String>>,
+    shared_machine_id: Arc<RwLock<Option<String>>>,
     status_tx: watch::Sender<RunnerStatus>,
     shutdown_rx: tokio::sync::oneshot::Receiver<()>,
 ) {
@@ -169,6 +215,27 @@ async fn run_lifecycle(
             reporter.handle_event(event).await;
         }
     });
+
+    // Spawn a small task that watches the status channel for the Active variant
+    // and publishes the machine_id into the shared Arc. This lets external
+    // consumers (like the LogForwardingLayer) pick up the ID as soon as
+    // registration succeeds, without waiting for the lifecycle to end.
+    {
+        let mut status_rx = status_tx.subscribe();
+        let machine_id_writer = Arc::clone(&shared_machine_id);
+        tokio::spawn(async move {
+            while status_rx.changed().await.is_ok() {
+                // Clone the status out of the borrow to avoid holding the
+                // non-Send watch::Ref across an await point.
+                let status = status_rx.borrow().clone();
+                if let RunnerStatus::Active { machine_id, .. } = status {
+                    let mut guard = machine_id_writer.write().await;
+                    *guard = Some(machine_id);
+                    break;
+                }
+            }
+        });
+    }
 
     // Run the main lifecycle; propagate the shutdown receiver.
     if let Err(e) = runner.run(shutdown_rx).await {

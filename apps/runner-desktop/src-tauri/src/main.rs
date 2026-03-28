@@ -9,21 +9,69 @@ use cadre_machine_runner::{RunnerHandle, RunnerStatus, Settings};
 use tauri::Manager;
 use tauri_plugin_notification::NotificationExt;
 use tokio::sync::RwLock;
+use tracing_appender::rolling;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::EnvFilter;
 
 pub struct AppState {
     pub runner: Arc<RwLock<Option<RunnerHandle>>>,
     pub settings: Arc<RwLock<Settings>>,
     pub token: Arc<RwLock<String>>,
+    /// Shared machine ID for the log forwarding layer.
+    pub machine_id: Arc<RwLock<Option<String>>>,
 }
 
 fn main() {
     let minimized = std::env::args().any(|a| a == "--minimized");
 
-    let settings = Settings::default();
+    let settings = Settings::load().unwrap_or_default();
+    let machine_id: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
+    let shared_settings = Arc::new(RwLock::new(settings.clone()));
+
+    // Set up file-based logging to ~/.config/cadre/runner.YYYY-MM-DD.log
+    let log_dir = dirs::config_dir()
+        .unwrap_or_default()
+        .join("cadre");
+    let file_appender = rolling::RollingFileAppender::builder()
+        .rotation(rolling::Rotation::DAILY)
+        .max_log_files(3)
+        .filename_prefix("runner")
+        .filename_suffix("log")
+        .build(&log_dir)
+        .expect("failed to create log appender");
+
+    // Create the log forwarding layer that batches events to the control API.
+    // We use an empty token here; once the user authenticates and the runner
+    // starts, the forwarding layer will pick up the machine_id and begin sending.
+    let (forwarding_layer, _forwarder_handle) =
+        cadre_machine_runner::log_forwarder::create_layer(
+            &settings.control_service_url,
+            "", // token is not yet available at init; logs are dropped until machine_id is set
+            Arc::clone(&machine_id),
+            Arc::clone(&shared_settings),
+        );
+
+    // Compose: EnvFilter + file appender + API forwarding
+    tracing_subscriber::registry()
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info")),
+        )
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(file_appender)
+                .with_target(true)
+                .with_ansi(false),
+        )
+        .with(forwarding_layer)
+        .init();
+
     let app_state = AppState {
         runner: Arc::new(RwLock::new(None)),
-        settings: Arc::new(RwLock::new(settings)),
+        settings: shared_settings,
         token: Arc::new(RwLock::new(String::new())),
+        machine_id,
     };
 
     tauri::Builder::default()

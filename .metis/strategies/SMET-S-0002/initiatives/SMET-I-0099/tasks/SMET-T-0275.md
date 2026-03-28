@@ -4,14 +4,14 @@ level: task
 title: "Dashboard Machine Logs Tab"
 short_code: "SMET-T-0275"
 created_at: 2026-03-28T17:49:59.517223+00:00
-updated_at: 2026-03-28T17:49:59.517223+00:00
+updated_at: 2026-03-28T18:01:30.691295+00:00
 parent: SMET-I-0099
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0099
 ## Objective
 
 Add a "Logs" tab to the machine detail page in the Control Dashboard with live SSE streaming and historical log query, reusing the LiveOutput component pattern.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

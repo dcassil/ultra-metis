@@ -18,12 +18,16 @@ pub async fn get_status(state: State<'_, AppState>) -> Result<String, String> {
 }
 
 /// Create a `RunnerHandle` from the current settings and token, then start it.
+///
+/// Uses the shared `machine_id` Arc from `AppState` so that the log forwarding
+/// layer receives the machine ID as soon as registration succeeds.
 #[tauri::command]
 pub async fn start_runner(state: State<'_, AppState>) -> Result<(), String> {
     let settings = state.settings.read().await.clone();
     let token = state.token.read().await.clone();
+    let machine_id = std::sync::Arc::clone(&state.machine_id);
 
-    let mut handle = RunnerHandle::new(settings, token);
+    let mut handle = RunnerHandle::with_shared_machine_id(settings, token, machine_id);
     handle.start().await.map_err(|e| e.to_string())?;
 
     let mut runner = state.runner.write().await;

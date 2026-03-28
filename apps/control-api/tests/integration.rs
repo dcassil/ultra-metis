@@ -2111,3 +2111,250 @@ async fn monitoring_session_ownership_validation() {
 
     handle.abort();
 }
+
+// ===========================================================================
+// Log pipeline helpers
+// ===========================================================================
+
+/// POST /api/machines/{id}/logs — ingest a batch of log entries.
+async fn post_machine_logs(
+    client: &Client,
+    base_url: &str,
+    machine_id: &str,
+    logs: serde_json::Value,
+) -> reqwest::Response {
+    client
+        .post(&format!("{base_url}/api/machines/{machine_id}/logs"))
+        .bearer_auth(VALID_TOKEN)
+        .json(&logs)
+        .send()
+        .await
+        .unwrap()
+}
+
+/// GET /api/machines/{id}/logs with optional query string and parse as JSON.
+async fn get_machine_logs(
+    client: &Client,
+    base_url: &str,
+    machine_id: &str,
+    query: &str,
+) -> serde_json::Value {
+    client
+        .get(&format!("{base_url}/api/machines/{machine_id}/logs{query}"))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap()
+}
+
+// ---------------------------------------------------------------------------
+// Log pipeline: ingestion and query
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn logs_ingestion_and_query() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "log-ingest-m").await;
+
+    // POST a batch of 3 log entries with different levels and targets
+    let body = serde_json::json!({
+        "logs": [
+            { "level": "info",  "target": "cadre::runner",     "message": "runner started" },
+            { "level": "warn",  "target": "cadre::supervisor",  "message": "high memory" },
+            { "level": "error", "target": "cadre::client",      "message": "connection lost" },
+        ]
+    });
+    let resp = post_machine_logs(&client, &base, &machine_id, body).await;
+    assert_eq!(resp.status(), 200);
+    let resp_json: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(resp_json["ingested"], 3);
+
+    // GET all logs for the machine
+    let logs = get_machine_logs(&client, &base, &machine_id, "").await;
+    let arr = logs.as_array().expect("logs should be an array");
+    assert_eq!(arr.len(), 3);
+
+    // Verify each entry has the expected fields
+    let levels: Vec<&str> = arr.iter().map(|e| e["level"].as_str().unwrap()).collect();
+    assert!(levels.contains(&"info"));
+    assert!(levels.contains(&"warn"));
+    assert!(levels.contains(&"error"));
+
+    let targets: Vec<&str> = arr.iter().map(|e| e["target"].as_str().unwrap()).collect();
+    assert!(targets.contains(&"cadre::runner"));
+    assert!(targets.contains(&"cadre::supervisor"));
+    assert!(targets.contains(&"cadre::client"));
+
+    let messages: Vec<&str> = arr.iter().map(|e| e["message"].as_str().unwrap()).collect();
+    assert!(messages.contains(&"runner started"));
+    assert!(messages.contains(&"high memory"));
+    assert!(messages.contains(&"connection lost"));
+
+    // Verify ordering is by timestamp ASC (insertion order in this case since
+    // all timestamps are server-assigned at roughly the same time)
+    for entry in arr {
+        assert!(entry["id"].as_str().is_some(), "each log should have an id");
+        assert!(entry["timestamp"].as_str().is_some(), "each log should have a timestamp");
+        assert_eq!(entry["machine_id"].as_str().unwrap(), machine_id);
+    }
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// Log pipeline: level filtering
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn logs_level_filtering() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "log-level-m").await;
+
+    // Post 4 logs at different levels with distinct timestamps to guarantee ordering
+    let body = serde_json::json!({
+        "logs": [
+            { "level": "debug", "target": "cadre::core", "message": "trace msg",   "timestamp": "2025-01-01T00:00:01Z" },
+            { "level": "info",  "target": "cadre::core", "message": "info msg",    "timestamp": "2025-01-01T00:00:02Z" },
+            { "level": "warn",  "target": "cadre::core", "message": "warning msg", "timestamp": "2025-01-01T00:00:03Z" },
+            { "level": "error", "target": "cadre::core", "message": "error msg",   "timestamp": "2025-01-01T00:00:04Z" },
+        ]
+    });
+    let resp = post_machine_logs(&client, &base, &machine_id, body).await;
+    assert_eq!(resp.status(), 200);
+
+    // ?level=warn → only warn + error (levels at or above warn)
+    let logs = get_machine_logs(&client, &base, &machine_id, "?level=warn").await;
+    let arr = logs.as_array().unwrap();
+    assert_eq!(arr.len(), 2);
+    let levels: Vec<&str> = arr.iter().map(|e| e["level"].as_str().unwrap()).collect();
+    assert!(levels.contains(&"warn"));
+    assert!(levels.contains(&"error"));
+
+    // ?level=info → info + warn + error
+    let logs = get_machine_logs(&client, &base, &machine_id, "?level=info").await;
+    let arr = logs.as_array().unwrap();
+    assert_eq!(arr.len(), 3);
+    let levels: Vec<&str> = arr.iter().map(|e| e["level"].as_str().unwrap()).collect();
+    assert!(levels.contains(&"info"));
+    assert!(levels.contains(&"warn"));
+    assert!(levels.contains(&"error"));
+
+    // ?level=debug → all 4
+    let logs = get_machine_logs(&client, &base, &machine_id, "?level=debug").await;
+    let arr = logs.as_array().unwrap();
+    assert_eq!(arr.len(), 4);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// Log pipeline: target filtering
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn logs_target_filtering() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "log-target-m").await;
+
+    let body = serde_json::json!({
+        "logs": [
+            { "level": "info", "target": "cadre::runner",     "message": "runner log" },
+            { "level": "info", "target": "cadre::supervisor",  "message": "supervisor log" },
+            { "level": "info", "target": "cadre::client",      "message": "client log" },
+        ]
+    });
+    let resp = post_machine_logs(&client, &base, &machine_id, body).await;
+    assert_eq!(resp.status(), 200);
+
+    // Exact target match (actually prefix match via LIKE)
+    let logs = get_machine_logs(&client, &base, &machine_id, "?target=cadre::runner").await;
+    let arr = logs.as_array().unwrap();
+    assert_eq!(arr.len(), 1);
+    assert_eq!(arr[0]["target"], "cadre::runner");
+    assert_eq!(arr[0]["message"], "runner log");
+
+    // Prefix match: "cadre::" matches all three
+    let logs = get_machine_logs(&client, &base, &machine_id, "?target=cadre::").await;
+    let arr = logs.as_array().unwrap();
+    assert_eq!(arr.len(), 3);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// Log pipeline: pagination
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn logs_pagination() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "log-page-m").await;
+
+    // Post 10 logs with distinct timestamps so ordering is deterministic
+    let logs: Vec<serde_json::Value> = (0..10)
+        .map(|i| {
+            serde_json::json!({
+                "level": "info",
+                "target": "cadre::test",
+                "message": format!("log entry {i}"),
+                "timestamp": format!("2025-01-01T00:00:{:02}Z", i),
+            })
+        })
+        .collect();
+    let body = serde_json::json!({ "logs": logs });
+    let resp = post_machine_logs(&client, &base, &machine_id, body).await;
+    assert_eq!(resp.status(), 200);
+
+    // First page: limit=3
+    let page1 = get_machine_logs(&client, &base, &machine_id, "?limit=3").await;
+    let arr1 = page1.as_array().unwrap();
+    assert_eq!(arr1.len(), 3);
+
+    // Second page: limit=3&offset=3
+    let page2 = get_machine_logs(&client, &base, &machine_id, "?limit=3&offset=3").await;
+    let arr2 = page2.as_array().unwrap();
+    assert_eq!(arr2.len(), 3);
+
+    // Verify pages contain different entries (no overlap)
+    let ids1: Vec<&str> = arr1.iter().map(|e| e["id"].as_str().unwrap()).collect();
+    let ids2: Vec<&str> = arr2.iter().map(|e| e["id"].as_str().unwrap()).collect();
+    for id in &ids1 {
+        assert!(!ids2.contains(id), "page 1 and page 2 should not overlap");
+    }
+
+    // Last page with offset=9 → only 1 entry
+    let last = get_machine_logs(&client, &base, &machine_id, "?limit=3&offset=9").await;
+    let arr_last = last.as_array().unwrap();
+    assert_eq!(arr_last.len(), 1);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// Log pipeline: empty machine returns empty array
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn logs_empty_machine() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "log-empty-m").await;
+
+    // Query logs without posting any
+    let logs = get_machine_logs(&client, &base, &machine_id, "").await;
+    let arr = logs.as_array().expect("logs should be an array, not an error");
+    assert_eq!(arr.len(), 0);
+
+    handle.abort();
+}

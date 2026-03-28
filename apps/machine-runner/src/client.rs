@@ -3,6 +3,17 @@ use crate::output_capture::OutputEvent;
 use crate::policy::MachinePolicy;
 use serde::{Deserialize, Serialize};
 
+/// A single log entry to forward to the control service.
+#[derive(Debug, Clone, Serialize)]
+pub struct LogEntry {
+    pub level: String,
+    pub target: String,
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fields: Option<serde_json::Value>,
+    pub timestamp: String,
+}
+
 /// Response from the control service after machine registration.
 #[derive(Debug, Deserialize)]
 pub struct RegisterResponse {
@@ -274,6 +285,40 @@ impl ControlClient {
         }
     }
 
+    /// Post a batch of log entries for a machine to the control service.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ClientError` on HTTP failures or unexpected status codes.
+    pub async fn post_machine_logs(
+        &self,
+        machine_id: &str,
+        logs: &[LogEntry],
+    ) -> Result<(), ClientError> {
+        let url = format!("{}/api/machines/{machine_id}/logs", self.base_url);
+
+        let body = serde_json::json!({ "logs": logs });
+
+        let response = self
+            .http
+            .post(&url)
+            .bearer_auth(&self.token)
+            .json(&body)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            let body = response.text().await.unwrap_or_default();
+            Err(ClientError::UnexpectedStatus {
+                status: status.as_u16(),
+                body,
+            })
+        }
+    }
+
     /// Fetch the machine policy from the control service.
     ///
     /// # Errors
@@ -416,6 +461,39 @@ mod tests {
         let json = "[]";
         let commands: Vec<CommandResponse> = serde_json::from_str(json).unwrap();
         assert!(commands.is_empty());
+    }
+
+    #[test]
+    fn test_log_entry_serialization() {
+        let entry = LogEntry {
+            level: "info".to_string(),
+            target: "cadre_machine_runner::runner".to_string(),
+            message: "Heartbeat sent".to_string(),
+            fields: Some(serde_json::json!({ "machine_id": "m-1" })),
+            timestamp: "2026-03-27T12:00:00Z".to_string(),
+        };
+
+        let json = serde_json::to_value(&entry).unwrap();
+        assert_eq!(json["level"], "info");
+        assert_eq!(json["target"], "cadre_machine_runner::runner");
+        assert_eq!(json["message"], "Heartbeat sent");
+        assert_eq!(json["fields"]["machine_id"], "m-1");
+        assert_eq!(json["timestamp"], "2026-03-27T12:00:00Z");
+    }
+
+    #[test]
+    fn test_log_entry_serialization_without_fields() {
+        let entry = LogEntry {
+            level: "warn".to_string(),
+            target: "test".to_string(),
+            message: "something".to_string(),
+            fields: None,
+            timestamp: "2026-03-27T12:00:00Z".to_string(),
+        };
+
+        let json = serde_json::to_value(&entry).unwrap();
+        // fields should be absent (not null) due to skip_serializing_if
+        assert!(json.get("fields").is_none());
     }
 
     #[test]

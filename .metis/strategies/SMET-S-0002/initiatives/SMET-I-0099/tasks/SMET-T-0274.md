@@ -4,14 +4,14 @@ level: task
 title: "Tracing Integration for Tauri and Headless Modes"
 short_code: "SMET-T-0274"
 created_at: 2026-03-28T17:49:58.562908+00:00
-updated_at: 2026-03-28T17:49:58.562908+00:00
+updated_at: 2026-03-28T18:07:08.636818+00:00
 parent: SMET-I-0099
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0099
 ## Objective
 
 Wire the custom tracing layer into both the Tauri desktop app and the headless CLI binary, with appropriate output destinations for each mode.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
