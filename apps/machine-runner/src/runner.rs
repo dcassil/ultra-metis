@@ -3,13 +3,15 @@ use std::time::Duration;
 
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
+use tokio::sync::{watch, RwLock};
 
 use crate::client::{ClientError, CommandResponse, ControlClient, HeartbeatRequest, RegisterRequest};
-use crate::config::RunnerConfig;
 use crate::discovery;
+use crate::handle::RunnerStatus;
 use crate::injection;
 use crate::output_capture::{OutputCapture, OutputEvent};
 use crate::policy::LocalPolicyCache;
+use crate::settings::Settings;
 use crate::supervisor::ProcessSupervisor;
 
 /// The possible states of the machine runner lifecycle.
@@ -22,24 +24,44 @@ pub enum RunnerState {
 }
 
 /// The machine runner, responsible for registration and heartbeat lifecycle.
+///
+/// Reads connection parameters from shared `Arc<RwLock<Settings>>` and
+/// `Arc<RwLock<String>>` (token), and publishes status changes through a
+/// `watch::Sender<RunnerStatus>`.
 pub struct Runner {
-    config: RunnerConfig,
+    settings: Arc<RwLock<Settings>>,
+    #[allow(dead_code)] // retained for future client rebuild when token changes
+    token: Arc<RwLock<String>>,
     client: Arc<ControlClient>,
     state: RunnerState,
     machine_id: Option<String>,
     supervisor: ProcessSupervisor,
     policy_cache: LocalPolicyCache,
     output_event_tx: tokio::sync::mpsc::Sender<(String, Vec<OutputEvent>)>,
+    status_tx: watch::Sender<RunnerStatus>,
 }
 
 impl Runner {
-    /// Create a new runner from the given configuration.
+    /// Create a new runner from shared settings and token.
     ///
     /// Returns the runner and a receiver for supervisor lifecycle events.
     /// Also spawns a background task that forwards output events from captured
     /// process streams to the control service.
-    pub fn new(config: RunnerConfig) -> (Self, tokio::sync::mpsc::Receiver<crate::supervisor::SupervisorEvent>) {
-        let client = Arc::new(ControlClient::new(&config.control_service_url, &config.api_token));
+    pub fn new(
+        settings: Arc<RwLock<Settings>>,
+        token: Arc<RwLock<String>>,
+        status_tx: watch::Sender<RunnerStatus>,
+    ) -> (Self, tokio::sync::mpsc::Receiver<crate::supervisor::SupervisorEvent>) {
+        // Snapshot current settings and token to build the initial client.
+        // We use try_read() to avoid blocking in a sync context; if the lock
+        // is contended we fall back to defaults (this only happens at startup).
+        let (url, tok) = {
+            let s = settings.try_read().expect("settings lock should not be contended at Runner creation");
+            let t = token.try_read().expect("token lock should not be contended at Runner creation");
+            (s.control_service_url.clone(), t.clone())
+        };
+
+        let client = Arc::new(ControlClient::new(&url, &tok));
         let (supervisor, event_rx) = ProcessSupervisor::new();
         let policy_cache = LocalPolicyCache::new(300);
 
@@ -67,13 +89,15 @@ impl Runner {
         });
 
         let runner = Self {
-            config,
+            settings,
+            token: token,
             client,
             state: RunnerState::Registering,
             machine_id: None,
             supervisor,
             policy_cache,
             output_event_tx: output_tx,
+            status_tx,
         };
         (runner, event_rx)
     }
@@ -92,11 +116,17 @@ impl Runner {
 
     /// Run the full lifecycle: register, then heartbeat loop.
     ///
+    /// The `shutdown_rx` receiver will signal when the handle wants to stop.
+    ///
     /// # Errors
     ///
     /// Returns an error if registration fails fatally or if the heartbeat
     /// loop terminates due to an unrecoverable error.
-    pub async fn run(&mut self) -> anyhow::Result<()> {
+    pub async fn run(
+        &mut self,
+        shutdown_rx: tokio::sync::oneshot::Receiver<()>,
+    ) -> anyhow::Result<()> {
+        self.publish_status(RunnerStatus::Registering);
         self.register().await?;
 
         // Fetch initial policy if already active after registration
@@ -104,15 +134,40 @@ impl Runner {
             self.refresh_policy().await;
         }
 
-        self.heartbeat_loop().await
+        self.heartbeat_loop(shutdown_rx).await
+    }
+
+    /// Publish a status update through the watch channel.
+    fn publish_status(&self, status: RunnerStatus) {
+        let _ = self.status_tx.send(status);
+    }
+
+    /// Publish the appropriate `RunnerStatus` for the current `RunnerState`.
+    fn publish_current_status(&self) {
+        let status = match &self.state {
+            RunnerState::Registering => RunnerStatus::Registering,
+            RunnerState::Pending => RunnerStatus::PendingApproval,
+            RunnerState::Active => RunnerStatus::Active {
+                machine_id: self.machine_id.clone().unwrap_or_default(),
+                connected: true,
+                active_sessions: self.supervisor.active_session_count() as u32,
+            },
+            RunnerState::Stopped => RunnerStatus::Stopped,
+        };
+        self.publish_status(status);
     }
 
     async fn register(&mut self) -> anyhow::Result<()> {
-        let repos = discovery::discover_repos(&self.config.repo_paths())?;
-        let request = build_register_request(&self.config.machine_name, &repos);
+        let (repo_dirs, machine_name) = {
+            let s = self.settings.read().await;
+            (s.repo_paths(), s.machine_name.clone())
+        };
+
+        let repos = discovery::discover_repos(&repo_dirs)?;
+        let request = build_register_request(&machine_name, &repos);
 
         tracing::info!(
-            name = %self.config.machine_name,
+            name = %machine_name,
             repos = repos.len(),
             "Registering machine with control service"
         );
@@ -132,20 +187,54 @@ impl Runner {
             "Registration complete"
         );
 
+        self.publish_current_status();
         Ok(())
     }
 
-    async fn heartbeat_loop(&mut self) -> anyhow::Result<()> {
-        let interval = Duration::from_secs(self.config.heartbeat_interval_secs);
+    async fn heartbeat_loop(
+        &mut self,
+        mut shutdown_rx: tokio::sync::oneshot::Receiver<()>,
+    ) -> anyhow::Result<()> {
         let mut backoff = BackoffState::new();
 
         while self.state == RunnerState::Pending || self.state == RunnerState::Active {
-            tokio::time::sleep(interval).await;
+            // Read the heartbeat interval from shared settings each iteration
+            // so live setting changes take effect.
+            let (interval_secs, enabled) = {
+                let s = self.settings.read().await;
+                (s.heartbeat_interval_secs, s.enabled)
+            };
+            let interval = Duration::from_secs(interval_secs);
+
+            // Check if we've been disabled
+            if !enabled {
+                tracing::debug!("Runner disabled via settings, pausing heartbeat loop");
+                // Sleep and re-check; don't send heartbeats while disabled
+                tokio::select! {
+                    _ = tokio::time::sleep(interval) => continue,
+                    _ = &mut shutdown_rx => {
+                        tracing::info!("Shutdown signal received");
+                        self.state = RunnerState::Stopped;
+                        break;
+                    }
+                }
+            }
+
+            // Sleep for the heartbeat interval, but also listen for shutdown
+            tokio::select! {
+                _ = tokio::time::sleep(interval) => {}
+                _ = &mut shutdown_rx => {
+                    tracing::info!("Shutdown signal received");
+                    self.state = RunnerState::Stopped;
+                    break;
+                }
+            }
 
             let result = self.send_heartbeat().await;
             match result {
                 Ok(()) => {
                     backoff.reset();
+                    self.publish_current_status();
                     // Poll for and process commands when active
                     if self.state == RunnerState::Active {
                         // Refresh policy if stale
@@ -158,6 +247,7 @@ impl Runner {
                 Err(HeartbeatOutcome::Revoked) => {
                     tracing::warn!("Machine revoked by control service, stopping");
                     self.state = RunnerState::Stopped;
+                    self.publish_current_status();
                     break;
                 }
                 Err(HeartbeatOutcome::Pending) => {
@@ -216,7 +306,12 @@ impl Runner {
             .as_deref()
             .expect("machine_id must be set before heartbeat loop");
 
-        let repos = discovery::discover_repos(&self.config.repo_paths())
+        let repo_dirs = {
+            let s = self.settings.read().await;
+            s.repo_paths()
+        };
+
+        let repos = discovery::discover_repos(&repo_dirs)
             .map_err(|e| HeartbeatOutcome::NetworkError(e.to_string()))?;
 
         let request = HeartbeatRequest { repos };
@@ -629,11 +724,17 @@ impl BackoffState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::settings::Settings;
 
     #[tokio::test]
     async fn test_initial_state_is_registering() {
-        let config = test_config();
-        let (runner, _rx) = Runner::new(config);
+        let (settings, token) = test_settings_and_token();
+        let (status_tx, _status_rx) = watch::channel(RunnerStatus::Stopped);
+        let (runner, _rx) = Runner::new(
+            Arc::new(RwLock::new(settings)),
+            Arc::new(RwLock::new(token)),
+            status_tx,
+        );
         assert_eq!(*runner.state(), RunnerState::Registering);
         assert!(runner.machine_id().is_none());
     }
@@ -708,13 +809,15 @@ mod tests {
         assert_eq!(backoff.next_delay(), Duration::from_secs(1));
     }
 
-    fn test_config() -> RunnerConfig {
-        RunnerConfig {
+    fn test_settings_and_token() -> (Settings, String) {
+        let settings = Settings {
             control_service_url: "http://localhost:8080".to_string(),
             machine_name: "test-machine".to_string(),
-            api_token: "test-token".to_string(),
             heartbeat_interval_secs: 5,
             repo_directories: vec![],
-        }
+            ..Settings::default()
+        };
+        let token = "test-token".to_string();
+        (settings, token)
     }
 }

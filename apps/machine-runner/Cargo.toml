@@ -5,6 +5,14 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[[bin]]
+name = "cadre-machine-runner"
+path = "src/main.rs"
+
+[lib]
+name = "cadre_machine_runner"
+path = "src/lib.rs"
+
 [dependencies]
 tokio = { workspace = true }
 serde = { workspace = true }
