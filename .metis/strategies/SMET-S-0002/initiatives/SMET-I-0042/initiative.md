@@ -4,14 +4,14 @@ level: initiative
 title: "Notifications and Mobile Control"
 short_code: "SMET-I-0042"
 created_at: 2026-03-17T19:56:54.624969+00:00
-updated_at: 2026-03-17T19:56:54.624969+00:00
+updated_at: 2026-03-28T03:42:00.365411+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -117,13 +117,14 @@ No changes needed for: #2, #3, #4, #5, #6, #7. Notifications and mobile control 
 
 ## Implementation Plan
 
-1. Define notification data model (id, user\_id, session\_id, type, priority, payload, read\_at)
-2. Integrate push provider SDK in Control Service (FCM + APNs)
-3. Implement device token registration endpoint (`POST /users/me/devices`)
-4. Implement notification generation logic triggered by session events
-5. Implement notification inbox API (`GET /notifications`, `POST /notifications/{id}/read`)
-6. Build notification inbox view in dashboard
-7. Implement mobile-first responsive layout for session list, session detail, and approval cards
-8. Build bottom navigation bar for mobile
-9. Test push delivery end-to-end: approval event → FCM push → tap → dashboard opens approval card
-10. Test notification preferences: disable completion notifications, verify approval still fires
+### Task Decomposition (5 tasks)
+
+| Order | Task | Title | Dependencies |
+|-------|------|-------|-------------|
+| 1 | SMET-T-0259 | Notification Data Model, Storage, and API | None (foundation) |
+| 2 | SMET-T-0260 | Notification Generation from Session Events | T-0259 |
+| 3 | SMET-T-0261 | Dashboard Notification Inbox and Badge | T-0259 |
+| 4 | SMET-T-0262 | Mobile-First Responsive Layout Improvements | None (independent CSS) |
+| 5 | SMET-T-0263 | Notification Integration Tests | T-0259, T-0260 |
+
+**Note:** Push delivery (FCM/APNs) is stubbed — notifications written to DB only. Actual push integration deferred until credentials are available. T-0261 and T-0262 can run in parallel.

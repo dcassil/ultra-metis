@@ -96,6 +96,10 @@ pub fn build_app_with_planning(state: AppState, planning_state: PlanningState) -
         .route("/{id}/inject", post(routes::inject_guidance))
         .route("/{id}/outcome", get(routes::get_session_outcome));
 
+    let notification_routes = Router::new()
+        .route("/{id}/read", post(routes::mark_notification_read))
+        .route("/{id}/dismiss", post(routes::dismiss_notification));
+
     let planning_routes = Router::new()
         .route("/documents", get(planning::list_documents))
         .route("/documents/search", get(planning::search_documents))
@@ -111,6 +115,10 @@ pub fn build_app_with_planning(state: AppState, planning_state: PlanningState) -
         .nest("/api/machines", machine_routes)
         .route("/api/sessions", get(routes::list_sessions).post(routes::create_session))
         .nest("/api/sessions", session_routes)
+        .route("/api/notifications", get(routes::list_notifications))
+        .route("/api/notifications/unread-count", get(routes::unread_count))
+        .nest("/api/notifications", notification_routes)
+        .route("/api/devices", post(routes::register_device))
         .route("/api/policy-violations", get(routes::list_policy_violations))
         .nest("/api/planning", planning_routes)
         .layer(cors)

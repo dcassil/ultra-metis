@@ -185,6 +185,37 @@ fn create_tables(conn: &Connection) -> Result<()> {
             duration_seconds INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS notifications (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            session_id TEXT REFERENCES sessions(id),
+            notification_type TEXT NOT NULL,
+            priority TEXT NOT NULL DEFAULT 'normal',
+            title TEXT NOT NULL,
+            body TEXT NOT NULL DEFAULT '',
+            deep_link TEXT,
+            read_at TEXT,
+            dismissed_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS device_tokens (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            token TEXT NOT NULL UNIQUE,
+            platform TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS notification_preferences (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            notification_type TEXT NOT NULL,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(user_id, notification_type)
+        );
         ",
     )?;
     Ok(())

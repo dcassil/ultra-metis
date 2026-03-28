@@ -17,6 +17,7 @@ import DocumentDetailPage from './pages/planning/DocumentDetailPage';
 import HierarchyPage from './pages/planning/HierarchyPage';
 import QualityPage from './pages/planning/QualityPage';
 import RulesPage from './pages/planning/RulesPage';
+import NotificationsPage from './pages/NotificationsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="history" element={<HistoryPage />} />
             <Route path="history/:id" element={<HistoryDetailPage />} />
             <Route path="policies" element={<PoliciesPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="violations" element={<ViolationsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

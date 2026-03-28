@@ -18,13 +18,14 @@ use axum::extract::Query;
 use crate::models::{
     ActionCategory, ApprovalStatus, AutonomyLevel, CommandResponse, CreateSessionRequest,
     CreateSessionResponse, EffectivePolicy, EffectivePolicyQuery, ErrorBody, HeartbeatRequest,
-    IngestEventsRequest, InjectGuidanceRequest, ListSessionsQuery, ListViolationsQuery, Machine,
-    MachineDetailResponse, MachinePolicy, MachineRepo, MachineResponse, MachineStatus,
-    PendingApproval, PolicyViolationRecord, QueryEventsParams, RegisterRequest, RegisterResponse,
-    RepoInfo, RepoPolicy, RepoPolicyQuery, ReportStateRequest, RespondToApprovalRequest, Session,
+    IngestEventsRequest, InjectGuidanceRequest, ListNotificationsQuery, ListSessionsQuery,
+    ListViolationsQuery, Machine, MachineDetailResponse, MachinePolicy, MachineRepo,
+    MachineResponse, MachineStatus, Notification, PendingApproval, PolicyViolationRecord,
+    QueryEventsParams, RegisterDeviceRequest, RegisterRequest, RegisterResponse, RepoInfo,
+    RepoPolicy, RepoPolicyQuery, ReportStateRequest, RespondToApprovalRequest, Session,
     SessionListResponse, SessionMode, SessionOutcome, SessionOutputEvent, SessionOutputEventType,
-    SessionResponse, SessionState, UpdateMachinePolicyRequest, UpdateRepoPolicyRequest,
-    ViolationsListResponse,
+    SessionResponse, SessionState, UnreadCountResponse, UpdateMachinePolicyRequest,
+    UpdateRepoPolicyRequest, ViolationsListResponse,
 };
 use crate::AppState;
 
@@ -1037,6 +1038,37 @@ pub async fn report_session_state(
     // Write outcome record when session reaches a terminal state
     if body.state.is_terminal() {
         write_session_outcome(&state, &session_id, &body.state);
+
+        // Generate notification for terminal session states
+        let (notification_type, priority, title) = match body.state {
+            SessionState::Completed => (
+                "session_completed",
+                "normal",
+                format!("Session completed: {}", session.title),
+            ),
+            SessionState::Failed => (
+                "session_failed",
+                "high",
+                format!("Session failed: {}", session.title),
+            ),
+            SessionState::Stopped => (
+                "session_stopped",
+                "normal",
+                format!("Session stopped: {}", session.title),
+            ),
+            _ => unreachable!("is_terminal() already checked"),
+        };
+
+        create_notification(
+            &state,
+            &session.user_id,
+            &session_id,
+            notification_type,
+            priority,
+            &title,
+            "",
+            &format!("/sessions/{session_id}"),
+        );
     }
 
     Json(serde_json::json!({"status": "ok", "state": body.state})).into_response()
@@ -2039,7 +2071,7 @@ pub async fn ingest_events(
     Json(body): Json<IngestEventsRequest>,
 ) -> impl IntoResponse {
     // Validate session exists and belongs to the authenticated user
-    let _session = match load_session(&state, &session_id, &auth.user_id) {
+    let session = match load_session(&state, &session_id, &auth.user_id) {
         Ok(Some(s)) => s,
         Ok(None) => return not_found("session not found"),
         Err(e) => return internal_error(&format!("db error: {e}")),
@@ -2095,6 +2127,19 @@ pub async fn ingest_events(
             {
                 tracing::error!("failed to insert pending approval: {e}");
             }
+
+            // Generate notification for approval request
+            let truncated_body: String = item.content.chars().take(200).collect();
+            create_notification(
+                &state,
+                &session.user_id,
+                &session_id,
+                "approval_request",
+                "urgent",
+                "Session needs your input",
+                &truncated_body,
+                &format!("/sessions/{session_id}"),
+            );
         }
 
         // Broadcast to SSE subscribers
@@ -2789,6 +2834,199 @@ pub async fn get_session_outcome(
     match load_session_outcome(&state, &session_id) {
         Ok(Some(outcome)) => Json(serde_json::to_value(outcome).unwrap_or_default()).into_response(),
         Ok(None) => not_found("no outcome recorded for this session"),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+/// Insert a notification into the database, deduplicating by session_id + notification_type.
+///
+/// If an unread notification with the same session_id and notification_type already exists,
+/// this is a no-op.
+#[allow(clippy::too_many_arguments)]
+fn create_notification(
+    state: &AppState,
+    user_id: &str,
+    session_id: &str,
+    notification_type: &str,
+    priority: &str,
+    title: &str,
+    body: &str,
+    deep_link: &str,
+) {
+    let db = state.db.lock().expect("db lock poisoned");
+
+    // Check for duplicate: don't insert if an unread notification with the same
+    // session_id + notification_type already exists.
+    let existing: i64 = db
+        .query_row(
+            "SELECT COUNT(*) FROM notifications
+             WHERE session_id = ?1 AND notification_type = ?2 AND read_at IS NULL",
+            params![session_id, notification_type],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    if existing > 0 {
+        return;
+    }
+
+    let id = uuid::Uuid::new_v4().to_string();
+    let now = Utc::now().to_rfc3339();
+
+    if let Err(e) = db.execute(
+        "INSERT INTO notifications (id, user_id, session_id, notification_type, priority, title, body, deep_link, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        params![id, user_id, session_id, notification_type, priority, title, body, deep_link, now],
+    ) {
+        tracing::error!("failed to create notification: {e}");
+        return;
+    }
+
+    tracing::info!(
+        notification_id = %id,
+        notification_type = %notification_type,
+        session_id = %session_id,
+        user_id = %user_id,
+        "notification created (push delivery stub)"
+    );
+}
+
+/// GET /api/notifications — list notifications for the current user.
+pub async fn list_notifications(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Query(params): Query<ListNotificationsQuery>,
+) -> impl IntoResponse {
+    let limit = params.limit.unwrap_or(50);
+    let offset = params.offset.unwrap_or(0);
+
+    match query_notifications(&state, &auth.user_id, limit, offset) {
+        Ok(notifications) => Json(serde_json::to_value(notifications).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_notifications(
+    state: &AppState,
+    user_id: &str,
+    limit: i64,
+    offset: i64,
+) -> Result<Vec<Notification>, rusqlite::Error> {
+    let db = state.db.lock().expect("db lock poisoned");
+    let mut stmt = db.prepare(
+        "SELECT id, user_id, session_id, notification_type, priority, title, body,
+                deep_link, read_at, dismissed_at, created_at
+         FROM notifications
+         WHERE user_id = ?1
+         ORDER BY read_at IS NULL DESC, created_at DESC
+         LIMIT ?2 OFFSET ?3",
+    )?;
+
+    let rows = stmt.query_map(params![user_id, limit, offset], |row| {
+        Ok(Notification {
+            id: row.get(0)?,
+            user_id: row.get(1)?,
+            session_id: row.get(2)?,
+            notification_type: row.get(3)?,
+            priority: row.get(4)?,
+            title: row.get(5)?,
+            body: row.get(6)?,
+            deep_link: row.get(7)?,
+            read_at: row.get(8)?,
+            dismissed_at: row.get(9)?,
+            created_at: row.get(10)?,
+        })
+    })?;
+
+    let mut notifications = Vec::new();
+    for row in rows {
+        notifications.push(row?);
+    }
+    Ok(notifications)
+}
+
+/// POST /api/notifications/{id}/read — mark a notification as read.
+pub async fn mark_notification_read(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(notification_id): Path<String>,
+) -> impl IntoResponse {
+    let now = Utc::now().to_rfc3339();
+    let result = state.db.lock().expect("db lock poisoned").execute(
+        "UPDATE notifications SET read_at = ?1 WHERE id = ?2 AND user_id = ?3 AND read_at IS NULL",
+        params![now, notification_id, auth.user_id],
+    );
+
+    match result {
+        Ok(0) => not_found("notification not found or already read"),
+        Ok(_) => Json(serde_json::json!({"status": "ok"})).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+/// POST /api/notifications/{id}/dismiss — dismiss a notification.
+pub async fn dismiss_notification(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(notification_id): Path<String>,
+) -> impl IntoResponse {
+    let now = Utc::now().to_rfc3339();
+    let result = state.db.lock().expect("db lock poisoned").execute(
+        "UPDATE notifications SET dismissed_at = ?1 WHERE id = ?2 AND user_id = ?3 AND dismissed_at IS NULL",
+        params![now, notification_id, auth.user_id],
+    );
+
+    match result {
+        Ok(0) => not_found("notification not found or already dismissed"),
+        Ok(_) => Json(serde_json::json!({"status": "ok"})).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+/// GET /api/notifications/unread-count — count unread, non-dismissed notifications.
+pub async fn unread_count(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+) -> impl IntoResponse {
+    let result = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT COUNT(*) FROM notifications WHERE user_id = ?1 AND read_at IS NULL AND dismissed_at IS NULL",
+        params![auth.user_id],
+        |row| row.get::<_, i64>(0),
+    );
+
+    match result {
+        Ok(count) => Json(serde_json::to_value(UnreadCountResponse { count }).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+/// POST /api/devices — register a device token for push notifications.
+pub async fn register_device(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Json(body): Json<RegisterDeviceRequest>,
+) -> impl IntoResponse {
+    let id = uuid::Uuid::new_v4().to_string();
+    let now = Utc::now().to_rfc3339();
+
+    let result = state.db.lock().expect("db lock poisoned").execute(
+        "INSERT INTO device_tokens (id, user_id, token, platform, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)
+         ON CONFLICT(token) DO UPDATE SET platform = excluded.platform",
+        params![id, auth.user_id, body.token, body.platform, now],
+    );
+
+    match result {
+        Ok(_) => (
+            StatusCode::CREATED,
+            Json(serde_json::json!({"status": "ok"})),
+        )
+            .into_response(),
         Err(e) => internal_error(&format!("db error: {e}")),
     }
 }

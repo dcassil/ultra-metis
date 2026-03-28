@@ -11,6 +11,7 @@ import {
   RectangleGroupIcon,
   CheckBadgeIcon,
   BookOpenIcon,
+  BellAlertIcon,
 } from '@heroicons/react/24/outline';
 import { usePendingCount } from '../hooks/usePendingCount';
 
@@ -29,6 +30,7 @@ const planningNavigation = [
 const operationsNavigation = [
   { name: 'Monitoring', href: '/monitoring', icon: ChartBarIcon },
   { name: 'History', href: '/history', icon: ClockIcon },
+  { name: 'Notifications', href: '/notifications', icon: BellAlertIcon },
   { name: 'Policies', href: '/policies', icon: ShieldCheckIcon },
   { name: 'Violations', href: '/violations', icon: ExclamationTriangleIcon },
 ];

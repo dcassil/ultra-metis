@@ -260,6 +260,7 @@ export default function SessionDetailPage() {
             <Button
               variant="secondary"
               size="sm"
+              className="w-full sm:w-auto"
               loading={stoppingSession}
               onClick={() => void handleStop()}
             >
@@ -270,6 +271,7 @@ export default function SessionDetailPage() {
             <Button
               variant="secondary"
               size="sm"
+              className="w-full sm:w-auto"
               loading={pausingSession}
               onClick={() => void handlePause()}
             >
@@ -280,6 +282,7 @@ export default function SessionDetailPage() {
             <Button
               variant="primary"
               size="sm"
+              className="w-full sm:w-auto"
               loading={resumingSession}
               onClick={() => void handleResume()}
             >
@@ -290,6 +293,7 @@ export default function SessionDetailPage() {
             <Button
               variant="danger"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => setShowForceStopModal(true)}
             >
               Force Stop
@@ -324,7 +328,7 @@ export default function SessionDetailPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="border-b border-secondary-200">
+        <div className="border-b border-secondary-200 overflow-x-auto">
           <nav className="-mb-px flex gap-6" aria-label="Tabs">
             {TABS.map((tab) => (
               <button

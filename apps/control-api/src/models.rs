@@ -1067,6 +1067,54 @@ pub struct SessionOutcome {
     pub created_at: String,
 }
 
+// -- Notification types --
+
+/// A notification for a user.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Notification {
+    pub id: String,
+    pub user_id: String,
+    pub session_id: Option<String>,
+    pub notification_type: String,
+    pub priority: String,
+    pub title: String,
+    pub body: String,
+    pub deep_link: Option<String>,
+    pub read_at: Option<String>,
+    pub dismissed_at: Option<String>,
+    pub created_at: String,
+}
+
+/// A registered device token for push notifications.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceToken {
+    pub id: String,
+    pub user_id: String,
+    pub token: String,
+    pub platform: String,
+    pub created_at: String,
+}
+
+/// Query params for GET /api/notifications.
+#[derive(Debug, Deserialize)]
+pub struct ListNotificationsQuery {
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}
+
+/// Request body for POST /api/devices.
+#[derive(Debug, Deserialize)]
+pub struct RegisterDeviceRequest {
+    pub token: String,
+    pub platform: String,
+}
+
+/// Response for GET /api/notifications/unread-count.
+#[derive(Debug, Serialize)]
+pub struct UnreadCountResponse {
+    pub count: i64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

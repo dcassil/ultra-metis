@@ -86,6 +86,7 @@ export function ApprovalCard({ approval, sessionId, disabled, onResponded }: App
                 key={option}
                 variant={option.toLowerCase() === 'deny' || option.toLowerCase() === 'reject' ? 'danger' : 'primary'}
                 size="sm"
+                className="min-h-[44px] w-full sm:w-auto"
                 loading={responding}
                 disabled={disabled}
                 onClick={() => void handleRespond(option)}

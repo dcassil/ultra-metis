@@ -67,8 +67,10 @@ body {
   background-color: var(--color-secondary-50);
   color: var(--color-secondary-900);
   font-family: var(--font-sans);
+  font-size: max(13px, 1rem);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 #root {
