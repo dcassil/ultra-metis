@@ -4,13 +4,22 @@ import { getSession, stopSession, forceStopSession, pauseSession, resumeSession 
 import type { SessionResponse } from '../api/sessions'
 import { listSessionViolations } from '../api/policies'
 import type { PolicyViolationRecord } from '../api/policies'
+import { listPendingApprovals } from '../api/interventions'
+import type { PendingApproval } from '../api/interventions'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
 import { SessionStateBadge } from '../components/SessionStateBadge'
 import { RelativeTime } from '../components/RelativeTime'
+import { LiveOutput } from '../components/LiveOutput'
+import { SessionTimeline } from '../components/SessionTimeline'
+import { ApprovalCard } from '../components/ApprovalCard'
+import { GuidanceInput } from '../components/GuidanceInput'
+import { useSessionEventStream } from '../hooks/useSessionEventStream'
 
 const TERMINAL_STATES = ['completed', 'failed', 'stopped']
+
+type TabId = 'overview' | 'live-output' | 'timeline'
 
 function formatElapsed(startedAt: string | undefined, completedAt: string | undefined): string {
   if (!startedAt) return '\u2014'
@@ -26,12 +35,21 @@ function formatElapsed(startedAt: string | undefined, completedAt: string | unde
   return `${seconds}s`
 }
 
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'live-output', label: 'Live Output' },
+  { id: 'timeline', label: 'Timeline' },
+]
+
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [session, setSession] = useState<SessionResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  // Tab state — will be set once session loads
+  const [activeTab, setActiveTab] = useState<TabId | null>(null)
 
   // Action loading states
   const [stoppingSession, setStoppingSession] = useState(false)
@@ -45,8 +63,14 @@ export default function SessionDetailPage() {
   // Violations
   const [violations, setViolations] = useState<PolicyViolationRecord[]>([])
 
+  // Pending approvals
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
+
   // Elapsed time ticker
   const [, setTick] = useState(0)
+
+  // SSE event stream (always active while on this page)
+  const { events, isConnected, error: streamError } = useSessionEventStream(id ?? '')
 
   const fetchViolations = useCallback(async () => {
     if (!id) return
@@ -55,6 +79,16 @@ export default function SessionDetailPage() {
       setViolations(data)
     } catch {
       // Non-critical — violations section just won't show
+    }
+  }, [id])
+
+  const fetchApprovals = useCallback(async () => {
+    if (!id) return
+    try {
+      const data = await listPendingApprovals(id)
+      setPendingApprovals(data)
+    } catch {
+      // Non-critical — approvals section just won't show
     }
   }, [id])
 
@@ -75,12 +109,22 @@ export default function SessionDetailPage() {
   useEffect(() => {
     void fetchSession()
     void fetchViolations()
+    void fetchApprovals()
     const interval = setInterval(() => {
       void fetchSession()
       void fetchViolations()
+      void fetchApprovals()
     }, 5_000)
     return () => clearInterval(interval)
-  }, [fetchSession, fetchViolations])
+  }, [fetchSession, fetchViolations, fetchApprovals])
+
+  // Set default tab based on session state once loaded
+  useEffect(() => {
+    if (session && activeTab === null) {
+      const isTerminal = TERMINAL_STATES.includes(session.state)
+      setActiveTab(isTerminal ? 'overview' : 'live-output')
+    }
+  }, [session, activeTab])
 
   // Elapsed time counter - tick every second when session is active
   useEffect(() => {
@@ -177,167 +221,235 @@ export default function SessionDetailPage() {
   const showPause = session.state === 'running'
   const showResume = session.state === 'paused' || session.state === 'waiting_for_input'
 
+  const currentTab = activeTab ?? 'overview'
+
+  const activePendingApprovals = pendingApprovals.filter((a) => a.status === 'pending')
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link to="/sessions" className="text-sm text-primary-600 hover:text-primary-800">
-          &larr; Back to Sessions
-        </Link>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-secondary-900">{session.title}</h1>
-          <SessionStateBadge state={session.state} />
+    <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 4rem)' }}>
+      <div className="flex-1 space-y-6 pb-4">
+        <div className="flex items-center gap-4">
+          <Link to="/sessions" className="text-sm text-primary-600 hover:text-primary-800">
+            &larr; Back to Sessions
+          </Link>
         </div>
-      </div>
 
-      {actionError && (
-        <div className="rounded-md bg-danger-50 border border-danger-200 p-3 text-sm text-danger-700">
-          {actionError}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-semibold text-secondary-900">{session.title}</h1>
+            <SessionStateBadge state={session.state} />
+          </div>
         </div>
-      )}
 
-      {error && (
-        <div className="rounded-md bg-warning-50 border border-warning-200 p-3 text-sm text-warning-700">
-          {error} (showing cached data)
-        </div>
-      )}
+        {actionError && (
+          <div className="rounded-md bg-danger-50 border border-danger-200 p-3 text-sm text-danger-700">
+            {actionError}
+          </div>
+        )}
 
-      {/* Control Actions */}
-      <div className="flex flex-wrap gap-3">
-        {showStop && (
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={stoppingSession}
-            onClick={() => void handleStop()}
-          >
-            Stop
-          </Button>
+        {error && (
+          <div className="rounded-md bg-warning-50 border border-warning-200 p-3 text-sm text-warning-700">
+            {error} (showing cached data)
+          </div>
         )}
-        {showPause && (
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={pausingSession}
-            onClick={() => void handlePause()}
-          >
-            Pause
-          </Button>
-        )}
-        {showResume && (
-          <Button
-            variant="primary"
-            size="sm"
-            loading={resumingSession}
-            onClick={() => void handleResume()}
-          >
-            Resume
-          </Button>
-        )}
-        {showForceStop && (
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => setShowForceStopModal(true)}
-          >
-            Force Stop
-          </Button>
-        )}
-      </div>
 
-      {/* Session Details */}
-      <Card title="Session Details">
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-          <div>
-            <dt className="text-xs font-medium uppercase text-secondary-500">Machine</dt>
-            <dd className="mt-1 text-sm text-secondary-900">{session.machine_id}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase text-secondary-500">Repository</dt>
-            <dd className="mt-1 text-sm text-secondary-900">{session.repo_path}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase text-secondary-500">Autonomy Level</dt>
-            <dd className="mt-1 text-sm capitalize text-secondary-900">{session.autonomy_level}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase text-secondary-500">Elapsed Time</dt>
-            <dd className="mt-1 text-sm font-mono text-secondary-900">
-              {formatElapsed(session.started_at, session.completed_at)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase text-secondary-500">Created</dt>
-            <dd className="mt-1 text-sm text-secondary-900">
-              <RelativeTime timestamp={session.created_at} />
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase text-secondary-500">Last Updated</dt>
-            <dd className="mt-1 text-sm text-secondary-900">
-              <RelativeTime timestamp={session.updated_at} />
-            </dd>
-          </div>
-          {session.work_item_id && (
-            <div>
-              <dt className="text-xs font-medium uppercase text-secondary-500">Work Item</dt>
-              <dd className="mt-1 text-sm text-secondary-900">{session.work_item_id}</dd>
-            </div>
+        {/* Control Actions */}
+        <div className="flex flex-wrap gap-3">
+          {showStop && (
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={stoppingSession}
+              onClick={() => void handleStop()}
+            >
+              Stop
+            </Button>
           )}
-        </dl>
-      </Card>
+          {showPause && (
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={pausingSession}
+              onClick={() => void handlePause()}
+            >
+              Pause
+            </Button>
+          )}
+          {showResume && (
+            <Button
+              variant="primary"
+              size="sm"
+              loading={resumingSession}
+              onClick={() => void handleResume()}
+            >
+              Resume
+            </Button>
+          )}
+          {showForceStop && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setShowForceStopModal(true)}
+            >
+              Force Stop
+            </Button>
+          )}
+        </div>
 
-      {/* Instructions */}
-      <Card title="Instructions">
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary-50 p-3 text-sm text-secondary-800">
-          {session.instructions}
-        </pre>
-      </Card>
-
-      {/* Context (if present) */}
-      {session.context && (
-        <Card title="Context">
-          <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary-50 p-3 text-sm text-secondary-800">
-            {session.context}
-          </pre>
-        </Card>
-      )}
-
-      {/* Policy Violations */}
-      {violations.length > 0 && (
-        <div className="rounded-lg border border-danger-200 bg-danger-50 shadow-sm">
-          <div className="border-b border-danger-200 px-4 py-3">
-            <h3 className="text-sm font-medium text-danger-800">
-              Policy Violations ({violations.length})
-            </h3>
+        {/* Pending Approvals */}
+        {activePendingApprovals.length > 0 && (
+          <div className="rounded-lg border border-warning-300 bg-warning-50 shadow-sm">
+            <div className="border-b border-warning-300 px-4 py-3">
+              <h3 className="flex items-center gap-2 text-sm font-medium text-warning-800">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-warning-500" />
+                </span>
+                Pending Approvals ({activePendingApprovals.length})
+              </h3>
+            </div>
+            <div className="p-4 space-y-3">
+              {activePendingApprovals.map((approval) => (
+                <ApprovalCard
+                  key={approval.id}
+                  approval={approval}
+                  sessionId={session.id}
+                  disabled={isTerminal}
+                  onResponded={() => void fetchApprovals()}
+                />
+              ))}
+            </div>
           </div>
-          <div className="p-4 space-y-3">
-            {violations.map((v) => (
-              <div
-                key={v.id}
-                className="rounded-md border border-danger-200 bg-white p-3"
+        )}
+
+        {/* Tab Navigation */}
+        <div className="border-b border-secondary-200">
+          <nav className="-mb-px flex gap-6" aria-label="Tabs">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`whitespace-nowrap border-b-2 py-2.5 text-sm font-medium transition-colors ${
+                  currentTab === tab.id
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-secondary-500 hover:border-secondary-300 hover:text-secondary-700'
+                }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <code className="rounded bg-danger-100 px-1.5 py-0.5 text-xs font-mono text-danger-700">
-                        {v.action}
-                      </code>
-                      <span className="text-xs text-secondary-500 capitalize">{v.policy_scope}</span>
-                    </div>
-                    <p className="text-sm text-secondary-700">{v.reason}</p>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {currentTab === 'overview' && (
+          <>
+            {/* Session Details */}
+            <Card title="Session Details">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                <div>
+                  <dt className="text-xs font-medium uppercase text-secondary-500">Machine</dt>
+                  <dd className="mt-1 text-sm text-secondary-900">{session.machine_id}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase text-secondary-500">Repository</dt>
+                  <dd className="mt-1 text-sm text-secondary-900">{session.repo_path}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase text-secondary-500">Autonomy Level</dt>
+                  <dd className="mt-1 text-sm capitalize text-secondary-900">{session.autonomy_level}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase text-secondary-500">Elapsed Time</dt>
+                  <dd className="mt-1 text-sm font-mono text-secondary-900">
+                    {formatElapsed(session.started_at, session.completed_at)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase text-secondary-500">Created</dt>
+                  <dd className="mt-1 text-sm text-secondary-900">
+                    <RelativeTime timestamp={session.created_at} />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase text-secondary-500">Last Updated</dt>
+                  <dd className="mt-1 text-sm text-secondary-900">
+                    <RelativeTime timestamp={session.updated_at} />
+                  </dd>
+                </div>
+                {session.work_item_id && (
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-secondary-500">Work Item</dt>
+                    <dd className="mt-1 text-sm text-secondary-900">{session.work_item_id}</dd>
                   </div>
-                  <span className="shrink-0 text-xs text-secondary-500">
-                    <RelativeTime timestamp={v.timestamp} />
-                  </span>
+                )}
+              </dl>
+            </Card>
+
+            {/* Instructions */}
+            <Card title="Instructions">
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary-50 p-3 text-sm text-secondary-800">
+                {session.instructions}
+              </pre>
+            </Card>
+
+            {/* Context (if present) */}
+            {session.context && (
+              <Card title="Context">
+                <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary-50 p-3 text-sm text-secondary-800">
+                  {session.context}
+                </pre>
+              </Card>
+            )}
+
+            {/* Policy Violations */}
+            {violations.length > 0 && (
+              <div className="rounded-lg border border-danger-200 bg-danger-50 shadow-sm">
+                <div className="border-b border-danger-200 px-4 py-3">
+                  <h3 className="text-sm font-medium text-danger-800">
+                    Policy Violations ({violations.length})
+                  </h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  {violations.map((v) => (
+                    <div
+                      key={v.id}
+                      className="rounded-md border border-danger-200 bg-white p-3"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <code className="rounded bg-danger-100 px-1.5 py-0.5 text-xs font-mono text-danger-700">
+                              {v.action}
+                            </code>
+                            <span className="text-xs text-secondary-500 capitalize">{v.policy_scope}</span>
+                          </div>
+                          <p className="text-sm text-secondary-700">{v.reason}</p>
+                        </div>
+                        <span className="shrink-0 text-xs text-secondary-500">
+                          <RelativeTime timestamp={v.timestamp} />
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
+          </>
+        )}
+
+        {currentTab === 'live-output' && (
+          <LiveOutput events={events} isConnected={isConnected} error={streamError} />
+        )}
+
+        {currentTab === 'timeline' && (
+          <SessionTimeline events={events} />
+        )}
+      </div>
+
+      {/* Guidance Input — fixed at the bottom, visible on all tabs */}
+      <GuidanceInput sessionId={session.id} disabled={isTerminal} />
 
       {/* Force Stop Confirmation Modal */}
       <Modal

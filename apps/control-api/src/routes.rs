@@ -1,23 +1,29 @@
 //! HTTP route handlers for the Machine Registry API.
 
+use std::time::Duration;
+
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
+use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::IntoResponse;
 use axum::Json;
 use chrono::Utc;
 use rusqlite::params;
+use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::StreamExt;
 
 use crate::auth::{DashboardAuth, MachineTokenAuth};
 use axum::extract::Query;
 
 use crate::models::{
-    ActionCategory, AutonomyLevel, CommandResponse, CreateSessionRequest, CreateSessionResponse,
-    EffectivePolicy, EffectivePolicyQuery, ErrorBody, HeartbeatRequest, ListSessionsQuery,
-    ListViolationsQuery, Machine, MachineDetailResponse, MachinePolicy, MachineRepo,
-    MachineResponse, MachineStatus, PolicyViolationRecord, RegisterRequest, RegisterResponse,
-    RepoInfo, RepoPolicy, RepoPolicyQuery, ReportStateRequest, Session, SessionListResponse,
-    SessionMode, SessionResponse, SessionState, UpdateMachinePolicyRequest,
-    UpdateRepoPolicyRequest, ViolationsListResponse,
+    ActionCategory, ApprovalStatus, AutonomyLevel, CommandResponse, CreateSessionRequest,
+    CreateSessionResponse, EffectivePolicy, EffectivePolicyQuery, ErrorBody, HeartbeatRequest,
+    IngestEventsRequest, InjectGuidanceRequest, ListSessionsQuery, ListViolationsQuery, Machine,
+    MachineDetailResponse, MachinePolicy, MachineRepo, MachineResponse, MachineStatus,
+    PendingApproval, PolicyViolationRecord, QueryEventsParams, RegisterRequest, RegisterResponse,
+    RepoInfo, RepoPolicy, RepoPolicyQuery, ReportStateRequest, RespondToApprovalRequest, Session,
+    SessionListResponse, SessionMode, SessionOutputEvent, SessionOutputEventType, SessionResponse,
+    SessionState, UpdateMachinePolicyRequest, UpdateRepoPolicyRequest, ViolationsListResponse,
 };
 use crate::AppState;
 
@@ -1967,10 +1973,606 @@ fn merge_policies(
     }
 }
 
+// ---------------------------------------------------------------------------
+// POST /api/sessions/{id}/events  (runner ingests output events)
+// ---------------------------------------------------------------------------
+
+pub async fn ingest_events(
+    State(state): State<AppState>,
+    MachineTokenAuth(auth): MachineTokenAuth,
+    Path(session_id): Path<String>,
+    Json(body): Json<IngestEventsRequest>,
+) -> impl IntoResponse {
+    // Validate session exists and belongs to the authenticated user
+    let _session = match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(s)) => s,
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    let now = Utc::now().to_rfc3339();
+
+    // Get current max sequence_num for this session
+    let base_seq = match get_max_sequence_num(&state, &session_id) {
+        Ok(seq) => seq,
+        Err(e) => return internal_error(&format!("failed to get sequence_num: {e}")),
+    };
+
+    let mut inserted = 0i64;
+    for (i, item) in body.events.iter().enumerate() {
+        let event_id = uuid::Uuid::new_v4().to_string();
+        let seq = base_seq + (i as i64) + 1;
+        let metadata_str = item.metadata.as_ref().map(std::string::ToString::to_string);
+        let category_str = item.category.as_ref().map(|c| c.as_str().to_string());
+
+        if let Err(e) = insert_output_event(
+            &state,
+            &event_id,
+            &session_id,
+            item.event_type.as_str(),
+            category_str.as_deref(),
+            &item.content,
+            metadata_str.as_deref(),
+            seq,
+            &now,
+        ) {
+            return internal_error(&format!("failed to insert event: {e}"));
+        }
+
+        // If this is an approval_request, also insert into pending_approvals
+        if item.event_type == SessionOutputEventType::ApprovalRequest {
+            let question = item.content.clone();
+            let options = item
+                .metadata
+                .as_ref()
+                .and_then(|m| m.get("options"))
+                .map(std::string::ToString::to_string)
+                .unwrap_or_else(|| "[]".to_string());
+            let context = item
+                .metadata
+                .as_ref()
+                .and_then(|m| m.get("context"))
+                .and_then(|c| c.as_str())
+                .map(String::from);
+
+            if let Err(e) =
+                insert_pending_approval(&state, &session_id, &question, &options, context.as_deref(), &now)
+            {
+                tracing::error!("failed to insert pending approval: {e}");
+            }
+        }
+
+        // Broadcast to SSE subscribers
+        let output_event = SessionOutputEvent {
+            id: event_id,
+            session_id: session_id.clone(),
+            event_type: item.event_type.clone(),
+            category: item.category.clone(),
+            content: item.content.clone(),
+            metadata: metadata_str.clone(),
+            sequence_num: seq,
+            timestamp: now.clone(),
+        };
+        if let Ok(json) = serde_json::to_string(&output_event) {
+            broadcast_event(&state, &session_id, &json);
+        }
+
+        inserted += 1;
+    }
+
+    Json(serde_json::json!({"ingested": inserted})).into_response()
+}
+
+fn get_max_sequence_num(state: &AppState, session_id: &str) -> Result<i64, rusqlite::Error> {
+    let seq: Option<i64> = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT MAX(sequence_num) FROM session_output_events WHERE session_id = ?1",
+        [session_id],
+        |row| row.get(0),
+    )?;
+    Ok(seq.unwrap_or(0))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn insert_output_event(
+    state: &AppState,
+    event_id: &str,
+    session_id: &str,
+    event_type: &str,
+    category: Option<&str>,
+    content: &str,
+    metadata: Option<&str>,
+    sequence_num: i64,
+    timestamp: &str,
+) -> Result<(), rusqlite::Error> {
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "INSERT INTO session_output_events (id, session_id, event_type, category, content, metadata, sequence_num, timestamp)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![event_id, session_id, event_type, category, content, metadata, sequence_num, timestamp],
+        )?;
+    Ok(())
+}
+
+fn insert_pending_approval(
+    state: &AppState,
+    session_id: &str,
+    question: &str,
+    options: &str,
+    context: Option<&str>,
+    now: &str,
+) -> Result<(), rusqlite::Error> {
+    let approval_id = uuid::Uuid::new_v4().to_string();
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "INSERT INTO pending_approvals (id, session_id, question, options, context, status, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, 'pending', ?6)",
+            params![approval_id, session_id, question, options, context, now],
+        )?;
+    Ok(())
+}
+
+fn broadcast_event(state: &AppState, session_id: &str, json: &str) {
+    let channels = state.event_channels.lock().expect("event_channels lock poisoned");
+    if let Some(tx) = channels.get(session_id) {
+        // Ignore send errors (no active receivers is fine)
+        let _ = tx.send(json.to_string());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/sessions/{id}/events  (dashboard queries event history)
+// ---------------------------------------------------------------------------
+
+pub async fn query_events(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+    Query(query): Query<QueryEventsParams>,
+) -> impl IntoResponse {
+    // Validate session ownership
+    match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    match query_output_events(&state, &session_id, &query) {
+        Ok(events) => Json(serde_json::to_value(events).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_output_events(
+    state: &AppState,
+    session_id: &str,
+    query: &QueryEventsParams,
+) -> Result<Vec<SessionOutputEvent>, rusqlite::Error> {
+    let db = state.db.lock().expect("db lock poisoned");
+    let since = query.since_sequence.unwrap_or(0);
+    let limit = query.limit.unwrap_or(100);
+
+    let (sql, events) = if let Some(ref event_type) = query.event_type {
+        let sql = "SELECT id, session_id, event_type, category, content, metadata, sequence_num, timestamp
+             FROM session_output_events
+             WHERE session_id = ?1 AND sequence_num > ?2 AND event_type = ?3
+             ORDER BY sequence_num ASC
+             LIMIT ?4";
+        let mut stmt = db.prepare(sql)?;
+        let rows = stmt.query_map(params![session_id, since, event_type, limit], parse_output_event_row)?;
+        let mut events = Vec::new();
+        for row in rows {
+            events.push(row?);
+        }
+        (sql, events)
+    } else {
+        let sql = "SELECT id, session_id, event_type, category, content, metadata, sequence_num, timestamp
+             FROM session_output_events
+             WHERE session_id = ?1 AND sequence_num > ?2
+             ORDER BY sequence_num ASC
+             LIMIT ?3";
+        let mut stmt = db.prepare(sql)?;
+        let rows = stmt.query_map(params![session_id, since, limit], parse_output_event_row)?;
+        let mut events = Vec::new();
+        for row in rows {
+            events.push(row?);
+        }
+        (sql, events)
+    };
+
+    // Suppress unused variable warning for sql
+    let _ = sql;
+    Ok(events)
+}
+
+fn parse_output_event_row(row: &rusqlite::Row<'_>) -> Result<SessionOutputEvent, rusqlite::Error> {
+    Ok(SessionOutputEvent {
+        id: row.get(0)?,
+        session_id: row.get(1)?,
+        event_type: row
+            .get::<_, String>(2)?
+            .parse()
+            .unwrap_or(SessionOutputEventType::OutputLine),
+        category: row
+            .get::<_, Option<String>>(3)?
+            .and_then(|s| s.parse().ok()),
+        content: row.get(4)?,
+        metadata: row.get(5)?,
+        sequence_num: row.get(6)?,
+        timestamp: row.get(7)?,
+    })
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/sessions/{id}/events/stream  (SSE live event stream)
+// ---------------------------------------------------------------------------
+
+pub async fn event_stream(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+) -> impl IntoResponse {
+    // Validate session ownership
+    match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return Err(not_found("session not found")),
+        Err(e) => return Err(internal_error(&format!("db error: {e}"))),
+    }
+
+    // Get or create the broadcast channel for this session
+    let rx = {
+        let mut channels = state.event_channels.lock().expect("event_channels lock poisoned");
+        let tx = channels
+            .entry(session_id)
+            .or_insert_with(|| {
+                let (tx, _rx) = tokio::sync::broadcast::channel(256);
+                tx
+            });
+        let rx = tx.subscribe();
+        drop(channels);
+        rx
+    };
+
+    let event_stream = BroadcastStream::new(rx).filter_map(|result| match result {
+        Ok(json) => Some(Ok::<_, std::convert::Infallible>(
+            Event::default().event("session_event").data(json),
+        )),
+        Err(_) => None,
+    });
+
+    Ok(Sse::new(event_stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(15))))
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/sessions/{id}/approvals  (dashboard queries pending approvals)
+// ---------------------------------------------------------------------------
+
+pub async fn list_pending_approvals(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+) -> impl IntoResponse {
+    // Validate session ownership
+    match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    match query_pending_approvals(&state, &session_id) {
+        Ok(approvals) => Json(serde_json::to_value(approvals).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_pending_approvals(
+    state: &AppState,
+    session_id: &str,
+) -> Result<Vec<PendingApproval>, rusqlite::Error> {
+    let db = state.db.lock().expect("db lock poisoned");
+    let mut stmt = db.prepare(
+        "SELECT id, session_id, question, options, context, status, response_choice, response_note, created_at, responded_at
+         FROM pending_approvals
+         WHERE session_id = ?1 AND status = 'pending'
+         ORDER BY created_at ASC",
+    )?;
+    let rows = stmt.query_map([session_id], |row| {
+        Ok(PendingApproval {
+            id: row.get(0)?,
+            session_id: row.get(1)?,
+            question: row.get(2)?,
+            options: row.get(3)?,
+            context: row.get(4)?,
+            status: row
+                .get::<_, String>(5)?
+                .parse()
+                .unwrap_or(ApprovalStatus::Pending),
+            response_choice: row.get(6)?,
+            response_note: row.get(7)?,
+            created_at: row.get(8)?,
+            responded_at: row.get(9)?,
+        })
+    })?;
+
+    let mut approvals = Vec::new();
+    for row in rows {
+        approvals.push(row?);
+    }
+    Ok(approvals)
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/sessions/{id}/respond  (dashboard responds to approval)
+// ---------------------------------------------------------------------------
+
+pub async fn respond_to_approval(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+    Json(body): Json<RespondToApprovalRequest>,
+) -> impl IntoResponse {
+    let session = match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(s)) => s,
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    // Load the pending approval
+    let approval = match load_pending_approval(&state, &body.approval_id, &session_id) {
+        Ok(Some(a)) => a,
+        Ok(None) => return bad_request("approval not found or already responded"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    if approval.status != ApprovalStatus::Pending {
+        return bad_request("approval not found or already responded");
+    }
+
+    let now = Utc::now().to_rfc3339();
+
+    // Update pending_approvals: set status = 'responded', response fields
+    if let Err(e) = update_approval_response(&state, &body.approval_id, &body.choice, body.note.as_deref(), &now) {
+        return internal_error(&format!("failed to update approval: {e}"));
+    }
+
+    // Queue a respond command
+    let payload = serde_json::json!({
+        "approval_id": body.approval_id,
+        "choice": body.choice,
+        "note": body.note,
+    });
+    if let Err(e) = insert_session_command(
+        &state,
+        &session_id,
+        &session.machine_id,
+        "respond",
+        Some(&payload.to_string()),
+    ) {
+        return internal_error(&format!("failed to queue respond command: {e}"));
+    }
+
+    // Insert an approval_response event
+    let base_seq = match get_max_sequence_num(&state, &session_id) {
+        Ok(seq) => seq,
+        Err(e) => return internal_error(&format!("failed to get sequence_num: {e}")),
+    };
+    let seq = base_seq + 1;
+    let event_id = uuid::Uuid::new_v4().to_string();
+    let content = format!("Approval response: {}", body.choice);
+    let metadata = serde_json::json!({
+        "approval_id": body.approval_id,
+        "choice": body.choice,
+        "note": body.note,
+    })
+    .to_string();
+
+    if let Err(e) = insert_output_event(
+        &state,
+        &event_id,
+        &session_id,
+        SessionOutputEventType::ApprovalResponse.as_str(),
+        None,
+        &content,
+        Some(&metadata),
+        seq,
+        &now,
+    ) {
+        return internal_error(&format!("failed to insert event: {e}"));
+    }
+
+    // If session state is waiting_for_input, transition back to running
+    if session.state == SessionState::WaitingForInput {
+        if let Err(e) = update_session_state(&state, &session_id, "running", &now, None) {
+            return internal_error(&format!("failed to update session state: {e}"));
+        }
+        if let Err(e) = insert_session_event(
+            &state,
+            &session_id,
+            Some("waiting_for_input"),
+            "running",
+            &now,
+            None,
+        ) {
+            tracing::error!("failed to insert state change event: {e}");
+        }
+    }
+
+    // Broadcast the event to SSE subscribers
+    let output_event = SessionOutputEvent {
+        id: event_id,
+        session_id: session_id.clone(),
+        event_type: SessionOutputEventType::ApprovalResponse,
+        category: None,
+        content,
+        metadata: Some(metadata),
+        sequence_num: seq,
+        timestamp: now,
+    };
+    if let Ok(json) = serde_json::to_string(&output_event) {
+        broadcast_event(&state, &session_id, &json);
+    }
+
+    Json(serde_json::json!({"status": "responded", "session_id": session_id})).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/sessions/{id}/inject  (dashboard injects guidance)
+// ---------------------------------------------------------------------------
+
+pub async fn inject_guidance(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+    Json(body): Json<InjectGuidanceRequest>,
+) -> impl IntoResponse {
+    let session = match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(s)) => s,
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    // Validate session is in running or waiting_for_input state
+    if !matches!(
+        session.state,
+        SessionState::Running | SessionState::WaitingForInput
+    ) {
+        return conflict(&format!(
+            "cannot inject guidance into session in {} state, must be running or waiting_for_input",
+            session.state
+        ));
+    }
+
+    let now = Utc::now().to_rfc3339();
+
+    // Queue an inject command
+    let payload = serde_json::json!({
+        "message": body.message,
+        "injection_type": body.injection_type.as_str(),
+    });
+    if let Err(e) = insert_session_command(
+        &state,
+        &session_id,
+        &session.machine_id,
+        "inject",
+        Some(&payload.to_string()),
+    ) {
+        return internal_error(&format!("failed to queue inject command: {e}"));
+    }
+
+    // Insert a guidance_injected event
+    let base_seq = match get_max_sequence_num(&state, &session_id) {
+        Ok(seq) => seq,
+        Err(e) => return internal_error(&format!("failed to get sequence_num: {e}")),
+    };
+    let seq = base_seq + 1;
+    let event_id = uuid::Uuid::new_v4().to_string();
+    let metadata = serde_json::json!({
+        "injection_type": body.injection_type.as_str(),
+    })
+    .to_string();
+
+    if let Err(e) = insert_output_event(
+        &state,
+        &event_id,
+        &session_id,
+        SessionOutputEventType::GuidanceInjected.as_str(),
+        None,
+        &body.message,
+        Some(&metadata),
+        seq,
+        &now,
+    ) {
+        return internal_error(&format!("failed to insert event: {e}"));
+    }
+
+    // Broadcast the event to SSE subscribers
+    let output_event = SessionOutputEvent {
+        id: event_id,
+        session_id: session_id.clone(),
+        event_type: SessionOutputEventType::GuidanceInjected,
+        category: None,
+        content: body.message,
+        metadata: Some(metadata),
+        sequence_num: seq,
+        timestamp: now,
+    };
+    if let Ok(json) = serde_json::to_string(&output_event) {
+        broadcast_event(&state, &session_id, &json);
+    }
+
+    Json(serde_json::json!({"status": "injected", "session_id": session_id})).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Approval / injection helpers
+// ---------------------------------------------------------------------------
+
+fn load_pending_approval(
+    state: &AppState,
+    approval_id: &str,
+    session_id: &str,
+) -> Result<Option<PendingApproval>, rusqlite::Error> {
+    let result = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT id, session_id, question, options, context, status, response_choice, response_note, created_at, responded_at
+         FROM pending_approvals WHERE id = ?1 AND session_id = ?2",
+        params![approval_id, session_id],
+        |row| {
+            Ok(PendingApproval {
+                id: row.get(0)?,
+                session_id: row.get(1)?,
+                question: row.get(2)?,
+                options: row.get(3)?,
+                context: row.get(4)?,
+                status: row
+                    .get::<_, String>(5)?
+                    .parse()
+                    .unwrap_or(ApprovalStatus::Pending),
+                response_choice: row.get(6)?,
+                response_note: row.get(7)?,
+                created_at: row.get(8)?,
+                responded_at: row.get(9)?,
+            })
+        },
+    );
+
+    match result {
+        Ok(approval) => Ok(Some(approval)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+fn update_approval_response(
+    state: &AppState,
+    approval_id: &str,
+    choice: &str,
+    note: Option<&str>,
+    now: &str,
+) -> Result<(), rusqlite::Error> {
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "UPDATE pending_approvals SET status = 'responded', response_choice = ?1, response_note = ?2, responded_at = ?3
+             WHERE id = ?4",
+            params![choice, note, now, approval_id],
+        )?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::db;
+    use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
 
     fn test_state() -> AppState {
@@ -1978,6 +2580,7 @@ mod tests {
         db::init_db(&conn).unwrap();
         AppState {
             db: Arc::new(Mutex::new(conn)),
+            event_channels: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -3134,5 +3737,512 @@ mod tests {
         assert!(v.reason.contains("exceeds machine max"));
         assert_eq!(v.session_id, None);
         assert_eq!(v.repo_path, Some("/project".into()));
+    }
+
+    // -----------------------------------------------------------------------
+    // Event ingestion and query tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_ingest_and_query_events() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Insert a batch of events
+        insert_output_event(
+            &state, "e-1", "s-1", "output_line", Some("info"), "Hello world", None, 1, &now,
+        )
+        .unwrap();
+        insert_output_event(
+            &state, "e-2", "s-1", "output_line", Some("warning"), "Watch out", None, 2, &now,
+        )
+        .unwrap();
+        insert_output_event(
+            &state, "e-3", "s-1", "state_changed", None, "running", None, 3, &now,
+        )
+        .unwrap();
+
+        // Query all events
+        let query = QueryEventsParams {
+            since_sequence: None,
+            limit: None,
+            event_type: None,
+        };
+        let events = query_output_events(&state, "s-1", &query).unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].sequence_num, 1);
+        assert_eq!(events[1].sequence_num, 2);
+        assert_eq!(events[2].sequence_num, 3);
+    }
+
+    #[test]
+    fn test_sequence_numbering_is_monotonic() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Insert some events
+        for i in 1..=5 {
+            insert_output_event(
+                &state,
+                &format!("e-{i}"),
+                "s-1",
+                "output_line",
+                Some("info"),
+                &format!("Line {i}"),
+                None,
+                i,
+                &now,
+            )
+            .unwrap();
+        }
+
+        // Check max sequence
+        let max = get_max_sequence_num(&state, "s-1").unwrap();
+        assert_eq!(max, 5);
+
+        // Insert another and verify it would be 6
+        let next = max + 1;
+        assert_eq!(next, 6);
+
+        insert_output_event(
+            &state, "e-6", "s-1", "output_line", Some("info"), "Line 6", None, next, &now,
+        )
+        .unwrap();
+        let max = get_max_sequence_num(&state, "s-1").unwrap();
+        assert_eq!(max, 6);
+    }
+
+    #[test]
+    fn test_approval_created_from_approval_request_event() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        let options = r#"["yes","no","skip"]"#;
+        insert_pending_approval(
+            &state,
+            "s-1",
+            "Should I proceed with the deployment?",
+            options,
+            Some("prod environment"),
+            &now,
+        )
+        .unwrap();
+
+        let approvals = query_pending_approvals(&state, "s-1").unwrap();
+        assert_eq!(approvals.len(), 1);
+        assert_eq!(approvals[0].question, "Should I proceed with the deployment?");
+        assert_eq!(approvals[0].options, options);
+        assert_eq!(approvals[0].context, Some("prod environment".into()));
+        assert_eq!(approvals[0].status, ApprovalStatus::Pending);
+    }
+
+    #[test]
+    fn test_event_query_with_since_sequence() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        for i in 1..=10 {
+            insert_output_event(
+                &state,
+                &format!("e-{i}"),
+                "s-1",
+                "output_line",
+                Some("info"),
+                &format!("Line {i}"),
+                None,
+                i,
+                &now,
+            )
+            .unwrap();
+        }
+
+        // Query since sequence 7 (should return events 8, 9, 10)
+        let query = QueryEventsParams {
+            since_sequence: Some(7),
+            limit: None,
+            event_type: None,
+        };
+        let events = query_output_events(&state, "s-1", &query).unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].sequence_num, 8);
+        assert_eq!(events[1].sequence_num, 9);
+        assert_eq!(events[2].sequence_num, 10);
+    }
+
+    #[test]
+    fn test_event_query_with_event_type_filter() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        insert_output_event(
+            &state, "e-1", "s-1", "output_line", Some("info"), "Hello", None, 1, &now,
+        )
+        .unwrap();
+        insert_output_event(
+            &state, "e-2", "s-1", "state_changed", None, "paused", None, 2, &now,
+        )
+        .unwrap();
+        insert_output_event(
+            &state, "e-3", "s-1", "output_line", Some("error"), "Error!", None, 3, &now,
+        )
+        .unwrap();
+
+        // Filter by output_line only
+        let query = QueryEventsParams {
+            since_sequence: None,
+            limit: None,
+            event_type: Some("output_line".to_string()),
+        };
+        let events = query_output_events(&state, "s-1", &query).unwrap();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].content, "Hello");
+        assert_eq!(events[1].content, "Error!");
+    }
+
+    #[test]
+    fn test_event_query_with_limit() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        for i in 1..=10 {
+            insert_output_event(
+                &state,
+                &format!("e-{i}"),
+                "s-1",
+                "output_line",
+                Some("info"),
+                &format!("Line {i}"),
+                None,
+                i,
+                &now,
+            )
+            .unwrap();
+        }
+
+        let query = QueryEventsParams {
+            since_sequence: None,
+            limit: Some(3),
+            event_type: None,
+        };
+        let events = query_output_events(&state, "s-1", &query).unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].sequence_num, 1);
+        assert_eq!(events[2].sequence_num, 3);
+    }
+
+    #[test]
+    fn test_pending_approvals_returns_only_pending() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Insert two approvals
+        insert_pending_approval(&state, "s-1", "Q1?", "[]", None, &now).unwrap();
+        insert_pending_approval(&state, "s-1", "Q2?", "[]", None, &now).unwrap();
+
+        // Mark one as responded
+        state
+            .db
+            .lock()
+            .unwrap()
+            .execute(
+                "UPDATE pending_approvals SET status = 'responded' WHERE question = 'Q1?'",
+                [],
+            )
+            .unwrap();
+
+        let approvals = query_pending_approvals(&state, "s-1").unwrap();
+        assert_eq!(approvals.len(), 1);
+        assert_eq!(approvals[0].question, "Q2?");
+    }
+
+    #[test]
+    fn test_get_max_sequence_num_empty_session() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+
+        let max = get_max_sequence_num(&state, "s-1").unwrap();
+        assert_eq!(max, 0);
+    }
+
+    #[test]
+    fn test_broadcast_event_no_subscribers() {
+        let state = test_state();
+        // Should not panic even when no channel exists
+        broadcast_event(&state, "nonexistent-session", r#"{"test": true}"#);
+    }
+
+    #[test]
+    fn test_event_metadata_preserved() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+        let metadata = r#"{"key":"value","nested":{"a":1}}"#;
+
+        insert_output_event(
+            &state,
+            "e-1",
+            "s-1",
+            "output_line",
+            Some("info"),
+            "test",
+            Some(metadata),
+            1,
+            &now,
+        )
+        .unwrap();
+
+        let query = QueryEventsParams {
+            since_sequence: None,
+            limit: None,
+            event_type: None,
+        };
+        let events = query_output_events(&state, "s-1", &query).unwrap();
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].metadata, Some(metadata.to_string()));
+    }
+
+    // -----------------------------------------------------------------------
+    // Approval response and guidance injection tests
+    // -----------------------------------------------------------------------
+
+    /// Helper: insert a pending approval and return its id.
+    fn create_pending_approval(state: &AppState, session_id: &str) -> String {
+        let now = Utc::now().to_rfc3339();
+        insert_pending_approval(state, session_id, "Proceed?", r#"["yes","no"]"#, Some("ctx"), &now).unwrap();
+        // Fetch the approval id
+        let approvals = query_pending_approvals(state, session_id).unwrap();
+        approvals.last().unwrap().id.clone()
+    }
+
+    #[test]
+    fn test_respond_updates_approval_and_queues_command() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let approval_id = create_pending_approval(&state, "s-1");
+
+        let now = Utc::now().to_rfc3339();
+
+        // Update approval response
+        update_approval_response(&state, &approval_id, "yes", Some("looks good"), &now).unwrap();
+
+        // Verify status changed
+        let approval = load_pending_approval(&state, &approval_id, "s-1").unwrap().unwrap();
+        assert_eq!(approval.status, ApprovalStatus::Responded);
+        assert_eq!(approval.response_choice, Some("yes".into()));
+        assert_eq!(approval.response_note, Some("looks good".into()));
+        assert!(approval.responded_at.is_some());
+
+        // Queue respond command
+        let payload = serde_json::json!({
+            "approval_id": approval_id,
+            "choice": "yes",
+            "note": "looks good",
+        });
+        insert_session_command(&state, "s-1", "m-1", "respond", Some(&payload.to_string())).unwrap();
+
+        // Verify command was queued
+        let count: i64 = state
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT COUNT(*) FROM session_commands WHERE session_id = ?1 AND command_type = 'respond'",
+                ["s-1"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn test_respond_to_already_responded_approval() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let approval_id = create_pending_approval(&state, "s-1");
+
+        let now = Utc::now().to_rfc3339();
+
+        // First response
+        update_approval_response(&state, &approval_id, "yes", None, &now).unwrap();
+
+        // Loading it should show responded status
+        let approval = load_pending_approval(&state, &approval_id, "s-1").unwrap().unwrap();
+        assert_eq!(approval.status, ApprovalStatus::Responded);
+        // Attempting to use it again should be caught by the status != Pending check
+        assert_ne!(approval.status, ApprovalStatus::Pending);
+    }
+
+    #[test]
+    fn test_respond_to_nonexistent_approval() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+
+        // Load a nonexistent approval
+        let approval = load_pending_approval(&state, "nonexistent-id", "s-1").unwrap();
+        assert!(approval.is_none());
+    }
+
+    #[test]
+    fn test_respond_transitions_session_from_waiting_to_running() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Set session to waiting_for_input
+        update_session_state(&state, "s-1", "waiting_for_input", &now, None).unwrap();
+        let session = load_session(&state, "s-1", "user-default").unwrap().unwrap();
+        assert_eq!(session.state, SessionState::WaitingForInput);
+
+        // Transition back to running (as the handler would)
+        update_session_state(&state, "s-1", "running", &now, None).unwrap();
+        insert_session_event(&state, "s-1", Some("waiting_for_input"), "running", &now, None).unwrap();
+
+        let session = load_session(&state, "s-1", "user-default").unwrap().unwrap();
+        assert_eq!(session.state, SessionState::Running);
+
+        // Verify state change event was inserted
+        let count: i64 = state
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT COUNT(*) FROM session_events WHERE session_id = ?1 AND to_state = 'running' AND from_state = 'waiting_for_input'",
+                ["s-1"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn test_inject_queues_command_and_persists_event() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Queue inject command
+        let payload = serde_json::json!({
+            "message": "Focus on the login bug",
+            "injection_type": "normal",
+        });
+        insert_session_command(&state, "s-1", "m-1", "inject", Some(&payload.to_string())).unwrap();
+
+        // Insert guidance_injected event
+        let metadata = serde_json::json!({
+            "injection_type": "normal",
+        })
+        .to_string();
+        insert_output_event(
+            &state,
+            "e-inject-1",
+            "s-1",
+            SessionOutputEventType::GuidanceInjected.as_str(),
+            None,
+            "Focus on the login bug",
+            Some(&metadata),
+            1,
+            &now,
+        )
+        .unwrap();
+
+        // Verify command queued
+        let count: i64 = state
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT COUNT(*) FROM session_commands WHERE session_id = ?1 AND command_type = 'inject'",
+                ["s-1"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 1);
+
+        // Verify event persisted
+        let query = QueryEventsParams {
+            since_sequence: None,
+            limit: None,
+            event_type: Some("guidance_injected".to_string()),
+        };
+        let events = query_output_events(&state, "s-1", &query).unwrap();
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].content, "Focus on the login bug");
+        assert_eq!(events[0].event_type, SessionOutputEventType::GuidanceInjected);
+    }
+
+    #[test]
+    fn test_inject_on_terminal_session_is_rejected() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+        let now = Utc::now().to_rfc3339();
+
+        // Transition to completed (terminal)
+        update_session_state(&state, "s-1", "completed", &now, Some(&now)).unwrap();
+        let session = load_session(&state, "s-1", "user-default").unwrap().unwrap();
+        assert_eq!(session.state, SessionState::Completed);
+        assert!(session.state.is_terminal());
+
+        // Verify that a running/waiting_for_input check would reject this
+        assert!(!matches!(
+            session.state,
+            SessionState::Running | SessionState::WaitingForInput
+        ));
+    }
+
+    #[test]
+    fn test_inject_on_running_session_succeeds() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_running_session(&state, "s-1", "m-1");
+
+        let session = load_session(&state, "s-1", "user-default").unwrap().unwrap();
+        assert_eq!(session.state, SessionState::Running);
+
+        // Running session passes the state check
+        assert!(matches!(
+            session.state,
+            SessionState::Running | SessionState::WaitingForInput
+        ));
+
+        // Can queue inject command without error
+        let payload = serde_json::json!({
+            "message": "Update approach",
+            "injection_type": "side_note",
+        });
+        insert_session_command(&state, "s-1", "m-1", "inject", Some(&payload.to_string())).unwrap();
+
+        let count: i64 = state
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT COUNT(*) FROM session_commands WHERE session_id = ?1 AND command_type = 'inject'",
+                ["s-1"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 1);
     }
 }

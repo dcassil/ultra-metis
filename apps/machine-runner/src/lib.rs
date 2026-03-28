@@ -1,6 +1,8 @@
 pub mod client;
 pub mod config;
 pub mod discovery;
+pub mod injection;
+pub mod output_capture;
 pub mod policy;
 pub mod runner;
 pub mod state_reporter;

@@ -25,7 +25,9 @@
       "mcp__plugin_metis_metis__edit_document",
       "mcp__plugin_metis_metis__transition_phase",
       "Skill(metis:metis-ralph)",
-      "mcp__plugin_metis_metis__list_documents"
+      "mcp__plugin_metis_metis__list_documents",
+      "Skill(metis:metis-decompose)",
+      "Skill(metis:metis-ralph-initiative)"
     ]
   },
   "enableAllProjectMcpServers": true

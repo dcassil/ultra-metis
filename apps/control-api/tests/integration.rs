@@ -3,6 +3,7 @@
 //! Each test spins up an in-process Axum server on a random port with its own
 //! temporary SQLite database for full isolation.
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use cadre_control_api::db;
@@ -31,6 +32,7 @@ async fn start_test_server() -> (String, tokio::task::JoinHandle<()>) {
 
     let state = AppState {
         db: Arc::new(Mutex::new(conn)),
+        event_channels: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let app = build_app(state);
@@ -1567,6 +1569,544 @@ async fn repo_policy_crud() {
         other_blocked.is_empty(),
         "different repo path should have empty blocked list"
     );
+
+    handle.abort();
+}
+
+// ===========================================================================
+// Monitoring & intervention helpers
+// ===========================================================================
+
+/// Helper to get a session into "running" state. Returns (machine_id, session_id).
+async fn setup_running_session(
+    client: &Client,
+    base: &str,
+    name: &str,
+) -> (String, String) {
+    let machine_id = register_and_approve_machine(client, base, name).await;
+    let session_id = create_session(client, base, &machine_id).await;
+
+    // Ack the start_session command
+    let cmds = get_commands(client, base, &machine_id).await;
+    let start_cmd_id = cmds[0]["command_id"].as_str().unwrap().to_string();
+    ack_command(client, base, &machine_id, &start_cmd_id).await;
+
+    // Report running
+    let s = report_state(client, base, &session_id, "running", None).await;
+    assert_eq!(s, 200);
+
+    (machine_id, session_id)
+}
+
+/// POST /api/sessions/{id}/events — batch event ingestion (needs MachineTokenAuth).
+async fn post_events(
+    client: &Client,
+    base: &str,
+    session_id: &str,
+    events: serde_json::Value,
+) -> reqwest::Response {
+    client
+        .post(format!("{base}/api/sessions/{session_id}/events"))
+        .bearer_auth(VALID_TOKEN)
+        .json(&serde_json::json!({ "events": events }))
+        .send()
+        .await
+        .expect("post_events request failed")
+}
+
+/// GET /api/sessions/{id}/events — query events (DashboardAuth, no special auth in MVP).
+async fn get_events(
+    client: &Client,
+    base: &str,
+    session_id: &str,
+    since_sequence: Option<i64>,
+) -> serde_json::Value {
+    let mut url = format!("{base}/api/sessions/{session_id}/events");
+    if let Some(seq) = since_sequence {
+        url = format!("{url}?since_sequence={seq}");
+    }
+    let resp = client.get(&url).send().await.expect("get_events request failed");
+    assert_eq!(resp.status(), 200);
+    resp.json().await.expect("get_events body not json")
+}
+
+/// GET /api/sessions/{id}/events with query params as a raw URL suffix.
+async fn get_events_with_params(
+    client: &Client,
+    base: &str,
+    session_id: &str,
+    params: &str,
+) -> serde_json::Value {
+    let url = format!("{base}/api/sessions/{session_id}/events?{params}");
+    let resp = client.get(&url).send().await.expect("get_events request failed");
+    assert_eq!(resp.status(), 200);
+    resp.json().await.expect("get_events body not json")
+}
+
+/// GET /api/sessions/{id}/approvals — list pending approvals (DashboardAuth).
+async fn get_approvals(
+    client: &Client,
+    base: &str,
+    session_id: &str,
+) -> serde_json::Value {
+    let resp = client
+        .get(format!("{base}/api/sessions/{session_id}/approvals"))
+        .send()
+        .await
+        .expect("get_approvals request failed");
+    assert_eq!(resp.status(), 200);
+    resp.json().await.expect("get_approvals body not json")
+}
+
+/// POST /api/sessions/{id}/respond — respond to an approval (DashboardAuth).
+async fn respond_to_approval(
+    client: &Client,
+    base: &str,
+    session_id: &str,
+    approval_id: &str,
+    choice: &str,
+    note: Option<&str>,
+) -> reqwest::Response {
+    let mut body = serde_json::json!({
+        "approval_id": approval_id,
+        "choice": choice,
+    });
+    if let Some(n) = note {
+        body["note"] = serde_json::json!(n);
+    }
+    client
+        .post(format!("{base}/api/sessions/{session_id}/respond"))
+        .json(&body)
+        .send()
+        .await
+        .expect("respond_to_approval request failed")
+}
+
+/// POST /api/sessions/{id}/inject — inject guidance (DashboardAuth).
+async fn inject_guidance(
+    client: &Client,
+    base: &str,
+    session_id: &str,
+    message: &str,
+    injection_type: &str,
+) -> reqwest::Response {
+    client
+        .post(format!("{base}/api/sessions/{session_id}/inject"))
+        .json(&serde_json::json!({
+            "message": message,
+            "injection_type": injection_type,
+        }))
+        .send()
+        .await
+        .expect("inject_guidance request failed")
+}
+
+// ===========================================================================
+// Monitoring integration tests
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// M1. Event ingestion and query
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_event_ingestion_and_query() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-ingest-m").await;
+
+    // POST 3 output_line events with different categories
+    let events = serde_json::json!([
+        { "event_type": "output_line", "category": "info", "content": "Starting build..." },
+        { "event_type": "output_line", "category": "warning", "content": "Deprecated API used" },
+        { "event_type": "output_line", "category": "error", "content": "Build failed" },
+    ]);
+    let resp = post_events(&client, &base, &session_id, events).await;
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body["ingested"], 3);
+
+    // GET events — verify 3 events returned in order with correct sequence numbers
+    let events = get_events(&client, &base, &session_id, None).await;
+    let events_arr = events.as_array().expect("events should be an array");
+    assert_eq!(events_arr.len(), 3);
+
+    assert_eq!(events_arr[0]["content"], "Starting build...");
+    assert_eq!(events_arr[0]["event_type"], "output_line");
+    assert_eq!(events_arr[0]["category"], "info");
+    assert_eq!(events_arr[0]["sequence_num"], 1);
+
+    assert_eq!(events_arr[1]["content"], "Deprecated API used");
+    assert_eq!(events_arr[1]["category"], "warning");
+    assert_eq!(events_arr[1]["sequence_num"], 2);
+
+    assert_eq!(events_arr[2]["content"], "Build failed");
+    assert_eq!(events_arr[2]["category"], "error");
+    assert_eq!(events_arr[2]["sequence_num"], 3);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M2. Approval auto-created from approval_request event
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_approval_auto_created() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-approval-m").await;
+
+    // POST an approval_request event
+    let events = serde_json::json!([
+        {
+            "event_type": "approval_request",
+            "content": "May I delete the database?",
+            "metadata": {
+                "options": ["Allow", "Deny"],
+                "context": "rm -rf /var/db"
+            }
+        }
+    ]);
+    let resp = post_events(&client, &base, &session_id, events).await;
+    assert_eq!(resp.status(), 200);
+
+    // GET approvals — verify one pending approval exists with correct question
+    let approvals = get_approvals(&client, &base, &session_id).await;
+    let approvals_arr = approvals.as_array().expect("approvals should be an array");
+    assert_eq!(approvals_arr.len(), 1);
+
+    assert_eq!(approvals_arr[0]["question"], "May I delete the database?");
+    assert_eq!(approvals_arr[0]["status"], "pending");
+    assert!(approvals_arr[0]["id"].is_string(), "approval should have an id");
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M3. Respond to approval
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_respond_to_approval() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-respond-m").await;
+
+    // Post approval_request event
+    let events = serde_json::json!([
+        {
+            "event_type": "approval_request",
+            "content": "Deploy to production?",
+            "metadata": { "options": ["Allow", "Deny"] }
+        }
+    ]);
+    post_events(&client, &base, &session_id, events).await;
+
+    // Get pending approvals to find the approval_id
+    let approvals = get_approvals(&client, &base, &session_id).await;
+    let approval_id = approvals[0]["id"].as_str().unwrap().to_string();
+
+    // POST respond with choice="Allow", note="Looks good"
+    let resp = respond_to_approval(
+        &client,
+        &base,
+        &session_id,
+        &approval_id,
+        "Allow",
+        Some("Looks good"),
+    )
+    .await;
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body["status"], "responded");
+
+    // GET approvals — the endpoint only returns pending approvals,
+    // so after responding the list should be empty (status is now 'responded')
+    let approvals = get_approvals(&client, &base, &session_id).await;
+    let approvals_arr = approvals.as_array().unwrap();
+    assert_eq!(
+        approvals_arr.len(),
+        0,
+        "responded approval should no longer appear in pending list"
+    );
+
+    // Verify the approval_response event was persisted
+    let events = get_events(&client, &base, &session_id, None).await;
+    let events_arr = events.as_array().unwrap();
+    let response_event = events_arr
+        .iter()
+        .find(|e| e["event_type"] == "approval_response")
+        .expect("approval_response event should exist");
+    assert!(
+        response_event["content"]
+            .as_str()
+            .unwrap()
+            .contains("Allow"),
+        "response event content should mention the choice"
+    );
+
+    // GET commands — verify a "respond" command was queued
+    let cmds = get_commands(&client, &base, &machine_id).await;
+    let respond_cmd = cmds
+        .iter()
+        .find(|c| c["command_type"] == "respond")
+        .expect("respond command should be queued");
+    // payload is already deserialized as JSON by the API
+    let payload = &respond_cmd["payload"];
+    assert_eq!(payload["approval_id"], approval_id);
+    assert_eq!(payload["choice"], "Allow");
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M4. Respond to already-responded approval
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_respond_already_responded() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-double-resp-m").await;
+
+    // Post approval_request event and respond to it
+    let events = serde_json::json!([
+        {
+            "event_type": "approval_request",
+            "content": "Run tests?",
+            "metadata": { "options": ["Allow", "Deny"] }
+        }
+    ]);
+    post_events(&client, &base, &session_id, events).await;
+
+    let approvals = get_approvals(&client, &base, &session_id).await;
+    let approval_id = approvals[0]["id"].as_str().unwrap().to_string();
+
+    // First response — should succeed
+    let resp = respond_to_approval(
+        &client,
+        &base,
+        &session_id,
+        &approval_id,
+        "Allow",
+        None,
+    )
+    .await;
+    assert_eq!(resp.status(), 200);
+
+    // Second response to same approval — should get 400
+    let resp = respond_to_approval(
+        &client,
+        &base,
+        &session_id,
+        &approval_id,
+        "Deny",
+        Some("Changed my mind"),
+    )
+    .await;
+    assert_eq!(resp.status(), 400);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M5. Inject guidance
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_inject_guidance() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-inject-m").await;
+
+    // POST inject with message and injection_type
+    let resp =
+        inject_guidance(&client, &base, &session_id, "Focus on tests", "normal").await;
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body["status"], "injected");
+
+    // GET commands — verify "inject" command queued with correct payload
+    let cmds = get_commands(&client, &base, &machine_id).await;
+    let inject_cmd = cmds
+        .iter()
+        .find(|c| c["command_type"] == "inject")
+        .expect("inject command should be queued");
+    // payload is already deserialized as JSON by the API
+    let payload = &inject_cmd["payload"];
+    assert_eq!(payload["message"], "Focus on tests");
+    assert_eq!(payload["injection_type"], "normal");
+
+    // GET events — verify guidance_injected event persisted
+    let events = get_events(&client, &base, &session_id, None).await;
+    let events_arr = events.as_array().unwrap();
+    let guidance_event = events_arr
+        .iter()
+        .find(|e| e["event_type"] == "guidance_injected")
+        .expect("guidance_injected event should exist");
+    assert_eq!(guidance_event["content"], "Focus on tests");
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M6. Inject guidance on terminal session rejected
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_inject_terminal_session_rejected() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-inject-term-m").await;
+
+    // Move session to completed
+    let s = report_state(&client, &base, &session_id, "completed", None).await;
+    assert_eq!(s, 200);
+
+    // POST inject — expect 409 Conflict
+    let resp =
+        inject_guidance(&client, &base, &session_id, "Too late", "normal").await;
+    assert_eq!(resp.status(), 409);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M7. Event query with since_sequence filter
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_event_query_since_sequence() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-since-m").await;
+
+    // Post 5 events
+    let events = serde_json::json!([
+        { "event_type": "output_line", "content": "line 1" },
+        { "event_type": "output_line", "content": "line 2" },
+        { "event_type": "output_line", "content": "line 3" },
+        { "event_type": "output_line", "content": "line 4" },
+        { "event_type": "output_line", "content": "line 5" },
+    ]);
+    let resp = post_events(&client, &base, &session_id, events).await;
+    assert_eq!(resp.status(), 200);
+
+    // GET events?since_sequence=3 — should return only events 4 and 5
+    let events = get_events(&client, &base, &session_id, Some(3)).await;
+    let events_arr = events.as_array().expect("events should be an array");
+    assert_eq!(events_arr.len(), 2);
+    assert_eq!(events_arr[0]["content"], "line 4");
+    assert_eq!(events_arr[0]["sequence_num"], 4);
+    assert_eq!(events_arr[1]["content"], "line 5");
+    assert_eq!(events_arr[1]["sequence_num"], 5);
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M8. Event query with type filter
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_event_query_with_type_filter() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-filter-m").await;
+
+    // Post a mix of output_line and approval_request events
+    let events = serde_json::json!([
+        { "event_type": "output_line", "content": "line A" },
+        {
+            "event_type": "approval_request",
+            "content": "May I proceed?",
+            "metadata": { "options": ["Yes", "No"] }
+        },
+        { "event_type": "output_line", "content": "line B" },
+        {
+            "event_type": "approval_request",
+            "content": "Delete file?",
+            "metadata": { "options": ["Allow", "Deny"] }
+        },
+    ]);
+    let resp = post_events(&client, &base, &session_id, events).await;
+    assert_eq!(resp.status(), 200);
+
+    // GET events?event_type=approval_request — verify only approval events returned
+    let events = get_events_with_params(
+        &client,
+        &base,
+        &session_id,
+        "event_type=approval_request",
+    )
+    .await;
+    let events_arr = events.as_array().expect("events should be an array");
+    assert_eq!(events_arr.len(), 2);
+    assert_eq!(events_arr[0]["event_type"], "approval_request");
+    assert_eq!(events_arr[0]["content"], "May I proceed?");
+    assert_eq!(events_arr[1]["event_type"], "approval_request");
+    assert_eq!(events_arr[1]["content"], "Delete file?");
+
+    handle.abort();
+}
+
+// ---------------------------------------------------------------------------
+// M9. Session ownership validation (documents scoping behavior)
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn monitoring_session_ownership_validation() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let (_machine_id, session_id) =
+        setup_running_session(&client, &base, "mon-owner-m").await;
+
+    // Post events — should work since MVP auth always returns "user-default"
+    // which matches the session creator
+    let events = serde_json::json!([
+        { "event_type": "output_line", "content": "owned event" },
+    ]);
+    let resp = post_events(&client, &base, &session_id, events).await;
+    assert_eq!(resp.status(), 200);
+
+    // Query events — should also work for the same reason
+    let events = get_events(&client, &base, &session_id, None).await;
+    let events_arr = events.as_array().unwrap();
+    assert_eq!(events_arr.len(), 1);
+    assert_eq!(events_arr[0]["content"], "owned event");
+
+    // Get approvals — should work (empty list, no approvals posted)
+    let approvals = get_approvals(&client, &base, &session_id).await;
+    let approvals_arr = approvals.as_array().unwrap();
+    assert_eq!(approvals_arr.len(), 0);
+
+    // Inject guidance — should work on running session
+    let resp =
+        inject_guidance(&client, &base, &session_id, "Some guidance", "normal").await;
+    assert_eq!(resp.status(), 200);
+
+    // NOTE: In a real multi-user system, querying events for a session owned
+    // by a different user should return 404 (session not found for this user).
+    // The MVP DashboardAuth stub always returns "user-default", so all
+    // dashboard requests succeed for sessions created by "user-default".
 
     handle.abort();
 }

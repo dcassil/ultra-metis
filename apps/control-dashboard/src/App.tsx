@@ -11,6 +11,11 @@ import MonitoringPage from './pages/MonitoringPage';
 import HistoryPage from './pages/HistoryPage';
 import PoliciesPage from './pages/PoliciesPage';
 import ViolationsPage from './pages/ViolationsPage';
+import DocumentsPage from './pages/planning/DocumentsPage';
+import DocumentDetailPage from './pages/planning/DocumentDetailPage';
+import HierarchyPage from './pages/planning/HierarchyPage';
+import QualityPage from './pages/planning/QualityPage';
+import RulesPage from './pages/planning/RulesPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -26,6 +31,11 @@ function App() {
             <Route path="sessions" element={<SessionsPage />} />
             <Route path="sessions/new" element={<NewSessionPage />} />
             <Route path="sessions/:id" element={<SessionDetailPage />} />
+            <Route path="planning/documents" element={<DocumentsPage />} />
+            <Route path="planning/documents/:shortCode" element={<DocumentDetailPage />} />
+            <Route path="planning/hierarchy" element={<HierarchyPage />} />
+            <Route path="planning/quality" element={<QualityPage />} />
+            <Route path="planning/rules" element={<RulesPage />} />
             <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="policies" element={<PoliciesPage />} />

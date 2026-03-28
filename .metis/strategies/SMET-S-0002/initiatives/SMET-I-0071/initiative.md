@@ -4,14 +4,14 @@ level: initiative
 title: "Planning Data Views in Control Dashboard"
 short_code: "SMET-I-0071"
 created_at: 2026-03-20T17:08:31.840484+00:00
-updated_at: 2026-03-20T17:08:31.840484+00:00
+updated_at: 2026-03-28T00:36:27.534439+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -102,14 +102,18 @@ All planning views query the cadre MCP server (or a REST wrapper around it). The
 
 ## Implementation Plan
 
-1. Add document list page with type/phase filtering and search
-2. Add document detail page with markdown rendering and metadata display
-3. Build hierarchy tree component with expand/collapse navigation
-4. Add traceability view (ancestry + descendants for a selected document)
-5. Build quality dashboard with per-document indicators and aggregate trends
-6. Build rule browser with scope filtering
-7. Add "Planning Context" panel to session detail page (integrates with I-0040)
-8. Mobile-responsive layouts matching I-0042's design principles
+### Task Decomposition (6 tasks)
+
+| Order | Task | Title | Dependencies |
+|-------|------|-------|-------------|
+| 1 | SMET-T-0240 | Control API Planning Data Endpoints | None (foundation) |
+| 2 | SMET-T-0241 | Dashboard Planning Foundation: Navigation, API Client, Shared Components | T-0240 |
+| 3 | SMET-T-0242 | Document List and Detail Pages | T-0240, T-0241 |
+| 4 | SMET-T-0243 | Hierarchy Tree View Page | T-0240, T-0241 |
+| 5 | SMET-T-0244 | Quality Dashboard, Rule Browser, and Traceability Views | T-0240, T-0241 |
+| 6 | SMET-T-0245 | Session Planning Context Panel and Integration Tests | T-0240 through T-0244 |
+
+**Execution order:** T-0240 first (backend), T-0241 next (frontend foundation), then T-0242/T-0243/T-0244 can be parallel, T-0245 last (integration).
 
 ## Cadre ADR Alignment (SMET-A-0001)
 

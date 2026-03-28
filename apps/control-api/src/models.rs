@@ -809,6 +809,242 @@ pub struct ErrorBody {
     pub error: String,
 }
 
+// -- Session output event types --
+
+/// Type of session output event.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionOutputEventType {
+    OutputLine,
+    ApprovalRequest,
+    ApprovalResponse,
+    GuidanceInjected,
+    StateChanged,
+    PolicyViolation,
+}
+
+impl SessionOutputEventType {
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::OutputLine => "output_line",
+            Self::ApprovalRequest => "approval_request",
+            Self::ApprovalResponse => "approval_response",
+            Self::GuidanceInjected => "guidance_injected",
+            Self::StateChanged => "state_changed",
+            Self::PolicyViolation => "policy_violation",
+        }
+    }
+}
+
+impl std::fmt::Display for SessionOutputEventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for SessionOutputEventType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "output_line" => Ok(Self::OutputLine),
+            "approval_request" => Ok(Self::ApprovalRequest),
+            "approval_response" => Ok(Self::ApprovalResponse),
+            "guidance_injected" => Ok(Self::GuidanceInjected),
+            "state_changed" => Ok(Self::StateChanged),
+            "policy_violation" => Ok(Self::PolicyViolation),
+            other => Err(format!("unknown session output event type: {other}")),
+        }
+    }
+}
+
+/// Category for output line events.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum OutputCategory {
+    Info,
+    Warning,
+    Error,
+    Summary,
+}
+
+impl OutputCategory {
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Info => "info",
+            Self::Warning => "warning",
+            Self::Error => "error",
+            Self::Summary => "summary",
+        }
+    }
+}
+
+impl std::fmt::Display for OutputCategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for OutputCategory {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "info" => Ok(Self::Info),
+            "warning" => Ok(Self::Warning),
+            "error" => Ok(Self::Error),
+            "summary" => Ok(Self::Summary),
+            other => Err(format!("unknown output category: {other}")),
+        }
+    }
+}
+
+/// Type of guidance injection.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum InjectionType {
+    Normal,
+    SideNote,
+    Interrupt,
+}
+
+impl InjectionType {
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Normal => "normal",
+            Self::SideNote => "side_note",
+            Self::Interrupt => "interrupt",
+        }
+    }
+}
+
+impl std::fmt::Display for InjectionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for InjectionType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "normal" => Ok(Self::Normal),
+            "side_note" => Ok(Self::SideNote),
+            "interrupt" => Ok(Self::Interrupt),
+            other => Err(format!("unknown injection type: {other}")),
+        }
+    }
+}
+
+/// Approval status.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ApprovalStatus {
+    Pending,
+    Responded,
+    Expired,
+}
+
+impl ApprovalStatus {
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Responded => "responded",
+            Self::Expired => "expired",
+        }
+    }
+}
+
+impl std::fmt::Display for ApprovalStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for ApprovalStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pending" => Ok(Self::Pending),
+            "responded" => Ok(Self::Responded),
+            "expired" => Ok(Self::Expired),
+            other => Err(format!("unknown approval status: {other}")),
+        }
+    }
+}
+
+/// A session output event (high-volume event stream).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionOutputEvent {
+    pub id: String,
+    pub session_id: String,
+    pub event_type: SessionOutputEventType,
+    pub category: Option<OutputCategory>,
+    pub content: String,
+    pub metadata: Option<String>,
+    pub sequence_num: i64,
+    pub timestamp: String,
+}
+
+/// A pending approval request.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PendingApproval {
+    pub id: String,
+    pub session_id: String,
+    pub question: String,
+    pub options: String,
+    pub context: Option<String>,
+    pub status: ApprovalStatus,
+    pub response_choice: Option<String>,
+    pub response_note: Option<String>,
+    pub created_at: String,
+    pub responded_at: Option<String>,
+}
+
+/// Single event in an ingestion batch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IngestEventItem {
+    pub event_type: SessionOutputEventType,
+    pub category: Option<OutputCategory>,
+    pub content: String,
+    pub metadata: Option<serde_json::Value>,
+}
+
+/// Request body for POST /api/sessions/{id}/events (batch ingestion).
+#[derive(Debug, Deserialize)]
+pub struct IngestEventsRequest {
+    pub events: Vec<IngestEventItem>,
+}
+
+/// Request for POST /api/sessions/{id}/respond.
+#[derive(Debug, Deserialize)]
+pub struct RespondToApprovalRequest {
+    pub approval_id: String,
+    pub choice: String,
+    pub note: Option<String>,
+}
+
+/// Request for POST /api/sessions/{id}/inject.
+#[derive(Debug, Deserialize)]
+pub struct InjectGuidanceRequest {
+    pub message: String,
+    pub injection_type: InjectionType,
+}
+
+/// Query params for GET /api/sessions/{id}/events.
+#[derive(Debug, Deserialize)]
+pub struct QueryEventsParams {
+    pub since_sequence: Option<i64>,
+    pub limit: Option<i64>,
+    pub event_type: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1119,6 +1355,88 @@ mod tests {
         };
         assert!(is_autonomy_allowed(&AutonomyLevel::Normal, &policy, None).is_ok());
         assert!(is_autonomy_allowed(&AutonomyLevel::Autonomous, &policy, None).is_err());
+    }
+
+    #[test]
+    fn test_session_output_event_type_roundtrip() {
+        for t in [
+            SessionOutputEventType::OutputLine,
+            SessionOutputEventType::ApprovalRequest,
+            SessionOutputEventType::ApprovalResponse,
+            SessionOutputEventType::GuidanceInjected,
+            SessionOutputEventType::StateChanged,
+            SessionOutputEventType::PolicyViolation,
+        ] {
+            let s = t.as_str();
+            let parsed: SessionOutputEventType = s.parse().unwrap();
+            assert_eq!(parsed, t);
+        }
+    }
+
+    #[test]
+    fn test_output_category_roundtrip() {
+        for c in [
+            OutputCategory::Info,
+            OutputCategory::Warning,
+            OutputCategory::Error,
+            OutputCategory::Summary,
+        ] {
+            let s = c.as_str();
+            let parsed: OutputCategory = s.parse().unwrap();
+            assert_eq!(parsed, c);
+        }
+    }
+
+    #[test]
+    fn test_injection_type_roundtrip() {
+        for t in [
+            InjectionType::Normal,
+            InjectionType::SideNote,
+            InjectionType::Interrupt,
+        ] {
+            let s = t.as_str();
+            let parsed: InjectionType = s.parse().unwrap();
+            assert_eq!(parsed, t);
+        }
+    }
+
+    #[test]
+    fn test_approval_status_roundtrip() {
+        for s in [
+            ApprovalStatus::Pending,
+            ApprovalStatus::Responded,
+            ApprovalStatus::Expired,
+        ] {
+            let str_val = s.as_str();
+            let parsed: ApprovalStatus = str_val.parse().unwrap();
+            assert_eq!(parsed, s);
+        }
+    }
+
+    #[test]
+    fn test_ingest_event_item_serialization() {
+        let item = IngestEventItem {
+            event_type: SessionOutputEventType::OutputLine,
+            category: Some(OutputCategory::Info),
+            content: "hello world".into(),
+            metadata: Some(serde_json::json!({"line": 42})),
+        };
+        let json = serde_json::to_string(&item).unwrap();
+        let parsed: IngestEventItem = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.event_type, SessionOutputEventType::OutputLine);
+        assert_eq!(parsed.category, Some(OutputCategory::Info));
+        assert_eq!(parsed.content, "hello world");
+        assert_eq!(parsed.metadata, Some(serde_json::json!({"line": 42})));
+    }
+
+    #[test]
+    fn test_ingest_event_item_minimal() {
+        let json = r#"{"event_type":"state_changed","content":"running","category":null,"metadata":null}"#;
+        let parsed: IngestEventItem = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.event_type, SessionOutputEventType::StateChanged);
+        assert_eq!(parsed.content, "running");
+        assert!(parsed.category.is_none());
+        assert!(parsed.metadata.is_none());
     }
 
     #[test]

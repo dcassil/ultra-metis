@@ -1,4 +1,5 @@
 use crate::discovery::RepoInfo;
+use crate::output_capture::OutputEvent;
 use crate::policy::MachinePolicy;
 use serde::{Deserialize, Serialize};
 
@@ -224,6 +225,40 @@ impl ControlClient {
             .post(&url)
             .bearer_auth(&self.token)
             .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            let body = response.text().await.unwrap_or_default();
+            Err(ClientError::UnexpectedStatus {
+                status: status.as_u16(),
+                body,
+            })
+        }
+    }
+
+    /// Post a batch of output events for a session to the control service.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ClientError` on HTTP failures or unexpected status codes.
+    pub async fn post_session_events(
+        &self,
+        session_id: &str,
+        events: &[OutputEvent],
+    ) -> Result<(), ClientError> {
+        let url = format!("{}/api/sessions/{session_id}/events", self.base_url);
+
+        let body = serde_json::json!({ "events": events });
+
+        let response = self
+            .http
+            .post(&url)
+            .bearer_auth(&self.token)
+            .json(&body)
             .send()
             .await?;
 

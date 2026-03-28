@@ -148,6 +148,30 @@ fn create_tables(conn: &Connection) -> Result<()> {
             repo_path TEXT,
             timestamp TEXT NOT NULL DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS session_output_events (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id),
+            event_type TEXT NOT NULL,
+            category TEXT,
+            content TEXT NOT NULL DEFAULT '',
+            metadata TEXT,
+            sequence_num INTEGER NOT NULL,
+            timestamp TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS pending_approvals (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id),
+            question TEXT NOT NULL,
+            options TEXT NOT NULL DEFAULT '[]',
+            context TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            response_choice TEXT,
+            response_note TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            responded_at TEXT
+        );
         ",
     )?;
     Ok(())

@@ -6,7 +6,8 @@ use chrono::{DateTime, Utc};
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 use serde::{Deserialize, Serialize};
-use tokio::process::{Child, Command};
+use tokio::io::AsyncWriteExt;
+use tokio::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command};
 use tokio::sync::mpsc;
 
 /// Events emitted by the process supervisor when session state changes.
@@ -41,13 +42,15 @@ impl std::fmt::Display for ProcessState {
 /// A handle to a supervised child process.
 ///
 /// The `Child` is owned by a background monitor task that calls `wait()`.
-/// The supervisor retains only the PID for signal-based control.
+/// The supervisor retains only the PID for signal-based control, plus the
+/// stdin handle for writing injection/approval messages.
 #[allow(dead_code)] // session_id and started_at stored for logging/future session queries
 struct ProcessHandle {
     session_id: String,
     pid: u32,
     started_at: DateTime<Utc>,
     state: ProcessState,
+    stdin: Option<ChildStdin>,
 }
 
 /// Supervises Claude CLI child processes for remote sessions.
@@ -89,7 +92,7 @@ impl ProcessSupervisor {
         repo_path: &str,
         instructions: &str,
         autonomy_level: &str,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<(ChildStdout, ChildStderr)> {
         if self.sessions.contains_key(session_id) {
             anyhow::bail!("Session {session_id} is already active");
         }
@@ -101,16 +104,26 @@ impl ProcessSupervisor {
             .arg("-p")
             .arg(instructions)
             .current_dir(repo_path)
-            .stdin(Stdio::null())
+            .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
         apply_autonomy_flags(&mut cmd, autonomy_level);
 
-        let child = cmd.spawn()?;
+        let mut child = cmd.spawn()?;
         let pid = child
             .id()
             .ok_or_else(|| anyhow::anyhow!("Failed to get PID for spawned process"))?;
+
+        let stdin = child.stdin.take();
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("Failed to capture stdout from spawned process"))?;
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("Failed to capture stderr from spawned process"))?;
 
         tracing::info!(
             session_id = session_id,
@@ -120,8 +133,8 @@ impl ProcessSupervisor {
             "Spawned Claude CLI session"
         );
 
-        self.register_process(session_id, child, pid).await;
-        Ok(())
+        self.register_process(session_id, child, pid, stdin).await;
+        Ok((stdout, stderr))
     }
 
     /// Spawn a custom command as a session (used for testing).
@@ -133,31 +146,48 @@ impl ProcessSupervisor {
         &mut self,
         session_id: &str,
         mut cmd: Command,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<(ChildStdout, ChildStderr)> {
         if self.sessions.contains_key(session_id) {
             anyhow::bail!("Session {session_id} is already active");
         }
 
-        cmd.stdin(Stdio::null())
+        cmd.stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        let child = cmd.spawn()?;
+        let mut child = cmd.spawn()?;
         let pid = child
             .id()
             .ok_or_else(|| anyhow::anyhow!("Failed to get PID for spawned process"))?;
 
-        self.register_process(session_id, child, pid).await;
-        Ok(())
+        let stdin = child.stdin.take();
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("Failed to capture stdout from spawned process"))?;
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("Failed to capture stderr from spawned process"))?;
+
+        self.register_process(session_id, child, pid, stdin).await;
+        Ok((stdout, stderr))
     }
 
     /// Internal helper: store handle, emit Running event, spawn monitor task.
-    async fn register_process(&mut self, session_id: &str, child: Child, pid: u32) {
+    async fn register_process(
+        &mut self,
+        session_id: &str,
+        child: Child,
+        pid: u32,
+        stdin: Option<ChildStdin>,
+    ) {
         let handle = ProcessHandle {
             session_id: session_id.to_string(),
             pid,
             started_at: Utc::now(),
             state: ProcessState::Running,
+            stdin,
         };
         self.sessions.insert(session_id.to_string(), handle);
 
@@ -325,6 +355,44 @@ impl ProcessSupervisor {
         self.sessions.len()
     }
 
+    /// Write arbitrary bytes to the stdin of a supervised session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, if stdin was already
+    /// consumed, or if the write fails.
+    pub async fn write_to_stdin(&mut self, session_id: &str, data: &[u8]) -> anyhow::Result<()> {
+        let handle = self
+            .sessions
+            .get_mut(session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session {session_id} not found"))?;
+
+        let stdin = handle
+            .stdin
+            .as_mut()
+            .ok_or_else(|| anyhow::anyhow!("Session {session_id} stdin is not available"))?;
+
+        stdin.write_all(data).await?;
+        stdin.flush().await?;
+        Ok(())
+    }
+
+    /// Get a mutable reference to the stdin handle of a supervised session.
+    ///
+    /// Returns `None` if the session does not exist or if stdin has already
+    /// been consumed.
+    pub fn get_stdin(&mut self, session_id: &str) -> Option<&mut ChildStdin> {
+        self.sessions
+            .get_mut(session_id)
+            .and_then(|h| h.stdin.as_mut())
+    }
+
+    /// Returns the PID of a supervised session, or `None` if the session
+    /// does not exist.
+    pub fn session_pid(&self, session_id: &str) -> Option<u32> {
+        self.sessions.get(session_id).map(|h| h.pid)
+    }
+
     /// Gracefully shut down all active sessions.
     ///
     /// Sends SIGTERM to each, waits briefly, then SIGKILL stragglers.
@@ -391,7 +459,7 @@ mod tests {
         let mut cmd = Command::new("echo");
         cmd.arg("hello");
 
-        supervisor
+        let (_stdout, _stderr) = supervisor
             .start_session_with_command("sess-1", cmd)
             .await
             .expect("start_session_with_command should succeed");
@@ -434,7 +502,7 @@ mod tests {
 
         let mut cmd1 = Command::new("sleep");
         cmd1.arg("10");
-        supervisor
+        let (_stdout, _stderr) = supervisor
             .start_session_with_command("dup-1", cmd1)
             .await
             .expect("first start should succeed");
@@ -463,7 +531,7 @@ mod tests {
         let mut cmd = Command::new("sleep");
         cmd.arg("60");
 
-        supervisor
+        let (_stdout, _stderr) = supervisor
             .start_session_with_command("stop-1", cmd)
             .await
             .expect("start should succeed");
@@ -485,7 +553,7 @@ mod tests {
         let mut cmd = Command::new("sleep");
         cmd.arg("60");
 
-        supervisor
+        let (_stdout, _stderr) = supervisor
             .start_session_with_command("force-1", cmd)
             .await
             .expect("start should succeed");
@@ -514,7 +582,7 @@ mod tests {
         let mut cmd = Command::new("sleep");
         cmd.arg("60");
 
-        supervisor
+        let (_stdout, _stderr) = supervisor
             .start_session_with_command("pr-1", cmd)
             .await
             .expect("start should succeed");
@@ -550,7 +618,7 @@ mod tests {
         for i in 0..3 {
             let mut cmd = Command::new("sleep");
             cmd.arg("60");
-            supervisor
+            let (_stdout, _stderr) = supervisor
                 .start_session_with_command(&format!("shutdown-{i}"), cmd)
                 .await
                 .expect("start should succeed");
@@ -599,5 +667,91 @@ mod tests {
         assert_eq!(ProcessState::Running.to_string(), "running");
         assert_eq!(ProcessState::Paused.to_string(), "paused");
         assert_eq!(ProcessState::Stopped.to_string(), "stopped");
+    }
+
+    #[tokio::test]
+    async fn test_write_to_stdin_delivers_data() {
+        let (mut supervisor, _rx) = ProcessSupervisor::new();
+
+        // `cat` reads from stdin and writes to stdout, so we can verify
+        // that write_to_stdin delivers data by reading it back from stdout.
+        let cmd = Command::new("cat");
+        let (mut stdout, _stderr) = supervisor
+            .start_session_with_command("stdin-1", cmd)
+            .await
+            .expect("start should succeed");
+
+        // Write data to stdin
+        supervisor
+            .write_to_stdin("stdin-1", b"hello from test\n")
+            .await
+            .expect("write_to_stdin should succeed");
+
+        // Close stdin by dropping it so cat terminates
+        supervisor.sessions.get_mut("stdin-1").unwrap().stdin.take();
+
+        // Read back from stdout
+        use tokio::io::AsyncReadExt;
+        let mut output = String::new();
+        let read_result = tokio::time::timeout(
+            Duration::from_secs(5),
+            stdout.read_to_string(&mut output),
+        )
+        .await;
+
+        assert!(read_result.is_ok(), "read should complete within timeout");
+        assert_eq!(output.trim(), "hello from test");
+
+        // Cleanup
+        supervisor.force_stop_session("stdin-1").await.ok();
+    }
+
+    #[tokio::test]
+    async fn test_write_to_stdin_nonexistent_session_returns_error() {
+        let (mut supervisor, _rx) = ProcessSupervisor::new();
+        let result = supervisor
+            .write_to_stdin("no-such-session", b"data")
+            .await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not found"));
+    }
+
+    #[tokio::test]
+    async fn test_get_stdin_returns_handle() {
+        let (mut supervisor, _rx) = ProcessSupervisor::new();
+
+        let mut cmd = Command::new("sleep");
+        cmd.arg("60");
+        let (_stdout, _stderr) = supervisor
+            .start_session_with_command("gs-1", cmd)
+            .await
+            .expect("start should succeed");
+
+        assert!(supervisor.get_stdin("gs-1").is_some());
+        assert!(supervisor.get_stdin("no-such").is_none());
+
+        // Cleanup
+        supervisor.force_stop_session("gs-1").await.ok();
+    }
+
+    #[tokio::test]
+    async fn test_session_pid_returns_pid() {
+        let (mut supervisor, _rx) = ProcessSupervisor::new();
+
+        let mut cmd = Command::new("sleep");
+        cmd.arg("60");
+        let (_stdout, _stderr) = supervisor
+            .start_session_with_command("pid-1", cmd)
+            .await
+            .expect("start should succeed");
+
+        let pid = supervisor.session_pid("pid-1");
+        assert!(pid.is_some());
+        assert!(pid.unwrap() > 0);
+
+        assert!(supervisor.session_pid("no-such").is_none());
+
+        // Cleanup
+        supervisor.force_stop_session("pid-1").await.ok();
     }
 }

@@ -1,5 +1,6 @@
 //! Cadre Control API server entry point.
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use tracing_subscriber::EnvFilter;
@@ -19,6 +20,7 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState {
         db: Arc::new(Mutex::new(conn)),
+        event_channels: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let app = build_app(state);

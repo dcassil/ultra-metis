@@ -1,8 +1,14 @@
+use std::sync::Arc;
 use std::time::Duration;
+
+use nix::sys::signal::{self, Signal};
+use nix::unistd::Pid;
 
 use crate::client::{ClientError, CommandResponse, ControlClient, HeartbeatRequest, RegisterRequest};
 use crate::config::RunnerConfig;
 use crate::discovery;
+use crate::injection;
+use crate::output_capture::{OutputCapture, OutputEvent};
 use crate::policy::LocalPolicyCache;
 use crate::supervisor::ProcessSupervisor;
 
@@ -18,21 +24,48 @@ pub enum RunnerState {
 /// The machine runner, responsible for registration and heartbeat lifecycle.
 pub struct Runner {
     config: RunnerConfig,
-    client: ControlClient,
+    client: Arc<ControlClient>,
     state: RunnerState,
     machine_id: Option<String>,
     supervisor: ProcessSupervisor,
     policy_cache: LocalPolicyCache,
+    output_event_tx: tokio::sync::mpsc::Sender<(String, Vec<OutputEvent>)>,
 }
 
 impl Runner {
     /// Create a new runner from the given configuration.
     ///
     /// Returns the runner and a receiver for supervisor lifecycle events.
+    /// Also spawns a background task that forwards output events from captured
+    /// process streams to the control service.
     pub fn new(config: RunnerConfig) -> (Self, tokio::sync::mpsc::Receiver<crate::supervisor::SupervisorEvent>) {
-        let client = ControlClient::new(&config.control_service_url, &config.api_token);
+        let client = Arc::new(ControlClient::new(&config.control_service_url, &config.api_token));
         let (supervisor, event_rx) = ProcessSupervisor::new();
         let policy_cache = LocalPolicyCache::new(300);
+
+        // Channel for output events from captured process streams
+        let (output_tx, mut output_rx) =
+            tokio::sync::mpsc::channel::<(String, Vec<OutputEvent>)>(128);
+
+        // Spawn a background task to forward output events to the control service
+        let forwarder_client = Arc::clone(&client);
+        tokio::spawn(async move {
+            while let Some((session_id, events)) = output_rx.recv().await {
+                if let Err(e) = forwarder_client
+                    .post_session_events(&session_id, &events)
+                    .await
+                {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        event_count = events.len(),
+                        error = %e,
+                        "Failed to post session output events, dropping batch"
+                    );
+                }
+            }
+            tracing::debug!("Output event forwarder task exiting");
+        });
+
         let runner = Self {
             config,
             client,
@@ -40,6 +73,7 @@ impl Runner {
             machine_id: None,
             supervisor,
             policy_cache,
+            output_event_tx: output_tx,
         };
         (runner, event_rx)
     }
@@ -231,6 +265,8 @@ impl Runner {
             "force_stop" => self.handle_session_command(cmd, SessionAction::ForceStop).await,
             "pause" => self.handle_session_command(cmd, SessionAction::Pause).await,
             "resume" => self.handle_session_command(cmd, SessionAction::Resume).await,
+            "respond" => self.handle_respond(cmd).await,
+            "inject" => self.handle_inject(cmd).await,
             other => {
                 tracing::warn!(
                     command_id = %cmd.command_id,
@@ -320,9 +356,26 @@ impl Runner {
             "Starting session via supervisor"
         );
 
-        self.supervisor
+        let (stdout, stderr) = self
+            .supervisor
             .start_session(session_id, repo_path, instructions, autonomy_level)
-            .await
+            .await?;
+
+        // Wire up output capture for the session's stdout/stderr
+        let capture = OutputCapture::new(
+            session_id.to_string(),
+            stdout,
+            stderr,
+            self.output_event_tx.clone(),
+        );
+        capture.start();
+
+        tracing::info!(
+            session_id = session_id,
+            "Output capture started for session"
+        );
+
+        Ok(())
     }
 
     async fn handle_session_command(
@@ -350,6 +403,161 @@ impl Runner {
             SessionAction::Pause => self.supervisor.pause_session(session_id),
             SessionAction::Resume => self.supervisor.resume_session(session_id),
         }
+    }
+
+    /// Handle an approval response command by writing the chosen response to
+    /// the session's stdin.
+    ///
+    /// Expected payload:
+    /// ```json
+    /// {
+    ///   "session_id": "...",
+    ///   "approval_id": "...",
+    ///   "choice": "yes",
+    ///   "note": "optional note"
+    /// }
+    /// ```
+    async fn handle_respond(&mut self, cmd: &CommandResponse) -> anyhow::Result<()> {
+        let payload = cmd
+            .payload
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("respond command missing payload"))?;
+
+        let session_id = payload
+            .get("session_id")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("respond payload missing session_id"))?;
+
+        let approval_id = payload
+            .get("approval_id")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("unknown");
+
+        let choice = payload
+            .get("choice")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("respond payload missing choice"))?;
+
+        let note = payload
+            .get("note")
+            .and_then(serde_json::Value::as_str);
+
+        tracing::info!(
+            command_id = %cmd.command_id,
+            session_id = session_id,
+            approval_id = approval_id,
+            choice = choice,
+            "Writing approval response to session stdin"
+        );
+
+        let formatted = injection::format_approval_response(choice);
+        self.supervisor
+            .write_to_stdin(session_id, formatted.as_bytes())
+            .await?;
+
+        // Emit a confirmation event
+        let events = vec![OutputEvent {
+            event_type: "approval_response".to_string(),
+            category: Some("info".to_string()),
+            content: format!("Approval {approval_id} responded with: {choice}"),
+            metadata: Some(serde_json::json!({
+                "approval_id": approval_id,
+                "choice": choice,
+                "note": note,
+            })),
+            sequence: 0,
+        }];
+
+        if let Err(e) = self.output_event_tx.send((session_id.to_string(), events)).await {
+            tracing::warn!(
+                session_id = session_id,
+                error = %e,
+                "Failed to emit approval response confirmation event"
+            );
+        }
+
+        Ok(())
+    }
+
+    /// Handle a guidance injection command by writing a formatted message to
+    /// the session's stdin.
+    ///
+    /// Expected payload:
+    /// ```json
+    /// {
+    ///   "session_id": "...",
+    ///   "message": "...",
+    ///   "injection_type": "normal|side_note|interrupt"
+    /// }
+    /// ```
+    async fn handle_inject(&mut self, cmd: &CommandResponse) -> anyhow::Result<()> {
+        let payload = cmd
+            .payload
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("inject command missing payload"))?;
+
+        let session_id = payload
+            .get("session_id")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("inject payload missing session_id"))?;
+
+        let message = payload
+            .get("message")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("inject payload missing message"))?;
+
+        let injection_type = payload
+            .get("injection_type")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("normal");
+
+        tracing::info!(
+            command_id = %cmd.command_id,
+            session_id = session_id,
+            injection_type = injection_type,
+            "Writing injection to session stdin"
+        );
+
+        let formatted = injection::format_injection(message, injection_type);
+        self.supervisor
+            .write_to_stdin(session_id, formatted.as_bytes())
+            .await?;
+
+        // For interrupt type, optionally send SIGUSR1 to nudge the process
+        if injection_type == "interrupt" {
+            if let Some(raw_pid) = self.supervisor.session_pid(session_id) {
+                let pid = Pid::from_raw(raw_pid as i32);
+                if let Err(e) = signal::kill(pid, Signal::SIGUSR1) {
+                    tracing::debug!(
+                        session_id = session_id,
+                        error = %e,
+                        "Failed to send SIGUSR1 for interrupt injection (non-fatal)"
+                    );
+                }
+            }
+        }
+
+        // Emit a confirmation event
+        let events = vec![OutputEvent {
+            event_type: "injection".to_string(),
+            category: Some("info".to_string()),
+            content: format!("Injected {injection_type} message into session"),
+            metadata: Some(serde_json::json!({
+                "injection_type": injection_type,
+                "message": message,
+            })),
+            sequence: 0,
+        }];
+
+        if let Err(e) = self.output_event_tx.send((session_id.to_string(), events)).await {
+            tracing::warn!(
+                session_id = session_id,
+                error = %e,
+                "Failed to emit injection confirmation event"
+            );
+        }
+
+        Ok(())
     }
 }
 
@@ -422,8 +630,8 @@ impl BackoffState {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_initial_state_is_registering() {
+    #[tokio::test]
+    async fn test_initial_state_is_registering() {
         let config = test_config();
         let (runner, _rx) = Runner::new(config);
         assert_eq!(*runner.state(), RunnerState::Registering);

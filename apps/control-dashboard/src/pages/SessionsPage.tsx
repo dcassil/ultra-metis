@@ -64,7 +64,7 @@ export default function SessionsPage() {
 
   useEffect(() => {
     void fetchSessions()
-    const interval = setInterval(() => void fetchSessions(), 10_000)
+    const interval = setInterval(() => void fetchSessions(), 5_000)
     return () => clearInterval(interval)
   }, [fetchSessions])
 
@@ -102,7 +102,14 @@ export default function SessionsPage() {
       key: 'title',
       header: 'Title',
       render: (row: SessionRow) => (
-        <span className="font-medium text-secondary-900">{row.title}</span>
+        <span className="inline-flex items-center gap-2 font-medium text-secondary-900">
+          {row.title}
+          {row.state === 'waiting_for_input' && (
+            <span className="inline-flex items-center rounded-full bg-warning-100 px-2 py-0.5 text-xs font-semibold text-warning-800">
+              Needs Approval
+            </span>
+          )}
+        </span>
       ),
     },
     { key: 'machine_id', header: 'Machine' },
@@ -117,7 +124,23 @@ export default function SessionsPage() {
     {
       key: 'state',
       header: 'State',
-      render: (row: SessionRow) => <SessionStateBadge state={row.state} />,
+      render: (row: SessionRow) => (
+        <span className="inline-flex items-center gap-2">
+          {row.state === 'waiting_for_input' && (
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            </span>
+          )}
+          {row.state === 'running' && (
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
+            </span>
+          )}
+          <SessionStateBadge state={row.state} />
+        </span>
+      ),
     },
     {
       key: 'elapsed',
