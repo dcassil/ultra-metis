@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Machine } from '../api/machines'
 import { listMachines } from '../api/machines'
+import { getMachinePolicy } from '../api/policies'
 import { Table, Badge } from '../components/ui'
+import { SessionModeBadge } from '../components/SessionModeBadge'
 import PendingMachinesBanner from '../components/PendingMachinesBanner'
 import PendingMachineCard from '../components/PendingMachineCard'
 
@@ -45,6 +47,14 @@ const columns = [
     ),
   },
   {
+    key: 'session_mode',
+    header: 'Session Mode',
+    render: (row: Record<string, unknown>) => {
+      const mode = row.session_mode as string | undefined
+      return mode ? <SessionModeBadge mode={mode} /> : <span className="text-secondary-400">--</span>
+    },
+  },
+  {
     key: 'repos_count',
     header: 'Repos',
     render: (row: Record<string, unknown>) => {
@@ -61,11 +71,26 @@ export default function MachinesPage() {
   const [showPending, setShowPending] = useState(false)
   const pendingSectionRef = useRef<HTMLDivElement>(null)
 
+  const [sessionModes, setSessionModes] = useState<Record<string, string>>({})
+
   const fetchMachines = useCallback(async () => {
     try {
       const data = await listMachines()
       setMachines(data)
       setError(null)
+      // Fetch policies in background to get session modes
+      const modes: Record<string, string> = {}
+      await Promise.allSettled(
+        data.map(async (m) => {
+          try {
+            const policy = await getMachinePolicy(m.id)
+            modes[m.id] = policy.session_mode
+          } catch {
+            // Policy may not exist yet
+          }
+        }),
+      )
+      setSessionModes(modes)
     } catch {
       setError('Failed to load machines')
     } finally {
@@ -83,8 +108,11 @@ export default function MachinesPage() {
   )
 
   const activeMachines = useMemo(
-    () => machines.filter((m) => m.status !== 'pending') as (Machine & Record<string, unknown>)[],
-    [machines],
+    () =>
+      machines
+        .filter((m) => m.status !== 'pending')
+        .map((m) => ({ ...m, session_mode: sessionModes[m.id] })) as (Machine & Record<string, unknown>)[],
+    [machines, sessionModes],
   )
 
   function handleViewPending() {

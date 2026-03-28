@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getSession, stopSession, forceStopSession, pauseSession, resumeSession } from '../api/sessions'
 import type { SessionResponse } from '../api/sessions'
+import { listSessionViolations } from '../api/policies'
+import type { PolicyViolationRecord } from '../api/policies'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
@@ -40,8 +42,21 @@ export default function SessionDetailPage() {
   // Force stop confirmation modal
   const [showForceStopModal, setShowForceStopModal] = useState(false)
 
+  // Violations
+  const [violations, setViolations] = useState<PolicyViolationRecord[]>([])
+
   // Elapsed time ticker
   const [, setTick] = useState(0)
+
+  const fetchViolations = useCallback(async () => {
+    if (!id) return
+    try {
+      const data = await listSessionViolations(id)
+      setViolations(data)
+    } catch {
+      // Non-critical — violations section just won't show
+    }
+  }, [id])
 
   const fetchSession = useCallback(async () => {
     if (!id) return
@@ -59,9 +74,13 @@ export default function SessionDetailPage() {
   // Auto-refresh every 5 seconds
   useEffect(() => {
     void fetchSession()
-    const interval = setInterval(() => void fetchSession(), 5_000)
+    void fetchViolations()
+    const interval = setInterval(() => {
+      void fetchSession()
+      void fetchViolations()
+    }, 5_000)
     return () => clearInterval(interval)
-  }, [fetchSession])
+  }, [fetchSession, fetchViolations])
 
   // Elapsed time counter - tick every second when session is active
   useEffect(() => {
@@ -284,6 +303,40 @@ export default function SessionDetailPage() {
             {session.context}
           </pre>
         </Card>
+      )}
+
+      {/* Policy Violations */}
+      {violations.length > 0 && (
+        <div className="rounded-lg border border-danger-200 bg-danger-50 shadow-sm">
+          <div className="border-b border-danger-200 px-4 py-3">
+            <h3 className="text-sm font-medium text-danger-800">
+              Policy Violations ({violations.length})
+            </h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {violations.map((v) => (
+              <div
+                key={v.id}
+                className="rounded-md border border-danger-200 bg-white p-3"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <code className="rounded bg-danger-100 px-1.5 py-0.5 text-xs font-mono text-danger-700">
+                        {v.action}
+                      </code>
+                      <span className="text-xs text-secondary-500 capitalize">{v.policy_scope}</span>
+                    </div>
+                    <p className="text-sm text-secondary-700">{v.reason}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-secondary-500">
+                    <RelativeTime timestamp={v.timestamp} />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Force Stop Confirmation Modal */}

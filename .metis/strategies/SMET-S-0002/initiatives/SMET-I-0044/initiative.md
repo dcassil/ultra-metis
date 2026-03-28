@@ -4,14 +4,14 @@ level: initiative
 title: "Policy and Safe Execution"
 short_code: "SMET-I-0044"
 created_at: 2026-03-17T19:56:56.710835+00:00
-updated_at: 2026-03-17T19:56:56.710835+00:00
+updated_at: 2026-03-28T00:18:36.562670+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/active"
 
 
 exit_criteria_met: false

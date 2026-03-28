@@ -36,6 +36,15 @@ pub fn build_app(state: AppState) -> Router {
         .route(
             "/{id}/commands/{cmd_id}/ack",
             post(routes::ack_command),
+        )
+        .route(
+            "/{id}/policy",
+            get(routes::get_machine_policy).put(routes::update_machine_policy),
+        )
+        .route("/{id}/policy/effective", get(routes::get_effective_policy))
+        .route(
+            "/{id}/repo-policy",
+            get(routes::get_repo_policy).put(routes::update_repo_policy),
         );
 
     let session_routes = Router::new()
@@ -44,7 +53,8 @@ pub fn build_app(state: AppState) -> Router {
         .route("/{id}/force-stop", post(routes::force_stop_session))
         .route("/{id}/pause", post(routes::pause_session))
         .route("/{id}/resume", post(routes::resume_session))
-        .route("/{id}/state", post(routes::report_session_state));
+        .route("/{id}/state", post(routes::report_session_state))
+        .route("/{id}/violations", get(routes::list_session_violations));
 
     Router::new()
         .route("/health", get(routes::health))
@@ -52,6 +62,7 @@ pub fn build_app(state: AppState) -> Router {
         .nest("/api/machines", machine_routes)
         .route("/api/sessions", get(routes::list_sessions).post(routes::create_session))
         .nest("/api/sessions", session_routes)
+        .route("/api/policy-violations", get(routes::list_policy_violations))
         .layer(cors)
         .with_state(state)
 }

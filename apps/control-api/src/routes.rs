@@ -11,10 +11,13 @@ use crate::auth::{DashboardAuth, MachineTokenAuth};
 use axum::extract::Query;
 
 use crate::models::{
-    CommandResponse, CreateSessionRequest, CreateSessionResponse, ErrorBody, HeartbeatRequest,
-    ListSessionsQuery, Machine, MachineDetailResponse, MachineRepo, MachineResponse, MachineStatus,
-    RegisterRequest, RegisterResponse, RepoInfo, ReportStateRequest, Session, SessionListResponse,
-    SessionResponse, SessionState,
+    ActionCategory, AutonomyLevel, CommandResponse, CreateSessionRequest, CreateSessionResponse,
+    EffectivePolicy, EffectivePolicyQuery, ErrorBody, HeartbeatRequest, ListSessionsQuery,
+    ListViolationsQuery, Machine, MachineDetailResponse, MachinePolicy, MachineRepo,
+    MachineResponse, MachineStatus, PolicyViolationRecord, RegisterRequest, RegisterResponse,
+    RepoInfo, RepoPolicy, RepoPolicyQuery, ReportStateRequest, Session, SessionListResponse,
+    SessionMode, SessionResponse, SessionState, UpdateMachinePolicyRequest,
+    UpdateRepoPolicyRequest, ViolationsListResponse,
 };
 use crate::AppState;
 
@@ -374,6 +377,11 @@ pub async fn approve_machine(
         return internal_error(&format!("failed to approve: {e}"));
     }
 
+    // Insert a default permissive policy for the newly trusted machine
+    if let Err(e) = insert_default_machine_policy(&state, &machine_id) {
+        tracing::error!("failed to insert default policy: {e}");
+    }
+
     Json(serde_json::json!({"status": "trusted", "id": machine_id})).into_response()
 }
 
@@ -433,6 +441,39 @@ pub async fn create_session(
             "machine is {}, must be trusted to start a session",
             machine.status
         ));
+    }
+
+    // Policy enforcement: validate requested autonomy level
+    let requested_autonomy = body
+        .autonomy_level
+        .clone()
+        .unwrap_or(AutonomyLevel::Normal);
+    if let Some(machine_policy) = match load_machine_policy(&state, &body.machine_id) {
+        Ok(p) => p,
+        Err(e) => return internal_error(&format!("failed to load machine policy: {e}")),
+    } {
+        let repo_policy = match load_repo_policy(&state, &body.machine_id, &body.repo_path) {
+            Ok(p) => p,
+            Err(e) => return internal_error(&format!("failed to load repo policy: {e}")),
+        };
+        if let Err(violation) =
+            crate::models::is_autonomy_allowed(&requested_autonomy, &machine_policy, repo_policy.as_ref())
+        {
+            // Log the policy violation before returning the error
+            if let Err(e) = insert_policy_violation(
+                &state,
+                None,
+                &body.machine_id,
+                &auth.user_id,
+                &violation.blocked_action,
+                &violation.policy_scope,
+                &violation.reason,
+                Some(&body.repo_path),
+            ) {
+                tracing::error!("failed to log policy violation: {e}");
+            }
+            return bad_request(&violation.reason);
+        }
     }
 
     let session_id = uuid::Uuid::new_v4().to_string();
@@ -1107,6 +1148,191 @@ fn session_to_response(session: Session) -> SessionResponse {
 }
 
 // ---------------------------------------------------------------------------
+// GET /api/policy-violations
+// ---------------------------------------------------------------------------
+
+pub async fn list_policy_violations(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Query(query): Query<ListViolationsQuery>,
+) -> impl IntoResponse {
+    match query_violations(&state, &auth.user_id, &query) {
+        Ok(result) => Json(serde_json::to_value(result).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/sessions/{id}/violations
+// ---------------------------------------------------------------------------
+
+pub async fn list_session_violations(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+) -> impl IntoResponse {
+    match query_violations_by_session(&state, &session_id, &auth.user_id) {
+        Ok(violations) => Json(serde_json::to_value(violations).unwrap_or_default()).into_response(),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+fn insert_policy_violation(
+    state: &AppState,
+    session_id: Option<&str>,
+    machine_id: &str,
+    user_id: &str,
+    action: &str,
+    policy_scope: &str,
+    reason: &str,
+    repo_path: Option<&str>,
+) -> Result<(), rusqlite::Error> {
+    let violation_id = uuid::Uuid::new_v4().to_string();
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "INSERT INTO policy_violations (id, session_id, machine_id, user_id, action, policy_scope, reason, repo_path)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![violation_id, session_id, machine_id, user_id, action, policy_scope, reason, repo_path],
+        )?;
+    Ok(())
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_violations(
+    state: &AppState,
+    user_id: &str,
+    query: &ListViolationsQuery,
+) -> Result<ViolationsListResponse, rusqlite::Error> {
+    let db = state.db.lock().expect("db lock poisoned");
+
+    // Build WHERE clause dynamically
+    let mut conditions = vec!["user_id = ?1".to_string()];
+    let mut param_idx = 2;
+
+    if query.machine_id.is_some() {
+        conditions.push(format!("machine_id = ?{param_idx}"));
+        param_idx += 1;
+    }
+    if query.session_id.is_some() {
+        conditions.push(format!("session_id = ?{param_idx}"));
+        param_idx += 1;
+    }
+
+    let where_clause = conditions.join(" AND ");
+
+    let count_sql = format!("SELECT COUNT(*) FROM policy_violations WHERE {where_clause}");
+    let list_sql = format!(
+        "SELECT id, session_id, machine_id, user_id, action, policy_scope, reason, repo_path, timestamp
+         FROM policy_violations WHERE {where_clause}
+         ORDER BY timestamp DESC
+         LIMIT ?{} OFFSET ?{}",
+        param_idx,
+        param_idx + 1
+    );
+
+    let limit = query.limit.unwrap_or(50);
+    let offset = query.offset.unwrap_or(0);
+
+    // Execute count
+    let total: i64 = match (&query.machine_id, &query.session_id) {
+        (None, None) => {
+            db.query_row(&count_sql, [user_id], |row| row.get(0))?
+        }
+        (Some(mid), None) => {
+            db.query_row(&count_sql, params![user_id, mid], |row| row.get(0))?
+        }
+        (None, Some(sid)) => {
+            db.query_row(&count_sql, params![user_id, sid], |row| row.get(0))?
+        }
+        (Some(mid), Some(sid)) => {
+            db.query_row(&count_sql, params![user_id, mid, sid], |row| row.get(0))?
+        }
+    };
+
+    // Execute list
+    let violations: Vec<PolicyViolationRecord> = match (&query.machine_id, &query.session_id) {
+        (None, None) => {
+            query_violation_rows(&db, &list_sql, params![user_id, limit, offset])?
+        }
+        (Some(mid), None) => {
+            query_violation_rows(&db, &list_sql, params![user_id, mid, limit, offset])?
+        }
+        (None, Some(sid)) => {
+            query_violation_rows(&db, &list_sql, params![user_id, sid, limit, offset])?
+        }
+        (Some(mid), Some(sid)) => {
+            query_violation_rows(&db, &list_sql, params![user_id, mid, sid, limit, offset])?
+        }
+    };
+
+    Ok(ViolationsListResponse { violations, total })
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_violation_rows(
+    db: &rusqlite::Connection,
+    sql: &str,
+    params: impl rusqlite::Params,
+) -> Result<Vec<PolicyViolationRecord>, rusqlite::Error> {
+    let mut stmt = db.prepare(sql)?;
+    let rows = stmt.query_map(params, |row| {
+        Ok(PolicyViolationRecord {
+            id: row.get(0)?,
+            session_id: row.get(1)?,
+            machine_id: row.get(2)?,
+            user_id: row.get(3)?,
+            action: row.get(4)?,
+            policy_scope: row.get(5)?,
+            reason: row.get(6)?,
+            repo_path: row.get(7)?,
+            timestamp: row.get(8)?,
+        })
+    })?;
+
+    let mut violations = Vec::new();
+    for row in rows {
+        violations.push(row?);
+    }
+    Ok(violations)
+}
+
+#[allow(clippy::significant_drop_tightening)]
+fn query_violations_by_session(
+    state: &AppState,
+    session_id: &str,
+    user_id: &str,
+) -> Result<Vec<PolicyViolationRecord>, rusqlite::Error> {
+    let db = state.db.lock().expect("db lock poisoned");
+    let mut stmt = db.prepare(
+        "SELECT id, session_id, machine_id, user_id, action, policy_scope, reason, repo_path, timestamp
+         FROM policy_violations WHERE session_id = ?1 AND user_id = ?2
+         ORDER BY timestamp DESC",
+    )?;
+    let rows = stmt.query_map(params![session_id, user_id], |row| {
+        Ok(PolicyViolationRecord {
+            id: row.get(0)?,
+            session_id: row.get(1)?,
+            machine_id: row.get(2)?,
+            user_id: row.get(3)?,
+            action: row.get(4)?,
+            policy_scope: row.get(5)?,
+            reason: row.get(6)?,
+            repo_path: row.get(7)?,
+            timestamp: row.get(8)?,
+        })
+    })?;
+
+    let mut violations = Vec::new();
+    for row in rows {
+        violations.push(row?);
+    }
+    Ok(violations)
+}
+
+// ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
@@ -1235,6 +1461,510 @@ fn internal_error(msg: &str) -> axum::response::Response {
         .unwrap_or_default()),
     )
         .into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Policy helpers
+// ---------------------------------------------------------------------------
+
+fn default_machine_policy(machine_id: &str) -> MachinePolicy {
+    MachinePolicy {
+        id: uuid::Uuid::new_v4().to_string(),
+        machine_id: machine_id.to_string(),
+        allowed_categories: ActionCategory::all(),
+        blocked_categories: vec![],
+        max_autonomy_level: AutonomyLevel::Autonomous,
+        session_mode: SessionMode::Normal,
+        require_approval_for: vec![],
+        created_at: String::new(),
+        updated_at: String::new(),
+    }
+}
+
+fn insert_default_machine_policy(
+    state: &AppState,
+    machine_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let policy = default_machine_policy(machine_id);
+    upsert_machine_policy(state, machine_id, &policy)
+}
+
+fn load_machine_policy(
+    state: &AppState,
+    machine_id: &str,
+) -> Result<Option<MachinePolicy>, rusqlite::Error> {
+    let result = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT id, machine_id, allowed_categories, blocked_categories, max_autonomy_level,
+                session_mode, require_approval_for, created_at, updated_at
+         FROM machine_policies WHERE machine_id = ?1",
+        params![machine_id],
+        |row| {
+            let allowed_str: String = row.get(2)?;
+            let blocked_str: String = row.get(3)?;
+            let max_autonomy_str: String = row.get(4)?;
+            let session_mode_str: String = row.get(5)?;
+            let approval_str: String = row.get(6)?;
+
+            Ok(MachinePolicyRow {
+                id: row.get(0)?,
+                machine_id: row.get(1)?,
+                allowed_categories: allowed_str,
+                blocked_categories: blocked_str,
+                max_autonomy_level: max_autonomy_str,
+                session_mode: session_mode_str,
+                require_approval_for: approval_str,
+                created_at: row.get(7)?,
+                updated_at: row.get(8)?,
+            })
+        },
+    );
+
+    match result {
+        Ok(row) => Ok(Some(parse_machine_policy_row(row))),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+struct MachinePolicyRow {
+    id: String,
+    machine_id: String,
+    allowed_categories: String,
+    blocked_categories: String,
+    max_autonomy_level: String,
+    session_mode: String,
+    require_approval_for: String,
+    created_at: String,
+    updated_at: String,
+}
+
+fn parse_machine_policy_row(row: MachinePolicyRow) -> MachinePolicy {
+    MachinePolicy {
+        id: row.id,
+        machine_id: row.machine_id,
+        allowed_categories: serde_json::from_str(&row.allowed_categories).unwrap_or_default(),
+        blocked_categories: serde_json::from_str(&row.blocked_categories).unwrap_or_default(),
+        max_autonomy_level: row
+            .max_autonomy_level
+            .parse()
+            .unwrap_or(AutonomyLevel::Normal),
+        session_mode: row.session_mode.parse().unwrap_or(SessionMode::Normal),
+        require_approval_for: serde_json::from_str(&row.require_approval_for).unwrap_or_default(),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+    }
+}
+
+fn upsert_machine_policy(
+    state: &AppState,
+    machine_id: &str,
+    policy: &MachinePolicy,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let now = Utc::now().to_rfc3339();
+    let allowed = serde_json::to_string(&policy.allowed_categories)?;
+    let blocked = serde_json::to_string(&policy.blocked_categories)?;
+    let approval = serde_json::to_string(&policy.require_approval_for)?;
+    let policy_id = uuid::Uuid::new_v4().to_string();
+
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "INSERT INTO machine_policies (id, machine_id, allowed_categories, blocked_categories,
+             max_autonomy_level, session_mode, require_approval_for, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+             ON CONFLICT(machine_id) DO UPDATE SET
+                allowed_categories = excluded.allowed_categories,
+                blocked_categories = excluded.blocked_categories,
+                max_autonomy_level = excluded.max_autonomy_level,
+                session_mode = excluded.session_mode,
+                require_approval_for = excluded.require_approval_for,
+                updated_at = excluded.updated_at",
+            params![
+                policy_id,
+                machine_id,
+                allowed,
+                blocked,
+                policy.max_autonomy_level.as_str(),
+                policy.session_mode.as_str(),
+                approval,
+                now,
+                now
+            ],
+        )?;
+    Ok(())
+}
+
+fn load_repo_policy(
+    state: &AppState,
+    machine_id: &str,
+    repo_path: &str,
+) -> Result<Option<RepoPolicy>, rusqlite::Error> {
+    let result = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT id, machine_id, repo_path, allowed_categories, blocked_categories,
+                max_autonomy_level, require_approval_for, created_at, updated_at
+         FROM repo_policies WHERE machine_id = ?1 AND repo_path = ?2",
+        params![machine_id, repo_path],
+        |row| {
+            let allowed_str: String = row.get(3)?;
+            let blocked_str: String = row.get(4)?;
+            let max_autonomy_str: Option<String> = row.get(5)?;
+            let approval_str: String = row.get(6)?;
+
+            Ok(RepoPolicyRow {
+                id: row.get(0)?,
+                machine_id: row.get(1)?,
+                repo_path: row.get(2)?,
+                allowed_categories: allowed_str,
+                blocked_categories: blocked_str,
+                max_autonomy_level: max_autonomy_str,
+                require_approval_for: approval_str,
+                created_at: row.get(7)?,
+                updated_at: row.get(8)?,
+            })
+        },
+    );
+
+    match result {
+        Ok(row) => Ok(Some(parse_repo_policy_row(row))),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+struct RepoPolicyRow {
+    id: String,
+    machine_id: String,
+    repo_path: String,
+    allowed_categories: String,
+    blocked_categories: String,
+    max_autonomy_level: Option<String>,
+    require_approval_for: String,
+    created_at: String,
+    updated_at: String,
+}
+
+fn parse_repo_policy_row(row: RepoPolicyRow) -> RepoPolicy {
+    RepoPolicy {
+        id: row.id,
+        machine_id: row.machine_id,
+        repo_path: row.repo_path,
+        allowed_categories: serde_json::from_str(&row.allowed_categories).unwrap_or_default(),
+        blocked_categories: serde_json::from_str(&row.blocked_categories).unwrap_or_default(),
+        max_autonomy_level: row
+            .max_autonomy_level
+            .and_then(|s| s.parse().ok()),
+        require_approval_for: serde_json::from_str(&row.require_approval_for).unwrap_or_default(),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+    }
+}
+
+fn upsert_repo_policy(
+    state: &AppState,
+    machine_id: &str,
+    repo_path: &str,
+    policy: &RepoPolicy,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let now = Utc::now().to_rfc3339();
+    let allowed = serde_json::to_string(&policy.allowed_categories)?;
+    let blocked = serde_json::to_string(&policy.blocked_categories)?;
+    let approval = serde_json::to_string(&policy.require_approval_for)?;
+    let max_autonomy = policy.max_autonomy_level.as_ref().map(|a| a.as_str().to_string());
+    let policy_id = uuid::Uuid::new_v4().to_string();
+
+    state
+        .db
+        .lock()
+        .expect("db lock poisoned")
+        .execute(
+            "INSERT INTO repo_policies (id, machine_id, repo_path, allowed_categories, blocked_categories,
+             max_autonomy_level, require_approval_for, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+             ON CONFLICT(machine_id, repo_path) DO UPDATE SET
+                allowed_categories = excluded.allowed_categories,
+                blocked_categories = excluded.blocked_categories,
+                max_autonomy_level = excluded.max_autonomy_level,
+                require_approval_for = excluded.require_approval_for,
+                updated_at = excluded.updated_at",
+            params![
+                policy_id,
+                machine_id,
+                repo_path,
+                allowed,
+                blocked,
+                max_autonomy,
+                approval,
+                now,
+                now
+            ],
+        )?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/machines/{id}/policy
+// ---------------------------------------------------------------------------
+
+pub async fn get_machine_policy(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+) -> impl IntoResponse {
+    // Validate machine belongs to user
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    match load_machine_policy(&state, &machine_id) {
+        Ok(Some(policy)) => Json(serde_json::to_value(policy).unwrap_or_default()).into_response(),
+        Ok(None) => {
+            // Return a default policy (not persisted)
+            let default = default_machine_policy(&machine_id);
+            Json(serde_json::to_value(default).unwrap_or_default()).into_response()
+        }
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PUT /api/machines/{id}/policy
+// ---------------------------------------------------------------------------
+
+pub async fn update_machine_policy(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+    Json(body): Json<UpdateMachinePolicyRequest>,
+) -> impl IntoResponse {
+    // Validate machine belongs to user
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    // Load existing or create default, then apply updates
+    let mut policy = match load_machine_policy(&state, &machine_id) {
+        Ok(Some(p)) => p,
+        Ok(None) => default_machine_policy(&machine_id),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    if let Some(allowed) = body.allowed_categories {
+        policy.allowed_categories = allowed;
+    }
+    if let Some(blocked) = body.blocked_categories {
+        policy.blocked_categories = blocked;
+    }
+    if let Some(max) = body.max_autonomy_level {
+        policy.max_autonomy_level = max;
+    }
+    if let Some(mode) = body.session_mode {
+        policy.session_mode = mode;
+    }
+    if let Some(approval) = body.require_approval_for {
+        policy.require_approval_for = approval;
+    }
+
+    if let Err(e) = upsert_machine_policy(&state, &machine_id, &policy) {
+        return internal_error(&format!("failed to upsert machine policy: {e}"));
+    }
+
+    // Reload to get updated timestamps
+    match load_machine_policy(&state, &machine_id) {
+        Ok(Some(p)) => Json(serde_json::to_value(p).unwrap_or_default()).into_response(),
+        Ok(None) => internal_error("policy not found after upsert"),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/machines/{id}/repo-policy?repo_path=X
+// ---------------------------------------------------------------------------
+
+pub async fn get_repo_policy(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+    Query(query): Query<RepoPolicyQuery>,
+) -> impl IntoResponse {
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    match load_repo_policy(&state, &machine_id, &query.repo_path) {
+        Ok(Some(policy)) => Json(serde_json::to_value(policy).unwrap_or_default()).into_response(),
+        Ok(None) => {
+            // Return empty default repo policy
+            let default = RepoPolicy {
+                id: String::new(),
+                machine_id: machine_id.clone(),
+                repo_path: query.repo_path,
+                allowed_categories: vec![],
+                blocked_categories: vec![],
+                max_autonomy_level: None,
+                require_approval_for: vec![],
+                created_at: String::new(),
+                updated_at: String::new(),
+            };
+            Json(serde_json::to_value(default).unwrap_or_default()).into_response()
+        }
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PUT /api/machines/{id}/repo-policy?repo_path=X
+// ---------------------------------------------------------------------------
+
+pub async fn update_repo_policy(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+    Query(query): Query<RepoPolicyQuery>,
+    Json(body): Json<UpdateRepoPolicyRequest>,
+) -> impl IntoResponse {
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    // Load existing or create default
+    let mut policy = match load_repo_policy(&state, &machine_id, &query.repo_path) {
+        Ok(Some(p)) => p,
+        Ok(None) => RepoPolicy {
+            id: uuid::Uuid::new_v4().to_string(),
+            machine_id: machine_id.clone(),
+            repo_path: query.repo_path.clone(),
+            allowed_categories: vec![],
+            blocked_categories: vec![],
+            max_autonomy_level: None,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        },
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    if let Some(allowed) = body.allowed_categories {
+        policy.allowed_categories = allowed;
+    }
+    if let Some(blocked) = body.blocked_categories {
+        policy.blocked_categories = blocked;
+    }
+    if let Some(max) = body.max_autonomy_level {
+        policy.max_autonomy_level = Some(max);
+    }
+    if let Some(approval) = body.require_approval_for {
+        policy.require_approval_for = approval;
+    }
+
+    if let Err(e) = upsert_repo_policy(&state, &machine_id, &query.repo_path, &policy) {
+        return internal_error(&format!("failed to upsert repo policy: {e}"));
+    }
+
+    match load_repo_policy(&state, &machine_id, &query.repo_path) {
+        Ok(Some(p)) => Json(serde_json::to_value(p).unwrap_or_default()).into_response(),
+        Ok(None) => internal_error("repo policy not found after upsert"),
+        Err(e) => internal_error(&format!("db error: {e}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/machines/{id}/policy/effective?repo_path=X
+// ---------------------------------------------------------------------------
+
+pub async fn get_effective_policy(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+    Query(query): Query<EffectivePolicyQuery>,
+) -> impl IntoResponse {
+    match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(_)) => {}
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    }
+
+    let machine_policy = match load_machine_policy(&state, &machine_id) {
+        Ok(Some(p)) => p,
+        Ok(None) => default_machine_policy(&machine_id),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    let repo_policy = if let Some(ref repo_path) = query.repo_path {
+        match load_repo_policy(&state, &machine_id, repo_path) {
+            Ok(p) => p,
+            Err(e) => return internal_error(&format!("db error: {e}")),
+        }
+    } else {
+        None
+    };
+
+    let effective = merge_policies(&machine_policy, repo_policy.as_ref());
+    Json(serde_json::to_value(effective).unwrap_or_default()).into_response()
+}
+
+fn merge_policies(
+    machine: &MachinePolicy,
+    repo: Option<&RepoPolicy>,
+) -> EffectivePolicy {
+    let mut allowed = machine.allowed_categories.clone();
+    let mut blocked = machine.blocked_categories.clone();
+    let mut max_autonomy = machine.max_autonomy_level.clone();
+    let mut approval = machine.require_approval_for.clone();
+
+    if let Some(rp) = repo {
+        // Repo blocked categories are additive (union)
+        for cat in &rp.blocked_categories {
+            if !blocked.contains(cat) {
+                blocked.push(cat.clone());
+            }
+        }
+
+        // If repo has allowed categories, narrow the machine allowed list (intersection)
+        if !rp.allowed_categories.is_empty() {
+            allowed.retain(|c| rp.allowed_categories.contains(c));
+        }
+
+        // Repo max autonomy can only narrow (pick the more restrictive)
+        if let Some(ref repo_max) = rp.max_autonomy_level {
+            let rank = |level: &AutonomyLevel| -> u8 {
+                match level {
+                    AutonomyLevel::Normal | AutonomyLevel::Stricter => 0,
+                    AutonomyLevel::Autonomous => 2,
+                }
+            };
+            if rank(repo_max) < rank(&max_autonomy) {
+                max_autonomy = repo_max.clone();
+            }
+        }
+
+        // Merge approval lists (union)
+        for cat in &rp.require_approval_for {
+            if !approval.contains(cat) {
+                approval.push(cat.clone());
+            }
+        }
+    }
+
+    // Remove blocked from allowed
+    allowed.retain(|c| !blocked.contains(c));
+
+    EffectivePolicy {
+        allowed_categories: allowed,
+        blocked_categories: blocked,
+        max_autonomy_level: max_autonomy,
+        session_mode: machine.session_mode.clone(),
+        require_approval_for: approval,
+    }
 }
 
 #[cfg(test)]
@@ -1865,5 +2595,544 @@ mod tests {
 
         let m = load_machine(&state, "m-1", "user-default").unwrap().unwrap();
         assert!(m.last_heartbeat.is_some());
+    }
+
+    // -- Policy tests --
+
+    #[test]
+    fn test_load_machine_policy_returns_none_when_absent() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy = load_machine_policy(&state, "m-1").unwrap();
+        assert!(policy.is_none());
+    }
+
+    #[test]
+    fn test_upsert_and_load_machine_policy() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: vec![ActionCategory::ReadFiles, ActionCategory::WriteFiles],
+            blocked_categories: vec![ActionCategory::InstallPackages],
+            max_autonomy_level: AutonomyLevel::Normal,
+            session_mode: SessionMode::Restricted,
+            require_approval_for: vec![ActionCategory::GitOperations],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &policy).unwrap();
+
+        let loaded = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        assert_eq!(loaded.machine_id, "m-1");
+        assert_eq!(loaded.allowed_categories.len(), 2);
+        assert!(loaded.allowed_categories.contains(&ActionCategory::ReadFiles));
+        assert!(loaded.allowed_categories.contains(&ActionCategory::WriteFiles));
+        assert_eq!(loaded.blocked_categories, vec![ActionCategory::InstallPackages]);
+        assert_eq!(loaded.max_autonomy_level, AutonomyLevel::Normal);
+        assert_eq!(loaded.session_mode, SessionMode::Restricted);
+        assert_eq!(loaded.require_approval_for, vec![ActionCategory::GitOperations]);
+    }
+
+    #[test]
+    fn test_upsert_machine_policy_overwrites() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy1 = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: vec![ActionCategory::ReadFiles],
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Normal,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &policy1).unwrap();
+
+        let policy2 = MachinePolicy {
+            id: "p-2".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![ActionCategory::ShellExecution],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Elevated,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &policy2).unwrap();
+
+        let loaded = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        assert_eq!(loaded.allowed_categories.len(), ActionCategory::all().len());
+        assert_eq!(loaded.blocked_categories, vec![ActionCategory::ShellExecution]);
+        assert_eq!(loaded.max_autonomy_level, AutonomyLevel::Autonomous);
+        assert_eq!(loaded.session_mode, SessionMode::Elevated);
+    }
+
+    #[test]
+    fn test_load_repo_policy_returns_none_when_absent() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy = load_repo_policy(&state, "m-1", "/project").unwrap();
+        assert!(policy.is_none());
+    }
+
+    #[test]
+    fn test_upsert_and_load_repo_policy() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy = RepoPolicy {
+            id: "rp-1".into(),
+            machine_id: "m-1".into(),
+            repo_path: "/home/user/project".into(),
+            allowed_categories: vec![ActionCategory::ReadFiles],
+            blocked_categories: vec![ActionCategory::NetworkAccess],
+            max_autonomy_level: Some(AutonomyLevel::Normal),
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_repo_policy(&state, "m-1", "/home/user/project", &policy).unwrap();
+
+        let loaded = load_repo_policy(&state, "m-1", "/home/user/project")
+            .unwrap()
+            .unwrap();
+        assert_eq!(loaded.machine_id, "m-1");
+        assert_eq!(loaded.repo_path, "/home/user/project");
+        assert_eq!(loaded.allowed_categories, vec![ActionCategory::ReadFiles]);
+        assert_eq!(loaded.blocked_categories, vec![ActionCategory::NetworkAccess]);
+        assert_eq!(loaded.max_autonomy_level, Some(AutonomyLevel::Normal));
+    }
+
+    #[test]
+    fn test_repo_policy_different_paths_independent() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy_a = RepoPolicy {
+            id: "rp-a".into(),
+            machine_id: "m-1".into(),
+            repo_path: "/project-a".into(),
+            allowed_categories: vec![ActionCategory::ReadFiles],
+            blocked_categories: vec![],
+            max_autonomy_level: None,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_repo_policy(&state, "m-1", "/project-a", &policy_a).unwrap();
+
+        let policy_b = RepoPolicy {
+            id: "rp-b".into(),
+            machine_id: "m-1".into(),
+            repo_path: "/project-b".into(),
+            allowed_categories: vec![ActionCategory::WriteFiles],
+            blocked_categories: vec![],
+            max_autonomy_level: None,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_repo_policy(&state, "m-1", "/project-b", &policy_b).unwrap();
+
+        let loaded_a = load_repo_policy(&state, "m-1", "/project-a").unwrap().unwrap();
+        assert_eq!(loaded_a.allowed_categories, vec![ActionCategory::ReadFiles]);
+
+        let loaded_b = load_repo_policy(&state, "m-1", "/project-b").unwrap().unwrap();
+        assert_eq!(loaded_b.allowed_categories, vec![ActionCategory::WriteFiles]);
+    }
+
+    #[test]
+    fn test_default_policy_created_on_approval() {
+        let state = test_state();
+        let now = Utc::now().to_rfc3339();
+        let req = RegisterRequest {
+            name: "test".into(),
+            platform: "linux".into(),
+            capabilities: None,
+            repos: None,
+        };
+        insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
+
+        // No policy before approval
+        assert!(load_machine_policy(&state, "m-1").unwrap().is_none());
+
+        // Approve and insert default policy (mirrors approve_machine handler)
+        set_machine_status(&state, "m-1", "trusted", "basic", &now).unwrap();
+        insert_default_machine_policy(&state, "m-1").unwrap();
+
+        // Policy should now exist with default values
+        let policy = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        assert_eq!(policy.machine_id, "m-1");
+        assert_eq!(policy.allowed_categories, ActionCategory::all());
+        assert!(policy.blocked_categories.is_empty());
+        assert_eq!(policy.max_autonomy_level, AutonomyLevel::Autonomous);
+        assert_eq!(policy.session_mode, SessionMode::Normal);
+        assert!(policy.require_approval_for.is_empty());
+    }
+
+    #[test]
+    fn test_policy_enforcement_blocks_autonomous_session() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        // Set machine policy to only allow normal autonomy
+        let policy = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Normal,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &policy).unwrap();
+
+        // Verify that autonomous is blocked
+        let loaded = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        let result = crate::models::is_autonomy_allowed(
+            &AutonomyLevel::Autonomous,
+            &loaded,
+            None,
+        );
+        assert!(result.is_err());
+        assert!(result.unwrap_err().reason.contains("exceeds machine max"));
+    }
+
+    #[test]
+    fn test_policy_enforcement_allows_normal_session() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let policy = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Normal,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &policy).unwrap();
+
+        let loaded = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        let result = crate::models::is_autonomy_allowed(
+            &AutonomyLevel::Normal,
+            &loaded,
+            None,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_policy_enforcement_repo_narrows_autonomy() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        // Machine allows autonomous
+        let mp = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &mp).unwrap();
+
+        // Repo restricts to normal
+        let rp = RepoPolicy {
+            id: "rp-1".into(),
+            machine_id: "m-1".into(),
+            repo_path: "/project".into(),
+            allowed_categories: vec![],
+            blocked_categories: vec![],
+            max_autonomy_level: Some(AutonomyLevel::Normal),
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_repo_policy(&state, "m-1", "/project", &rp).unwrap();
+
+        let loaded_mp = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        let loaded_rp = load_repo_policy(&state, "m-1", "/project").unwrap();
+        let result = crate::models::is_autonomy_allowed(
+            &AutonomyLevel::Autonomous,
+            &loaded_mp,
+            loaded_rp.as_ref(),
+        );
+        assert!(result.is_err());
+        assert!(result.unwrap_err().reason.contains("repo max"));
+    }
+
+    #[test]
+    fn test_effective_policy_merge_no_repo() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let mp = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![ActionCategory::InstallPackages],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![ActionCategory::GitOperations],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+
+        let effective = merge_policies(&mp, None);
+        // InstallPackages should be removed from allowed since it's blocked
+        assert!(!effective.allowed_categories.contains(&ActionCategory::InstallPackages));
+        assert!(effective.blocked_categories.contains(&ActionCategory::InstallPackages));
+        assert_eq!(effective.max_autonomy_level, AutonomyLevel::Autonomous);
+        assert_eq!(effective.require_approval_for, vec![ActionCategory::GitOperations]);
+    }
+
+    #[test]
+    fn test_effective_policy_merge_with_repo() {
+        let mp = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+
+        let rp = RepoPolicy {
+            id: "rp-1".into(),
+            machine_id: "m-1".into(),
+            repo_path: "/project".into(),
+            allowed_categories: vec![ActionCategory::ReadFiles, ActionCategory::WriteFiles],
+            blocked_categories: vec![ActionCategory::WriteFiles],
+            max_autonomy_level: Some(AutonomyLevel::Normal),
+            require_approval_for: vec![ActionCategory::ReadFiles],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+
+        let effective = merge_policies(&mp, Some(&rp));
+        // Allowed narrowed to ReadFiles, WriteFiles — then WriteFiles removed because blocked
+        assert!(effective.allowed_categories.contains(&ActionCategory::ReadFiles));
+        assert!(!effective.allowed_categories.contains(&ActionCategory::WriteFiles));
+        assert!(!effective.allowed_categories.contains(&ActionCategory::GitOperations));
+        assert!(effective.blocked_categories.contains(&ActionCategory::WriteFiles));
+        assert_eq!(effective.max_autonomy_level, AutonomyLevel::Normal);
+        assert_eq!(effective.require_approval_for, vec![ActionCategory::ReadFiles]);
+    }
+
+    // -- Policy violation tests --
+
+    #[test]
+    fn test_insert_and_query_policy_violation() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        insert_policy_violation(
+            &state,
+            Some("s-1"),
+            "m-1",
+            "user-default",
+            "autonomy:autonomous",
+            "machine",
+            "requested autonomy 'autonomous' exceeds machine max 'normal'",
+            Some("/project"),
+        )
+        .unwrap();
+
+        let query = ListViolationsQuery {
+            machine_id: None,
+            session_id: None,
+            limit: None,
+            offset: None,
+        };
+        let result = query_violations(&state, "user-default", &query).unwrap();
+        assert_eq!(result.total, 1);
+        assert_eq!(result.violations.len(), 1);
+
+        let v = &result.violations[0];
+        assert_eq!(v.machine_id, "m-1");
+        assert_eq!(v.user_id, "user-default");
+        assert_eq!(v.action, "autonomy:autonomous");
+        assert_eq!(v.policy_scope, "machine");
+        assert_eq!(v.session_id, Some("s-1".into()));
+        assert_eq!(v.repo_path, Some("/project".into()));
+    }
+
+    #[test]
+    fn test_query_violations_filter_by_machine_id() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+        create_trusted_machine(&state, "m-2");
+
+        insert_policy_violation(
+            &state, None, "m-1", "user-default", "autonomy:autonomous", "machine",
+            "exceeds max", Some("/project"),
+        ).unwrap();
+        insert_policy_violation(
+            &state, None, "m-2", "user-default", "autonomy:autonomous", "machine",
+            "exceeds max", Some("/other"),
+        ).unwrap();
+
+        let query = ListViolationsQuery {
+            machine_id: Some("m-1".into()),
+            session_id: None,
+            limit: None,
+            offset: None,
+        };
+        let result = query_violations(&state, "user-default", &query).unwrap();
+        assert_eq!(result.total, 1);
+        assert_eq!(result.violations[0].machine_id, "m-1");
+    }
+
+    #[test]
+    fn test_query_violations_filter_by_session_id() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        // Create a session so FK is satisfied
+        let now = Utc::now().to_rfc3339();
+        let body = CreateSessionRequest {
+            machine_id: "m-1".into(),
+            repo_path: "/project".into(),
+            title: "Test".into(),
+            instructions: "Work".into(),
+            autonomy_level: None,
+            work_item_id: None,
+            context: None,
+        };
+        insert_session(&state, "s-1", "user-default", &body, "normal", &now).unwrap();
+
+        insert_policy_violation(
+            &state, Some("s-1"), "m-1", "user-default", "autonomy:autonomous", "machine",
+            "exceeds max", Some("/project"),
+        ).unwrap();
+        insert_policy_violation(
+            &state, None, "m-1", "user-default", "autonomy:autonomous", "machine",
+            "exceeds max", Some("/other"),
+        ).unwrap();
+
+        let query = ListViolationsQuery {
+            machine_id: None,
+            session_id: Some("s-1".into()),
+            limit: None,
+            offset: None,
+        };
+        let result = query_violations(&state, "user-default", &query).unwrap();
+        assert_eq!(result.total, 1);
+        assert_eq!(result.violations[0].session_id, Some("s-1".into()));
+    }
+
+    #[test]
+    fn test_query_violations_by_session() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        let now = Utc::now().to_rfc3339();
+        let body = CreateSessionRequest {
+            machine_id: "m-1".into(),
+            repo_path: "/project".into(),
+            title: "Test".into(),
+            instructions: "Work".into(),
+            autonomy_level: None,
+            work_item_id: None,
+            context: None,
+        };
+        insert_session(&state, "s-1", "user-default", &body, "normal", &now).unwrap();
+
+        insert_policy_violation(
+            &state, Some("s-1"), "m-1", "user-default", "autonomy:autonomous", "machine",
+            "exceeds max", Some("/project"),
+        ).unwrap();
+        insert_policy_violation(
+            &state, None, "m-1", "user-default", "autonomy:autonomous", "machine",
+            "other violation", Some("/other"),
+        ).unwrap();
+
+        let violations = query_violations_by_session(&state, "s-1", "user-default").unwrap();
+        assert_eq!(violations.len(), 1);
+        assert_eq!(violations[0].session_id, Some("s-1".into()));
+    }
+
+    #[test]
+    fn test_session_creation_violation_logged() {
+        let state = test_state();
+        create_trusted_machine(&state, "m-1");
+
+        // Set machine policy to only allow normal autonomy
+        let policy = MachinePolicy {
+            id: "p-1".into(),
+            machine_id: "m-1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Normal,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        upsert_machine_policy(&state, "m-1", &policy).unwrap();
+
+        // Simulate what create_session does when autonomy is blocked:
+        // Load the machine policy and check autonomy
+        let loaded_policy = load_machine_policy(&state, "m-1").unwrap().unwrap();
+        let repo_policy = load_repo_policy(&state, "m-1", "/project").unwrap();
+        let result = crate::models::is_autonomy_allowed(
+            &AutonomyLevel::Autonomous,
+            &loaded_policy,
+            repo_policy.as_ref(),
+        );
+        assert!(result.is_err());
+
+        let violation = result.unwrap_err();
+        // Log the violation (mirrors what the handler now does)
+        insert_policy_violation(
+            &state,
+            None,
+            "m-1",
+            "user-default",
+            &violation.blocked_action,
+            &violation.policy_scope,
+            &violation.reason,
+            Some("/project"),
+        )
+        .unwrap();
+
+        // Verify violation record exists
+        let query = ListViolationsQuery {
+            machine_id: None,
+            session_id: None,
+            limit: None,
+            offset: None,
+        };
+        let result = query_violations(&state, "user-default", &query).unwrap();
+        assert_eq!(result.total, 1);
+        let v = &result.violations[0];
+        assert_eq!(v.machine_id, "m-1");
+        assert_eq!(v.action, "autonomy:autonomous");
+        assert_eq!(v.policy_scope, "machine");
+        assert!(v.reason.contains("exceeds machine max"));
+        assert_eq!(v.session_id, None);
+        assert_eq!(v.repo_path, Some("/project".into()));
     }
 }

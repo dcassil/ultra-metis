@@ -1,4 +1,5 @@
 use crate::discovery::RepoInfo;
+use crate::policy::MachinePolicy;
 use serde::{Deserialize, Serialize};
 
 /// Response from the control service after machine registration.
@@ -229,6 +230,34 @@ impl ControlClient {
         let status = response.status();
         if status.is_success() {
             Ok(())
+        } else {
+            let body = response.text().await.unwrap_or_default();
+            Err(ClientError::UnexpectedStatus {
+                status: status.as_u16(),
+                body,
+            })
+        }
+    }
+
+    /// Fetch the machine policy from the control service.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ClientError` on HTTP failures or unexpected status codes.
+    pub async fn fetch_policy(&self, machine_id: &str) -> Result<MachinePolicy, ClientError> {
+        let url = format!("{}/api/machines/{machine_id}/policy", self.base_url);
+
+        let response = self
+            .http
+            .get(&url)
+            .bearer_auth(&self.token)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let policy = response.json::<MachinePolicy>().await?;
+            Ok(policy)
         } else {
             let body = response.text().await.unwrap_or_default();
             Err(ClientError::UnexpectedStatus {

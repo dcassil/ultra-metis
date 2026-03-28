@@ -5,6 +5,7 @@ import {
   ChartBarIcon,
   ClockIcon,
   ShieldCheckIcon,
+  ExclamationTriangleIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import { usePendingCount } from '../hooks/usePendingCount';
@@ -15,6 +16,7 @@ const navigation = [
   { name: 'Monitoring', href: '/monitoring', icon: ChartBarIcon, showPendingBadge: false },
   { name: 'History', href: '/history', icon: ClockIcon, showPendingBadge: false },
   { name: 'Policies', href: '/policies', icon: ShieldCheckIcon, showPendingBadge: false },
+  { name: 'Violations', href: '/violations', icon: ExclamationTriangleIcon, showPendingBadge: false },
 ];
 
 interface SidebarProps {

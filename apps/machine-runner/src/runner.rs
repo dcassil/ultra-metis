@@ -3,6 +3,7 @@ use std::time::Duration;
 use crate::client::{ClientError, CommandResponse, ControlClient, HeartbeatRequest, RegisterRequest};
 use crate::config::RunnerConfig;
 use crate::discovery;
+use crate::policy::LocalPolicyCache;
 use crate::supervisor::ProcessSupervisor;
 
 /// The possible states of the machine runner lifecycle.
@@ -21,6 +22,7 @@ pub struct Runner {
     state: RunnerState,
     machine_id: Option<String>,
     supervisor: ProcessSupervisor,
+    policy_cache: LocalPolicyCache,
 }
 
 impl Runner {
@@ -30,12 +32,14 @@ impl Runner {
     pub fn new(config: RunnerConfig) -> (Self, tokio::sync::mpsc::Receiver<crate::supervisor::SupervisorEvent>) {
         let client = ControlClient::new(&config.control_service_url, &config.api_token);
         let (supervisor, event_rx) = ProcessSupervisor::new();
+        let policy_cache = LocalPolicyCache::new(300);
         let runner = Self {
             config,
             client,
             state: RunnerState::Registering,
             machine_id: None,
             supervisor,
+            policy_cache,
         };
         (runner, event_rx)
     }
@@ -60,6 +64,12 @@ impl Runner {
     /// loop terminates due to an unrecoverable error.
     pub async fn run(&mut self) -> anyhow::Result<()> {
         self.register().await?;
+
+        // Fetch initial policy if already active after registration
+        if self.state == RunnerState::Active {
+            self.refresh_policy().await;
+        }
+
         self.heartbeat_loop().await
     }
 
@@ -104,6 +114,10 @@ impl Runner {
                     backoff.reset();
                     // Poll for and process commands when active
                     if self.state == RunnerState::Active {
+                        // Refresh policy if stale
+                        if self.policy_cache.needs_refresh() {
+                            self.refresh_policy().await;
+                        }
                         self.poll_and_process_commands().await;
                     }
                 }
@@ -130,6 +144,36 @@ impl Runner {
 
         tracing::info!(state = ?self.state, "Runner heartbeat loop exited");
         Ok(())
+    }
+
+    /// Fetch the machine policy from the control service and update the local cache.
+    ///
+    /// Logs a warning if the fetch fails but does not propagate the error,
+    /// allowing the runner to continue with the previously cached policy.
+    async fn refresh_policy(&mut self) {
+        let machine_id = match self.machine_id.as_deref() {
+            Some(id) => id.to_string(),
+            None => return,
+        };
+
+        match self.client.fetch_policy(&machine_id).await {
+            Ok(policy) => {
+                tracing::info!(
+                    machine_id = %machine_id,
+                    policy_id = %policy.id,
+                    max_autonomy = %policy.max_autonomy_level,
+                    "Refreshed machine policy"
+                );
+                self.policy_cache.update(policy);
+            }
+            Err(e) => {
+                tracing::warn!(
+                    machine_id = %machine_id,
+                    error = %e,
+                    "Failed to fetch machine policy, using cached version"
+                );
+            }
+        }
     }
 
     async fn send_heartbeat(&mut self) -> Result<(), HeartbeatOutcome> {
@@ -241,6 +285,32 @@ impl Runner {
             .get("autonomy_level")
             .and_then(serde_json::Value::as_str)
             .unwrap_or("normal");
+
+        // Enforce local policy: validate autonomy level
+        if let Err(detail) = self.policy_cache.validate_autonomy(autonomy_level) {
+            tracing::warn!(
+                command_id = %cmd.command_id,
+                session_id = session_id,
+                autonomy = autonomy_level,
+                detail = %detail,
+                "Session rejected by local policy"
+            );
+
+            // Report failure to the control service
+            let _ = self
+                .client
+                .report_session_state(
+                    session_id,
+                    "failed",
+                    Some(serde_json::json!({
+                        "reason": "local_policy_violation",
+                        "detail": detail
+                    })),
+                )
+                .await;
+
+            return Ok(());
+        }
 
         tracing::info!(
             command_id = %cmd.command_id,

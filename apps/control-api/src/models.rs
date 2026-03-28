@@ -133,6 +133,314 @@ pub struct MachineRepo {
     pub last_seen: String,
 }
 
+// -- Policy types --
+
+/// Action categories that can be allowed or blocked by policy.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum ActionCategory {
+    ReadFiles,
+    WriteFiles,
+    RunTests,
+    RunBuilds,
+    GitOperations,
+    InstallPackages,
+    NetworkAccess,
+    WorktreeOperations,
+    ShellExecution,
+}
+
+impl ActionCategory {
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::ReadFiles => "read_files",
+            Self::WriteFiles => "write_files",
+            Self::RunTests => "run_tests",
+            Self::RunBuilds => "run_builds",
+            Self::GitOperations => "git_operations",
+            Self::InstallPackages => "install_packages",
+            Self::NetworkAccess => "network_access",
+            Self::WorktreeOperations => "worktree_operations",
+            Self::ShellExecution => "shell_execution",
+        }
+    }
+
+    /// All available action categories.
+    #[must_use]
+    pub fn all() -> Vec<Self> {
+        vec![
+            Self::ReadFiles,
+            Self::WriteFiles,
+            Self::RunTests,
+            Self::RunBuilds,
+            Self::GitOperations,
+            Self::InstallPackages,
+            Self::NetworkAccess,
+            Self::WorktreeOperations,
+            Self::ShellExecution,
+        ]
+    }
+}
+
+impl std::fmt::Display for ActionCategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for ActionCategory {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "read_files" => Ok(Self::ReadFiles),
+            "write_files" => Ok(Self::WriteFiles),
+            "run_tests" => Ok(Self::RunTests),
+            "run_builds" => Ok(Self::RunBuilds),
+            "git_operations" => Ok(Self::GitOperations),
+            "install_packages" => Ok(Self::InstallPackages),
+            "network_access" => Ok(Self::NetworkAccess),
+            "worktree_operations" => Ok(Self::WorktreeOperations),
+            "shell_execution" => Ok(Self::ShellExecution),
+            other => Err(format!("unknown action category: {other}")),
+        }
+    }
+}
+
+/// Session mode — visible indicator of policy restrictiveness.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionMode {
+    Normal,
+    Restricted,
+    Elevated,
+}
+
+impl SessionMode {
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Normal => "normal",
+            Self::Restricted => "restricted",
+            Self::Elevated => "elevated",
+        }
+    }
+}
+
+impl std::str::FromStr for SessionMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "normal" => Ok(Self::Normal),
+            "restricted" => Ok(Self::Restricted),
+            "elevated" => Ok(Self::Elevated),
+            other => Err(format!("unknown session mode: {other}")),
+        }
+    }
+}
+
+/// Machine-level policy.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MachinePolicy {
+    pub id: String,
+    pub machine_id: String,
+    pub allowed_categories: Vec<ActionCategory>,
+    pub blocked_categories: Vec<ActionCategory>,
+    pub max_autonomy_level: AutonomyLevel,
+    pub session_mode: SessionMode,
+    pub require_approval_for: Vec<ActionCategory>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Repo-level policy (narrows machine policy for a specific repo).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RepoPolicy {
+    pub id: String,
+    pub machine_id: String,
+    pub repo_path: String,
+    pub allowed_categories: Vec<ActionCategory>,
+    pub blocked_categories: Vec<ActionCategory>,
+    pub max_autonomy_level: Option<AutonomyLevel>,
+    pub require_approval_for: Vec<ActionCategory>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Policy violation — recorded when an action is blocked.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PolicyViolation {
+    pub reason: String,
+    pub policy_scope: String,
+    pub blocked_action: String,
+}
+
+/// Check if an action is allowed under a machine policy and optional repo policy.
+/// Blocked categories always take precedence. Repo policy narrows machine policy.
+pub fn is_action_allowed(
+    action: &ActionCategory,
+    machine_policy: &MachinePolicy,
+    repo_policy: Option<&RepoPolicy>,
+) -> Result<(), PolicyViolation> {
+    // Check machine blocked list first (deny wins)
+    if machine_policy.blocked_categories.contains(action) {
+        return Err(PolicyViolation {
+            reason: format!("action '{}' is blocked by machine policy", action),
+            policy_scope: "machine".into(),
+            blocked_action: action.to_string(),
+        });
+    }
+
+    // Check repo blocked list
+    if let Some(rp) = repo_policy {
+        if rp.blocked_categories.contains(action) {
+            return Err(PolicyViolation {
+                reason: format!("action '{}' is blocked by repo policy", action),
+                policy_scope: "repo".into(),
+                blocked_action: action.to_string(),
+            });
+        }
+    }
+
+    // Check machine allowed list
+    if !machine_policy.allowed_categories.contains(action) {
+        return Err(PolicyViolation {
+            reason: format!("action '{}' is not in machine allowed list", action),
+            policy_scope: "machine".into(),
+            blocked_action: action.to_string(),
+        });
+    }
+
+    // Check repo allowed list (if repo policy exists and has allowed categories)
+    if let Some(rp) = repo_policy {
+        if !rp.allowed_categories.is_empty() && !rp.allowed_categories.contains(action) {
+            return Err(PolicyViolation {
+                reason: format!("action '{}' is not in repo allowed list", action),
+                policy_scope: "repo".into(),
+                blocked_action: action.to_string(),
+            });
+        }
+    }
+
+    Ok(())
+}
+
+/// Check if a requested autonomy level is allowed by policy.
+pub fn is_autonomy_allowed(
+    requested: &AutonomyLevel,
+    machine_policy: &MachinePolicy,
+    repo_policy: Option<&RepoPolicy>,
+) -> Result<(), PolicyViolation> {
+    let autonomy_rank = |level: &AutonomyLevel| -> u8 {
+        match level {
+            AutonomyLevel::Normal => 0,
+            AutonomyLevel::Stricter => 0, // stricter is more restrictive, always allowed
+            AutonomyLevel::Autonomous => 2,
+        }
+    };
+
+    if autonomy_rank(requested) > autonomy_rank(&machine_policy.max_autonomy_level) {
+        return Err(PolicyViolation {
+            reason: format!(
+                "requested autonomy '{}' exceeds machine max '{}'",
+                requested, machine_policy.max_autonomy_level
+            ),
+            policy_scope: "machine".into(),
+            blocked_action: format!("autonomy:{requested}"),
+        });
+    }
+
+    if let Some(rp) = repo_policy {
+        if let Some(ref repo_max) = rp.max_autonomy_level {
+            if autonomy_rank(requested) > autonomy_rank(repo_max) {
+                return Err(PolicyViolation {
+                    reason: format!(
+                        "requested autonomy '{}' exceeds repo max '{}'",
+                        requested, repo_max
+                    ),
+                    policy_scope: "repo".into(),
+                    blocked_action: format!("autonomy:{requested}"),
+                });
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Request body for PUT /api/machines/{id}/policy.
+#[derive(Debug, Deserialize)]
+pub struct UpdateMachinePolicyRequest {
+    pub allowed_categories: Option<Vec<ActionCategory>>,
+    pub blocked_categories: Option<Vec<ActionCategory>>,
+    pub max_autonomy_level: Option<AutonomyLevel>,
+    pub session_mode: Option<SessionMode>,
+    pub require_approval_for: Option<Vec<ActionCategory>>,
+}
+
+/// Request body for PUT /api/machines/{id}/repos/{repo_path}/policy.
+#[derive(Debug, Deserialize)]
+pub struct UpdateRepoPolicyRequest {
+    pub allowed_categories: Option<Vec<ActionCategory>>,
+    pub blocked_categories: Option<Vec<ActionCategory>>,
+    pub max_autonomy_level: Option<AutonomyLevel>,
+    pub require_approval_for: Option<Vec<ActionCategory>>,
+}
+
+/// Response for a policy violation record.
+#[derive(Debug, Serialize)]
+pub struct PolicyViolationRecord {
+    pub id: String,
+    pub session_id: Option<String>,
+    pub machine_id: String,
+    pub user_id: String,
+    pub action: String,
+    pub policy_scope: String,
+    pub reason: String,
+    pub repo_path: Option<String>,
+    pub timestamp: String,
+}
+
+/// Query params for repo-policy endpoints (repo_path as query param).
+#[derive(Debug, Deserialize)]
+pub struct RepoPolicyQuery {
+    pub repo_path: String,
+}
+
+/// Query params for GET /api/machines/{id}/policy/effective.
+#[derive(Debug, Deserialize)]
+pub struct EffectivePolicyQuery {
+    pub repo_path: Option<String>,
+}
+
+/// Merged effective policy returned by the effective endpoint.
+#[derive(Debug, Serialize)]
+pub struct EffectivePolicy {
+    pub allowed_categories: Vec<ActionCategory>,
+    pub blocked_categories: Vec<ActionCategory>,
+    pub max_autonomy_level: AutonomyLevel,
+    pub session_mode: SessionMode,
+    pub require_approval_for: Vec<ActionCategory>,
+}
+
+/// Query params for GET /api/policy-violations.
+#[derive(Debug, Deserialize)]
+pub struct ListViolationsQuery {
+    pub machine_id: Option<String>,
+    pub session_id: Option<String>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}
+
+/// Response for policy violations list.
+#[derive(Debug, Serialize)]
+pub struct ViolationsListResponse {
+    pub violations: Vec<PolicyViolationRecord>,
+    pub total: i64,
+}
+
 // -- Session types --
 
 /// State of a session in its lifecycle.
@@ -664,5 +972,179 @@ mod tests {
     #[test]
     fn test_invalid_autonomy_level() {
         assert!("bogus".parse::<AutonomyLevel>().is_err());
+    }
+
+    #[test]
+    fn test_action_category_roundtrip() {
+        for cat in ActionCategory::all() {
+            let s = cat.as_str();
+            let parsed: ActionCategory = s.parse().unwrap();
+            assert_eq!(parsed, cat);
+        }
+    }
+
+    #[test]
+    fn test_session_mode_roundtrip() {
+        for mode in [SessionMode::Normal, SessionMode::Restricted, SessionMode::Elevated] {
+            let s = mode.as_str();
+            let parsed: SessionMode = s.parse().unwrap();
+            assert_eq!(parsed, mode);
+        }
+    }
+
+    #[test]
+    fn test_is_action_allowed_basic() {
+        let policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        assert!(is_action_allowed(&ActionCategory::ReadFiles, &policy, None).is_ok());
+        assert!(is_action_allowed(&ActionCategory::WriteFiles, &policy, None).is_ok());
+    }
+
+    #[test]
+    fn test_is_action_blocked_by_machine() {
+        let policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![ActionCategory::InstallPackages],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        let result = is_action_allowed(&ActionCategory::InstallPackages, &policy, None);
+        assert!(result.is_err());
+        let violation = result.unwrap_err();
+        assert_eq!(violation.policy_scope, "machine");
+    }
+
+    #[test]
+    fn test_is_action_blocked_by_repo() {
+        let machine_policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        let repo_policy = RepoPolicy {
+            id: "rp1".into(),
+            machine_id: "m1".into(),
+            repo_path: "/project".into(),
+            allowed_categories: vec![],
+            blocked_categories: vec![ActionCategory::GitOperations],
+            max_autonomy_level: None,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        let result = is_action_allowed(&ActionCategory::GitOperations, &machine_policy, Some(&repo_policy));
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().policy_scope, "repo");
+    }
+
+    #[test]
+    fn test_repo_narrows_allowed_list() {
+        let machine_policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: ActionCategory::all(),
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        let repo_policy = RepoPolicy {
+            id: "rp1".into(),
+            machine_id: "m1".into(),
+            repo_path: "/project".into(),
+            allowed_categories: vec![ActionCategory::ReadFiles, ActionCategory::WriteFiles],
+            blocked_categories: vec![],
+            max_autonomy_level: None,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        // ReadFiles allowed by both
+        assert!(is_action_allowed(&ActionCategory::ReadFiles, &machine_policy, Some(&repo_policy)).is_ok());
+        // GitOperations allowed by machine but not in repo allowed list
+        assert!(is_action_allowed(&ActionCategory::GitOperations, &machine_policy, Some(&repo_policy)).is_err());
+    }
+
+    #[test]
+    fn test_autonomy_allowed() {
+        let policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: vec![],
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        assert!(is_autonomy_allowed(&AutonomyLevel::Normal, &policy, None).is_ok());
+        assert!(is_autonomy_allowed(&AutonomyLevel::Autonomous, &policy, None).is_ok());
+    }
+
+    #[test]
+    fn test_autonomy_blocked_by_machine() {
+        let policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: vec![],
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Normal,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        assert!(is_autonomy_allowed(&AutonomyLevel::Normal, &policy, None).is_ok());
+        assert!(is_autonomy_allowed(&AutonomyLevel::Autonomous, &policy, None).is_err());
+    }
+
+    #[test]
+    fn test_autonomy_blocked_by_repo() {
+        let machine_policy = MachinePolicy {
+            id: "p1".into(),
+            machine_id: "m1".into(),
+            allowed_categories: vec![],
+            blocked_categories: vec![],
+            max_autonomy_level: AutonomyLevel::Autonomous,
+            session_mode: SessionMode::Normal,
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        let repo_policy = RepoPolicy {
+            id: "rp1".into(),
+            machine_id: "m1".into(),
+            repo_path: "/project".into(),
+            allowed_categories: vec![],
+            blocked_categories: vec![],
+            max_autonomy_level: Some(AutonomyLevel::Normal),
+            require_approval_for: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        assert!(is_autonomy_allowed(&AutonomyLevel::Autonomous, &machine_policy, Some(&repo_policy)).is_err());
     }
 }

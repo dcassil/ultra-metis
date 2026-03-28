@@ -10,6 +10,7 @@ import SessionDetailPage from './pages/SessionDetailPage';
 import MonitoringPage from './pages/MonitoringPage';
 import HistoryPage from './pages/HistoryPage';
 import PoliciesPage from './pages/PoliciesPage';
+import ViolationsPage from './pages/ViolationsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="policies" element={<PoliciesPage />} />
+            <Route path="violations" element={<ViolationsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

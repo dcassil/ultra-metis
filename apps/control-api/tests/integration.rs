@@ -1103,3 +1103,470 @@ async fn session_force_stop_while_running() {
 
     handle.abort();
 }
+
+// ===========================================================================
+// Policy helpers
+// ===========================================================================
+
+/// GET /api/machines/{id}/policy — returns the JSON body.
+async fn get_machine_policy_api(
+    client: &Client,
+    base: &str,
+    machine_id: &str,
+) -> serde_json::Value {
+    let resp = client
+        .get(format!("{base}/api/machines/{machine_id}/policy"))
+        .send()
+        .await
+        .expect("get machine policy request failed");
+    assert_eq!(resp.status(), 200);
+    resp.json().await.expect("machine policy not json")
+}
+
+/// PUT /api/machines/{id}/policy — returns the raw response.
+async fn update_machine_policy_api(
+    client: &Client,
+    base: &str,
+    machine_id: &str,
+    body: serde_json::Value,
+) -> reqwest::Response {
+    client
+        .put(format!("{base}/api/machines/{machine_id}/policy"))
+        .json(&body)
+        .send()
+        .await
+        .expect("update machine policy request failed")
+}
+
+/// GET /api/policy-violations with optional query params — returns JSON body.
+async fn get_violations(
+    client: &Client,
+    base: &str,
+    params: &[(&str, &str)],
+) -> serde_json::Value {
+    let resp = client
+        .get(format!("{base}/api/policy-violations"))
+        .query(params)
+        .send()
+        .await
+        .expect("get violations request failed");
+    assert_eq!(resp.status(), 200);
+    resp.json().await.expect("violations not json")
+}
+
+/// Create a session with a specific autonomy level — returns the raw response.
+async fn create_session_with_autonomy(
+    client: &Client,
+    base: &str,
+    machine_id: &str,
+    autonomy_level: &str,
+) -> reqwest::Response {
+    client
+        .post(format!("{base}/api/sessions"))
+        .json(&serde_json::json!({
+            "machine_id": machine_id,
+            "repo_path": "/home/user/repo",
+            "title": "Test session",
+            "instructions": "Do the thing",
+            "autonomy_level": autonomy_level,
+        }))
+        .send()
+        .await
+        .expect("create session request failed")
+}
+
+// ===========================================================================
+// 21. Default policy created on approval
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_default_created_on_approval() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "policy-default").await;
+
+    let policy = get_machine_policy_api(&client, &base, &machine_id).await;
+
+    // All action categories should be in allowed list
+    let allowed = policy["allowed_categories"]
+        .as_array()
+        .expect("allowed_categories should be an array");
+    let allowed_strs: Vec<&str> = allowed.iter().filter_map(|v| v.as_str()).collect();
+    assert!(allowed_strs.contains(&"read_files"));
+    assert!(allowed_strs.contains(&"write_files"));
+    assert!(allowed_strs.contains(&"run_tests"));
+    assert!(allowed_strs.contains(&"run_builds"));
+    assert!(allowed_strs.contains(&"git_operations"));
+    assert!(allowed_strs.contains(&"install_packages"));
+    assert!(allowed_strs.contains(&"network_access"));
+    assert!(allowed_strs.contains(&"worktree_operations"));
+    assert!(allowed_strs.contains(&"shell_execution"));
+
+    // Blocked should be empty
+    let blocked = policy["blocked_categories"]
+        .as_array()
+        .expect("blocked_categories should be an array");
+    assert!(blocked.is_empty());
+
+    // Max autonomy = autonomous, session_mode = normal
+    assert_eq!(policy["max_autonomy_level"], "autonomous");
+    assert_eq!(policy["session_mode"], "normal");
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 22. Policy blocks high autonomy session
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_blocks_high_autonomy_session() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "policy-block").await;
+
+    // Set max autonomy to normal
+    let resp = update_machine_policy_api(
+        &client,
+        &base,
+        &machine_id,
+        serde_json::json!({ "max_autonomy_level": "normal" }),
+    )
+    .await;
+    assert_eq!(resp.status(), 200);
+
+    // Try to create session with autonomy_level=autonomous — should fail
+    let resp = create_session_with_autonomy(&client, &base, &machine_id, "autonomous").await;
+    assert_eq!(resp.status(), 400);
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    let error_msg = body["error"].as_str().expect("should have error field");
+    assert!(
+        error_msg.contains("autonomy") || error_msg.contains("policy"),
+        "error message should mention policy or autonomy, got: {error_msg}"
+    );
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 23. Policy allows matching autonomy
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_allows_matching_autonomy() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "policy-allow").await;
+
+    // Set max autonomy to normal
+    let resp = update_machine_policy_api(
+        &client,
+        &base,
+        &machine_id,
+        serde_json::json!({ "max_autonomy_level": "normal" }),
+    )
+    .await;
+    assert_eq!(resp.status(), 200);
+
+    // Create session with autonomy_level=normal — should succeed
+    let resp = create_session_with_autonomy(&client, &base, &machine_id, "normal").await;
+    assert_eq!(resp.status(), 201);
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 24. Policy update roundtrip
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_update_roundtrip() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "policy-roundtrip").await;
+
+    // Update with blocked categories and session mode
+    let resp = update_machine_policy_api(
+        &client,
+        &base,
+        &machine_id,
+        serde_json::json!({
+            "blocked_categories": ["install_packages", "network_access"],
+            "session_mode": "restricted",
+        }),
+    )
+    .await;
+    assert_eq!(resp.status(), 200);
+
+    // Read back
+    let policy = get_machine_policy_api(&client, &base, &machine_id).await;
+
+    let blocked = policy["blocked_categories"]
+        .as_array()
+        .expect("blocked_categories should be an array");
+    let blocked_strs: Vec<&str> = blocked.iter().filter_map(|v| v.as_str()).collect();
+    assert!(blocked_strs.contains(&"install_packages"));
+    assert!(blocked_strs.contains(&"network_access"));
+    assert_eq!(blocked.len(), 2);
+
+    assert_eq!(policy["session_mode"], "restricted");
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 25. Effective policy merge
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_effective_merge() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "policy-effective").await;
+
+    // Machine policy: allowed=all, blocked=[] (default after approval)
+    // No changes needed — default is already permissive
+
+    // Set repo policy for "/project": blocked=["git_operations"]
+    let resp = client
+        .put(format!(
+            "{base}/api/machines/{machine_id}/repo-policy?repo_path=/project"
+        ))
+        .json(&serde_json::json!({
+            "blocked_categories": ["git_operations"],
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+
+    // Get effective policy for that repo
+    let resp = client
+        .get(format!(
+            "{base}/api/machines/{machine_id}/policy/effective?repo_path=/project"
+        ))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+    let effective: serde_json::Value = resp.json().await.unwrap();
+
+    let blocked = effective["blocked_categories"]
+        .as_array()
+        .expect("blocked_categories should be an array");
+    let blocked_strs: Vec<&str> = blocked.iter().filter_map(|v| v.as_str()).collect();
+    assert!(
+        blocked_strs.contains(&"git_operations"),
+        "effective policy should include git_operations in blocked list"
+    );
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 26. Policy violation logged on rejection
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_violation_logged_on_rejection() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id =
+        register_and_approve_machine(&client, &base, "policy-violation").await;
+
+    // Set max autonomy to normal
+    let resp = update_machine_policy_api(
+        &client,
+        &base,
+        &machine_id,
+        serde_json::json!({ "max_autonomy_level": "normal" }),
+    )
+    .await;
+    assert_eq!(resp.status(), 200);
+
+    // Attempt to create autonomous session — should fail
+    let resp = create_session_with_autonomy(&client, &base, &machine_id, "autonomous").await;
+    assert_eq!(resp.status(), 400);
+
+    // Check that a violation was logged
+    let violations = get_violations(&client, &base, &[]).await;
+    let total = violations["total"].as_i64().expect("total should be a number");
+    assert!(total >= 1, "expected at least 1 violation, got {total}");
+
+    let records = violations["violations"]
+        .as_array()
+        .expect("violations should be an array");
+    let v = &records[0];
+    assert_eq!(v["machine_id"], machine_id);
+    let reason = v["reason"].as_str().unwrap_or("");
+    assert!(
+        reason.contains("autonomy"),
+        "violation reason should mention autonomy, got: {reason}"
+    );
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 27. Policy violations filter by machine
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_violations_filter_by_machine() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    // Set up two machines, each with restricted autonomy
+    let machine_a =
+        register_and_approve_machine(&client, &base, "viol-filter-a").await;
+    let machine_b =
+        register_and_approve_machine(&client, &base, "viol-filter-b").await;
+
+    // Restrict both
+    for mid in [&machine_a, &machine_b] {
+        let resp = update_machine_policy_api(
+            &client,
+            &base,
+            mid,
+            serde_json::json!({ "max_autonomy_level": "normal" }),
+        )
+        .await;
+        assert_eq!(resp.status(), 200);
+    }
+
+    // Trigger violations on both
+    let resp_a =
+        create_session_with_autonomy(&client, &base, &machine_a, "autonomous").await;
+    assert_eq!(resp_a.status(), 400);
+    let resp_b =
+        create_session_with_autonomy(&client, &base, &machine_b, "autonomous").await;
+    assert_eq!(resp_b.status(), 400);
+
+    // Filter by machine_a
+    let violations =
+        get_violations(&client, &base, &[("machine_id", &machine_a)]).await;
+    let records = violations["violations"]
+        .as_array()
+        .expect("violations should be an array");
+
+    assert_eq!(
+        violations["total"].as_i64().unwrap(),
+        1,
+        "expected exactly 1 violation for machine_a"
+    );
+    assert_eq!(records[0]["machine_id"], machine_a);
+
+    // Filter by machine_b
+    let violations =
+        get_violations(&client, &base, &[("machine_id", &machine_b)]).await;
+    let records = violations["violations"]
+        .as_array()
+        .expect("violations should be an array");
+    assert_eq!(
+        violations["total"].as_i64().unwrap(),
+        1,
+        "expected exactly 1 violation for machine_b"
+    );
+    assert_eq!(records[0]["machine_id"], machine_b);
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 28. Runner can fetch policy with bearer token
+// ===========================================================================
+
+#[tokio::test]
+async fn policy_runner_can_fetch_policy() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id =
+        register_and_approve_machine(&client, &base, "policy-runner").await;
+
+    // GET policy with Bearer token (simulating a runner request)
+    let resp = client
+        .get(format!("{base}/api/machines/{machine_id}/policy"))
+        .bearer_auth(VALID_TOKEN)
+        .send()
+        .await
+        .expect("get policy with bearer token failed");
+    assert_eq!(resp.status(), 200);
+
+    let policy: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(policy["machine_id"], machine_id);
+    assert_eq!(policy["max_autonomy_level"], "autonomous");
+
+    handle.abort();
+}
+
+// ===========================================================================
+// 29. Repo policy CRUD
+// ===========================================================================
+
+#[tokio::test]
+async fn repo_policy_crud() {
+    let (base, handle) = start_test_server().await;
+    let client = Client::new();
+
+    let machine_id = register_and_approve_machine(&client, &base, "repo-crud").await;
+
+    // PUT repo policy for /project — blocked=["shell_execution"]
+    let resp = client
+        .put(format!(
+            "{base}/api/machines/{machine_id}/repo-policy?repo_path=/project"
+        ))
+        .json(&serde_json::json!({
+            "blocked_categories": ["shell_execution"],
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+
+    // GET repo policy for /project — verify blocked includes shell_execution
+    let resp = client
+        .get(format!(
+            "{base}/api/machines/{machine_id}/repo-policy?repo_path=/project"
+        ))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+    let policy: serde_json::Value = resp.json().await.unwrap();
+    let blocked = policy["blocked_categories"]
+        .as_array()
+        .expect("blocked_categories should be an array");
+    let blocked_strs: Vec<&str> = blocked.iter().filter_map(|v| v.as_str()).collect();
+    assert!(
+        blocked_strs.contains(&"shell_execution"),
+        "repo policy should block shell_execution"
+    );
+
+    // GET different repo_path — should return empty/default
+    let resp = client
+        .get(format!(
+            "{base}/api/machines/{machine_id}/repo-policy?repo_path=/other-project"
+        ))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+    let other_policy: serde_json::Value = resp.json().await.unwrap();
+    let other_blocked = other_policy["blocked_categories"]
+        .as_array()
+        .expect("blocked_categories should be an array");
+    assert!(
+        other_blocked.is_empty(),
+        "different repo path should have empty blocked list"
+    );
+
+    handle.abort();
+}

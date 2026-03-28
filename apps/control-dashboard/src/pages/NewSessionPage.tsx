@@ -4,11 +4,14 @@ import { listMachines, getMachine } from '../api/machines'
 import type { Machine, MachineDetail } from '../api/machines'
 import { createSession } from '../api/sessions'
 import type { CreateSessionRequest } from '../api/sessions'
+import { getMachinePolicy } from '../api/policies'
+import type { MachinePolicy } from '../api/policies'
 import { Button } from '../components/ui/Button'
 import { FormInput } from '../components/ui/FormInput'
 import { Select } from '../components/ui/Select'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { SessionModeBadge } from '../components/SessionModeBadge'
 
 type AutonomyLevel = 'normal' | 'stricter' | 'autonomous'
 
@@ -40,6 +43,7 @@ export default function NewSessionPage() {
   // Machine & repo data
   const [machines, setMachines] = useState<Machine[]>([])
   const [machineDetail, setMachineDetail] = useState<MachineDetail | null>(null)
+  const [machinePolicy, setMachinePolicy] = useState<MachinePolicy | null>(null)
   const [loadingMachines, setLoadingMachines] = useState(true)
   const [loadingRepos, setLoadingRepos] = useState(false)
 
@@ -75,10 +79,11 @@ export default function NewSessionPage() {
     void fetchMachines()
   }, [fetchMachines])
 
-  // When machine selection changes, fetch its detail (which includes repos)
+  // When machine selection changes, fetch its detail (which includes repos) and policy
   useEffect(() => {
     if (!machineId) {
       setMachineDetail(null)
+      setMachinePolicy(null)
       setRepoPath('')
       return
     }
@@ -86,6 +91,7 @@ export default function NewSessionPage() {
     let cancelled = false
     setLoadingRepos(true)
     setRepoPath('')
+    setMachinePolicy(null)
 
     getMachine(machineId)
       .then((detail) => {
@@ -102,6 +108,16 @@ export default function NewSessionPage() {
         if (!cancelled) {
           setLoadingRepos(false)
         }
+      })
+
+    getMachinePolicy(machineId)
+      .then((policy) => {
+        if (!cancelled) {
+          setMachinePolicy(policy)
+        }
+      })
+      .catch(() => {
+        // Non-critical — just won't show session mode info
       })
 
     return () => {
@@ -187,6 +203,21 @@ export default function NewSessionPage() {
                 onChange={setMachineId}
                 placeholder="Select a machine..."
               />
+            )}
+
+            {machineId && machinePolicy && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-secondary-500">Session Mode:</span>
+                <SessionModeBadge mode={machinePolicy.session_mode} />
+              </div>
+            )}
+
+            {machineId && machinePolicy?.session_mode === 'restricted' && (
+              <div className="rounded-md border border-warning-300 bg-warning-50 p-3">
+                <p className="text-sm text-warning-700">
+                  This machine is in Restricted mode. Some actions may be limited.
+                </p>
+              </div>
             )}
 
             {machineId && (

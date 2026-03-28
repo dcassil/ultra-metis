@@ -111,6 +111,43 @@ fn create_tables(conn: &Connection) -> Result<()> {
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             delivered_at TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS machine_policies (
+            id TEXT PRIMARY KEY,
+            machine_id TEXT NOT NULL UNIQUE REFERENCES machines(id),
+            allowed_categories TEXT NOT NULL DEFAULT '[]',
+            blocked_categories TEXT NOT NULL DEFAULT '[]',
+            max_autonomy_level TEXT NOT NULL DEFAULT 'autonomous',
+            session_mode TEXT NOT NULL DEFAULT 'normal',
+            require_approval_for TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS repo_policies (
+            id TEXT PRIMARY KEY,
+            machine_id TEXT NOT NULL REFERENCES machines(id),
+            repo_path TEXT NOT NULL,
+            allowed_categories TEXT NOT NULL DEFAULT '[]',
+            blocked_categories TEXT NOT NULL DEFAULT '[]',
+            max_autonomy_level TEXT,
+            require_approval_for TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(machine_id, repo_path)
+        );
+
+        CREATE TABLE IF NOT EXISTS policy_violations (
+            id TEXT PRIMARY KEY,
+            session_id TEXT,
+            machine_id TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            policy_scope TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            repo_path TEXT,
+            timestamp TEXT NOT NULL DEFAULT (datetime('now'))
+        );
         ",
     )?;
     Ok(())
