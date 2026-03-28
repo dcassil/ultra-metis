@@ -4,14 +4,14 @@ level: task
 title: "Session Planning Context Panel and Integration Tests"
 short_code: "SMET-T-0245"
 created_at: 2026-03-28T00:33:50.540358+00:00
-updated_at: 2026-03-28T00:33:50.540358+00:00
+updated_at: 2026-03-28T01:12:32.345859+00:00
 parent: SMET-I-0071
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0071
 ## Objective
 
 Add a "Planning Context" collapsible panel to the existing Session Detail page showing the linked work item (task/story) and its full hierarchy chain. Also add integration tests validating the complete planning data flow from control-api through the dashboard. This task integrates planning data with the existing session management UI.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -67,4 +71,12 @@ Add a "Planning Context" collapsible panel to the existing Session Detail page s
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-28: Implementation Complete
+- Created `PlanningContextPanel.tsx` — collapsible panel showing work item hierarchy chain
+- Panel walks parent chain from work_item_id up to root (Vision/Strategy)
+- Each ancestor shows DocumentTypeBadge, ShortCodeLink, title, PhaseBadge
+- Current work item highlighted with primary-50 background
+- Collapse state persisted to localStorage
+- Integrated into SessionDetailPage.tsx — shows when session has work_item_id
+- All 10 planning integration tests pass, 29 existing tests pass (39 total, zero regressions)
+- Dashboard builds cleanly with tsc + vite (994 modules, 0 errors)

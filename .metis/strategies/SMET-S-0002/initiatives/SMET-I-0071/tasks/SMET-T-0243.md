@@ -4,14 +4,14 @@ level: task
 title: "Hierarchy Tree View Page"
 short_code: "SMET-T-0243"
 created_at: 2026-03-28T00:33:48.968536+00:00
-updated_at: 2026-03-28T00:33:48.968536+00:00
+updated_at: 2026-03-28T01:11:10.244062+00:00
 parent: SMET-I-0071
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0071
 ## Objective
 
 Build an interactive hierarchy tree view page that visualizes the full document hierarchy (Vision -> Strategy -> Initiative -> Task) as an expandable/collapsible tree. Users can navigate the planning structure visually and click any node to view its detail page.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

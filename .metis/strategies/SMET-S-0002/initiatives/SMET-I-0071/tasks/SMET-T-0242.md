@@ -4,14 +4,14 @@ level: task
 title: "Document List and Detail Pages"
 short_code: "SMET-T-0242"
 created_at: 2026-03-28T00:33:48.049177+00:00
-updated_at: 2026-03-28T00:33:48.049177+00:00
+updated_at: 2026-03-28T01:11:09.818306+00:00
 parent: SMET-I-0071
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0071
 ## Objective
 
 Build the Document List page (filterable table of all cadre documents) and Document Detail page (full document view with markdown rendering, metadata panel, and parent/child navigation). These are the primary content pages for planning data.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

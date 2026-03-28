@@ -16,6 +16,7 @@ import { SessionTimeline } from '../components/SessionTimeline'
 import { ApprovalCard } from '../components/ApprovalCard'
 import { GuidanceInput } from '../components/GuidanceInput'
 import { useSessionEventStream } from '../hooks/useSessionEventStream'
+import { PlanningContextPanel } from '../components/planning/PlanningContextPanel'
 
 const TERMINAL_STATES = ['completed', 'failed', 'stopped']
 
@@ -386,6 +387,11 @@ export default function SessionDetailPage() {
                 )}
               </dl>
             </Card>
+
+            {/* Planning Context */}
+            {session.work_item_id && (
+              <PlanningContextPanel workItemId={session.work_item_id} />
+            )}
 
             {/* Instructions */}
             <Card title="Instructions">

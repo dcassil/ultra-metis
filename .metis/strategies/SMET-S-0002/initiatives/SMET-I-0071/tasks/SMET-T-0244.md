@@ -4,14 +4,14 @@ level: task
 title: "Quality Dashboard, Rule Browser, and Traceability Views"
 short_code: "SMET-T-0244"
 created_at: 2026-03-28T00:33:49.858694+00:00
-updated_at: 2026-03-28T00:33:49.858694+00:00
+updated_at: 2026-03-28T01:11:10.780146+00:00
 parent: SMET-I-0071
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0071
 ## Objective
 
 Build three governance-focused views: (1) Quality Dashboard showing per-document quality indicators, gate pass/fail status, and aggregate trends; (2) Rule Browser with searchable/filterable list of active engineering rules by scope; (3) Traceability View showing ancestry chain and descendants for any document. These views provide governance visibility into the planning data.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

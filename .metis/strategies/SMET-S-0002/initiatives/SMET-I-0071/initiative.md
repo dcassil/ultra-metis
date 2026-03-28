@@ -4,14 +4,14 @@ level: initiative
 title: "Planning Data Views in Control Dashboard"
 short_code: "SMET-I-0071"
 created_at: 2026-03-20T17:08:31.840484+00:00
-updated_at: 2026-03-28T00:36:27.534439+00:00
+updated_at: 2026-03-28T01:12:37.288580+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
