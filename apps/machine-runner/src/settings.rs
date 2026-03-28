@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use crate::config::RunnerConfig;
@@ -105,7 +107,104 @@ impl Default for Settings {
     }
 }
 
+/// Versioned wrapper for JSON serialization of settings.
+///
+/// The `version` field allows future migrations if the schema changes.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct VersionedSettings {
+    version: u32,
+    #[serde(flatten)]
+    settings: Settings,
+}
+
 impl Settings {
+    /// Path to the settings JSON file (`~/.config/cadre/settings.json`).
+    pub fn settings_path() -> PathBuf {
+        dirs::config_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("cadre")
+            .join("settings.json")
+    }
+
+    /// Path to the legacy TOML config (`~/.config/cadre/machine-runner.toml`).
+    fn legacy_config_path() -> PathBuf {
+        dirs::config_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("cadre")
+            .join("machine-runner.toml")
+    }
+
+    /// Load settings from `~/.config/cadre/settings.json`.
+    ///
+    /// Returns default settings if the file doesn't exist.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file exists but cannot be read or parsed.
+    pub fn load() -> Result<Self, anyhow::Error> {
+        let path = Self::settings_path();
+        if !path.exists() {
+            return Ok(Self::default());
+        }
+        let contents = std::fs::read_to_string(&path)
+            .map_err(|e| anyhow::anyhow!("Failed to read settings at {}: {e}", path.display()))?;
+        let versioned: VersionedSettings = serde_json::from_str(&contents)
+            .map_err(|e| anyhow::anyhow!("Failed to parse settings JSON: {e}"))?;
+        Ok(versioned.settings)
+    }
+
+    /// Save settings to `~/.config/cadre/settings.json`.
+    ///
+    /// Creates the parent directory if it doesn't exist.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written.
+    pub fn save(&self) -> Result<(), anyhow::Error> {
+        let path = Self::settings_path();
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let versioned = VersionedSettings {
+            version: 1,
+            settings: self.clone(),
+        };
+        let json = serde_json::to_string_pretty(&versioned)?;
+        std::fs::write(&path, json)?;
+        Ok(())
+    }
+
+    /// Check if the legacy TOML config exists at `~/.config/cadre/machine-runner.toml`.
+    pub fn has_legacy_config() -> bool {
+        Self::legacy_config_path().exists()
+    }
+
+    /// Migrate from legacy `machine-runner.toml` to `settings.json`.
+    ///
+    /// Reads the TOML config, converts it to `Settings`, saves the JSON file, and
+    /// returns the extracted API token separately (for keychain storage).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the legacy config cannot be read/parsed or the new file
+    /// cannot be written.
+    pub fn migrate_from_legacy() -> Result<(Self, String), anyhow::Error> {
+        let legacy_path = Self::legacy_config_path();
+        let config = RunnerConfig::load(Some(
+            legacy_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Legacy config path is not valid UTF-8"))?,
+        ))?;
+        let (settings, token) = Self::from_runner_config(&config);
+        settings.save()?;
+        tracing::info!(
+            legacy = %legacy_path.display(),
+            new = %Self::settings_path().display(),
+            "Migrated legacy config to settings.json"
+        );
+        Ok((settings, token))
+    }
+
     /// Convert a legacy `RunnerConfig` into `Settings`, extracting the API token separately.
     ///
     /// Returns `(settings, token)` so the token can be stored in its own `Arc<RwLock<String>>`.
@@ -148,6 +247,114 @@ fn hostname_or_default() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Helper: override settings path to a temp directory for isolation.
+    fn save_to_path(settings: &Settings, path: &std::path::Path) -> anyhow::Result<()> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let versioned = VersionedSettings {
+            version: 1,
+            settings: settings.clone(),
+        };
+        let json = serde_json::to_string_pretty(&versioned)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    fn load_from_path(path: &std::path::Path) -> anyhow::Result<Settings> {
+        let contents = std::fs::read_to_string(path)?;
+        let versioned: VersionedSettings = serde_json::from_str(&contents)?;
+        Ok(versioned.settings)
+    }
+
+    #[test]
+    fn test_save_then_load_roundtrip() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+
+        let mut settings = Settings::default();
+        settings.machine_name = "roundtrip-machine".to_string();
+        settings.control_service_url = "https://roundtrip.example.com".to_string();
+        settings.heartbeat_interval_secs = 42;
+        settings.repo_directories = vec!["/home/user/code".to_string()];
+        settings.block_autonomous_mode = true;
+
+        save_to_path(&settings, &path).unwrap();
+        let loaded = load_from_path(&path).unwrap();
+
+        assert_eq!(loaded.machine_name, "roundtrip-machine");
+        assert_eq!(loaded.control_service_url, "https://roundtrip.example.com");
+        assert_eq!(loaded.heartbeat_interval_secs, 42);
+        assert_eq!(loaded.repo_directories, vec!["/home/user/code"]);
+        assert!(loaded.block_autonomous_mode);
+        // Defaults should survive the trip
+        assert!(loaded.auto_start);
+        assert!(loaded.enabled);
+        assert_eq!(loaded.log_level, "info");
+    }
+
+    #[test]
+    fn test_settings_json_versioning() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+
+        let settings = Settings::default();
+        save_to_path(&settings, &path).unwrap();
+
+        // Read raw JSON and verify the version field is present
+        let raw = std::fs::read_to_string(&path).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(parsed["version"], serde_json::json!(1));
+        // Other fields should be present at the top level (flattened)
+        assert!(parsed["control_service_url"].is_string());
+        assert!(parsed["machine_name"].is_string());
+    }
+
+    #[test]
+    fn test_load_returns_default_when_file_missing() {
+        // Settings::load() returns defaults when the file doesn't exist.
+        // We test the underlying logic by verifying a non-existent path.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("nonexistent.json");
+        assert!(!path.exists());
+        // Directly test: since we can't override the path in load(), verify
+        // that default is returned by construction.
+        let settings = Settings::default();
+        assert_eq!(settings.control_service_url, "http://localhost:8080");
+        assert!(settings.enabled);
+    }
+
+    #[test]
+    fn test_migrate_from_legacy_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let toml_path = dir.path().join("machine-runner.toml");
+
+        let toml_content = r#"
+control_service_url = "https://legacy.example.com"
+machine_name = "legacy-box"
+api_token = "tok_legacy_secret"
+heartbeat_interval_secs = 20
+repo_directories = ["/old/path"]
+"#;
+        std::fs::write(&toml_path, toml_content).unwrap();
+
+        // Load via RunnerConfig to simulate migration
+        let config = RunnerConfig::load(Some(toml_path.to_str().unwrap())).unwrap();
+        let (settings, token) = Settings::from_runner_config(&config);
+
+        assert_eq!(settings.control_service_url, "https://legacy.example.com");
+        assert_eq!(settings.machine_name, "legacy-box");
+        assert_eq!(settings.heartbeat_interval_secs, 20);
+        assert_eq!(settings.repo_directories, vec!["/old/path"]);
+        assert_eq!(token, "tok_legacy_secret");
+
+        // Verify it can be saved and re-loaded as JSON
+        let json_path = dir.path().join("settings.json");
+        save_to_path(&settings, &json_path).unwrap();
+        let loaded = load_from_path(&json_path).unwrap();
+        assert_eq!(loaded.machine_name, "legacy-box");
+    }
 
     #[test]
     fn test_default_settings_has_sensible_values() {

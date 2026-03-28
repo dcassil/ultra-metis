@@ -4,14 +4,14 @@ level: task
 title: "Scaffold Tauri App and System Tray"
 short_code: "SMET-T-0265"
 created_at: 2026-03-28T16:52:36.642918+00:00
-updated_at: 2026-03-28T16:52:36.642918+00:00
+updated_at: 2026-03-28T17:38:16.737157+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 Create the Tauri application scaffold at `apps/runner-desktop/` with system tray integration, status icons, and the basic tray menu. This is the shell that will host all UI and embed the runner core.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

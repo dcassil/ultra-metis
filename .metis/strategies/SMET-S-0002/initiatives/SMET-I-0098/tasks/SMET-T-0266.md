@@ -4,14 +4,14 @@ level: task
 title: "Settings Persistence and OS Keychain Integration"
 short_code: "SMET-T-0266"
 created_at: 2026-03-28T16:52:37.583232+00:00
-updated_at: 2026-03-28T16:52:37.583232+00:00
+updated_at: 2026-03-28T17:38:17.514525+00:00
 parent: SMET-I-0098
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,10 @@ initiative_id: SMET-I-0098
 ## Objective
 
 Implement the settings persistence layer with the full ADR SMET-A-0003 settings model, and integrate OS keychain for secure API token storage. Settings must be readable/writable from both the Rust backend and the React frontend via Tauri IPC.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
