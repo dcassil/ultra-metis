@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { NetworkError, AuthError, ClientError, ServerError } from './errors'
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const baseURL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:3000`
 const authToken = import.meta.env.VITE_AUTH_TOKEN || 'static-token'
 
 export const apiClient = axios.create({ baseURL })

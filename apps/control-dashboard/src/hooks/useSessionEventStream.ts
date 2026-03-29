@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { SessionOutputEvent } from '../api/events'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:3000`
 const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN || 'static-token'
 
 const MAX_EVENTS = 500

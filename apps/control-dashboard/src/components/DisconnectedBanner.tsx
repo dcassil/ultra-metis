@@ -5,7 +5,7 @@ import { useHealth } from '../contexts/HealthContext'
 export default function DisconnectedBanner() {
   const { status } = useHealth()
   const [dismissed, setDismissed] = useState(false)
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:3000`
 
   if (status !== 'disconnected' || dismissed) return null
 

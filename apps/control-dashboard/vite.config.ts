@@ -4,4 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    host: true, // bind to 0.0.0.0 so LAN devices can connect
+  },
 })
