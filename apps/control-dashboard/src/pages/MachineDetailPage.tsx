@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getMachine, revokeMachine } from '../api/machines'
 import type { MachineDetail } from '../api/machines'
@@ -7,8 +7,11 @@ import {
   updateMachinePolicy,
   getRepoPolicy,
   updateRepoPolicy,
+  listViolations,
 } from '../api/policies'
-import type { MachinePolicy } from '../api/policies'
+import type { MachinePolicy, PolicyViolationRecord } from '../api/policies'
+import { listSessions } from '../api/sessions'
+import type { SessionResponse } from '../api/sessions'
 import { Card } from '../components/ui/Card'
 import { Table } from '../components/ui/Table'
 import { Button } from '../components/ui/Button'
@@ -17,16 +20,46 @@ import { Badge } from '../components/ui/Badge'
 import { StatusBadge } from '../components/StatusBadge'
 import { TrustTierBadge } from '../components/TrustTierBadge'
 import { SessionModeBadge } from '../components/SessionModeBadge'
+import { SessionStateBadge } from '../components/SessionStateBadge'
 import { PolicyEditor } from '../components/PolicyEditor'
 import { RelativeTime } from '../components/RelativeTime'
 import { MachineLogViewer } from '../components/MachineLogViewer'
 
-type TabId = 'details' | 'logs'
+type TabId = 'details' | 'sessions' | 'logs' | 'violations'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'details', label: 'Details' },
+  { id: 'sessions', label: 'Sessions' },
   { id: 'logs', label: 'Logs' },
+  { id: 'violations', label: 'Violations' },
 ]
+
+const sessionStateOptions = [
+  { value: '', label: 'All States' },
+  { value: 'starting', label: 'Starting' },
+  { value: 'running', label: 'Running' },
+  { value: 'waiting_for_input', label: 'Waiting for Input' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'stopped', label: 'Stopped' },
+]
+
+function formatElapsed(startedAt: string | undefined): string {
+  if (!startedAt) return '\u2014'
+  const diffMs = Date.now() - Date.parse(startedAt)
+  if (diffMs < 0) return '\u2014'
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  if (hours > 0) return `${hours}h ${minutes}m`
+  if (minutes > 0) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
+}
+
+type SessionRow = SessionResponse & Record<string, unknown>
+type ViolationRow = PolicyViolationRecord & Record<string, unknown>
 
 type Repo = MachineDetail['repos'][number]
 
@@ -65,6 +98,17 @@ export default function MachineDetailPage() {
   const [repoPolicies, setRepoPolicies] = useState<Record<string, MachinePolicy>>({})
   const [repoPolicyLoading, setRepoPolicyLoading] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('details')
+
+  // Sessions tab state
+  const [sessions, setSessions] = useState<SessionResponse[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+  const [sessionsError, setSessionsError] = useState<string | null>(null)
+  const [sessionStateFilter, setSessionStateFilter] = useState('')
+
+  // Violations tab state
+  const [violations, setViolations] = useState<PolicyViolationRecord[]>([])
+  const [violationsLoading, setViolationsLoading] = useState(false)
+  const [violationsError, setViolationsError] = useState<string | null>(null)
 
   const fetchMachine = useCallback(async () => {
     if (!id) return
@@ -107,10 +151,54 @@ export default function MachineDetailPage() {
     }
   }, [id])
 
+  const fetchSessions = useCallback(async () => {
+    if (!id) return
+    setSessionsLoading(true)
+    try {
+      const params: Record<string, string> = { machine_id: id }
+      if (sessionStateFilter) params.state = sessionStateFilter
+      const data = await listSessions(params)
+      setSessions(data.sessions)
+      setSessionsError(null)
+    } catch (err) {
+      setSessionsError(err instanceof Error ? err.message : 'Failed to load sessions')
+    } finally {
+      setSessionsLoading(false)
+    }
+  }, [id, sessionStateFilter])
+
+  const fetchViolations = useCallback(async () => {
+    if (!id) return
+    setViolationsLoading(true)
+    try {
+      const data = await listViolations({ machine_id: id })
+      setViolations(data.violations)
+      setViolationsError(null)
+    } catch (err) {
+      setViolationsError(err instanceof Error ? err.message : 'Failed to load violations')
+    } finally {
+      setViolationsLoading(false)
+    }
+  }, [id])
+
   useEffect(() => {
     void fetchMachine()
     void fetchMachinePolicy()
   }, [fetchMachine, fetchMachinePolicy])
+
+  // Fetch sessions when tab is active or filter changes
+  useEffect(() => {
+    if (activeTab === 'sessions') {
+      void fetchSessions()
+    }
+  }, [activeTab, fetchSessions])
+
+  // Fetch violations when tab is active
+  useEffect(() => {
+    if (activeTab === 'violations') {
+      void fetchViolations()
+    }
+  }, [activeTab, fetchViolations])
 
   const handleRevoke = async () => {
     if (!id) return
@@ -125,6 +213,100 @@ export default function MachineDetailPage() {
       setRevoking(false)
     }
   }
+
+  const filteredSessions = useMemo(() => {
+    const sorted = [...sessions].sort(
+      (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
+    )
+    return sorted as SessionRow[]
+  }, [sessions])
+
+  const sessionColumns = [
+    {
+      key: 'title',
+      header: 'Title',
+      render: (row: SessionRow) => (
+        <span className="font-medium text-secondary-900">{row.title}</span>
+      ),
+    },
+    {
+      key: 'state',
+      header: 'State',
+      render: (row: SessionRow) => <SessionStateBadge state={row.state} />,
+    },
+    {
+      key: 'repo_path',
+      header: 'Repo',
+      render: (row: SessionRow) => {
+        const parts = row.repo_path.split('/')
+        return <span title={row.repo_path}>{parts[parts.length - 1] || row.repo_path}</span>
+      },
+    },
+    {
+      key: 'elapsed',
+      header: 'Elapsed',
+      render: (row: SessionRow) => (
+        <span className="text-secondary-600">{formatElapsed(row.started_at)}</span>
+      ),
+    },
+    {
+      key: 'updated_at',
+      header: 'Last Activity',
+      render: (row: SessionRow) => <RelativeTime timestamp={row.updated_at} />,
+    },
+  ]
+
+  const violationRows = useMemo(
+    () => [...violations].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp)) as ViolationRow[],
+    [violations],
+  )
+
+  const violationColumns = [
+    {
+      key: 'timestamp',
+      header: 'Timestamp',
+      render: (row: ViolationRow) => <RelativeTime timestamp={row.timestamp} />,
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      render: (row: ViolationRow) => (
+        <code className="rounded bg-secondary-100 px-1.5 py-0.5 text-xs font-medium text-secondary-800">
+          {row.action}
+        </code>
+      ),
+    },
+    {
+      key: 'policy_scope',
+      header: 'Scope',
+      render: (row: ViolationRow) => (
+        <span className="text-secondary-600">{row.policy_scope}</span>
+      ),
+    },
+    {
+      key: 'reason',
+      header: 'Reason',
+      render: (row: ViolationRow) => (
+        <span className="text-secondary-700">{row.reason}</span>
+      ),
+    },
+    {
+      key: 'session_id',
+      header: 'Session',
+      render: (row: ViolationRow) =>
+        row.session_id ? (
+          <Link
+            to={`/sessions/${row.session_id}`}
+            className="text-primary-600 hover:text-primary-800 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {row.session_id.slice(0, 8)}...
+          </Link>
+        ) : (
+          <span className="text-secondary-400">&mdash;</span>
+        ),
+    },
+  ]
 
   if (loading) {
     return (
@@ -212,6 +394,111 @@ export default function MachineDetailPage() {
       {/* Logs Tab */}
       {activeTab === 'logs' && (
         <MachineLogViewer machineId={id!} />
+      )}
+
+      {/* Sessions Tab */}
+      {activeTab === 'sessions' && (
+        <div className="space-y-4">
+          {/* State filter */}
+          <div className="flex items-end gap-4">
+            <div>
+              <label className="block text-xs font-medium text-secondary-500 mb-1">State</label>
+              <select
+                value={sessionStateFilter}
+                onChange={(e) => setSessionStateFilter(e.target.value)}
+                className="rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                {sessionStateOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {sessionsError && (
+            <div className="rounded-md bg-danger-50 border border-danger-200 p-3 text-sm text-danger-700">
+              {sessionsError}
+              <button
+                type="button"
+                className="ml-2 text-sm font-medium text-primary-600 hover:text-primary-700"
+                onClick={() => void fetchSessions()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          <div className="rounded-lg border border-secondary-200 bg-white shadow-sm">
+            {sessionsLoading && sessions.length === 0 ? (
+              <div className="flex items-center justify-center px-4 py-12">
+                <div className="flex items-center gap-2 text-sm text-secondary-500">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Loading sessions...
+                </div>
+              </div>
+            ) : filteredSessions.length === 0 ? (
+              <div className="px-4 py-12 text-center">
+                <p className="text-sm text-secondary-500">
+                  {sessionStateFilter
+                    ? 'No sessions match the current filter.'
+                    : 'No sessions found for this machine.'}
+                </p>
+              </div>
+            ) : (
+              <Table<SessionRow>
+                columns={sessionColumns}
+                data={filteredSessions}
+                onRowClick={(row) => navigate(`/sessions/${row.id}`)}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Violations Tab */}
+      {activeTab === 'violations' && (
+        <div className="space-y-4">
+          {violationsError && (
+            <div className="rounded-md bg-danger-50 border border-danger-200 p-3 text-sm text-danger-700">
+              {violationsError}
+              <button
+                type="button"
+                className="ml-2 text-sm font-medium text-primary-600 hover:text-primary-700"
+                onClick={() => void fetchViolations()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          <div className="rounded-lg border border-secondary-200 bg-white shadow-sm">
+            {violationsLoading && violations.length === 0 ? (
+              <div className="flex items-center justify-center px-4 py-12">
+                <div className="flex items-center gap-2 text-sm text-secondary-500">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Loading violations...
+                </div>
+              </div>
+            ) : violationRows.length === 0 ? (
+              <div className="px-4 py-12 text-center">
+                <p className="text-sm text-secondary-500">No policy violations recorded for this machine.</p>
+              </div>
+            ) : (
+              <Table<ViolationRow>
+                columns={violationColumns}
+                data={violationRows}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       {/* Details Tab */}

@@ -112,7 +112,19 @@ export default function SessionsPage() {
         </span>
       ),
     },
-    { key: 'machine_id', header: 'Machine' },
+    {
+      key: 'machine_id',
+      header: 'Machine',
+      render: (row: SessionRow) => (
+        <Link
+          to={`/machines/${row.machine_id}`}
+          className="text-primary-600 hover:text-primary-800 hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {row.machine_id}
+        </Link>
+      ),
+    },
     {
       key: 'repo_path',
       header: 'Repo',
