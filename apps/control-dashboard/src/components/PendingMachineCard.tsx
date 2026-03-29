@@ -113,10 +113,10 @@ export default function PendingMachineCard({ machine, onAction }: PendingMachine
         title="Reject Machine"
         footer={
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
-            <Button variant="secondary" size="sm" onClick={() => setShowRejectModal(false)}>
+            <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowRejectModal(false)}>
               Cancel
             </Button>
-            <Button variant="danger" size="sm" onClick={handleReject}>
+            <Button variant="danger" size="sm" className="w-full sm:w-auto" onClick={handleReject}>
               Reject
             </Button>
           </div>

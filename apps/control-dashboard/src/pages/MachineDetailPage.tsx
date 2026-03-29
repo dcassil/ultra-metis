@@ -709,10 +709,10 @@ export default function MachineDetailPage() {
         title="Revoke Machine"
         footer={
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
-            <Button variant="secondary" size="sm" onClick={() => setShowRevokeModal(false)}>
+            <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowRevokeModal(false)}>
               Cancel
             </Button>
-            <Button variant="danger" size="sm" loading={revoking} onClick={() => void handleRevoke()}>
+            <Button variant="danger" size="sm" className="w-full sm:w-auto" loading={revoking} onClick={() => void handleRevoke()}>
               Revoke Machine
             </Button>
           </div>
@@ -729,10 +729,10 @@ export default function MachineDetailPage() {
         title="Remove Machine"
         footer={
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
-            <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(false)}>
+            <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowDeleteModal(false)}>
               Cancel
             </Button>
-            <Button variant="danger" size="sm" loading={deleting} onClick={() => void handleDelete()}>
+            <Button variant="danger" size="sm" className="w-full sm:w-auto" loading={deleting} onClick={() => void handleDelete()}>
               Remove Machine
             </Button>
           </div>

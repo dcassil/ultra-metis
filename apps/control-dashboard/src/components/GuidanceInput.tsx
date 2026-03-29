@@ -70,7 +70,7 @@ export function GuidanceInput({ sessionId, disabled }: GuidanceInputProps) {
         )}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {/* Injection type selector */}
-          <div className="flex rounded-md border border-secondary-300 bg-secondary-50 text-xs shrink-0">
+          <div className="flex rounded-md border border-secondary-300 bg-secondary-50 text-xs shrink-0 overflow-x-auto">
             {INJECTION_TYPES.map((type) => (
               <button
                 key={type.value}
@@ -130,10 +130,10 @@ export function GuidanceInput({ sessionId, disabled }: GuidanceInputProps) {
         title="Confirm Interrupt"
         footer={
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
-            <Button variant="secondary" size="sm" onClick={() => setShowInterruptConfirm(false)}>
+            <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowInterruptConfirm(false)}>
               Cancel
             </Button>
-            <Button variant="danger" size="sm" loading={sending} onClick={handleConfirmInterrupt}>
+            <Button variant="danger" size="sm" className="w-full sm:w-auto" loading={sending} onClick={handleConfirmInterrupt}>
               Send Interrupt
             </Button>
           </div>
