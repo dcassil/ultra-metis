@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "cadre": {
-      "command": "cadre-mcp",
+      "command": "/Users/danielcassil/.local/bin/cadre-mcp",
       "args": [],
       "env": {}
     }
