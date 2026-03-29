@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { getMachine, revokeMachine } from '../api/machines'
+import { getMachine, revokeMachine, deleteMachine } from '../api/machines'
 import type { MachineDetail } from '../api/machines'
 import {
   getMachinePolicy,
@@ -90,6 +90,8 @@ export default function MachineDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showRevokeModal, setShowRevokeModal] = useState(false)
   const [revoking, setRevoking] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [metadataExpanded, setMetadataExpanded] = useState(false)
   const [machinePolicy, setMachinePolicy] = useState<MachinePolicy | null>(null)
   const [policyLoading, setPolicyLoading] = useState(false)
@@ -211,6 +213,21 @@ export default function MachineDetailPage() {
       setShowRevokeModal(false)
     } finally {
       setRevoking(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!id) return
+    setDeleting(true)
+    try {
+      await deleteMachine(id)
+      navigate('/machines')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete machine'
+      setError(message)
+      setShowDeleteModal(false)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -345,9 +362,14 @@ export default function MachineDetailPage() {
           <h1 className="text-xl font-semibold text-secondary-900">{machine.name}</h1>
           {machinePolicy && <SessionModeBadge mode={machinePolicy.session_mode} />}
         </div>
-        <Button variant="danger" size="sm" onClick={() => setShowRevokeModal(true)}>
-          Revoke
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="danger" size="sm" onClick={() => setShowRevokeModal(true)}>
+            Revoke
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(true)}>
+            Remove
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -682,6 +704,26 @@ export default function MachineDetailPage() {
       >
         <p className="text-sm text-secondary-600">
           Are you sure you want to revoke <strong>{machine.name}</strong>? This machine will no longer be able to communicate with the control plane.
+        </p>
+      </Modal>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Remove Machine"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" size="sm" loading={deleting} onClick={() => void handleDelete()}>
+              Remove Machine
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-secondary-600">
+          Are you sure you want to permanently remove <strong>{machine.name}</strong>? This cannot be undone. All machine data including logs and policies will be deleted.
         </p>
       </Modal>
     </div>

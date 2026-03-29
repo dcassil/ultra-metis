@@ -430,6 +430,64 @@ pub async fn revoke_machine(
 }
 
 // ---------------------------------------------------------------------------
+// DELETE /api/machines/offline  (bulk cleanup)
+// ---------------------------------------------------------------------------
+
+pub async fn delete_offline_machines(
+    State(state): State<AppState>,
+    DashboardAuth(_auth): DashboardAuth,
+) -> impl IntoResponse {
+    let db = state.db.lock().expect("db lock poisoned");
+    match crate::db::delete_offline_machines(&db) {
+        Ok(count) => {
+            drop(db);
+            Json(serde_json::json!({"deleted_count": count})).into_response()
+        }
+        Err(e) => {
+            drop(db);
+            internal_error(&format!("failed to delete offline machines: {e}"))
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// DELETE /api/machines/{id}
+// ---------------------------------------------------------------------------
+
+pub async fn delete_machine(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(machine_id): Path<String>,
+) -> impl IntoResponse {
+    // Verify machine exists and belongs to user
+    let _machine = match load_machine(&state, &machine_id, &auth.user_id) {
+        Ok(Some(m)) => m,
+        Ok(None) => return not_found("machine not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    let db = state.db.lock().expect("db lock poisoned");
+    match crate::db::delete_machine(&db, &machine_id) {
+        Ok(()) => {
+            drop(db);
+            StatusCode::NO_CONTENT.into_response()
+        }
+        Err(crate::db::DeleteMachineError::ActiveSessions(n)) => {
+            drop(db);
+            conflict(&format!("machine has {n} active session(s) — stop them before deleting"))
+        }
+        Err(crate::db::DeleteMachineError::NotFound) => {
+            drop(db);
+            not_found("machine not found")
+        }
+        Err(e) => {
+            drop(db);
+            internal_error(&format!("failed to delete machine: {e}"))
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/sessions
 // ---------------------------------------------------------------------------
 

@@ -35,3 +35,12 @@ export async function approveMachine(id: string): Promise<void> {
 export async function revokeMachine(id: string): Promise<void> {
   await apiClient.post(`/api/machines/${id}/revoke`)
 }
+
+export async function deleteMachine(id: string): Promise<void> {
+  await apiClient.delete(`/api/machines/${id}`)
+}
+
+export async function deleteOfflineMachines(): Promise<{ deleted_count: number }> {
+  const response = await apiClient.delete<{ deleted_count: number }>('/api/machines/offline')
+  return response.data
+}

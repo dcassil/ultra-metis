@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::Router;
 use cadre_store::DocumentStore;
 use tokio::sync::broadcast;
@@ -62,7 +62,8 @@ pub fn build_app_with_planning(state: AppState, planning_state: PlanningState) -
 
     let machine_routes = Router::new()
         .route("/register", post(routes::register_machine))
-        .route("/{id}", get(routes::get_machine))
+        .route("/offline", delete(routes::delete_offline_machines))
+        .route("/{id}", get(routes::get_machine).delete(routes::delete_machine))
         .route("/{id}/heartbeat", post(routes::heartbeat))
         .route("/{id}/approve", post(routes::approve_machine))
         .route("/{id}/revoke", post(routes::revoke_machine))

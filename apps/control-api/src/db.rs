@@ -283,6 +283,136 @@ fn seed_token(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// Error returned when a machine cannot be deleted due to active sessions.
+#[derive(Debug)]
+pub enum DeleteMachineError {
+    ActiveSessions(i64),
+    NotFound,
+    Db(rusqlite::Error),
+}
+
+impl std::fmt::Display for DeleteMachineError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ActiveSessions(n) => write!(f, "machine has {n} active session(s)"),
+            Self::NotFound => write!(f, "machine not found"),
+            Self::Db(e) => write!(f, "database error: {e}"),
+        }
+    }
+}
+
+impl From<rusqlite::Error> for DeleteMachineError {
+    fn from(e: rusqlite::Error) -> Self {
+        Self::Db(e)
+    }
+}
+
+/// Delete a single machine and all its related data.
+///
+/// Returns an error if the machine has active sessions (not completed/failed/stopped).
+pub fn delete_machine(conn: &Connection, machine_id: &str) -> std::result::Result<(), DeleteMachineError> {
+    // Check that the machine exists
+    let exists: bool = conn
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM machines WHERE id = ?1)",
+            [machine_id],
+            |row| row.get(0),
+        )
+        .map_err(DeleteMachineError::Db)?;
+
+    if !exists {
+        return Err(DeleteMachineError::NotFound);
+    }
+
+    // Check for active sessions
+    let active_count: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM sessions WHERE machine_id = ?1 AND state NOT IN ('completed', 'failed', 'stopped')",
+            [machine_id],
+            |row| row.get(0),
+        )
+        .map_err(DeleteMachineError::Db)?;
+
+    if active_count > 0 {
+        return Err(DeleteMachineError::ActiveSessions(active_count));
+    }
+
+    // Delete from related tables in dependency order
+    conn.execute("DELETE FROM machine_logs WHERE machine_id = ?1", [machine_id])?;
+    conn.execute(
+        "DELETE FROM pending_approvals WHERE session_id IN (SELECT id FROM sessions WHERE machine_id = ?1)",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM session_outcomes WHERE session_id IN (SELECT id FROM sessions WHERE machine_id = ?1)",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM session_output_events WHERE session_id IN (SELECT id FROM sessions WHERE machine_id = ?1)",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM session_events WHERE session_id IN (SELECT id FROM sessions WHERE machine_id = ?1)",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM session_commands WHERE machine_id = ?1",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM notifications WHERE session_id IN (SELECT id FROM sessions WHERE machine_id = ?1)",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM policy_violations WHERE machine_id = ?1",
+        [machine_id],
+    )?;
+    conn.execute(
+        "DELETE FROM sessions WHERE machine_id = ?1",
+        [machine_id],
+    )?;
+    conn.execute("DELETE FROM repo_policies WHERE machine_id = ?1", [machine_id])?;
+    conn.execute("DELETE FROM machine_policies WHERE machine_id = ?1", [machine_id])?;
+    conn.execute("DELETE FROM machine_repos WHERE machine_id = ?1", [machine_id])?;
+    conn.execute("DELETE FROM machines WHERE id = ?1", [machine_id])?;
+
+    Ok(())
+}
+
+/// Delete all offline machines that have no active sessions.
+///
+/// Returns the number of machines deleted.
+pub fn delete_offline_machines(conn: &Connection) -> std::result::Result<i64, DeleteMachineError> {
+    // Find offline machines: last_heartbeat is either NULL or older than 5 minutes,
+    // matching the connectivity_status logic in the models.
+    let mut stmt = conn.prepare(
+        "SELECT id FROM machines
+         WHERE (last_heartbeat IS NULL
+                OR last_heartbeat < datetime('now', '-5 minutes'))
+           AND id NOT IN (
+               SELECT DISTINCT machine_id FROM sessions
+               WHERE state NOT IN ('completed', 'failed', 'stopped')
+           )",
+    )?;
+
+    let ids: Vec<String> = stmt
+        .query_map([], |row| row.get(0))?
+        .collect::<std::result::Result<Vec<String>, _>>()?;
+
+    let mut count: i64 = 0;
+    for id in &ids {
+        match delete_machine(conn, id) {
+            Ok(()) => count += 1,
+            Err(DeleteMachineError::ActiveSessions(_)) => {
+                // Skip — race condition, session appeared between our check and delete
+            }
+            Err(e) => return Err(e),
+        }
+    }
+
+    Ok(count)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Machine } from '../api/machines'
-import { listMachines } from '../api/machines'
+import { listMachines, deleteOfflineMachines } from '../api/machines'
 import { getMachinePolicy } from '../api/policies'
-import { Table, Badge } from '../components/ui'
+import { Table, Badge, Button, Modal } from '../components/ui'
 import { SessionModeBadge } from '../components/SessionModeBadge'
 import { RelativeTime } from '../components/RelativeTime'
 import PendingMachinesBanner from '../components/PendingMachinesBanner'
@@ -109,6 +109,8 @@ export default function MachinesPage() {
   const pendingSectionRef = useRef<HTMLDivElement>(null)
 
   const [sessionModes, setSessionModes] = useState<Record<string, string>>({})
+  const [showCleanupModal, setShowCleanupModal] = useState(false)
+  const [cleaning, setCleaning] = useState(false)
 
   const fetchMachines = useCallback(async () => {
     try {
@@ -157,6 +159,25 @@ export default function MachinesPage() {
     [machines, sessionModes],
   )
 
+  const offlineMachineCount = useMemo(
+    () => activeMachines.filter((m) => m.connectivity_status === 'offline').length,
+    [activeMachines],
+  )
+
+  const handleCleanupOffline = async () => {
+    setCleaning(true)
+    try {
+      await deleteOfflineMachines()
+      setShowCleanupModal(false)
+      setLoading(true)
+      await fetchMachines()
+    } catch {
+      setError('Failed to remove offline machines')
+    } finally {
+      setCleaning(false)
+    }
+  }
+
   function handleViewPending() {
     setShowPending(true)
     // Scroll to the pending section after render
@@ -201,6 +222,11 @@ export default function MachinesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-secondary-900">Machines</h2>
+        {offlineMachineCount > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setShowCleanupModal(true)}>
+            Remove offline ({offlineMachineCount})
+          </Button>
+        )}
       </div>
 
       <PendingMachinesBanner count={pendingMachines.length} onViewPending={handleViewPending} />
@@ -240,6 +266,26 @@ export default function MachinesPage() {
           />
         )}
       </div>
+
+      <Modal
+        isOpen={showCleanupModal}
+        onClose={() => setShowCleanupModal(false)}
+        title="Remove Offline Machines"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" size="sm" onClick={() => setShowCleanupModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" size="sm" loading={cleaning} onClick={() => void handleCleanupOffline()}>
+              Remove Machines
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-secondary-600">
+          Remove {offlineMachineCount} offline machine{offlineMachineCount !== 1 ? 's' : ''}? This permanently deletes all data for machines that are no longer connected.
+        </p>
+      </Modal>
     </div>
   )
 }
