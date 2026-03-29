@@ -283,6 +283,43 @@ fn seed_token(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// Update an existing machine's registration data without changing status or trust_tier.
+///
+/// Deletes existing `machine_repos` for the machine and re-inserts from the request.
+pub fn update_machine_registration(
+    conn: &Connection,
+    machine_id: &str,
+    name: &str,
+    platform: &str,
+    capabilities: Option<&str>,
+    repos: Option<&[crate::models::RepoInfo]>,
+    now: &str,
+) -> Result<()> {
+    conn.execute(
+        "UPDATE machines SET name = ?1, platform = ?2, capabilities = ?3, last_heartbeat = ?4, updated_at = ?5 WHERE id = ?6",
+        rusqlite::params![name, platform, capabilities, now, now, machine_id],
+    )?;
+
+    // Replace machine_repos: delete old, insert new
+    conn.execute(
+        "DELETE FROM machine_repos WHERE machine_id = ?1",
+        [machine_id],
+    )?;
+
+    if let Some(repos) = repos {
+        for repo in repos {
+            let repo_id = uuid::Uuid::new_v4().to_string();
+            conn.execute(
+                "INSERT INTO machine_repos (id, machine_id, repo_path, repo_name, last_seen)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![repo_id, machine_id, repo.path, repo.name, now],
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Error returned when a machine cannot be deleted due to active sessions.
 #[derive(Debug)]
 pub enum DeleteMachineError {

@@ -47,8 +47,75 @@ pub async fn register_machine(
     MachineTokenAuth(auth): MachineTokenAuth,
     Json(body): Json<RegisterRequest>,
 ) -> impl IntoResponse {
-    let machine_id = uuid::Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
+
+    // --- Re-registration path ---
+    if let Some(ref existing_id) = body.machine_id {
+        match load_machine_by_id(&state, existing_id) {
+            Ok(Some(machine)) => {
+                // Verify the name matches to prevent identity hijacking
+                if machine.name != body.name {
+                    return (
+                        StatusCode::CONFLICT,
+                        Json(serde_json::to_value(ErrorBody {
+                            error: format!(
+                                "machine_id '{}' is registered with name '{}', not '{}'",
+                                existing_id, machine.name, body.name
+                            ),
+                        })
+                        .unwrap_or_default()),
+                    )
+                        .into_response();
+                }
+
+                // Update the existing machine registration
+                let db = state.db.lock().expect("db lock poisoned");
+                if let Err(e) = crate::db::update_machine_registration(
+                    &db,
+                    existing_id,
+                    &body.name,
+                    &body.platform,
+                    body.capabilities.as_deref(),
+                    body.repos.as_deref(),
+                    &now,
+                ) {
+                    tracing::error!("failed to update machine registration: {e}");
+                    return internal_error(&format!("failed to update machine registration: {e}"));
+                }
+
+                tracing::info!(
+                    machine_id = %existing_id,
+                    name = %body.name,
+                    "Machine re-registered successfully"
+                );
+
+                return (
+                    StatusCode::OK,
+                    Json(
+                        serde_json::to_value(RegisterResponse {
+                            id: existing_id.clone(),
+                            status: machine.status,
+                        })
+                        .unwrap_or_default(),
+                    ),
+                )
+                    .into_response();
+            }
+            Ok(None) => {
+                // machine_id provided but not found — fall through to new registration
+                tracing::info!(
+                    machine_id = %existing_id,
+                    "Provided machine_id not found, creating new registration"
+                );
+            }
+            Err(e) => {
+                return internal_error(&format!("db error looking up machine: {e}"));
+            }
+        }
+    }
+
+    // --- New registration path ---
+    let machine_id = uuid::Uuid::new_v4().to_string();
 
     let result = insert_machine(&state, &machine_id, &auth.user_id, &body, &now);
     match result {
@@ -1498,6 +1565,46 @@ fn load_machine(
                 last_heartbeat, created_at, updated_at
          FROM machines WHERE id = ?1 AND user_id = ?2",
         params![machine_id, user_id],
+        |row| {
+            Ok(Machine {
+                id: row.get(0)?,
+                user_id: row.get(1)?,
+                name: row.get(2)?,
+                platform: row.get(3)?,
+                status: row.get::<_, String>(4)?
+                    .parse()
+                    .unwrap_or(MachineStatus::Pending),
+                trust_tier: row.get::<_, String>(5)?
+                    .parse()
+                    .unwrap_or(crate::models::TrustTier::Untrusted),
+                capabilities: row.get(6)?,
+                last_heartbeat: row.get(7)?,
+                created_at: row.get(8)?,
+                updated_at: row.get(9)?,
+            })
+        },
+    );
+
+    match result {
+        Ok(machine) => Ok(Some(machine)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Load a machine by ID only (without filtering by user_id).
+///
+/// Used during re-registration where we need to look up the machine
+/// before we know which user owns it.
+fn load_machine_by_id(
+    state: &AppState,
+    machine_id: &str,
+) -> Result<Option<Machine>, rusqlite::Error> {
+    let result = state.db.lock().expect("db lock poisoned").query_row(
+        "SELECT id, user_id, name, platform, status, trust_tier, capabilities,
+                last_heartbeat, created_at, updated_at
+         FROM machines WHERE id = ?1",
+        params![machine_id],
         |row| {
             Ok(Machine {
                 id: row.get(0)?,
@@ -3364,6 +3471,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: Some("docker".into()),
             repos: None,
+            machine_id: None,
         };
 
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
@@ -3383,6 +3491,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
 
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
@@ -3399,6 +3508,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
 
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
@@ -3423,6 +3533,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
 
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
@@ -3451,6 +3562,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
 
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
@@ -3487,6 +3599,7 @@ mod tests {
                 platform: "linux".into(),
                 capabilities: None,
                 repos: None,
+                machine_id: None,
             };
             insert_machine(&state, &format!("m-{i}"), "user-default", &req, &now).unwrap();
         }
@@ -3502,6 +3615,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
         insert_machine(state, machine_id, "user-default", &req, &now).unwrap();
         set_machine_status(state, machine_id, "trusted", "basic", &now).unwrap();
@@ -3976,6 +4090,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
 
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
@@ -4151,6 +4266,7 @@ mod tests {
             platform: "linux".into(),
             capabilities: None,
             repos: None,
+            machine_id: None,
         };
         insert_machine(&state, "m-1", "user-default", &req, &now).unwrap();
 

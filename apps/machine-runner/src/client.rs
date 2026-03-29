@@ -28,6 +28,8 @@ pub struct RegisterRequest {
     pub platform: String,
     pub capabilities: Option<String>,
     pub repos: Vec<RepoInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub machine_id: Option<String>,
 }
 
 /// Response from the control service after a heartbeat.
@@ -385,6 +387,7 @@ mod tests {
                 repo_path: "/home/user/test-repo".to_string(),
                 cadre_managed: true,
             }],
+            machine_id: None,
         };
 
         let json = serde_json::to_value(&request).unwrap();

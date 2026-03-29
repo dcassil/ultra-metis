@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -190,8 +191,15 @@ impl Runner {
             (s.repo_paths(), s.machine_name.clone())
         };
 
+        // Attempt to load a previously persisted machine ID for re-registration
+        let persisted_id = load_persisted_machine_id();
+        if let Some(ref id) = persisted_id {
+            tracing::info!(machine_id = %id, "Loaded persisted machine ID, attempting re-registration");
+            self.machine_id = Some(id.clone());
+        }
+
         let repos = discovery::discover_repos(&repo_dirs)?;
-        let request = build_register_request(&machine_name, &repos);
+        let request = build_register_request(&machine_name, &repos, persisted_id);
 
         tracing::info!(
             name = %machine_name,
@@ -206,6 +214,16 @@ impl Runner {
             "trusted" | "active" => RunnerState::Active,
             _ => RunnerState::Pending,
         };
+
+        // Persist the machine ID for future re-registration
+        if let Err(e) = save_persisted_machine_id(&response.id) {
+            tracing::warn!(
+                error = %e,
+                "Failed to persist machine ID to disk"
+            );
+        } else {
+            tracing::debug!(machine_id = %response.id, "Persisted machine ID to disk");
+        }
 
         tracing::info!(
             machine_id = %response.id,
@@ -884,9 +902,36 @@ enum SessionAction {
     Resume,
 }
 
+/// Returns the path to the persisted machine ID file (`~/.cadre/machine_id`).
+fn machine_id_path() -> PathBuf {
+    let dir = dirs::home_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join(".cadre");
+    dir.join("machine_id")
+}
+
+/// Load a previously persisted machine ID from disk, if available.
+fn load_persisted_machine_id() -> Option<String> {
+    let path = machine_id_path();
+    std::fs::read_to_string(&path)
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+/// Save a machine ID to disk for re-registration on future startups.
+fn save_persisted_machine_id(id: &str) -> std::io::Result<()> {
+    let path = machine_id_path();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&path, id)
+}
+
 fn build_register_request(
     machine_name: &str,
     repos: &[discovery::RepoInfo],
+    persisted_machine_id: Option<String>,
 ) -> RegisterRequest {
     let platform = format!("{}/{}", std::env::consts::OS, std::env::consts::ARCH);
     RegisterRequest {
@@ -894,6 +939,7 @@ fn build_register_request(
         platform,
         capabilities: Some("claude_code".to_string()),
         repos: repos.to_vec(),
+        machine_id: persisted_machine_id,
     }
 }
 
@@ -996,11 +1042,43 @@ mod tests {
             cadre_managed: true,
         }];
 
-        let req = build_register_request("my-machine", &repos);
+        let req = build_register_request("my-machine", &repos, None);
         assert_eq!(req.name, "my-machine");
         assert!(!req.platform.is_empty());
         assert!(req.platform.contains('/'));
         assert_eq!(req.repos.len(), 1);
+        assert!(req.machine_id.is_none());
+    }
+
+    #[test]
+    fn test_build_register_request_with_persisted_id() {
+        let repos = vec![crate::discovery::RepoInfo {
+            repo_name: "test".to_string(),
+            repo_path: "/path/test".to_string(),
+            cadre_managed: true,
+        }];
+
+        let req = build_register_request("my-machine", &repos, Some("existing-id".to_string()));
+        assert_eq!(req.machine_id, Some("existing-id".to_string()));
+    }
+
+    #[test]
+    fn test_load_persisted_machine_id_returns_none_when_missing() {
+        // machine_id_path() points to ~/.cadre/machine_id which may or may not exist,
+        // but load_persisted_machine_id should not panic either way.
+        let _ = load_persisted_machine_id();
+    }
+
+    #[test]
+    fn test_save_and_load_persisted_machine_id() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("machine_id");
+        std::fs::write(&path, "test-machine-uuid").unwrap();
+        let loaded = std::fs::read_to_string(&path)
+            .ok()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty());
+        assert_eq!(loaded, Some("test-machine-uuid".to_string()));
     }
 
     #[test]

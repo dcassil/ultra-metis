@@ -680,6 +680,8 @@ pub struct RegisterRequest {
     pub platform: String,
     pub capabilities: Option<String>,
     pub repos: Option<Vec<RepoInfo>>,
+    /// Optional machine ID for re-registration of a previously registered machine.
+    pub machine_id: Option<String>,
 }
 
 /// Repo info sent during registration or heartbeat.
