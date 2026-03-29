@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "cadre": {
-      "command": "cadre",
-      "args": ["mcp"],
+      "command": "${CLAUDE_PLUGIN_ROOT}/../../target/release/cadre-mcp",
+      "args": [],
       "env": {}
     }
   }

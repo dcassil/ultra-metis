@@ -78,6 +78,10 @@ make test           # Run all workspace tests
 
 After `make install`, the `cadre-mcp` and `cadre` binaries are on PATH. The `.mcp.json` at the repo root configures Claude Code to use the MCP server for this project.
 
+## MCP Binary Rule (CRITICAL)
+
+After ANY edit to Rust source files in `crates/cadre-mcp/` or `crates/cadre-cli/`, you MUST run `make build` before the session ends. The Cadre plugin's MCP server (`.mcp.json`) points to `target/release/cadre-mcp` — if you edit the source without rebuilding, the MCP server will use a stale binary and fail to start on the next session. Always rebuild after source changes.
+
 ## Code Standards
 
 - Follow existing patterns in `crates/cadre-core/` codebase
