@@ -4,14 +4,14 @@ level: task
 title: "Session Event History Hydration: Persist Live Output Across Page Reloads"
 short_code: "SMET-T-0282"
 created_at: 2026-03-29T00:43:15.302009+00:00
-updated_at: 2026-03-29T00:43:15.302009+00:00
+updated_at: 2026-03-29T01:11:05.874284+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,55 @@ initiative_id: SMET-I-0101
 
 # Session Event History Hydration: Persist Live Output Across Page Reloads
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+Covers Initiative Issue 6. Session output events are already persisted in the DB but not loaded on page mount.
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+## Objective
 
-[[SMET-I-0101]]
+When the SessionDetailPage loads (or reloads), fetch historical session output events from the database and display them immediately in LiveOutput. Then connect the SSE stream and append only new events, providing seamless continuity across page reloads.
 
-## Objective **[REQUIRED]**
+## Acceptance Criteria
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+- [ ] On SessionDetailPage mount, historical events are fetched from `GET /api/sessions/{id}/events`
+- [ ] Historical events are displayed in LiveOutput immediately (before SSE connects)
+- [ ] SSE stream connects after historical load and only appends events with sequence_num > last historical event
+- [ ] No duplicate events displayed (deduplication by sequence_num)
+- [ ] For terminal sessions (completed/failed/stopped), only historical events are shown (no SSE connection)
+- [ ] Page reload on an active session shows full conversation history + live tail
+- [ ] Performance: Historical load doesn't block SSE connection (load in parallel, merge)
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
-
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+
+**useSessionEventStream.ts** — Enhance the hook:
+1. Add optional params: `initialEvents?: SessionEvent[]` and `startAfterSequence?: number`
+2. On initialization, seed the events array with `initialEvents` if provided
+3. When SSE events arrive, check `sequence_num > startAfterSequence` before appending
+4. This prevents duplicates when historical and SSE overlap
+
+**SessionDetailPage.tsx** — Hydrate on mount:
+1. Add a `useEffect` that fetches `getSessionEvents(id)` on mount
+2. Extract the max `sequence_num` from the historical events
+3. Pass both to `useSessionEventStream(id, { initialEvents, startAfterSequence })`
+4. For terminal sessions, skip the SSE hook entirely (just show historical)
+
+**api/events.ts** — Verify pagination support:
+1. The `GET /api/sessions/{id}/events` endpoint should return events ordered by `sequence_num`
+2. If the endpoint doesn't support pagination, it's acceptable for now (events are small text records)
+3. If pagination is needed later, add `?after_sequence=N&limit=500` params
+
+### Files to Change
+- `apps/control-dashboard/src/hooks/useSessionEventStream.ts`
+- `apps/control-dashboard/src/pages/SessionDetailPage.tsx`
+- `apps/control-dashboard/src/api/events.ts` (verify/enhance)
 
 ### Dependencies
-{Other tasks or systems this depends on}
+None — independent of other tasks.
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

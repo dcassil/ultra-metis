@@ -4,14 +4,14 @@ level: task
 title: "Governance Page: Merge Quality and Rules into Tabbed View"
 short_code: "SMET-T-0284"
 created_at: 2026-03-29T00:43:17.531855+00:00
-updated_at: 2026-03-29T00:43:17.531855+00:00
+updated_at: 2026-03-29T01:15:49.714592+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,62 @@ initiative_id: SMET-I-0101
 
 # Governance Page: Merge Quality and Rules into Tabbed View
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+Covers Initiative Issue 9 (Phase 1). Simplifies the Planning/Work section navigation.
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+## Objective
 
-[[SMET-I-0101]]
+Create a new GovernancePage that combines the existing Quality Gates and Rules views into a single tabbed page, replacing the standalone QualityPage and RulesPage. Update routing and navigation to reflect the merge.
 
-## Objective **[REQUIRED]**
+## Acceptance Criteria
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+- [ ] New `GovernancePage.tsx` exists at `src/pages/planning/GovernancePage.tsx`
+- [ ] GovernancePage has two tabs: "Quality Gates" and "Rules"
+- [ ] Quality Gates tab contains the exact same content as the current QualityPage
+- [ ] Rules tab contains the exact same content as the current RulesPage
+- [ ] `/planning/governance` route renders GovernancePage
+- [ ] Old routes `/planning/quality` and `/planning/rules` redirect to `/planning/governance`
+- [ ] Sidebar "Work" section has 3 items: Documents, Hierarchy, Governance
+- [ ] QualityPage.tsx and RulesPage.tsx are deleted
+- [ ] Tab state is preserved in URL (e.g., `/planning/governance?tab=rules`)
+- [ ] Dashboard compiles and renders without errors
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
-
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+
+**GovernancePage.tsx** — New page:
+1. Create with two tabs: "Quality Gates" (default) and "Rules"
+2. Extract the rendering logic from QualityPage and RulesPage into this page
+3. Both tabs retain all their existing functionality (search, filters, table rendering)
+4. Read initial tab from URL search params: `?tab=quality` or `?tab=rules`
+5. Update URL when tab changes (without full navigation)
+
+**App.tsx** — Route changes:
+1. Add route: `<Route path="planning/governance" element={<GovernancePage />} />`
+2. Add redirects: `<Route path="planning/quality" element={<Navigate to="/planning/governance?tab=quality" replace />} />`
+3. Add redirect: `<Route path="planning/rules" element={<Navigate to="/planning/governance?tab=rules" replace />} />`
+4. Remove old route entries after redirects are in place
+
+**Sidebar.tsx** (already updated in SMET-T-0278):
+- The "Work" section already references "Governance" — this task creates the actual page for it
+
+**Delete files**:
+- `src/pages/planning/QualityPage.tsx`
+- `src/pages/planning/RulesPage.tsx`
+
+### Files to Change
+- Create: `apps/control-dashboard/src/pages/planning/GovernancePage.tsx`
+- `apps/control-dashboard/src/App.tsx`
+- Delete: `apps/control-dashboard/src/pages/planning/QualityPage.tsx`
+- Delete: `apps/control-dashboard/src/pages/planning/RulesPage.tsx`
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0278 (sidebar restructure) should be done first — it sets up the "Governance" nav entry
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

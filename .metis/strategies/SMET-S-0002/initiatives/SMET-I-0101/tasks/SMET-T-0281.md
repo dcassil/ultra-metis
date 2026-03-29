@@ -4,14 +4,14 @@ level: task
 title: "Persistent Machine Identity: Local ID Storage and Re-Registration Support"
 short_code: "SMET-T-0281"
 created_at: 2026-03-29T00:43:13.880244+00:00
-updated_at: 2026-03-29T00:43:13.880244+00:00
+updated_at: 2026-03-29T01:08:24.497614+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,67 @@ initiative_id: SMET-I-0101
 
 # Persistent Machine Identity: Local ID Storage and Re-Registration Support
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+Covers Initiative Issue 5. Prevents future orphaned machines on runner restart.
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+## Objective
 
-[[SMET-I-0101]]
+Persist the machine_id to local disk after first registration so that subsequent runner restarts re-register with the same ID instead of creating orphaned entries. Modify the server-side registration endpoint to support re-registration with an existing ID.
 
-## Objective **[REQUIRED]**
+## Acceptance Criteria
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+- [ ] After first registration, machine_id is saved to a local file (`~/.cadre/machine_id` or Tauri app data dir)
+- [ ] On runner startup, if persisted machine_id file exists, it is loaded and sent in the registration request
+- [ ] `RegisterRequest` includes an optional `machine_id` field
+- [ ] Server-side: if `machine_id` is provided and matches an existing record with same name, updates the existing record (resets connectivity_status to online, updates last_heartbeat, updates repos)
+- [ ] Server-side: if `machine_id` is provided but no matching record exists, falls through to new registration (generates new UUID)
+- [ ] Server-side: if `machine_id` is provided but name doesn't match, rejects with 409 Conflict
+- [ ] Runner restart no longer creates duplicate machine entries
+- [ ] Existing tests still pass
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
-
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+
+**Machine Runner — client.rs**:
+1. Add `machine_id: Option<String>` field to `RegisterRequest`
+
+**Machine Runner — runner.rs**:
+1. On startup: Check for persisted ID file. If exists, load into `self.machine_id`
+2. In `register()`: If `self.machine_id` is Some, include it in RegisterRequest
+3. After successful registration: Save the returned `response.id` to the persistence file
+4. Persistence location:
+   - Tauri mode: Use `app_data_dir()` from tauri paths
+   - Headless mode: Use `~/.cadre/machine_id` (create dir if needed)
+   - File format: Plain text, just the UUID string
+
+**Control API — routes.rs**:
+1. Modify `register_machine` handler:
+   - If `body.machine_id` is Some:
+     - Query DB for that machine_id
+     - If found AND name matches: Update existing record (status, heartbeat, repos), return 200 with same ID
+     - If found AND name doesn't match: Return 409 Conflict
+     - If not found: Fall through to normal new registration
+   - If `body.machine_id` is None: Normal new registration (current behavior)
+
+**Control API — db.rs**:
+1. Add `update_machine_registration(conn, machine_id, body, now)` function
+   - Updates: name, platform, capabilities, last_heartbeat, updated_at
+   - Re-syncs repos (delete old, insert new)
+   - Sets connectivity_status to 'online' if machine was previously offline/stale
+
+### Files to Change
+- `apps/machine-runner/src/client.rs` — RegisterRequest field
+- `apps/machine-runner/src/runner.rs` — persist/load machine_id
+- `apps/control-api/src/routes.rs` — re-registration logic
+- `apps/control-api/src/db.rs` — update_machine_registration function
 
 ### Dependencies
-{Other tasks or systems this depends on}
+None — can be done independently. Works with SMET-T-0280 (deletion) to clean up existing orphans.
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

@@ -4,14 +4,14 @@ level: task
 title: "Machine Deletion API and Bulk Cleanup UI"
 short_code: "SMET-T-0280"
 created_at: 2026-03-29T00:43:12.611661+00:00
-updated_at: 2026-03-29T00:43:12.611661+00:00
+updated_at: 2026-03-29T01:02:06.830091+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,58 @@ initiative_id: SMET-I-0101
 
 # Machine Deletion API and Bulk Cleanup UI
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+Covers Initiative Issue 3. Depends on Issue 5 cleanup for orphans.
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+## Objective
 
-[[SMET-I-0101]]
+Add a true machine deletion endpoint (`DELETE /api/machines/{id}`) to the control API that removes machine records from the database, and add deletion UI to both the machine list (bulk "Remove offline" action) and machine detail page ("Remove" button).
 
-## Objective **[REQUIRED]**
+## Acceptance Criteria
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+- [ ] `DELETE /api/machines/{id}` endpoint exists and removes the machine record
+- [ ] DELETE endpoint returns 409 Conflict if machine has active (non-terminal) sessions
+- [ ] DELETE endpoint cascades: removes machine_repos, machine policies, and machine logs for that machine
+- [ ] `deleteMachine()` function added to dashboard API client
+- [ ] Machine Detail page has a "Remove" button (distinct from "Revoke")
+- [ ] "Remove" shows a confirmation modal warning about permanent deletion
+- [ ] MachinesPage has a "Remove all offline" button in the header area
+- [ ] "Remove all offline" shows confirmation with count of machines to be removed
+- [ ] After removal, machine list refreshes and removed entries are gone
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
-
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+
+**Backend — control-api**:
+1. `db.rs`: Add `delete_machine(conn, machine_id)` function that:
+   - Checks for active sessions (`SELECT count(*) FROM sessions WHERE machine_id = ? AND state NOT IN ('completed', 'failed', 'stopped')`)
+   - If active sessions exist, return error
+   - Delete from: `machine_logs`, `machine_policies`, `repo_policies`, `machine_repos`, `machines` (in that order for FK safety)
+2. `routes.rs`: Add `DELETE /api/machines/{machine_id}` handler
+   - Auth check (same as other machine endpoints)
+   - Call `delete_machine()`, return 204 No Content on success, 409 on conflict
+3. Add `DELETE /api/machines/offline` bulk endpoint that deletes all machines with connectivity_status = 'offline' and no active sessions
+
+**Frontend — control-dashboard**:
+1. `api/machines.ts`: Add `deleteMachine(id: string)` and `deleteOfflineMachines()` functions
+2. `MachineDetailPage.tsx`: Add "Remove" button next to "Revoke" — red variant, with confirmation modal
+3. `MachinesPage.tsx`: Add "Remove all offline" button in header, with confirmation showing count
+
+### Files to Change
+- `apps/control-api/src/db.rs`
+- `apps/control-api/src/routes.rs`
+- `apps/control-dashboard/src/api/machines.ts`
+- `apps/control-dashboard/src/pages/MachineDetailPage.tsx`
+- `apps/control-dashboard/src/pages/MachinesPage.tsx`
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0277 (clickable machines) for reaching the detail page
+- Works alongside SMET-T-0281 (persistent machine ID) to prevent future orphans
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

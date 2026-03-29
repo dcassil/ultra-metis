@@ -4,14 +4,14 @@ level: task
 title: "Machine Detail Enrichment: Sessions Tab, Violations Tab, and Cross-Navigation"
 short_code: "SMET-T-0279"
 created_at: 2026-03-29T00:43:11.498748+00:00
-updated_at: 2026-03-29T00:43:11.498748+00:00
+updated_at: 2026-03-29T00:57:28.750878+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,54 @@ initiative_id: SMET-I-0101
 
 # Machine Detail Enrichment: Sessions Tab, Violations Tab, and Cross-Navigation
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+Covers Initiative Issues 8 (sessions as children of machines) and partial Issue 2 (violations tab).
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+## Objective
 
-[[SMET-I-0101]]
+Enrich the Machine Detail page with a Sessions tab showing all sessions for that machine, a Violations tab showing policy violations for that machine, and add cross-navigation links between machines and sessions throughout the dashboard.
 
-## Objective **[REQUIRED]**
+## Acceptance Criteria
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+- [ ] Machine Detail page has 4 tabs: Details | Sessions | Logs | Violations
+- [ ] Sessions tab shows all sessions (active + historical) filtered by machine_id
+- [ ] Sessions tab has state filter (all/running/completed/failed/stopped)
+- [ ] Sessions tab rows are clickable, navigating to `/sessions/{id}`
+- [ ] Violations tab shows policy violations for this machine (moved from standalone ViolationsPage)
+- [ ] In global SessionsPage, the "Machine" column is a clickable link navigating to `/machines/{machine_id}`
+- [ ] Machine link in SessionsPage stops event propagation so it doesn't trigger row click
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
-
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+
+**MachineDetailPage.tsx**:
+1. Expand `TabId` type to `'details' | 'sessions' | 'logs' | 'violations'`
+2. Add Sessions tab content:
+   - Use `listSessions({ machine_id: id })` to fetch sessions
+   - Render a Table with columns: Title, State (with SessionStateBadge), Repo, Elapsed, Last Activity
+   - Add state filter dropdown above the table
+   - Add `onRowClick` to navigate to `/sessions/{id}`
+3. Add Violations tab content:
+   - Port the violations table from the deleted ViolationsPage
+   - Use `listViolations({ machine_id: id })` or similar filtered endpoint
+   - Show: timestamp, action, scope, reason, session link
+
+**SessionsPage.tsx**:
+1. Change the `machine_id` column to render a `<Link to={`/machines/${row.machine_id}`}>`
+2. Add `onClick={(e) => e.stopPropagation()}` on the link to prevent triggering row navigation
+
+### Files to Change
+- `apps/control-dashboard/src/pages/MachineDetailPage.tsx`
+- `apps/control-dashboard/src/pages/SessionsPage.tsx`
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0277 (machine clickability) should be done first
+- SMET-T-0278 (sidebar restructure) removes standalone ViolationsPage
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

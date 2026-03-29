@@ -4,14 +4,14 @@ level: task
 title: "Machine List Row Clickability and Status Display Enhancement"
 short_code: "SMET-T-0277"
 created_at: 2026-03-29T00:43:08.798012+00:00
-updated_at: 2026-03-29T00:43:08.798012+00:00
+updated_at: 2026-03-29T00:53:06.932813+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ Covers Initiative Issues 1 and 4. Unblocks Issues 3, 7, and 8.
 ## Objective
 
 Make machine rows clickable in the machines list to navigate to the detail page, and enhance status visibility with colored dot indicators, a "Last Seen" column, and default sort by connectivity status.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -4,14 +4,14 @@ level: initiative
 title: "Dashboard UI Review: Usability, Data Integrity, and Information Architecture"
 short_code: "SMET-I-0101"
 created_at: 2026-03-28T23:22:09.761751+00:00
-updated_at: 2026-03-29T00:43:02.769826+00:00
+updated_at: 2026-03-29T01:15:55.903698+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -416,3 +416,20 @@ This initiative is ready for decomposition into tasks. Suggested grouping:
 
 **Future Initiative** (out of scope):
 - Issue 9 Phase 2: Project entity as first-class domain type
+
+## Decomposition Summary
+
+8 tasks created, covering all 10 issues:
+
+| Task | Title | Issues Covered | Scope |
+|------|-------|---------------|-------|
+| SMET-T-0277 | Machine List Row Clickability and Status Display Enhancement | 1, 4 | Frontend |
+| SMET-T-0278 | Sidebar and Navigation Restructure | 2, 10 | Frontend |
+| SMET-T-0279 | Machine Detail Enrichment: Sessions Tab, Violations Tab, Cross-Navigation | 8, 2 (partial) | Frontend |
+| SMET-T-0280 | Machine Deletion API and Bulk Cleanup UI | 3 | Full-stack |
+| SMET-T-0281 | Persistent Machine Identity: Local ID Storage and Re-Registration | 5 | Backend + Runner |
+| SMET-T-0282 | Session Event History Hydration | 6 | Frontend |
+| SMET-T-0283 | Log Access Improvements: Quick-Link and Session Logs Tab | 7 | Frontend |
+| SMET-T-0284 | Governance Page: Merge Quality and Rules | 9 (Phase 1) | Frontend |
+
+**Execution order**: T-0277 → T-0278 → T-0279 → T-0280 → T-0281 → T-0282 → T-0283 → T-0284

@@ -4,14 +4,14 @@ level: task
 title: "Log Access Improvements: Quick-Link from Machine List and Session Logs Tab"
 short_code: "SMET-T-0283"
 created_at: 2026-03-29T00:43:16.700814+00:00
-updated_at: 2026-03-29T00:43:16.700814+00:00
+updated_at: 2026-03-29T01:13:17.114949+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -21,117 +21,58 @@ initiative_id: SMET-I-0101
 
 # Log Access Improvements: Quick-Link from Machine List and Session Logs Tab
 
-*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+Covers Initiative Issue 7. Makes logs easily accessible from machine list and session detail.
 
-## Parent Initiative **[CONDITIONAL: Assigned Task]**
+## Objective
 
-[[SMET-I-0101]]
+Add a quick-link logs icon on machine list rows for direct access to machine logs, and add a "Logs" tab to the SessionDetailPage showing machine-level debug logs filtered to the session's time range.
 
-## Objective **[REQUIRED]**
+## Acceptance Criteria
 
-{Clear statement of what this task accomplishes}
+## Acceptance Criteria
 
-## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+## Acceptance Criteria
 
-{Delete this section when task is assigned to an initiative}
+- [ ] Machine list rows have a small log icon button that navigates directly to `/machines/{id}?tab=logs`
+- [ ] MachineDetailPage respects `?tab=logs` URL parameter to auto-select the Logs tab on load
+- [ ] SessionDetailPage has a 4th tab: "Logs" (after Overview, Live Output, Timeline)
+- [ ] Session Logs tab shows `MachineLogViewer` filtered by the session's `started_at` to `completed_at` time range
+- [ ] For active sessions, the Logs tab shows live machine logs (no end time filter)
+- [ ] Log icon click on machine list stops event propagation (doesn't trigger row navigation)
 
-### Type
-- [ ] Bug - Production issue that needs fixing
-- [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
-- [ ] Chore - Maintenance or setup work
-
-### Priority
-- [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
-
-### Impact Assessment **[CONDITIONAL: Bug]**
-- **Affected Users**: {Number/percentage of users affected}
-- **Reproduction Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected vs Actual**: {What should happen vs what happens}
-
-### Business Justification **[CONDITIONAL: Feature]**
-- **User Value**: {Why users need this}
-- **Business Value**: {Impact on metrics/revenue}
-- **Effort Estimate**: {Rough size - S/M/L/XL}
-
-### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
-
-## Test Cases **[CONDITIONAL: Testing Task]**
-
-{Delete unless this is a testing task}
-
-### Test Case 1: {Test Case Name}
-- **Test ID**: TC-001
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-  3. {Step 3}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-### Test Case 2: {Test Case Name}
-- **Test ID**: TC-002
-- **Preconditions**: {What must be true before testing}
-- **Steps**: 
-  1. {Step 1}
-  2. {Step 2}
-- **Expected Results**: {What should happen}
-- **Actual Results**: {To be filled during execution}
-- **Status**: {Pass/Fail/Blocked}
-
-## Documentation Sections **[CONDITIONAL: Documentation Task]**
-
-{Delete unless this is a documentation task}
-
-### User Guide Content
-- **Feature Description**: {What this feature does and why it's useful}
-- **Prerequisites**: {What users need before using this feature}
-- **Step-by-Step Instructions**:
-  1. {Step 1 with screenshots/examples}
-  2. {Step 2 with screenshots/examples}
-  3. {Step 3 with screenshots/examples}
-
-### Troubleshooting Guide
-- **Common Issue 1**: {Problem description and solution}
-- **Common Issue 2**: {Problem description and solution}
-- **Error Messages**: {List of error messages and what they mean}
-
-### API Documentation **[CONDITIONAL: API Documentation]**
-- **Endpoint**: {API endpoint description}
-- **Parameters**: {Required and optional parameters}
-- **Example Request**: {Code example}
-- **Example Response**: {Expected response format}
-
-## Implementation Notes **[CONDITIONAL: Technical Task]**
-
-{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+## Implementation Notes
 
 ### Technical Approach
-{How this will be implemented}
+
+**MachinesPage.tsx**:
+1. Add a column (or inline button in the name column) with a small log icon (DocumentTextIcon or similar)
+2. On click: `navigate(`/machines/${row.id}?tab=logs`)` with `e.stopPropagation()`
+
+**MachineDetailPage.tsx**:
+1. Read `tab` from URL search params on mount: `const searchParams = new URLSearchParams(location.search)`
+2. If `searchParams.get('tab') === 'logs'`, set initial `activeTab` to `'logs'`
+
+**SessionDetailPage.tsx**:
+1. Add `'logs'` to `TabId` type and `TABS` array
+2. In the Logs tab content, render `<MachineLogViewer>` with:
+   - `machineId={session.machine_id}`
+   - Pass time range props (may need to enhance MachineLogViewer to accept `startTime`/`endTime` filter params)
+3. For the time range filter, the API `GET /api/machines/{id}/logs` may need `?after=timestamp&before=timestamp` params
+
+**MachineLogViewer.tsx** (potential enhancement):
+- If it doesn't already support time range filtering, add optional `startTime` and `endTime` props
+- Pass these as query params to the history fetch endpoint
+
+### Files to Change
+- `apps/control-dashboard/src/pages/MachinesPage.tsx`
+- `apps/control-dashboard/src/pages/MachineDetailPage.tsx`
+- `apps/control-dashboard/src/pages/SessionDetailPage.tsx`
+- `apps/control-dashboard/src/components/MachineLogViewer.tsx` (if time range filter needed)
 
 ### Dependencies
-{Other tasks or systems this depends on}
+- SMET-T-0277 (clickable machines) should be done first
+- SMET-T-0279 (machine detail enrichment) adds the Sessions/Violations tabs — coordinate tab ordering
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
-
-## Status Updates **[REQUIRED]**
+## Status Updates
 
 *To be added during implementation*

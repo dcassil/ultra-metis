@@ -4,14 +4,14 @@ level: task
 title: "Sidebar and Navigation Restructure: Remove Policies, Violations, Monitoring Pages"
 short_code: "SMET-T-0278"
 created_at: 2026-03-29T00:43:10.130095+00:00
-updated_at: 2026-03-29T00:43:10.130095+00:00
+updated_at: 2026-03-29T00:55:07.384662+00:00
 parent: SMET-I-0101
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ Covers Initiative Issues 2 and 10. Major UI simplification.
 ## Objective
 
 Restructure the sidebar navigation from 11 items (3 groups) to 7 items (2 groups), remove redundant pages (Policies, Violations, Monitoring), rename "Planning" to "Work", move History to the main group, and move notifications to a header bell icon.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
