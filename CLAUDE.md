@@ -80,7 +80,7 @@ After `make install`, the `cadre-mcp` and `cadre` binaries are on PATH. The `.mc
 
 ## MCP Binary Rule (CRITICAL)
 
-After ANY edit to Rust source files in `crates/cadre-mcp/` or `crates/cadre-cli/`, you MUST run `make build` before the session ends. The Cadre plugin's MCP server (`.mcp.json`) points to `target/release/cadre-mcp` — if you edit the source without rebuilding, the MCP server will use a stale binary and fail to start on the next session. Always rebuild after source changes.
+After ANY edit to Rust source files in `crates/cadre-mcp/` or `crates/cadre-cli/`, you MUST run `make install` before the session ends. The Cadre plugin's MCP server uses `cadre-mcp` from PATH (`~/.local/bin/cadre-mcp`). If you edit source without running `make install`, the installed binary will be stale and the MCP server will fail to start on the next session. `make build` alone is NOT enough — you must `make install` to copy the binary to PATH.
 
 ## Code Standards
 
