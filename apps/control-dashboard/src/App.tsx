@@ -13,18 +13,8 @@ import DocumentsPage from './pages/planning/DocumentsPage';
 import DocumentDetailPage from './pages/planning/DocumentDetailPage';
 import HierarchyPage from './pages/planning/HierarchyPage';
 import NotificationsPage from './pages/NotificationsPage';
+import GovernancePage from './pages/planning/GovernancePage';
 import NotFoundPage from './pages/NotFoundPage';
-
-function GovernancePlaceholder() {
-  return (
-    <div className="flex items-center justify-center py-24">
-      <div className="rounded-lg border border-secondary-200 bg-white px-8 py-12 text-center shadow-sm">
-        <h2 className="text-2xl font-semibold text-secondary-900">Governance</h2>
-        <p className="mt-2 text-secondary-500">Coming Soon</p>
-      </div>
-    </div>
-  );
-}
 
 function App() {
   return (
@@ -42,9 +32,9 @@ function App() {
             <Route path="planning/documents" element={<DocumentsPage />} />
             <Route path="planning/documents/:shortCode" element={<DocumentDetailPage />} />
             <Route path="planning/hierarchy" element={<HierarchyPage />} />
-            <Route path="planning/governance" element={<GovernancePlaceholder />} />
-            <Route path="planning/quality" element={<Navigate to="/planning/governance" replace />} />
-            <Route path="planning/rules" element={<Navigate to="/planning/governance" replace />} />
+            <Route path="planning/governance" element={<GovernancePage />} />
+            <Route path="planning/quality" element={<Navigate to="/planning/governance?tab=quality" replace />} />
+            <Route path="planning/rules" element={<Navigate to="/planning/governance?tab=rules" replace />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="history/:id" element={<HistoryDetailPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
