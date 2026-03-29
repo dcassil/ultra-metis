@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { getMachine, revokeMachine, deleteMachine } from '../api/machines'
 import type { MachineDetail } from '../api/machines'
 import {
@@ -85,6 +85,7 @@ const repoColumns = [
 export default function MachineDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [machine, setMachine] = useState<MachineDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -99,7 +100,12 @@ export default function MachineDetailPage() {
   const [expandedRepoPolicy, setExpandedRepoPolicy] = useState<string | null>(null)
   const [repoPolicies, setRepoPolicies] = useState<Record<string, MachinePolicy>>({})
   const [repoPolicyLoading, setRepoPolicyLoading] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<TabId>('details')
+
+  const validTabs: TabId[] = ['details', 'sessions', 'logs', 'violations']
+  const initialTab = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<TabId>(
+    initialTab && validTabs.includes(initialTab as TabId) ? (initialTab as TabId) : 'details',
+  )
 
   // Sessions tab state
   const [sessions, setSessions] = useState<SessionResponse[]>([])

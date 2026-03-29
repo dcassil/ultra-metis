@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CommandLineIcon } from '@heroicons/react/24/outline'
 import type { Machine } from '../api/machines'
 import { listMachines, deleteOfflineMachines } from '../api/machines'
 import { getMachinePolicy } from '../api/policies'
@@ -164,6 +165,30 @@ export default function MachinesPage() {
     [activeMachines],
   )
 
+  const tableColumns = useMemo(
+    () => [
+      ...columns,
+      {
+        key: '_actions',
+        header: '',
+        render: (row: Record<string, unknown>) => (
+          <button
+            type="button"
+            title="View logs"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/machines/${row.id}?tab=logs`)
+            }}
+            className="rounded p-1 text-secondary-400 hover:bg-secondary-100 hover:text-secondary-600 transition-colors"
+          >
+            <CommandLineIcon className="h-4 w-4" />
+          </button>
+        ),
+      },
+    ],
+    [navigate],
+  )
+
   const handleCleanupOffline = async () => {
     setCleaning(true)
     try {
@@ -260,7 +285,7 @@ export default function MachinesPage() {
           </div>
         ) : (
           <Table
-            columns={columns}
+            columns={tableColumns}
             data={activeMachines}
             onRowClick={(row) => navigate(`/machines/${(row as Record<string, unknown>).id}`)}
           />

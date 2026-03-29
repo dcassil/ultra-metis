@@ -19,10 +19,11 @@ import { ApprovalCard } from '../components/ApprovalCard'
 import { GuidanceInput } from '../components/GuidanceInput'
 import { useSessionEventStream } from '../hooks/useSessionEventStream'
 import { PlanningContextPanel } from '../components/planning/PlanningContextPanel'
+import { MachineLogViewer } from '../components/MachineLogViewer'
 
 const TERMINAL_STATES = ['completed', 'failed', 'stopped']
 
-type TabId = 'overview' | 'live-output' | 'timeline'
+type TabId = 'overview' | 'live-output' | 'timeline' | 'logs'
 
 function formatElapsed(startedAt: string | undefined, completedAt: string | undefined): string {
   if (!startedAt) return '\u2014'
@@ -42,6 +43,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'live-output', label: 'Live Output' },
   { id: 'timeline', label: 'Timeline' },
+  { id: 'logs', label: 'Logs' },
 ]
 
 export default function SessionDetailPage() {
@@ -488,6 +490,10 @@ export default function SessionDetailPage() {
 
         {currentTab === 'timeline' && (
           <SessionTimeline events={events} />
+        )}
+
+        {currentTab === 'logs' && (
+          <MachineLogViewer machineId={session.machine_id} />
         )}
       </div>
 
