@@ -172,6 +172,23 @@ export default function MachineDetailPage() {
         <div className="rounded-md bg-danger-50 p-3 text-sm text-danger-700">{error}</div>
       )}
 
+      {/* Connectivity Status Banner */}
+      {machine.connectivity_status === 'online' && (
+        <div className="rounded-md border-l-4 border-green-500 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Machine is online
+        </div>
+      )}
+      {machine.connectivity_status === 'stale' && (
+        <div className="rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Machine hasn&apos;t sent a heartbeat recently
+        </div>
+      )}
+      {machine.connectivity_status === 'offline' && (
+        <div className="rounded-md border-l-4 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Machine is offline
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <div className="border-b border-secondary-200 overflow-x-auto">
         <nav className="-mb-px flex gap-6" aria-label="Tabs">

@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Machine } from '../api/machines'
 import { listMachines } from '../api/machines'
 import { getMachinePolicy } from '../api/policies'
 import { Table, Badge } from '../components/ui'
 import { SessionModeBadge } from '../components/SessionModeBadge'
+import { RelativeTime } from '../components/RelativeTime'
 import PendingMachinesBanner from '../components/PendingMachinesBanner'
 import PendingMachineCard from '../components/PendingMachineCard'
 
@@ -22,8 +24,35 @@ const trustVariant: Record<string, TrustVariant> = {
   pending: 'error',
 }
 
+const connectivityDotColor: Record<string, string> = {
+  online: 'bg-green-500',
+  stale: 'bg-amber-400',
+  offline: 'bg-secondary-400',
+  unknown: 'bg-secondary-400',
+}
+
+const connectivitySortPriority: Record<string, number> = {
+  online: 0,
+  stale: 1,
+  offline: 2,
+  unknown: 3,
+}
+
 const columns = [
-  { key: 'name', header: 'Name' },
+  {
+    key: 'name',
+    header: 'Name',
+    render: (row: Record<string, unknown>) => {
+      const connectivity = (row.connectivity_status as string) ?? 'unknown'
+      const dotColor = connectivityDotColor[connectivity] ?? 'bg-secondary-400'
+      return (
+        <span className="flex items-center gap-2">
+          <span className={`inline-block h-2 w-2 rounded-full ${dotColor}`} />
+          {String(row.name)}
+        </span>
+      )
+    },
+  },
   {
     key: 'platform',
     header: 'Platform',
@@ -55,6 +84,13 @@ const columns = [
     },
   },
   {
+    key: 'last_heartbeat',
+    header: 'Last Seen',
+    render: (row: Record<string, unknown>) => (
+      <RelativeTime timestamp={row.last_heartbeat as string | null} />
+    ),
+  },
+  {
     key: 'repos_count',
     header: 'Repos',
     render: (row: Record<string, unknown>) => {
@@ -65,6 +101,7 @@ const columns = [
 ]
 
 export default function MachinesPage() {
+  const navigate = useNavigate()
   const [machines, setMachines] = useState<Machine[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -111,7 +148,12 @@ export default function MachinesPage() {
     () =>
       machines
         .filter((m) => m.status !== 'pending')
-        .map((m) => ({ ...m, session_mode: sessionModes[m.id] })) as (Machine & Record<string, unknown>)[],
+        .map((m) => ({ ...m, session_mode: sessionModes[m.id] }))
+        .sort(
+          (a, b) =>
+            (connectivitySortPriority[a.connectivity_status] ?? 3) -
+            (connectivitySortPriority[b.connectivity_status] ?? 3),
+        ) as (Machine & Record<string, unknown>)[],
     [machines, sessionModes],
   )
 
@@ -191,7 +233,11 @@ export default function MachinesPage() {
             <p className="text-sm text-secondary-500">No machines registered yet.</p>
           </div>
         ) : (
-          <Table columns={columns} data={activeMachines} />
+          <Table
+            columns={columns}
+            data={activeMachines}
+            onRowClick={(row) => navigate(`/machines/${(row as Record<string, unknown>).id}`)}
+          />
         )}
       </div>
     </div>
