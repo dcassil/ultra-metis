@@ -103,7 +103,8 @@ pub fn build_app_with_planning(state: AppState, planning_state: PlanningState) -
         .route("/{id}/approvals", get(routes::list_pending_approvals))
         .route("/{id}/respond", post(routes::respond_to_approval))
         .route("/{id}/inject", post(routes::inject_guidance))
-        .route("/{id}/outcome", get(routes::get_session_outcome));
+        .route("/{id}/outcome", get(routes::get_session_outcome))
+        .route("/{id}/continue", post(routes::continue_session));
 
     let notification_routes = Router::new()
         .route("/{id}/read", post(routes::mark_notification_read))

@@ -871,7 +871,7 @@ impl Runner {
 
         // Emit a confirmation event
         let events = vec![OutputEvent {
-            event_type: "injection".to_string(),
+            event_type: "output_line".to_string(),
             category: Some("info".to_string()),
             content: format!("Injected {injection_type} message into session"),
             metadata: Some(serde_json::json!({

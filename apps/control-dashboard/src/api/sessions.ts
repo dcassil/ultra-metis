@@ -87,3 +87,13 @@ export async function pauseSession(id: string): Promise<void> {
 export async function resumeSession(id: string): Promise<void> {
   await apiClient.post(`/api/sessions/${id}/resume`)
 }
+
+// --- Continue Session ---
+
+export async function continueSession(sessionId: string, instructions: string): Promise<CreateSessionResponse> {
+  const response = await apiClient.post<CreateSessionResponse>(
+    `/api/sessions/${sessionId}/continue`,
+    { instructions },
+  )
+  return response.data
+}

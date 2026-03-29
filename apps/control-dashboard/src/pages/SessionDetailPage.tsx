@@ -17,6 +17,7 @@ import { LiveOutput } from '../components/LiveOutput'
 import { SessionTimeline } from '../components/SessionTimeline'
 import { ApprovalCard } from '../components/ApprovalCard'
 import { GuidanceInput } from '../components/GuidanceInput'
+import { ContinueSessionBar } from '../components/ContinueSessionBar'
 import { useSessionEventStream } from '../hooks/useSessionEventStream'
 import { PlanningContextPanel } from '../components/planning/PlanningContextPanel'
 import { MachineLogViewer } from '../components/MachineLogViewer'
@@ -498,7 +499,11 @@ export default function SessionDetailPage() {
       </div>
 
       {/* Guidance Input — fixed at the bottom, visible on all tabs */}
-      <GuidanceInput sessionId={session.id} disabled={isTerminal} />
+      {isTerminal ? (
+        <ContinueSessionBar sessionId={session.id} />
+      ) : (
+        <GuidanceInput sessionId={session.id} />
+      )}
 
       {/* Force Stop Confirmation Modal */}
       <Modal

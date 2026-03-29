@@ -16,7 +16,7 @@ use crate::auth::{DashboardAuth, MachineTokenAuth};
 use axum::extract::Query;
 
 use crate::models::{
-    ActionCategory, ApprovalStatus, AutonomyLevel, CommandResponse, CreateSessionRequest,
+    ActionCategory, ApprovalStatus, AutonomyLevel, CommandResponse, ContinueSessionRequest, CreateSessionRequest,
     CreateSessionResponse, EffectivePolicy, EffectivePolicyQuery, ErrorBody, HeartbeatRequest,
     IngestEventsRequest, IngestLogsRequest, InjectGuidanceRequest, ListNotificationsQuery,
     ListSessionsQuery, ListViolationsQuery, Machine, MachineDetailResponse, MachineLogEntry,
@@ -665,6 +665,101 @@ pub async fn create_session(
         .into_response()
 }
 
+
+// ---------------------------------------------------------------------------
+// POST /api/sessions/{id}/continue
+// ---------------------------------------------------------------------------
+
+pub async fn continue_session(
+    State(state): State<AppState>,
+    DashboardAuth(auth): DashboardAuth,
+    Path(session_id): Path<String>,
+    Json(body): Json<ContinueSessionRequest>,
+) -> impl IntoResponse {
+    // Load the original session (validate ownership)
+    let original = match load_session(&state, &session_id, &auth.user_id) {
+        Ok(Some(s)) => s,
+        Ok(None) => return not_found("session not found"),
+        Err(e) => return internal_error(&format!("db error: {e}")),
+    };
+
+    // Verify it's in a terminal state
+    if !original.state.is_terminal() {
+        return bad_request(&format!(
+            "cannot continue session in {} state, must be in a terminal state (completed/failed/stopped)",
+            original.state
+        ));
+    }
+
+    // Build the new session
+    let new_session_id = uuid::Uuid::new_v4().to_string();
+    let now = Utc::now().to_rfc3339();
+    let autonomy = original.autonomy_level.as_str();
+
+    let new_title = format!("Follow-up: {}", original.title);
+
+    // Truncate original instructions if too long for context
+    let truncated_original = if original.instructions.len() > 500 {
+        format!("{}...", &original.instructions[..500])
+    } else {
+        original.instructions.clone()
+    };
+    let new_instructions = format!(
+        "This is a continuation of a previous session. Previous task: {}. Previous instructions: {}\n\nNew instructions: {}",
+        original.title, truncated_original, body.instructions
+    );
+
+    // Create a synthetic CreateSessionRequest for insert_session
+    let create_req = CreateSessionRequest {
+        machine_id: original.machine_id.clone(),
+        repo_path: original.repo_path.clone(),
+        title: new_title.clone(),
+        instructions: new_instructions.clone(),
+        autonomy_level: Some(original.autonomy_level.clone()),
+        work_item_id: original.work_item_id.clone(),
+        context: original.context.clone(),
+    };
+
+    if let Err(e) = insert_session(&state, &new_session_id, &auth.user_id, &create_req, autonomy, &now) {
+        return internal_error(&format!("failed to create continuation session: {e}"));
+    }
+
+    // Insert initial session event
+    if let Err(e) = insert_session_event(&state, &new_session_id, None, "starting", &now, None) {
+        tracing::error!("failed to insert initial session event: {e}");
+    }
+
+    // Queue a start_session command for the runner
+    let payload = serde_json::json!({
+        "session_id": new_session_id,
+        "repo_path": create_req.repo_path,
+        "title": new_title,
+        "instructions": new_instructions,
+        "autonomy_level": autonomy,
+        "context": create_req.context,
+    });
+    if let Err(e) = insert_session_command(
+        &state,
+        &new_session_id,
+        &original.machine_id,
+        "start_session",
+        Some(&payload.to_string()),
+    ) {
+        tracing::error!("failed to queue start_session command: {e}");
+    }
+
+    (
+        StatusCode::CREATED,
+        Json(
+            serde_json::to_value(CreateSessionResponse {
+                id: new_session_id,
+                state: SessionState::Starting,
+            })
+            .unwrap_or_default(),
+        ),
+    )
+        .into_response()
+}
 fn insert_session(
     state: &AppState,
     session_id: &str,

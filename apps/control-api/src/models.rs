@@ -748,7 +748,12 @@ pub struct CreateSessionRequest {
     pub context: Option<String>,
 }
 
-/// Query params for GET /api/sessions.
+
+/// Request body for POST /api/sessions/{id}/continue.
+#[derive(Debug, Deserialize)]
+pub struct ContinueSessionRequest {
+    pub instructions: String,
+}/// Query params for GET /api/sessions.
 #[derive(Debug, Deserialize)]
 pub struct ListSessionsQuery {
     pub machine_id: Option<String>,
