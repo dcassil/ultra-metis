@@ -44,12 +44,6 @@ Fix crash in SessionDetailPage when navigating to a newly created session. The A
 
 ## Acceptance Criteria
 
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
 - [x] SessionDetailPage renders correctly for new sessions with no events
 - [x] `historicalEvents` is always a valid array, never undefined
 - [x] Existing sessions with events still work correctly
