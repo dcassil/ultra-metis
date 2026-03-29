@@ -71,10 +71,12 @@ export default function DocumentDetailPage() {
       </div>
 
       {/* Title row */}
-      <div className="flex items-center gap-3">
-        <h1 className="text-xl font-semibold text-secondary-900">{document.title}</h1>
-        <DocumentTypeBadge type={document.document_type} />
-        <PhaseBadge phase={document.phase} />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <h1 className="text-lg sm:text-xl font-semibold text-secondary-900">{document.title}</h1>
+        <div className="flex items-center gap-2">
+          <DocumentTypeBadge type={document.document_type} />
+          <PhaseBadge phase={document.phase} />
+        </div>
       </div>
 
       {error && (
@@ -83,7 +85,7 @@ export default function DocumentDetailPage() {
 
       {/* Metadata panel */}
       <Card title="Details">
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
           <div>
             <dt className="text-xs font-medium uppercase text-secondary-500">Short Code</dt>
             <dd className="mt-1 font-mono text-sm text-secondary-900">{document.short_code}</dd>
@@ -122,7 +124,7 @@ export default function DocumentDetailPage() {
       {/* Content */}
       <Card title="Content">
         {document.content ? (
-          <pre className="whitespace-pre-wrap text-sm text-secondary-800 font-sans leading-relaxed">
+          <pre className="whitespace-pre-wrap overflow-x-auto text-sm text-secondary-800 font-sans leading-relaxed">
             {document.content}
           </pre>
         ) : (
@@ -135,7 +137,7 @@ export default function DocumentDetailPage() {
         <Card title="Children" subtitle={`${document.children.length} child documents`}>
           <div className="divide-y divide-secondary-100">
             {document.children.map((child) => (
-              <div key={child.short_code} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+              <div key={child.short_code} className="flex flex-wrap items-center gap-2 sm:gap-3 py-3 first:pt-0 last:pb-0">
                 <ShortCodeLink shortCode={child.short_code} />
                 <span className="text-sm text-secondary-900">{child.title}</span>
                 <DocumentTypeBadge type={child.document_type} />

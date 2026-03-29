@@ -192,7 +192,7 @@ export default function HierarchyPage() {
             <p className="text-sm text-secondary-500">No planning documents found.</p>
           </div>
         ) : (
-          <div className="p-4 space-y-1">
+          <div className="p-3 sm:p-4 space-y-1 overflow-x-auto">
             {nodes.map((node) => (
               <TreeNode
                 key={node.short_code}

@@ -17,7 +17,7 @@ export function TreeNode({ node, expandedNodes, onToggle }: TreeNodeProps) {
 
   return (
     <div>
-      <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-secondary-100">
+      <div className="group flex items-center gap-2 rounded-md px-2 py-3 sm:py-1.5 hover:bg-secondary-100">
         {/* Expand/collapse chevron */}
         <button
           type="button"
@@ -62,7 +62,7 @@ export function TreeNode({ node, expandedNodes, onToggle }: TreeNodeProps) {
 
       {/* Children */}
       {hasChildren && isExpanded && (
-        <div className="border-l-2 border-secondary-200 ml-4 pl-3">
+        <div className="border-l-2 border-secondary-200 ml-2 pl-2 sm:ml-4 sm:pl-3">
           {node.children.map((child) => (
             <TreeNode
               key={child.short_code}
