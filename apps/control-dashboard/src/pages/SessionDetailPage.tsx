@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getSession, stopSession, forceStopSession, pauseSession, resumeSession } from '../api/sessions'
 import type { SessionResponse } from '../api/sessions'
@@ -6,6 +6,8 @@ import { listSessionViolations } from '../api/policies'
 import type { PolicyViolationRecord } from '../api/policies'
 import { listPendingApprovals } from '../api/interventions'
 import type { PendingApproval } from '../api/interventions'
+import { getSessionEvents } from '../api/events'
+import type { SessionOutputEvent } from '../api/events'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
@@ -67,11 +69,28 @@ export default function SessionDetailPage() {
   // Pending approvals
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
 
+  // Historical event hydration
+  const [historicalEvents, setHistoricalEvents] = useState<SessionOutputEvent[]>([])
+  const [historyLoaded, setHistoryLoaded] = useState(false)
+
   // Elapsed time ticker
   const [, setTick] = useState(0)
 
-  // SSE event stream (always active while on this page)
-  const { events, isConnected, error: streamError } = useSessionEventStream(id ?? '')
+  // Compute the max sequence number from historical events for deduplication
+  const maxSequence = useMemo(() => {
+    if (historicalEvents.length === 0) return undefined
+    return Math.max(...historicalEvents.map((e) => e.sequence_num))
+  }, [historicalEvents])
+
+  // Determine if session is terminal (needed before hook call)
+  const isTerminal = session ? TERMINAL_STATES.includes(session.state) : false
+
+  // SSE event stream — seeded with historical events, deduplicated by sequence
+  const { events, isConnected, error: streamError } = useSessionEventStream(id ?? '', {
+    initialEvents: historyLoaded ? historicalEvents : undefined,
+    startAfterSequence: maxSequence,
+    enabled: historyLoaded && !isTerminal,
+  })
 
   const fetchViolations = useCallback(async () => {
     if (!id) return
@@ -104,6 +123,21 @@ export default function SessionDetailPage() {
     } finally {
       setLoading(false)
     }
+  }, [id])
+
+  // Fetch historical events on mount (or when session id changes)
+  useEffect(() => {
+    if (!id) return
+    setHistoryLoaded(false)
+    getSessionEvents(id)
+      .then((resp) => {
+        setHistoricalEvents(resp.events)
+        setHistoryLoaded(true)
+      })
+      .catch(() => {
+        // Continue even if history fails — SSE will still work
+        setHistoryLoaded(true)
+      })
   }, [id])
 
   // Auto-refresh every 5 seconds
@@ -216,7 +250,6 @@ export default function SessionDetailPage() {
 
   if (!session) return null
 
-  const isTerminal = TERMINAL_STATES.includes(session.state)
   const showStop = session.state === 'running' || session.state === 'waiting_for_input'
   const showForceStop = !isTerminal
   const showPause = session.state === 'running'
