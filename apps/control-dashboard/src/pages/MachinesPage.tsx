@@ -288,6 +288,11 @@ export default function MachinesPage() {
             columns={tableColumns}
             data={activeMachines}
             onRowClick={(row) => navigate(`/machines/${(row as Record<string, unknown>).id}`)}
+            mobileCardConfig={{
+              headerColumn: 'name',
+              badgeColumn: 'status',
+              bodyColumns: ['trust_tier', 'session_mode', 'last_heartbeat'],
+            }}
           />
         )}
       </div>
@@ -297,11 +302,11 @@ export default function MachinesPage() {
         onClose={() => setShowCleanupModal(false)}
         title="Remove Offline Machines"
         footer={
-          <div className="flex justify-end gap-3">
-            <Button variant="secondary" size="sm" onClick={() => setShowCleanupModal(false)}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowCleanupModal(false)}>
               Cancel
             </Button>
-            <Button variant="danger" size="sm" loading={cleaning} onClick={() => void handleCleanupOffline()}>
+            <Button variant="danger" size="sm" className="w-full sm:w-auto" loading={cleaning} onClick={() => void handleCleanupOffline()}>
               Remove Machines
             </Button>
           </div>

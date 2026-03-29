@@ -301,7 +301,16 @@ export default function HistoryPage() {
             </p>
           </div>
         ) : (
-          <Table columns={columns} data={tableData} onRowClick={handleRowClick} />
+          <Table
+            columns={columns}
+            data={tableData}
+            onRowClick={handleRowClick}
+            mobileCardConfig={{
+              headerColumn: 'title',
+              badgeColumn: 'outcome_status',
+              bodyColumns: ['machine_id', 'duration', 'created_at'],
+            }}
+          />
         )}
       </div>
 

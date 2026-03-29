@@ -299,6 +299,11 @@ export default function SessionsPage() {
             columns={columns}
             data={filteredSessions}
             onRowClick={(row) => navigate(`/sessions/${row.id}`)}
+            mobileCardConfig={{
+              headerColumn: 'title',
+              badgeColumn: 'state',
+              bodyColumns: ['machine_id', 'elapsed', 'updated_at'],
+            }}
           />
         )}
       </div>

@@ -209,7 +209,16 @@ export default function DocumentsPage() {
             </p>
           </div>
         ) : (
-          <Table columns={columns} data={tableData} onRowClick={handleRowClick} />
+          <Table
+            columns={columns}
+            data={tableData}
+            onRowClick={handleRowClick}
+            mobileCardConfig={{
+              headerColumn: 'title',
+              badgeColumn: 'document_type',
+              bodyColumns: ['phase', 'parent_id'],
+            }}
+          />
         )}
       </div>
     </div>

@@ -157,7 +157,7 @@ export default function NotificationsPage() {
                     </p>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-x-2">
+                  <div className="flex shrink-0 flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-x-2">
                     {isUnread && (
                       <Button
                         variant="ghost"
