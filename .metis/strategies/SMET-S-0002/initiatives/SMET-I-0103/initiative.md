@@ -4,14 +4,14 @@ level: initiative
 title: "Mobile-Responsive Dashboard: Card Layouts, Touch Targets, and Small-Screen Optimization"
 short_code: "SMET-I-0103"
 created_at: 2026-03-29T01:13:17.495962+00:00
-updated_at: 2026-03-29T01:13:17.495962+00:00
+updated_at: 2026-03-29T02:23:30.222366+00:00
 parent: SMET-S-0002
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -195,16 +195,16 @@ Create separate `/m/sessions`, `/m/machines` routes with purpose-built mobile vi
 
 ## Implementation Plan
 
-Component-level responsive pass, screen by screen. Suggested task breakdown:
+Component-level responsive pass, screen by screen. All tasks completed:
 
-1. **Table Card Mode** — Add card rendering path to `<Table>` component, toggle below `sm` breakpoint. This is the foundation that all list pages benefit from.
+1. **SMET-T-0288 Table Card Mode** (completed) — Added `mobileCardConfig` prop and card rendering path to Table component. Cards render below `sm` breakpoint with header/badge/body/hidden column mapping.
 
-2. **LiveOutput Mobile** — Word wrapping, font size reduction, sticky guidance input, approval card repositioning.
+2. **SMET-T-0289 LiveOutput Mobile** (completed) — Word wrapping with `overflow-wrap: anywhere`, `text-xs` font on mobile, sticky toolbar, sticky guidance input at bottom, responsive padding.
 
-3. **Global Mobile Utilities** — Button stacking, modal sizing, touch target enforcement, tab bar horizontal scroll. These are cross-cutting changes to shared UI components.
+3. **SMET-T-0290 Global Mobile Utilities** (completed) — Modal viewport-aware sizing, 44px touch targets on sm buttons, horizontal scroll tab bars with touch-friendly targets, button stacking across all pages.
 
-4. **List Pages Card Integration** — Apply card mode to each list page (Machines, Sessions, History, Documents, Notifications) with per-page card field priority configuration.
+4. **SMET-T-0291 List Pages Card Integration** (completed) — mobileCardConfig wired up for Machines, Sessions, History, Documents, Notifications pages with per-page field priorities.
 
-5. **Detail Pages Mobile** — Session detail, machine detail, document detail, hierarchy tree — all the page-specific adjustments for stacking, tab bars, and metadata grids.
+5. **SMET-T-0292 Detail Pages Mobile** (completed) — Stacking title/badges, single-column metadata grids, reduced tree indentation, overflow-x-auto on content, flex-wrap on child lists.
 
-6. **Verification Pass** — Test all screens at 393px width, verify no horizontal scroll, verify touch targets, verify approval/guidance flows work end-to-end on mobile.
+6. **SMET-T-0293 Verification Pass** (completed) — Fixed 2 remaining tab bars (HistoryDetail, Governance), 8 error/empty state padding overflows, and 4 tables missing mobileCardConfig (MachineDetail sessions/violations, Governance quality/rules).

@@ -1,6 +1,7 @@
 .PHONY: build build-mcp build-cli install install-binary test clean \
        ci lint lint-shell fmt fmt-check release-local package \
-       build-desktop dev-desktop
+       build-desktop dev-desktop \
+       start-api start-runner start-dashboard start-all
 
 INSTALL_DIR ?= $(HOME)/.local/bin
 
@@ -36,6 +37,38 @@ test:
 clean:
 	cargo clean
 	rm -rf dist/
+
+# --------------------------------------------------------------------------
+# Local network services
+# --------------------------------------------------------------------------
+
+# Start the control API (port 3000)
+start-api:
+	apps/control-api/start.sh
+
+# Start the machine runner (connects to API on localhost:3000)
+start-runner:
+	apps/machine-runner/start.sh
+
+# Start the dashboard dev server (port 5173, LAN-accessible)
+start-dashboard:
+	apps/control-dashboard/start.sh
+
+# Start all services (API + runner in background, dashboard in foreground)
+start-all:
+	@echo "Starting control-api..."
+	@apps/control-api/start.sh &
+	@sleep 3
+	@echo "Starting machine-runner..."
+	@apps/machine-runner/start.sh &
+	@sleep 2
+	@echo "Starting dashboard..."
+	@LAN_IP=$$(ipconfig getifaddr en0 2>/dev/null || echo localhost); \
+	echo ""; \
+	echo "Dashboard: http://$$LAN_IP:5173"; \
+	echo "API:       http://$$LAN_IP:3000"; \
+	echo ""
+	@apps/control-dashboard/start.sh
 
 # --------------------------------------------------------------------------
 # CI / Quality targets
