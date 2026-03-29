@@ -363,16 +363,16 @@ export default function MachineDetailPage() {
         </Link>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-secondary-900">{machine.name}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-lg sm:text-xl font-semibold text-secondary-900 truncate">{machine.name}</h1>
           {machinePolicy && <SessionModeBadge mode={machinePolicy.session_mode} />}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="danger" size="sm" onClick={() => setShowRevokeModal(true)}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="danger" size="sm" className="w-full sm:w-auto" onClick={() => setShowRevokeModal(true)}>
             Revoke
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(true)}>
+          <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowDeleteModal(true)}>
             Remove
           </Button>
         </div>
@@ -400,14 +400,14 @@ export default function MachineDetailPage() {
       )}
 
       {/* Tab Navigation */}
-      <div className="border-b border-secondary-200 overflow-x-auto">
-        <nav className="-mb-px flex gap-6" aria-label="Tabs">
+      <div className="-mx-4 sm:mx-0 border-b border-secondary-200 overflow-x-auto">
+        <nav className="-mb-px flex gap-0 sm:gap-6 px-4 sm:px-0" aria-label="Tabs">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap border-b-2 py-2.5 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors sm:px-0 ${
                 activeTab === tab.id
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-secondary-500 hover:border-secondary-300 hover:text-secondary-700'
@@ -533,7 +533,7 @@ export default function MachineDetailPage() {
       {activeTab === 'details' && (<>
 
       <Card title="Machine Details">
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
           <div>
             <dt className="text-xs font-medium uppercase text-secondary-500">Platform</dt>
             <dd className="mt-1 text-sm text-secondary-900">{machine.platform}</dd>
@@ -698,7 +698,7 @@ export default function MachineDetailPage() {
         onClose={() => setShowRevokeModal(false)}
         title="Revoke Machine"
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
             <Button variant="secondary" size="sm" onClick={() => setShowRevokeModal(false)}>
               Cancel
             </Button>
@@ -718,7 +718,7 @@ export default function MachineDetailPage() {
         onClose={() => setShowDeleteModal(false)}
         title="Remove Machine"
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
             <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(false)}>
               Cancel
             </Button>
