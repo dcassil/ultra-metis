@@ -2,37 +2,24 @@ import { NavLink, Link } from 'react-router-dom';
 import {
   ServerIcon,
   PlayIcon,
-  ChartBarIcon,
   ClockIcon,
   ShieldCheckIcon,
-  ExclamationTriangleIcon,
   PlusIcon,
   DocumentTextIcon,
   RectangleGroupIcon,
-  CheckBadgeIcon,
-  BookOpenIcon,
-  BellAlertIcon,
 } from '@heroicons/react/24/outline';
 import { usePendingCount } from '../hooks/usePendingCount';
 
 const navigation = [
   { name: 'Machines', href: '/machines', icon: ServerIcon, showPendingBadge: true },
   { name: 'Sessions', href: '/sessions', icon: PlayIcon, showPendingBadge: false },
+  { name: 'History', href: '/history', icon: ClockIcon, showPendingBadge: false },
 ];
 
-const planningNavigation = [
+const workNavigation = [
   { name: 'Documents', href: '/planning/documents', icon: DocumentTextIcon },
   { name: 'Hierarchy', href: '/planning/hierarchy', icon: RectangleGroupIcon },
-  { name: 'Quality', href: '/planning/quality', icon: CheckBadgeIcon },
-  { name: 'Rules', href: '/planning/rules', icon: BookOpenIcon },
-];
-
-const operationsNavigation = [
-  { name: 'Monitoring', href: '/monitoring', icon: ChartBarIcon },
-  { name: 'History', href: '/history', icon: ClockIcon },
-  { name: 'Notifications', href: '/notifications', icon: BellAlertIcon },
-  { name: 'Policies', href: '/policies', icon: ShieldCheckIcon },
-  { name: 'Violations', href: '/violations', icon: ExclamationTriangleIcon },
+  { name: 'Governance', href: '/planning/governance', icon: ShieldCheckIcon },
 ];
 
 interface SidebarProps {
@@ -96,17 +83,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
         <li className="mt-4 mb-1">
           <span className="px-3 text-xs font-semibold uppercase tracking-wider text-secondary-500">
-            Planning
+            Work
           </span>
         </li>
-        {planningNavigation.map(renderNavItem)}
-
-        <li className="mt-4 mb-1">
-          <span className="px-3 text-xs font-semibold uppercase tracking-wider text-secondary-500">
-            Operations
-          </span>
-        </li>
-        {operationsNavigation.map(renderNavItem)}
+        {workNavigation.map(renderNavItem)}
       </ul>
     </nav>
   );
