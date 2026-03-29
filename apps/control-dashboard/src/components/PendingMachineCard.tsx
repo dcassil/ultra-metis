@@ -64,7 +64,7 @@ export default function PendingMachineCard({ machine, onAction }: PendingMachine
   return (
     <>
       <Card className="border-warning-200 bg-warning-50/30">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-semibold text-secondary-900">{machine.name}</h4>
@@ -82,10 +82,11 @@ export default function PendingMachineCard({ machine, onAction }: PendingMachine
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-col sm:flex-row shrink-0 gap-2">
             <Button
               variant="primary"
               size="sm"
+              className="w-full sm:w-auto"
               loading={approving}
               disabled={rejecting || !!successMessage}
               onClick={handleApprove}
@@ -95,6 +96,7 @@ export default function PendingMachineCard({ machine, onAction }: PendingMachine
             <Button
               variant="danger"
               size="sm"
+              className="w-full sm:w-auto"
               loading={rejecting}
               disabled={approving || !!successMessage}
               onClick={() => setShowRejectModal(true)}
@@ -110,7 +112,7 @@ export default function PendingMachineCard({ machine, onAction }: PendingMachine
         onClose={() => setShowRejectModal(false)}
         title="Reject Machine"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
             <Button variant="secondary" size="sm" onClick={() => setShowRejectModal(false)}>
               Cancel
             </Button>

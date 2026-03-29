@@ -227,13 +227,13 @@ export default function SessionsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div>
           <label className="block text-xs font-medium text-secondary-500 mb-1">State</label>
           <select
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
-            className="rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             {stateOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -248,7 +248,7 @@ export default function SessionsPage() {
           <select
             value={machineFilter}
             onChange={(e) => setMachineFilter(e.target.value)}
-            className="rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             <option value="">All Machines</option>
             {machineIds.map((mid) => (
@@ -266,7 +266,7 @@ export default function SessionsPage() {
             value={repoSearch}
             onChange={(e) => setRepoSearch(e.target.value)}
             placeholder="Search repo..."
-            className="rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
 
@@ -275,7 +275,7 @@ export default function SessionsPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortKey)}
-            className="rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             <option value="created_at">Created (newest)</option>
             <option value="updated_at">Last Activity</option>

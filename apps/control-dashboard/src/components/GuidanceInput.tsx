@@ -68,16 +68,16 @@ export function GuidanceInput({ sessionId, disabled }: GuidanceInputProps) {
         {error && (
           <p className="mb-2 text-xs text-danger-600">{error}</p>
         )}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {/* Injection type selector */}
-          <div className="flex rounded-md border border-secondary-300 bg-secondary-50 text-xs">
+          <div className="flex rounded-md border border-secondary-300 bg-secondary-50 text-xs shrink-0">
             {INJECTION_TYPES.map((type) => (
               <button
                 key={type.value}
                 type="button"
                 disabled={disabled}
                 onClick={() => setInjectionType(type.value)}
-                className={`px-2.5 py-1.5 font-medium transition-colors first:rounded-l-md last:rounded-r-md disabled:opacity-50 ${
+                className={`min-h-[44px] sm:min-h-0 px-3 sm:px-2.5 py-2 sm:py-1.5 font-medium transition-colors first:rounded-l-md last:rounded-r-md disabled:opacity-50 ${
                   injectionType === type.value
                     ? type.value === 'interrupt'
                       ? 'bg-danger-600 text-white'
@@ -90,33 +90,36 @@ export function GuidanceInput({ sessionId, disabled }: GuidanceInputProps) {
             ))}
           </div>
 
-          {/* Message input */}
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            placeholder={disabled ? 'Session is terminal' : 'Inject guidance...'}
-            className="flex-1 rounded-md border border-secondary-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-secondary-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-secondary-50 disabled:text-secondary-400"
-          />
+          {/* Input + send row */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-1">
+            {/* Message input */}
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={disabled}
+              placeholder={disabled ? 'Session is terminal' : 'Inject guidance...'}
+              className="flex-1 rounded-md border border-secondary-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-secondary-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-secondary-50 disabled:text-secondary-400"
+            />
 
-          {/* Send button */}
-          <Button
-            variant={injectionType === 'interrupt' ? 'danger' : 'primary'}
-            size="sm"
-            disabled={!canSend}
-            loading={sending}
-            onClick={handleSend}
-          >
-            {showSuccess ? (
-              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              'Send'
-            )}
-          </Button>
+            {/* Send button */}
+            <Button
+              variant={injectionType === 'interrupt' ? 'danger' : 'primary'}
+              size="sm"
+              disabled={!canSend}
+              loading={sending}
+              onClick={handleSend}
+            >
+              {showSuccess ? (
+                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                'Send'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -126,7 +129,7 @@ export function GuidanceInput({ sessionId, disabled }: GuidanceInputProps) {
         onClose={() => setShowInterruptConfirm(false)}
         title="Confirm Interrupt"
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
             <Button variant="secondary" size="sm" onClick={() => setShowInterruptConfirm(false)}>
               Cancel
             </Button>

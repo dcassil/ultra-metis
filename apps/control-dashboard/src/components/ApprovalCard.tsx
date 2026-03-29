@@ -80,7 +80,7 @@ export function ApprovalCard({ approval, sessionId, disabled, onResponded }: App
       {/* Action buttons */}
       {!isResponded && (
         <div className="mt-3 space-y-3">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {options.map((option) => (
               <Button
                 key={option}
