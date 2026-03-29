@@ -81,7 +81,7 @@ export default function SessionDetailPage() {
 
   // Compute the max sequence number from historical events for deduplication
   const maxSequence = useMemo(() => {
-    if (historicalEvents.length === 0) return undefined
+    if (!historicalEvents || historicalEvents.length === 0) return undefined
     return Math.max(...historicalEvents.map((e) => e.sequence_num))
   }, [historicalEvents])
 
@@ -134,7 +134,7 @@ export default function SessionDetailPage() {
     setHistoryLoaded(false)
     getSessionEvents(id)
       .then((resp) => {
-        setHistoricalEvents(resp.events)
+        setHistoricalEvents(resp.events ?? [])
         setHistoryLoaded(true)
       })
       .catch(() => {

@@ -4,15 +4,15 @@ level: task
 title: "Fix: SessionDetailPage crashes on new session — undefined historicalEvents"
 short_code: "SMET-T-0295"
 created_at: 2026-03-29T03:02:44.256058+00:00
-updated_at: 2026-03-29T03:02:44.256058+00:00
+updated_at: 2026-03-29T16:40:22.131499+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#bug"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -41,6 +41,12 @@ Fix crash in SessionDetailPage when navigating to a newly created session. The A
   2. Screen goes blank
   3. Navigate back to the session — same blank screen
 - **Expected vs Actual**: Page should render the session detail view. Instead, throws `Uncaught TypeError: Cannot read properties of undefined (reading 'length')` at SessionDetailPage.tsx:84.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
