@@ -263,8 +263,8 @@ export function LiveOutput({ events, isConnected, error }: LiveOutputProps) {
 
   return (
     <div className="flex flex-col rounded-lg border border-secondary-200 bg-secondary-950 shadow-sm overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-secondary-700 bg-secondary-900 px-4 py-2">
+      {/* Toolbar — sticky at top so controls stay visible while scrolling */}
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-secondary-700 bg-secondary-900 px-3 py-2 sm:px-4">
         <div className="flex items-center gap-3">
           {/* Connection status */}
           <span className="flex items-center gap-1.5 text-xs text-secondary-400">
@@ -301,7 +301,7 @@ export function LiveOutput({ events, isConnected, error }: LiveOutputProps) {
       {/* Log area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 font-mono text-sm leading-relaxed"
+        className="flex-1 overflow-y-auto p-3 sm:p-4 font-mono text-xs sm:text-sm leading-relaxed break-words overflow-wrap-anywhere"
         style={{ maxHeight: '60vh', minHeight: '300px' }}
       >
         {events.length === 0 ? (

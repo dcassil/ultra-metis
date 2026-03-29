@@ -76,3 +76,8 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Mobile word-wrap utility for monospace console output */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
