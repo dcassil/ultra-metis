@@ -242,14 +242,14 @@ export default function GovernancePage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-secondary-200 overflow-x-auto">
-        <nav className="-mb-px flex gap-6" aria-label="Tabs">
+      <div className="-mx-4 sm:mx-0 border-b border-secondary-200 overflow-x-auto">
+        <nav className="-mb-px flex gap-0 sm:gap-6 px-4 sm:px-0" aria-label="Tabs">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => handleTabChange(tab.id)}
-              className={`whitespace-nowrap border-b-2 py-2.5 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors sm:px-0 ${
                 activeTab === tab.id
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-secondary-500 hover:border-secondary-300 hover:text-secondary-700'
@@ -266,7 +266,7 @@ export default function GovernancePage() {
         <>
           {qualityError && !qualityLoading && documents.length === 0 ? (
             <div className="flex items-center justify-center py-24">
-              <div className="rounded-lg border border-danger-200 bg-danger-50 px-8 py-12 text-center">
+              <div className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-12 sm:px-8 text-center">
                 <p className="text-sm text-danger-700">{qualityError}</p>
                 <button
                   type="button"
@@ -322,7 +322,15 @@ export default function GovernancePage() {
                     </p>
                   </div>
                 ) : (
-                  <Table columns={qualityColumns} data={qualityTableData} />
+                  <Table
+                    columns={qualityColumns}
+                    data={qualityTableData}
+                    mobileCardConfig={{
+                      headerColumn: 'title',
+                      badgeColumn: 'quality_status',
+                      bodyColumns: ['document_type', 'records_count'],
+                    }}
+                  />
                 )}
               </div>
             </>
@@ -335,7 +343,7 @@ export default function GovernancePage() {
         <>
           {rulesError && !rulesLoading && rules.length === 0 ? (
             <div className="flex items-center justify-center py-24">
-              <div className="rounded-lg border border-danger-200 bg-danger-50 px-8 py-12 text-center">
+              <div className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-12 sm:px-8 text-center">
                 <p className="text-sm text-danger-700">{rulesError}</p>
                 <button
                   type="button"
@@ -380,7 +388,15 @@ export default function GovernancePage() {
                     </p>
                   </div>
                 ) : (
-                  <Table columns={rulesColumns} data={rulesTableData} />
+                  <Table
+                    columns={rulesColumns}
+                    data={rulesTableData}
+                    mobileCardConfig={{
+                      headerColumn: 'name',
+                      badgeColumn: 'protection_level',
+                      bodyColumns: ['scope', 'description'],
+                    }}
+                  />
                 )}
               </div>
             </>

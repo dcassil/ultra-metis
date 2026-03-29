@@ -482,6 +482,11 @@ export default function MachineDetailPage() {
                 columns={sessionColumns}
                 data={filteredSessions}
                 onRowClick={(row) => navigate(`/sessions/${row.id}`)}
+                mobileCardConfig={{
+                  headerColumn: 'title',
+                  badgeColumn: 'state',
+                  bodyColumns: ['repo_path', 'elapsed', 'updated_at'],
+                }}
               />
             )}
           </div>
@@ -523,6 +528,11 @@ export default function MachineDetailPage() {
               <Table<ViolationRow>
                 columns={violationColumns}
                 data={violationRows}
+                mobileCardConfig={{
+                  headerColumn: 'action',
+                  badgeColumn: 'policy_scope',
+                  bodyColumns: ['reason', 'timestamp'],
+                }}
               />
             )}
           </div>

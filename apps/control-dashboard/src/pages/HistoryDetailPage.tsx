@@ -206,14 +206,14 @@ export default function HistoryDetailPage() {
       )}
 
       {/* Tab Navigation */}
-      <div className="border-b border-secondary-200">
-        <nav className="-mb-px flex gap-6" aria-label="Tabs">
+      <div className="-mx-4 sm:mx-0 border-b border-secondary-200 overflow-x-auto">
+        <nav className="-mb-px flex gap-0 sm:gap-6 px-4 sm:px-0" aria-label="Tabs">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap border-b-2 py-2.5 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors sm:px-0 ${
                 activeTab === tab.id
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-secondary-500 hover:border-secondary-300 hover:text-secondary-700'

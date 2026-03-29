@@ -193,7 +193,7 @@ export default function SessionsPage() {
           </Link>
         </div>
         <div className="flex items-center justify-center py-24">
-          <div className="rounded-lg border border-danger-200 bg-danger-50 px-8 py-12 text-center">
+          <div className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-12 sm:px-8 text-center">
             <p className="text-sm text-danger-700">{error}</p>
             <button
               type="button"
