@@ -11,7 +11,10 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-remote-management"
+  - "#feature-knowledge"
+  - "#category-workflow-traceability"
 
 
 exit_criteria_met: false
@@ -22,15 +25,17 @@ initiative_id: session-history-audit-and-replay
 
 # Session History, Audit, and Replay Initiative
 
+**Status: Post-MVP** — builds on Shepherd MVP (SMET-I-0039, 0040, 0041).
+
 ## Context
 
-After sessions complete, users need to understand what happened: what was attempted, what decisions were made, what user interventions occurred, and what the outcome was. This requires durable session history with a chronological event stream, structured result records, and search/filter capabilities across past sessions.
+The Shepherd MVP persists interaction history (prompts + responses) in SQLite but doesn't have a dedicated history UI or search. After sessions complete, users need to understand what happened: what was attempted, what decisions were made, what user interventions occurred, and what the outcome was.
 
-This initiative is also the audit trail for the system — every approval, intervention, and outcome must be queryable so that AI work is explainable and reviewable after the fact. The session history is also the mechanism for linking execution back into Cadre work items.
+This initiative adds: durable session history with chronological event stream, structured result records, search/filter capabilities, and a timeline replay view. The interaction history already captured in the MVP SQLite is the foundation.
 
-**Pre-requisites**: SMET-I-0038, SMET-I-0039, SMET-I-0040, SMET-I-0041 (events generated during monitoring become the history).
+**Pre-requisites**: SMET-I-0039, SMET-I-0040, SMET-I-0041 (Shepherd MVP complete — events generated during sessions become the history).
 
-**Components touched**: Control Service (event persistence, history storage, search API), Control Dashboard (session history views, timeline replay, search/filter UI).
+**Components touched**: Server (`server/` — event persistence, history storage, search API), Web UI (`web/` — session history views, timeline replay, search/filter UI).
 
 ## Goals & Non-Goals
 

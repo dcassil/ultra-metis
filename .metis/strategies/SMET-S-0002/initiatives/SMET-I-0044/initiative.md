@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-remote-management"
+  - "#category-quality-governance"
 
 
 exit_criteria_met: false
@@ -22,15 +24,17 @@ initiative_id: policy-and-safe-execution
 
 # Policy and Safe Execution Initiative
 
+**Status: Post-MVP** — builds on Shepherd MVP (SMET-I-0039, 0040, 0041). Should be implemented before scaling beyond single-user localhost.
+
 ## Context
 
-Remote AI sessions introduce significant security risk: a compromised control plane could issue commands that cause real harm to local repos and machines. The policy and safety model is the defense layer. It defines what remote sessions can and cannot do at both the machine level and the repo level, enforces those boundaries locally (independent of the control service), logs all sensitive actions, and surfaces violations clearly.
+The Shepherd MVP runs localhost-only with no auth — acceptable for single-user. Before scaling to multi-machine or multi-user, a policy and safety model must be in place. Remote AI sessions introduce security risk: the policy layer defines what remote sessions can and cannot do, enforces boundaries locally (defense in depth), logs sensitive actions, and surfaces violations.
 
-The critical design principle is **defense in depth**: the Control Service enforces policy centrally AND the Machine Runner enforces policy locally. Even if a command passes the Control Service, the Machine Runner must independently validate it before executing. Remote actions should never bypass local safety gates.
+The critical design principle is **defense in depth**: the server enforces policy centrally AND the bridge enforces policy locally. Even if a command passes the server, the bridge must independently validate it. The MVP's interaction queue already provides human-in-the-loop for every prompt; policy adds machine-level and repo-level guardrails on top.
 
-**Pre-requisites**: SMET-I-0038, SMET-I-0039, SMET-I-0040. Policy should be established before connecting real AI sessions.
+**Pre-requisites**: SMET-I-0039, SMET-I-0040, SMET-I-0041 (Shepherd MVP complete).
 
-**Components touched**: Control Service (policy storage, central enforcement, violation logging), Machine Runner (local policy enforcement, independent validation), Control Dashboard (policy management UI, violation surface, session mode display).
+**Components touched**: Server (`server/` — policy storage, central enforcement, violation logging), Bridge (`bridge/` — local policy enforcement, independent validation), Web UI (`web/` — policy management UI, violation surface, session mode display).
 
 ## Goals & Non-Goals
 

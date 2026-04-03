@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-planning"
+  - "#category-domain-model"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: core-planning-hierarchy-domain
 
 ## Context
 
-The current Metis domain model uses a general-purpose project management hierarchy (Vision → Strategy → Initiative → Task) with ADRs as a separate concept. Cadre replaces this with an engineering-oriented hierarchy centered on product definition and design-linked implementation: ProductDoc → Epic → Story → Task, with DesignContext as a first-class cross-cutting artifact.
+The current Metis domain model uses a general-purpose project management hierarchy (Vision → Strategy → Initiative → Task) with ADRs as a separate concept. CADRE replaces this with an engineering-oriented hierarchy centered on product definition and design-linked implementation: ProductDoc → Epic → Story → Task, with DesignContext as a first-class cross-cutting artifact.
 
 This initiative is the foundational vertical slice — it reworks the core `DocumentType` enum, introduces the new planning types, rewires hierarchy validation, and lands storage support for all of it. Other domain-model initiatives (SMET-I-0019 governance types, SMET-I-0020 architecture catalog types) depend on this being done first.
 
@@ -104,16 +106,6 @@ Phase 4: Implement serialization/deserialization for new types
 Phase 5: Update SQLite schema and indexing
 Phase 6: Add schema versioning foundation
 Phase 7: Comprehensive unit tests
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

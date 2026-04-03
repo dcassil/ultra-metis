@@ -12,6 +12,8 @@ archived: true
 tags:
   - "#initiative"
   - "#phase/discovery"
+  - "#feature-ui"
+  - "#category-interface-layers"
 
 
 exit_criteria_met: false
@@ -25,8 +27,7 @@ initiative_id: upgrade-gui-for-stronger-model-and
 > **STATUS: POST-MVP / DEFERRED** — The product spec states the GUI is "valuable but not MVP-critical unless needed for adoption." For MVP, prototype with existing rapid GUI tools where possible. Full GUI productization should come after the core repo-native model is proven.
 
 ## Context
-
-Metis has GUI foundations for visualizing documents and workflows. Cadre introduces a richer document hierarchy, quality data, traceability chains, work leases, and governance artifacts — all of which benefit from visual representation. The GUI needs to evolve from a simple document viewer to an engineering dashboard that shows the full state of a product development effort.
+Cadre introduces a richer document hierarchy, quality data, traceability chains, work leases, and governance artifacts — all of which benefit from visual representation. The GUI needs to evolve from a simple document viewer to an engineering dashboard that shows the full state of a product development effort.
 
 ## Governing Commitments
 
@@ -39,7 +40,7 @@ This initiative directly serves:
 ## Goals & Non-Goals
 
 **Goals:**
-- Extend the GUI to display all new Cadre document types
+- Extend the GUI to display all new CADRE document types
 - Add hierarchy visualization showing Product Doc → Epic → Story → Task trees
 - Add traceability views that show document ancestry, descendants, and cross-references
 - Add quality dashboard views showing baselines, trends, and gate status
@@ -48,7 +49,7 @@ This initiative directly serves:
 - Support filtering and navigation across the expanded document set
 
 **Non-Goals:**
-- Building a full project management UI (Jira-like) — Cadre GUI is a dashboard, not a PM tool
+- Building a full project management UI (Jira-like) — CADRE GUI is a dashboard, not a PM tool
 - Real-time collaboration features — this is a local visualization tool
 - Mobile support — desktop/browser only
 

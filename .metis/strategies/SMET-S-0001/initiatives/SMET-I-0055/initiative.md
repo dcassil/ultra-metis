@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-mcp"
+  - "#category-interface-layers"
 
 
 exit_criteria_met: false

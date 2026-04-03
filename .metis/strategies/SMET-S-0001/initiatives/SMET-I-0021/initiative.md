@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-quality"
+  - "#category-quality-governance"
 
 
 exit_criteria_met: false
@@ -45,7 +47,7 @@ Split from the original SMET-I-0005 (now archived). Domain types for AnalysisBas
 **Non-Goals:**
 - Quality gate enforcement and phase transition blocking — covered by SMET-I-0022
 - Remediation loops when quality degrades — covered by SMET-I-0006
-- Running static analysis tools — Cadre captures results, it doesn't run tools
+- Running static analysis tools — CADRE captures results, it doesn't run tools
 - Defining what "good quality" means — thresholds are configurable per-project
 
 ## Detailed Design
@@ -84,16 +86,6 @@ Phase 4: Build baseline comparison engine
 Phase 5: Implement architecture boundary checking
 Phase 6: Add CLI and MCP commands
 Phase 7: Unit and integration tests
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

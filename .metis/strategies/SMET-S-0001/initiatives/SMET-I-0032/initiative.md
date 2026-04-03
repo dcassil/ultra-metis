@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-quality"
+  - "#category-quality-governance"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: gates-escalation-and-autonomy-model
 
 ## Context
 
-Cadre needs explicit control points (gates) where work must meet criteria before proceeding, clear escalation triggers for when the system should involve humans, and configurable autonomy modes that determine how much human oversight is required. This is essential for building trust — the system should be predictable about when it will stop and ask, when it will proceed, and when it will refuse.
+CADRE needs explicit control points (gates) where work must meet criteria before proceeding, clear escalation triggers for when the system should involve humans, and configurable autonomy modes that determine how much human oversight is required. This is essential for building trust — the system should be predictable about when it will stop and ask, when it will proceed, and when it will refuse.
 
 The same framework must support tight collaboration (early adoption, risky work), mixed mode (default), and autonomous mode (mature repos with strong rules and validations).
 
@@ -121,16 +123,6 @@ Phase 5: Integrate gates with transition hook system (SMET-I-0007)
 Phase 6: Integrate gate results with execution records (SMET-I-0031)
 Phase 7: Add MCP and CLI tools for mode configuration and gate status
 Phase 8: Integration tests for each mode with gate scenarios
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

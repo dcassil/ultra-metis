@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-distribution"
+  - "#category-infrastructure"
 
 
 exit_criteria_met: false

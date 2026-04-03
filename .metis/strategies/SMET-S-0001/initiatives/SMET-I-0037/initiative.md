@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-planning"
+  - "#category-parity-migration"
 
 
 exit_criteria_met: false
@@ -68,8 +70,8 @@ A great template should:
   - How the template influences AI agent output quality
 - Score each on the same 1-5 rubric used in benchmarks
 
-### Phase 2: Analyze Cadre Templates
-- Read all `content.md` templates in `cadre/crates/cadre-core/src/domain/documents/*/`
+### Phase 2: Analyze Ultra-Metis Templates
+- Read all `content.md` templates in `ultra-metis/crates/ultra-metis-core/src/domain/documents/*/`
 - Same analysis: structure, guidance quality, conditional handling
 - Side-by-side comparison with metis for matching document types
 
@@ -106,7 +108,7 @@ A great template should:
 
 ## Gap Analysis
 
-The original metis uses `domain/documents/` templates (not `templates/`). These are the richer set that the benchmark tested against. Cadre uses equivalent `domain/documents/` templates that were significantly stripped down during the cadre port.
+The original metis uses `domain/documents/` templates (not `templates/`). These are the richer set that the benchmark tested against. Ultra-metis uses equivalent `domain/documents/` templates that were significantly stripped down during the ultra-metis port.
 
 ### Vision Template — Impact: HIGH
 

@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-quality"
+  - "#category-domain-model"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: governance-quality-domain-types
 
 ## Context
 
-Cadre needs cross-cutting governance artifacts that enforce engineering quality alongside the planning hierarchy. These types — RulesConfig, AnalysisBaseline, QualityRecord, DesignChangeProposal, and ArchitectureInvestigation — sit orthogonal to the ProductDoc → Epic → Story → Task planning hierarchy and provide the quality enforcement layer.
+CADRE needs cross-cutting governance artifacts that enforce engineering quality alongside the planning hierarchy. These types — RulesConfig, AnalysisBaseline, QualityRecord, DesignChangeProposal, and ArchitectureInvestigation — sit orthogonal to the ProductDoc → Epic → Story → Task planning hierarchy and provide the quality enforcement layer.
 
 This initiative depends on SMET-I-0018 (Core Planning Hierarchy) being complete, since governance types reference and cross-cut planning types. Split out from the original SMET-I-0001 (now archived) as a focused vertical slice.
 
@@ -109,16 +111,6 @@ Phase 3: Implement DesignChangeProposal and ArchitectureInvestigation types
 Phase 4: Build cross-reference indexing between governance and planning artifacts
 Phase 5: Update SQLite schema and indexing for all governance types
 Phase 6: Comprehensive unit tests
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

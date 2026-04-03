@@ -12,6 +12,9 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/discovery"
+  - "#feature-remote-management"
+  - "#feature-knowledge"
+  - "#category-domain-model"
 
 
 exit_criteria_met: false
@@ -22,15 +25,17 @@ initiative_id: cadre-work-and-notes
 
 # Cadre Work and Notes Integration Initiative
 
+**Status: Post-MVP** — builds on Shepherd MVP + SMET-S-0001 core engine.
+
 ## Context
 
-Remote AI sessions should not be disconnected execution islands — they should be first-class participants in the Cadre planning and memory system. This initiative connects the Control Service and Machine Runner back into Cadre: sessions can be launched from work items, execution context is enriched with relevant notes and architecture guidance, session results flow back into the linked work item, and the note system is updated based on session findings.
+The Shepherd system and ultra-metis are separate repositories by design. This initiative bridges them: sessions can be launched from ultra-metis work items, execution context is enriched with relevant notes and architecture guidance, session results flow back into the linked work item, and the note system is updated based on session findings.
 
-This is the bridge between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops). It requires the core engine's note system (SMET-I-0030) and execution records (SMET-I-0031) to be functional.
+This is the integration point between SMET-S-0001 (core engine) and SMET-S-0002 (remote ops). Communication happens via API calls between the systems — no shared crate dependencies needed. Requires the core engine's note system (SMET-I-0030) and execution records (SMET-I-0031) to be functional.
 
-**Pre-requisites**: SMET-I-0038, SMET-I-0039, SMET-I-0040, SMET-I-0043 (session history for result handoff); plus SMET-S-0001 note system (SMET-I-0030) and execution records (SMET-I-0031).
+**Pre-requisites**: SMET-I-0039, SMET-I-0040, SMET-I-0041 (Shepherd MVP complete), SMET-I-0043 (session history for result handoff); plus SMET-S-0001 note system (SMET-I-0030) and execution records (SMET-I-0031).
 
-**Components touched**: Control Service (work item linkage API, note fetch/score API, result handoff), Machine Runner (note loading at session start, architecture guidance injection, finding capture), Control Dashboard (work item selector at session start, linked work item display, note proposal review).
+**Components touched**: Server (`server/` — work item linkage API, note fetch/score API, result handoff), Bridge (`bridge/` — note loading at session start, architecture guidance injection, finding capture), Web UI (`web/` — work item selector at session start, linked work item display, note proposal review).
 
 ## Goals & Non-Goals
 

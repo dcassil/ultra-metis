@@ -12,6 +12,8 @@ archived: true
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-benchmarks"
+  - "#category-parity-migration"
 
 
 exit_criteria_met: false

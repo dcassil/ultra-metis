@@ -12,6 +12,8 @@ archived: true
 tags:
   - "#initiative"
   - "#phase/discovery"
+  - "#feature-distribution"
+  - "#category-parity-migration"
 
 
 exit_criteria_met: false
@@ -20,13 +22,13 @@ strategy_id: cadre-core-engine-repo
 initiative_id: add-migration-and-versioning-path
 ---
 
-# Add Migration and Versioning Path from Metis to Cadre
+# Add Migration and Versioning Path from Metis to CADRE
 
 ## Context
 
-Existing Metis users have projects with Visions, Strategies, Initiatives, Tasks, and ADRs. Cadre introduces a fundamentally different document hierarchy (Product Doc, Epic, Story, Task) and new artifact types. There must be a clear, safe migration path from Metis documents to Cadre documents, as well as a schema versioning system that supports future evolution.
+CADRE introduces a fundamentally different document hierarchy (Product Doc, Epic, Story, Task) and new artifact types.
 
-This initiative ensures that the transition from Metis to Cadre is smooth, data-preserving, and reversible where possible.
+This initiative ensures that the transition from Metis to CADRE is smooth, data-preserving, and reversible where possible.
 
 ## Governing Commitments
 
@@ -39,16 +41,12 @@ This initiative directly serves:
 ## Goals & Non-Goals
 
 **Goals:**
-- Define mapping rules from Metis document types to Cadre types (Vision → Product Doc, Initiative → Epic, Task → Story or Task)
-- Build a migration tool that converts existing Metis projects to Cadre format
 - Implement document schema versioning so future changes are manageable
 - Preserve all existing document content during migration (no data loss)
 - Support incremental migration (not all-or-nothing)
 - Provide a dry-run mode that shows what would change without applying changes
 
 **Non-Goals:**
-- Backward migration (Cadre → Metis) — this is a one-way upgrade
-- Supporting Metis and Cadre formats simultaneously in production — after migration, the project is Cadre
 - Migrating external integrations (CI/CD references to Metis short codes, etc.)
 
 ## Detailed Design
@@ -65,7 +63,6 @@ This initiative directly serves:
 
 ### What is Net New
 - Type mapping rules: Vision → Product Doc, Strategy → (absorbed into Epic or dropped), Initiative → Epic, Task → Story or Task (based on complexity)
-- Migration tool: `cadre migrate` command
 - Schema version tracking in frontmatter and database
 - Dry-run mode: preview migration without applying changes
 - Migration report: summary of what was migrated, what needs manual attention

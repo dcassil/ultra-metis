@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-execution"
+  - "#category-autonomous-execution"
 
 
 exit_criteria_met: false

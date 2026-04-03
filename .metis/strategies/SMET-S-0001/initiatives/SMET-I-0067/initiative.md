@@ -12,6 +12,9 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-plugin"
+  - "#feature-execution"
+  - "#category-autonomous-execution"
 
 
 exit_criteria_met: false

@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-benchmarks"
+  - "#category-parity-migration"
 
 
 exit_criteria_met: false
@@ -24,11 +26,11 @@ initiative_id: practical-benchmark-ai-execution
 
 ## Context
 
-Current benchmarks (SMET-I-0035, SMET-I-0036, SMET-I-0037) test whether Cadre generates valid documents and system correctness. This initiative extends benchmarking to measure the **real-world value proposition**: how well can an AI use Cadre docs to successfully build complex systems, recognize scope gaps, and execute complete workflows?
+Current benchmarks (SMET-I-0035, SMET-I-0036, SMET-I-0037) test whether CADRE generates valid documents and system correctness. This initiative extends benchmarking to measure the **real-world value proposition**: how well can an AI use CADRE docs to successfully build complex systems, recognize scope gaps, and execute complete workflows?
 
 We need two parallel benchmark setups:
-1. **System benchmark** — Does Cadre itself work? (existing tests)
-2. **Practical benchmark** — Does Cadre help AI succeed in the wild? (this initiative)
+1. **System benchmark** — Does CADRE itself work? (existing tests)
+2. **Practical benchmark** — Does CADRE help AI succeed in the wild? (this initiative)
 
 ## Goals & Non-Goals
 

@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-plugin"
+  - "#category-workflow-traceability"
 
 
 exit_criteria_met: false

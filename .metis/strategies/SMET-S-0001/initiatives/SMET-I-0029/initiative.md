@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-knowledge"
+  - "#category-workflow-traceability"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: cognitive-operation-kernel-and
 
 ## Context
 
-Cadre's central design idea is that all higher-level workflows are composed from a fixed set of reusable engineering operations, not from brittle one-off workflow scripts. This avoids hardcoding separate large flows for every task type while still allowing structured execution.
+CADRE's central design idea is that all higher-level workflows are composed from a fixed set of reusable engineering operations, not from brittle one-off workflow scripts. This avoids hardcoding separate large flows for every task type while still allowing structured execution.
 
 The cognitive operation kernel defines 12 universal operations. These operations compose into reusable loops, and a "workflow" is simply a predefined composition of loops with entry conditions, required artifacts, required validations, escalation rules, and completion rules. This is the central abstraction of the entire system.
 
@@ -99,16 +101,6 @@ Phase 5: Create initial workflow templates (bugfix, feature, refactor, investiga
 Phase 6: Create remaining workflow templates (migration, architecture change, brownfield eval, remediation, greenfield bootstrap)
 Phase 7: Integrate with execution record system for auditability
 Phase 8: Add MCP and CLI tools for querying available operations, loops, and templates
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

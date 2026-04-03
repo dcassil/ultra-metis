@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-knowledge"
+  - "#category-workflow-traceability"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: execution-records-audit-spine-and
 
 ## Context
 
-Every meaningful work run in Cadre should emit a durable ExecutionRecord that links intent to outcome. This is the audit spine of the system — without it, there's no way to answer "what happened, why, and with what evidence?" for any piece of work. Additionally, all durable objects need to be cross-linkable and queryable through a typed relationship index.
+Every meaningful work run in CADRE should emit a durable ExecutionRecord that links intent to outcome. This is the audit spine of the system — without it, there's no way to answer "what happened, why, and with what evidence?" for any piece of work. Additionally, all durable objects need to be cross-linkable and queryable through a typed relationship index.
 
 The product spec identifies ExecutionRecord as a core execution/traceability artifact alongside TransitionRecord, DecisionRecord, and the CrossReference index. Together they form the traceability backbone.
 
@@ -135,16 +137,6 @@ Phase 5: Implement traceability queries (ancestors, descendants, relationships)
 Phase 6: Integrate TransitionRecord emission into phase transition engine (coordinate with SMET-I-0007)
 Phase 7: Add MCP and CLI tools for querying records and relationships
 Phase 8: Integration tests for full traceability chains
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

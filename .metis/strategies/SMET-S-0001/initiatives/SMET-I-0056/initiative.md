@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-cli"
+  - "#category-interface-layers"
 
 
 exit_criteria_met: false

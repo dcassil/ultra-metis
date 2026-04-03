@@ -33,11 +33,12 @@ Cadre needs a remote AI operations layer: a system that lets users register loca
 
 ## Components
 
-This strategy covers three tightly-coupled components that together deliver the remote operations capability:
+This strategy covers three tightly-coupled components in a **separate `shepherd/` repository** (Rust workspace + web SPA):
 
-- **Control Dashboard** (`apps/control-web/`): The user-facing web app (Next.js). Shows machines, sessions, live output, approvals, notifications, history, and artifacts. Mobile-first design.
-- **Control Service** (`apps/control-api/`): The hosted coordination layer. Authenticates users and machines, manages session lifecycle, routes commands, ingests events, persists state and audit trail, enforces policy, triggers notifications, and connects sessions to Cadre records.
-- **Machine Runner** (`apps/machine-runner/`): The local execution daemon running near the code. Connects to the control service, advertises repos and capabilities, starts/stops local AI sessions, captures output and prompts, enforces local policy, and returns structured updates and artifacts.
+- **Web UI** (`web/`): Mobile-first Preact + Tailwind PWA. Shows interaction queue, session dashboard, session launcher. Embedded in the server binary via rust-embed for single-binary deployment.
+- **Central Server** (`server/`): Axum-based Rust server. WebSocket hub for bridge connections, REST API for web UI, session registry, interaction queue, SQLite persistence. Serves the embedded web UI.
+- **Agent Bridge** (`bridge/`): Local Rust daemon on the dev machine. Connects outbound to the server, discovers projects, manages AI sessions via PTY allocation, detects prompts (hybrid hooks + pattern matching), injects responses. Contains the adapter layer with the AgentAdapter trait.
+- **Protocol** (`protocol/`): Shared Rust crate defining all message types, envelopes, and serialization. The contract between bridge and server.
 
 ## User Requirements
 
@@ -165,37 +166,61 @@ Every resource that a user "owns" (machine, session, notification, device token,
 
 ## Solution Approach
 
-Three-component architecture where the Machine Runner is a lightweight local daemon that connects outbound to the Control Service (avoiding firewall/NAT issues), the Control Service is a hosted stateless API with persistent storage for session state and events, and the Control Dashboard is a mobile-first Next.js app consuming the Control Service API.
+### Chosen Implementation: Shepherd
 
-All three components depend on SMET-I-0038 (monorepo restructure) which creates the `apps/` directory scaffold. The Control Service and Machine Runner share a common event and session model. Implementation is organized into 8 cross-cutting epics as initiatives:
+The implementation design is codified in `docs/superpowers/specs/2026-03-19-shepherd-remote-agent-management-design.md`. The system is called **Shepherd** and lives in a **separate repository** from ultra-metis.
 
-1. **Machine Connectivity and Trust** — registration, heartbeat, trust tiers, revocation, repo exposure
-2. **Remote Session Lifecycle** — session creation, state machine, termination, context loading
-3. **Live Monitoring and Intervention** — real-time output, session detail, multi-session oversight, approval handling, guidance injection
-4. **Notifications and Mobile Control** — push delivery, inbox, mobile-first UX, notification routing
-5. **Session History, Audit, and Replay** — event timeline, search/filter, audit trail, chronological replay
-6. **Policy and Safe Execution** — machine/repo policy model, violation surfacing, action logging, isolation guarantees
-7. **Cadre Work and Notes Integration** — work item linkage, note fetch/score, architecture awareness, result handoff
-8. **Operational Reliability and Multi-Session Management** — concurrency, capacity visibility, disconnection detection, resilience, administration
+**Why a separate repo**: The remote management layer doesn't depend on ultra-metis crate internals — it communicates with Claude Code (which happens to have Metis tools) through a generic adapter. Keeping it separate avoids blocking on monorepo tooling, mixing Rust workspace + Node/React build chains, and coupling release cycles. Ultra-Metis integration (SMET-I-0045) can happen later via API calls between the systems.
+
+### Architecture
+
+Three components connected by a plugin protocol:
+
+1. **Central Server** (Axum, Rust) — WebSocket hub for bridge connections, REST API for web UI, session registry, interaction queue, SQLite persistence, embedded SPA serving
+2. **Agent Bridge** (Rust daemon) — runs on the dev machine, connects outbound to server via WebSocket, manages AI sessions via PTY allocation, detects prompts via hybrid hooks+pattern-matching strategy
+3. **Web UI** (Preact + Tailwind, mobile-first PWA) — interaction queue, session dashboard, session launcher, embedded in server binary via rust-embed
+
+The bridge connects **outbound** to the server (works through firewalls/NAT). A **plugin protocol** defines all messages over WebSocket: session lifecycle (register/deregister/heartbeat/start/cancel/sync), interaction prompts (approval/confirm/choice/freeform/notification), and output streaming (post-MVP).
+
+The key abstraction is the **AgentAdapter trait** — the bridge's adapter layer that knows how to manage a specific AI tool. The Claude Code adapter is the MVP implementation; future adapters (Cursor, Aider, direct Claude API) implement the same trait.
+
+### Initiative Organization
+
+Implementation is organized into 8 cross-cutting initiatives. The first 3 constitute the Shepherd MVP, the remaining 5 are post-MVP extensions:
+
+**MVP (Shepherd v0.1)**:
+1. **Bridge Connectivity and Handshake** (SMET-I-0039) — bridge daemon, WebSocket connection, hello/welcome handshake, project discovery, reconnection
+2. **Session Lifecycle and Adapter Layer** (SMET-I-0040) — session start/stop/cancel, PTY management, AgentAdapter trait, Claude Code adapter, prompt detection, response injection
+3. **Interaction Queue and Web UI** (SMET-I-0041) — interaction types, web UI views (queue, dashboard, launcher, session detail), REST API, UI WebSocket push
+
+**Post-MVP**:
+4. **Notifications and Mobile Control** (SMET-I-0042) — push notifications, notification inbox
+5. **Session History, Audit, and Replay** (SMET-I-0043) — event persistence, history search, timeline replay
+6. **Policy and Safe Execution** (SMET-I-0044) — machine/repo policy model, violation surfacing, defense-in-depth
+7. **Ultra-Metis Work and Notes Integration** (SMET-I-0045) — work item linkage, note fetch/score, architecture awareness, result handoff
+8. **Operational Reliability and Multi-Session Management** (SMET-I-0046) — concurrency, capacity visibility, disconnection detection, resilience
 
 ## Scope
 
 **In Scope:**
-- `apps/control-web/` — Next.js dashboard
-- `apps/control-api/` — coordination API service
-- `apps/machine-runner/` — local execution daemon
-- All 8 epic initiatives and their user stories (A–K above)
-- Shared data models: machine, repo, session, prompt/approval, event/timeline, artifact, policy, notification, task linkage, note feedback
-- Cadre integration (work item linkage, note fetch/score, architecture guidance awareness)
-- Mobile-first responsive design for dashboard
+- **Separate `shepherd/` repository** — Rust workspace with protocol, server, bridge crates + web SPA
+- `protocol/` — shared message types, envelopes, serialization (the contract)
+- `server/` — Axum server with WebSocket hub, REST API, session registry, interaction queue, SQLite, embedded SPA
+- `bridge/` — daemon with WebSocket client, session manager, PTY management, adapter layer
+- `web/` — Preact + Tailwind mobile-first PWA (interaction queue, dashboard, launcher, session detail)
+- All 8 initiatives (3 MVP + 5 post-MVP)
+- Plugin protocol: session lifecycle, interaction prompts, output streaming, connection management
+- AgentAdapter trait and Claude Code adapter (MVP), extensible to other AI tools
+- Mobile-first responsive design
+- `user_id` column on all data tables from day one (cheap now, painful to retrofit)
 
 **Out of Scope:**
-- Cadre core engine capabilities — see SMET-S-0001
-- Native mobile apps (web-responsive is sufficient for MVP)
-- Self-hosted Control Service infrastructure (cloud-hosted only for MVP)
+- Ultra-Metis core engine capabilities — see SMET-S-0001
+- Native mobile apps (PWA is sufficient)
 - Advanced analytics or ML on session data
 - Cross-organization session sharing
-- **MVP out of scope**: login/authentication, user registration, admin UI, role enforcement, multi-user isolation testing (data model is in place; enforcement deferred)
+- Modifying Claude Code source code
+- **MVP out of scope**: authentication, push notifications, multi-machine support, output streaming in web UI, non-Claude-Code adapters, session persistence across server restarts
 
 ## Risks & Unknowns
 
@@ -209,17 +234,19 @@ All three components depend on SMET-I-0038 (monorepo restructure) which creates 
 
 ## Implementation Dependencies
 
-**Hard prerequisite**: SMET-I-0038 (Monorepo Restructure) must complete before any initiative under this strategy begins.
+**No hard prerequisite on ultra-metis monorepo** — Shepherd is a separate repository. SMET-I-0038 (Monorepo Restructure) is already complete but is not a blocker since Shepherd lives outside ultra-metis.
 
-**Epic dependency order**:
-1. Machine Connectivity and Trust — foundational; all others depend on machines existing
-2. Remote Session Lifecycle — core session model required before monitoring, approvals, or history
-3. Policy and Safe Execution — establish safety model before connecting real AI sessions
-4. Live Monitoring and Intervention — builds on running sessions
-5. Session History, Audit, and Replay — builds on session event model
-6. Notifications and Mobile Control — builds on session events and state
-7. Cadre Work and Notes Integration — builds on session model and core engine (SMET-S-0001)
-8. Operational Reliability and Multi-Session Management — cross-cutting; can overlap with 3–7
+**MVP initiative dependency order** (all three are tightly coupled and should be built together):
+1. **SMET-I-0039 — Bridge Connectivity and Handshake** — foundational; the bridge daemon, WebSocket connection, and project discovery
+2. **SMET-I-0040 — Session Lifecycle and Adapter Layer** — core session model, PTY management, Claude Code adapter, prompt detection; depends on bridge existing
+3. **SMET-I-0041 — Interaction Queue and Web UI** — the user-facing layer; depends on sessions and interactions flowing through the system
+
+**Post-MVP dependency order**:
+4. Policy and Safe Execution (SMET-I-0044) — establish safety model before scaling
+5. Session History, Audit, and Replay (SMET-I-0043) — builds on session event model from MVP
+6. Notifications and Mobile Control (SMET-I-0042) — builds on session events and state
+7. Ultra-Metis Work and Notes Integration (SMET-I-0045) — requires both Shepherd and ultra-metis core engine (SMET-S-0001)
+8. Operational Reliability and Multi-Session Management (SMET-I-0046) — cross-cutting; can overlap with 4–7
 
 ## Change Log
 
@@ -232,3 +259,8 @@ All three components depend on SMET-I-0038 (monorepo restructure) which creates 
 - **Change**: Added multi-tenant data model (Org → Team → User → Dashboard → Machine → Session) as a core architectural constraint. All resources are user-scoped from day one. Roles table scaffolded with default role. MVP ships with single seeded user and passthrough auth middleware.
 - **Rationale**: Team has multiple developers each working on their own projects/machines. Future goal is each developer has their own dashboard with isolated view. Designing this in from the start avoids a painful migration when the second user is added.
 - **Impact**: Every initiative must scope DB schemas and API queries by `user_id`. Auth middleware is a required component even in MVP (passthrough). All 8 initiatives updated with multi-tenancy notes.
+
+### 2026-03-19 — Shepherd Design Adopted
+- **Change**: Adopted the Shepherd design (`docs/superpowers/specs/2026-03-19-shepherd-remote-agent-management-design.md`) as the implementation approach. Key decisions: (1) separate `shepherd/` repository instead of `apps/` in ultra-metis monorepo; (2) Preact + Tailwind PWA instead of Next.js; (3) plugin protocol with typed messages as the contract; (4) AgentAdapter trait as the core extension point; (5) hybrid hooks + terminal pattern matching for Claude Code prompt detection; (6) `shepherd-bridge wrap` for local session management.
+- **Rationale**: Shepherd addresses the hard engineering problems (PTY management, prompt detection, protocol design) concretely. Separate repo avoids blocking on monorepo tooling, mixing build chains, and coupling release cycles. Ultra-Metis integration can happen via API calls later.
+- **Impact**: Components renamed (Machine Runner → Agent Bridge, Control Service → Central Server, Control Dashboard → Web UI). Initiatives 0039–0041 updated to align with Shepherd MVP design. Initiatives 0042–0046 marked as post-MVP. Multi-tenancy data model (`user_id` on all tables) carried forward from prior decision — cheap to include from day one. SMET-I-0038 monorepo restructure is no longer a blocker.

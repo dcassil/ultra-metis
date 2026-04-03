@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/design"
+  - "#phase/discovery"
+  - "#feature-cli"
+  - "#category-interface-layers"
 
 
 exit_criteria_met: false
@@ -57,29 +59,42 @@ Cadre CLI currently supports document CRUD, phase transitions, search, archive, 
 
 ## Detailed Design
 
-### New Commands
-- `cadre quality capture` — capture a quality baseline
-- `cadre quality compare` — compare two baselines
-- `cadre quality gate` — check quality gate status
-- `cadre quality validate` — record a validation result
-- `cadre rules list` — list active engineering rules by scope
-- `cadre rules propose` — create a rule change proposal
-- `cadre notes fetch` — fetch notes by scope (repo/package/subsystem/path/symbol)
-- `cadre notes create` — create a durable insight note
-- `cadre notes score` — record feedback on a note
-- `cadre notes inspect` — browse and filter notes
-- `cadre trace` — trace document ancestry/descendants and cross-references
-- `cadre execution list` — list execution records
-- `cadre execution show` — show execution record details
-- `cadre mode` — show or set autonomy mode (tight/mixed/autonomous)
-- `cadre workflow list` — list available workflow templates
+### What to Reuse from `metis/`
+- The existing CLI framework (likely clap-based in Rust)
+- Command structure and argument patterns
+- Output formatting conventions
+- The existing command implementations as a base
+
+### What to Change from `metis/`
+- Extend `create` command to handle new document types
+- Extend `list` and `search` commands with new type filters
+- Update `transition` command for new phase flows
+- Improve help text with examples for each command
+
+### What is Net New
+- `ultra-metis quality capture` — capture a quality baseline
+- `ultra-metis quality compare` — compare two baselines
+- `ultra-metis quality gate` — check quality gate status
+- `ultra-metis quality validate` — record a validation result
+- `ultra-metis rules list` — list active engineering rules by scope
+- `ultra-metis rules propose` — create a rule change proposal
+- `ultra-metis notes fetch` — fetch notes by scope (repo/package/subsystem/path/symbol)
+- `ultra-metis notes create` — create a durable insight note
+- `ultra-metis notes score` — record feedback on a note
+- `ultra-metis notes inspect` — browse and filter notes
+- `ultra-metis trace` — trace document ancestry/descendants and cross-references
+- `ultra-metis execution list` — list execution records
+- `ultra-metis execution show` — show execution record details
+- `ultra-metis mode` — show or set autonomy mode (tight/mixed/autonomous)
+- `ultra-metis workflow list` — list available workflow templates
+- `ultra-metis init` — enhanced repo-aware initialization (SMET-I-0008)
 - Improved `--help` with usage examples and workflow guides
-- Post-MVP: `cadre lease acquire/release` — work lease operations
+- Post-MVP: `ultra-metis lease acquire/release` — work lease operations
 
 ## Alternatives Considered
 
 1. **Wrap MCP tools as CLI**: Rejected because CLI needs different UX patterns (formatted output, interactive prompts) than MCP tools.
-2. **Single monolithic command with subcommands for everything**: This is the approach — `cadre` as the root command with organized subcommand groups.
+2. **Single monolithic command with subcommands for everything**: This is the approach — `ultra-metis` as the root command with organized subcommand groups.
 3. **Separate CLIs for different concern areas**: Rejected because a single CLI is easier to discover and learn.
 
 ## Progress (2026-03-23)

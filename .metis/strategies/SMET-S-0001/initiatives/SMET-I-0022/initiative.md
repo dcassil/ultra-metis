@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-quality"
+  - "#category-quality-governance"
 
 
 exit_criteria_met: false
@@ -46,7 +48,7 @@ Split from the original SMET-I-0005 (now archived).
 - Capturing baselines or comparing them — covered by SMET-I-0021
 - Remediation workflows when gates fail — covered by SMET-I-0006
 - UI for quality gate status — covered by SMET-I-0011
-- Running analysis tools — Cadre checks results, doesn't run tools
+- Running analysis tools — CADRE checks results, doesn't run tools
 
 ## Detailed Design
 
@@ -86,16 +88,6 @@ Phase 4: Implement gate failure messaging
 Phase 5: Implement emergency override with audit trail
 Phase 6: Add CLI and MCP commands
 Phase 7: Integration tests with full transition flows
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

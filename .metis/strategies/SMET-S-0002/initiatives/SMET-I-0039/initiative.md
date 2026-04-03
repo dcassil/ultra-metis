@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-remote-management"
+  - "#category-infrastructure"
 
 
 exit_criteria_met: false
@@ -20,90 +22,112 @@ strategy_id: SMET-S-0002
 initiative_id: machine-connectivity-and-trust
 ---
 
-# Machine Connectivity and Trust Initiative
+# Bridge Connectivity and Handshake Initiative
 
 ## Context
 
-This is the foundational initiative for the Remote AI Operations Layer (SMET-S-0002). Before any session can be started remotely, the system needs a reliable model for registering, identifying, trusting, and revoking local machines. A machine is any computer where the Machine Runner daemon is installed and where AI sessions will execute. Without a solid machine registry and trust model, the rest of the system cannot safely route commands or receive events.
+This is the foundational initiative for the Shepherd remote management system (SMET-S-0002). Before any session can be started remotely, the bridge daemon must be able to connect to the central server, identify itself, advertise available projects, and maintain a persistent connection with reconnection capability.
 
-**Pre-requisite**: SMET-I-0038 (Monorepo Restructure) must be complete — this initiative creates code in `apps/machine-runner/` and `apps/control-api/`.
+The detailed implementation design is in `docs/superpowers/specs/2026-03-19-shepherd-remote-agent-management-design.md`. This initiative covers the bridge daemon lifecycle, the `bridge.hello`/`bridge.welcome` handshake, project discovery, and the WebSocket connection management. This is **MVP initiative 1 of 3**.
 
-**Components touched**: Control Service (machine registry API), Machine Runner (registration + heartbeat client), Control Dashboard (machine list + detail views).
+**Pre-requisite**: None — Shepherd is a separate repository from ultra-metis.
+
+**Components touched**: Bridge daemon (`bridge/` crate — daemon lifecycle, config, WebSocket client, project discovery), Central Server (`server/` crate — WebSocket hub, machine registry), Protocol (`protocol/` crate — bridge handshake messages, envelope types).
 
 ## Goals & Non-Goals
 
 **Goals:**
-- Machine registration API in Control Service (name, identity, status, metadata)
-- Machine Runner daemon can register itself with the Control Service on startup
-- Heartbeat mechanism so the Control Service knows machine online/offline/stale status
-- Repo/working directory discovery: Machine Runner advertises what repos are available
-- Trust model: explicit approval required before a machine can receive commands
-- Machine revocation: user can disable a machine at any time from the dashboard
-- Machine-level permissions and trust tiers (some machines more trusted than others)
-- Machine list and machine detail views in the Control Dashboard
+- Protocol crate with message envelope, bridge handshake types (`bridge.hello`, `bridge.welcome`), and serde serialization
+- Bridge daemon that starts via `shepherd-bridge start`, connects outbound to server via WebSocket
+- `bridge.hello` message on connect: protocol version, machine ID, machine name, bridge version, available agents, available projects
+- Server responds with `bridge.welcome` (accepted/rejected, pending requests from while bridge was disconnected)
+- Project discovery: bridge scans configured directories and advertises available project paths
+- Bridge configuration via TOML (`~/.config/shepherd/bridge.toml`) — server URL, machine identity, project scan dirs, adapter settings
+- Server configuration via TOML (`~/.config/shepherd/server.toml`) — host, port, database path, heartbeat intervals
+- WebSocket reconnection with exponential backoff on disconnect
+- `session.sync` message after reconnection to reconcile state between bridge and server
+- Server tracks bridge online/offline/stale status from WebSocket connection liveness
+- Bridge CLI: `start`, `stop`, `status`, `config` subcommands
+- SQLite persistence on server for machine registry (known machines, last seen)
+- `user_id` column on all tables from day one (single seeded user in MVP)
 
 **Non-Goals:**
-- Session management (covered in SMET-I-0040)
-- Policy enforcement for what sessions can do on a machine (SMET-I-0044)
-- Advanced machine health metrics or telemetry (post-MVP)
+- Session management and PTY allocation (SMET-I-0040)
+- Interaction queue and web UI (SMET-I-0041)
+- Machine trust tiers and explicit approval flow (post-MVP — MVP trusts all connecting bridges)
+- Machine revocation (post-MVP)
+- Policy enforcement (SMET-I-0044, post-MVP)
+- Advanced machine health metrics (post-MVP)
 
 ## Detailed Design
 
-### Control Service — Machine Registry API
-- `POST /machines/register` — register a new machine (name, platform, capabilities)
-- `POST /machines/{id}/heartbeat` — periodic liveness signal from runner
-- `GET /machines` — list all machines with status, last heartbeat, active session count
-- `GET /machines/{id}` — machine detail: metadata, repos, trust level, active sessions
-- `POST /machines/{id}/approve` — approve a pending machine for command receipt
-- `POST /machines/{id}/revoke` — revoke a machine immediately
-- Machine status computed from heartbeat recency: online (< 30s), stale (30s–5m), offline (> 5m)
+See full spec: `docs/superpowers/specs/2026-03-19-shepherd-remote-agent-management-design.md`
 
-### Machine Runner — Registration and Heartbeat
-- On startup: POST to control service with machine name (from local config) and discovered repo list
-- Periodic heartbeat (every 15–30s) keeps machine marked online
-- Repo discovery: scan configured directories, expose repo name + path pairs
-- If registration is rejected/pending, runner enters waiting state (no command processing)
+### Protocol Crate (`protocol/`)
+- Message envelope: `{ type, id (uuid), timestamp (RFC3339), payload }` — one JSON message per WebSocket text frame
+- `bridge.hello` message: protocol_version, machine_id, machine_name, bridge_version, available_agents, available_projects
+- `bridge.welcome` message: accepted (bool), protocol_version, server_version, pending_requests (session.start requests made while bridge was disconnected)
+- `session.sync` message: machine_id, active_sessions list — sent after reconnection to reconcile state
+- Protocol version field for forward compatibility; server rejects incompatible versions
 
-### Control Dashboard — Machine Views
-- Machine list: name, status badge (online/stale/offline/unhealthy), active sessions, last heartbeat
-- Machine detail: expandable metadata, available repos, trust tier, revoke button
-- Pending machines queue: approve or reject new registrations
-- Trust tier badge shown in machine list and session start flow
+### Bridge Daemon (`bridge/`)
+- CLI entry point with `start`, `stop`, `status`, `config`, `wrap`, `notify` subcommands
+- Daemon lifecycle: start on login or manually, connect to server, discover projects, monitor sessions
+- WebSocket client with exponential backoff reconnection (5s initial, 60s max)
+- On connect: send `bridge.hello`, wait for `bridge.welcome`, send `session.sync` with current state
+- Process `pending_requests` from welcome message (session starts requested while disconnected)
+- Project discovery: scan configured directories (2 levels deep), expose path + name pairs
+- Local Unix socket for `notify` subcommand (hook-detected events sent to running daemon)
 
-### Trust Model
-- New machines start in `pending` state — no commands accepted
-- User approves explicitly from dashboard → machine moves to `trusted`
-- Trusted machines can receive session commands for their allowed repos
-- Revoked machines immediately stop receiving commands; runner gets 401 on next request
-- Trust tiers (trusted, restricted): restricted machines need stricter approval on sessions
+### Bridge Configuration
+```toml
+# ~/.config/shepherd/bridge.toml
+[server]
+url = "ws://localhost:8420/bridge"
+reconnect_interval_ms = 5000
+max_reconnect_interval_ms = 60000
+
+[machine]
+id = "dans-macbook"
+name = "Dan's MacBook Pro"
+
+[projects]
+scan_dirs = ["/Users/dan/Code"]
+
+[adapters.claude-code]
+binary = "claude"
+default_model = "opus"
+hook_pipe_dir = "/tmp/shepherd/hooks"
+```
+
+### Central Server — WebSocket Hub (`server/`)
+- Accepts WebSocket upgrades at `/bridge`
+- Expects `bridge.hello` as first message, responds with `bridge.welcome`
+- Ping/pong keepalive every 15 seconds
+- Tracks bridge connection status: connected (WebSocket open), stale (ping timeout), disconnected (WebSocket closed)
+- On disconnect: marks all sessions from that bridge as `status: unknown`
+- On reconnect: processes `session.sync` to reconcile, clears stale sessions
+
+### Central Server — REST API (MVP — machine endpoints)
+- `GET /api/machines` — list connected bridges/machines with status
+- `GET /api/machines/:id/projects` — list available projects on a machine
+
+### Persistence
+- SQLite at `~/.config/shepherd/server.db`
+- Machine registry table: id, machine_id, machine_name, bridge_version, last_seen, user_id
+- In-memory: active WebSocket connections, current bridge status
 
 ## Multi-Tenancy Notes
 
-### Schema Changes
-- `machines` table gets `user_id`, `team_id`, `org_id` foreign keys (all non-null; seeded to defaults in MVP)
-- `repos` exposed by a machine are also scoped through the machine's `user_id`
-- `roles` table: `(id, name, permissions_json)` — seed with `{id:1, name:"default", permissions_json:"{}"}`
-- `user_roles` table: `(user_id, role_id)` — seed MVP user with role `default`
-- Org/Team/User tables seeded at first startup with a single default record each
-
-### API Scoping
-- Machine registration: runner includes a machine API token in the request; Control Service resolves token → `user_id` → scopes the machine to that user
-- **MVP**: runner uses a hardcoded static token; middleware maps it to `user_id=1`
-- `GET /machines` always adds `WHERE user_id = :current_user` — never returns all machines globally
-- Machine approval, revocation, and heartbeat endpoints validate the machine belongs to `current_user` before proceeding
-
-### Auth Middleware (MVP)
-- Middleware exists in the request pipeline and sets `request.user_id = 1` unconditionally
-- Same middleware will be replaced with JWT verification when auth is added — no other code changes needed
-
-### Dashboard
-- Machine list and detail views render data from the user-scoped API — no changes needed when real auth lands
-- No "all machines" admin view in MVP; admin cross-user view is a future feature flag
+- `user_id` column on machines table from day one — seeded to `user_id=1` in MVP
+- MVP: no auth middleware, no login flow, no trust tiers — single user, all bridges trusted
+- All API queries include `WHERE user_id = :current_user` pattern even in MVP (habit, not enforcement)
+- Future: swap in auth middleware that resolves JWT → user_id; all downstream scoping already works
 
 ## Alternatives Considered
 
-- **Agent-based polling (runner polls for commands)**: simpler NAT traversal but higher latency for command delivery; rejected in favor of persistent outbound connection (WebSocket or SSE) from runner to service
-- **OAuth device flow for machine registration**: more standard but adds complexity for a local daemon; rejected in favor of explicit dashboard-based approval which fits the trust model better
+- **Agent-based polling (bridge polls for commands)**: simpler NAT traversal but higher latency for command delivery; rejected in favor of persistent outbound WebSocket connection
+- **REST registration instead of WebSocket handshake**: simpler but loses the persistent bidirectional channel needed for session.start commands; rejected
 - **mDNS/local discovery instead of central registry**: works only on local network, breaks the remote control model; rejected
 
 ## Cadre ADR Alignment (SMET-A-0001)
@@ -119,11 +143,13 @@ No changes needed for: #2 (superpowers dependency is orchestration-level, not ru
 
 ## Implementation Plan
 
-1. Define machine data model (id, name, platform, status, trust\_tier, repos, last\_heartbeat)
-2. Implement Control Service machine registry API (register, heartbeat, list, detail, approve, revoke)
-3. Implement Machine Runner registration client and heartbeat loop
-4. Implement repo discovery in Machine Runner (configurable directories)
-5. Build Control Dashboard machine list and machine detail views
-6. Build pending machine approval flow in dashboard
-7. Integration test: runner registers → dashboard shows pending → user approves → runner accepted
-8. Revocation test: user revokes → runner gets 401 → dashboard shows offline
+1. Create `shepherd/` repository with Cargo workspace (protocol, server, bridge crates)
+2. Implement protocol crate: message envelope, bridge.hello, bridge.welcome, session.sync types with serde
+3. Implement bridge daemon CLI (`start`, `stop`, `status`, `config`) with TOML config loading
+4. Implement bridge WebSocket client with exponential backoff reconnection
+5. Implement bridge project discovery (scan configured directories)
+6. Implement server Axum setup with WebSocket endpoint at `/bridge`
+7. Implement server WebSocket hub: accept connections, bridge.hello/welcome handshake, ping/pong keepalive
+8. Implement server machine registry (SQLite — machine table with user_id)
+9. Implement bridge local Unix socket for `notify` subcommand
+10. Integration test: bridge starts → connects → hello/welcome → server shows machine online → bridge disconnects → server marks stale → bridge reconnects → session.sync reconciles

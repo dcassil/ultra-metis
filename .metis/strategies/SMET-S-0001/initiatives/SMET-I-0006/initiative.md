@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-quality"
+  - "#category-quality-governance"
 
 
 exit_criteria_met: false
@@ -26,7 +28,7 @@ initiative_id: add-remediation-and-investigation
 
 When quality gates detect regression (SMET-I-0005), the system needs a structured response — not just a blocked transition, but a workflow for investigating the root cause, proposing remediation, executing fixes, and verifying resolution. Without this, quality gate violations become dead-ends that users work around rather than address.
 
-Cadre should introduce Architecture Investigation documents for root-cause analysis and structured remediation loops that connect quality degradation to corrective action.
+CADRE should introduce Architecture Investigation documents for root-cause analysis and structured remediation loops that connect quality degradation to corrective action.
 
 ## Governing Commitments
 
@@ -85,16 +87,6 @@ Phase 4: Implement investigation templates with quality delta pre-population
 Phase 5: Build remediation task generation from investigations
 Phase 6: Implement verification step (re-check quality after remediation)
 Phase 7: Add recurring issue detection
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

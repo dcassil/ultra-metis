@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-architecture"
+  - "#category-domain-model"
 
 
 exit_criteria_met: false

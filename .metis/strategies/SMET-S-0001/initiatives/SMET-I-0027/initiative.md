@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-architecture"
+  - "#category-architecture"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: architecture-catalog-content-and
 
 ## Context
 
-Cadre moves repos from improvised architecture to intentional architecture. This requires a curated catalog of known-good patterns and a selection flow that helps users choose the right one during setup.
+CADRE moves repos from improvised architecture to intentional architecture. This requires a curated catalog of known-good patterns and a selection flow that helps users choose the right one during setup.
 
 The domain types for ArchitectureCatalogEntry and ReferenceArchitecture are defined in SMET-I-0020. This initiative focuses on the actual catalog content (the 5 initial JS/TS patterns) and the greenfield selection flow. Brownfield evaluation is a separate initiative (SMET-I-0028).
 
@@ -67,7 +69,7 @@ Each entry defines:
 - Analysis expectations (what quality checks should enforce)
 
 ### Catalog Storage
-- Built-in entries ship with Cadre binary (embedded or bundled)
+- Built-in entries ship with CADRE binary (embedded or bundled)
 - Custom entries stored in `.metis/catalog/` directory
 - Both queried through the same interface
 
@@ -94,16 +96,6 @@ Phase 4: Build selection flow (query → present → choose → persist)
 Phase 5: Implement Reference Architecture tailoring
 Phase 6: Implement custom catalog entry support
 Phase 7: Integration test selection flow with each pattern
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

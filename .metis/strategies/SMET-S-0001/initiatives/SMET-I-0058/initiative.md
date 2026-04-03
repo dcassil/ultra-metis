@@ -12,6 +12,9 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-distribution"
+  - "#feature-plugin"
+  - "#category-infrastructure"
 
 
 exit_criteria_met: false

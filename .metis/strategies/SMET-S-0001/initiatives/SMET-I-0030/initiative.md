@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/completed"
+  - "#feature-knowledge"
+  - "#category-workflow-traceability"
 
 
 exit_criteria_met: false
@@ -24,7 +26,7 @@ initiative_id: durable-insight-note-system
 
 ## Context
 
-AI agents and developers accumulate local knowledge during work — hotspot warnings, misleading naming patterns, recurring bug signatures, validation hints, subsystem gotchas. Today this knowledge lives in chat context and is lost between sessions. Cadre needs a lightweight, self-pruning repo memory layer that captures this reusable local insight without becoming a transcript archive or a second documentation platform.
+AI agents and developers accumulate local knowledge during work — hotspot warnings, misleading naming patterns, recurring bug signatures, validation hints, subsystem gotchas. Today this knowledge lives in chat context and is lost between sessions. CADRE needs a lightweight, self-pruning repo memory layer that captures this reusable local insight without becoming a transcript archive or a second documentation platform.
 
 This is a first-class design concept in the product spec. Notes are the "B" category in the internal cognition vs durable persistence model: durable lightweight insight that sits between ephemeral reasoning and formal governed records.
 
@@ -130,16 +132,6 @@ Phase 6: Implement needs_human_review flagging
 Phase 7: Implement archival logic
 Phase 8: Integrate into task start (fetch) and task wrap-up (score/propose)
 Phase 9: Add MCP and CLI tools
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
 
 ## Acceptance Criteria
 

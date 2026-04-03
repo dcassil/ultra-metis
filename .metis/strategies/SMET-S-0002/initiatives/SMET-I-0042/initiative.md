@@ -11,7 +11,10 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/completed"
+  - "#phase/discovery"
+  - "#feature-remote-management"
+  - "#feature-ui"
+  - "#category-interface-layers"
 
 
 exit_criteria_met: false
@@ -22,15 +25,17 @@ initiative_id: notifications-and-mobile-control
 
 # Notifications and Mobile Control Initiative
 
+**Status: Post-MVP** — builds on Shepherd MVP (SMET-I-0039, 0040, 0041).
+
 ## Context
 
-The core value proposition of the remote operations layer is that users can step away from their desk and still manage AI sessions. Push notifications and a mobile-optimized UI are what make this real. When a session needs approval or fails, the user must be notified immediately and be able to act from their phone in as few taps as possible.
+The Shepherd MVP provides a web UI with an interaction queue that users can check from their phone. This initiative adds **push notifications** so users don't have to actively poll — when a session needs approval or fails, a notification appears on their phone immediately.
 
-This initiative covers: push notification delivery (FCM/APNs integration), configurable notification preferences, the notification inbox/queue in the dashboard, and the mobile-first responsive design for all key actions. The mobile experience is not an afterthought — layout, tap target size, and information density must be designed for mobile first.
+The MVP's mobile-first responsive layout (built in SMET-I-0041) already handles tap targets and information density. This initiative adds: push notification delivery (Web Push API, optional webhook to Slack/Discord/ntfy), configurable notification preferences, and a notification inbox in the dashboard.
 
-**Pre-requisites**: SMET-I-0038, SMET-I-0039, SMET-I-0040, SMET-I-0041 (notification triggers come from session events).
+**Pre-requisites**: SMET-I-0039, SMET-I-0040, SMET-I-0041 (Shepherd MVP complete).
 
-**Components touched**: Control Service (notification generation, push delivery), Control Dashboard (mobile-first layouts, notification inbox, notification settings).
+**Components touched**: Server (`server/` — notification generation, push delivery, device token storage), Web UI (`web/` — notification inbox, notification preferences, service worker push handler).
 
 ## Goals & Non-Goals
 

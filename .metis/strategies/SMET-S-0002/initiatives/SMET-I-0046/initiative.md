@@ -12,6 +12,8 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/discovery"
+  - "#feature-remote-management"
+  - "#category-infrastructure"
 
 
 exit_criteria_met: false
@@ -22,15 +24,17 @@ initiative_id: operational-reliability-and-multi
 
 # Operational Reliability and Multi-Session Management Initiative
 
+**Status: Post-MVP** — cross-cutting, can overlap with post-MVP initiatives 0042–0045.
+
 ## Context
 
-As the system matures, users will run multiple sessions concurrently across multiple machines. This initiative covers the operational concerns: concurrency and capacity management, machine disconnection detection and recovery, session resilience across service interruptions, and administration tools for managing machine and repo settings centrally.
+The Shepherd MVP supports multiple concurrent sessions on one machine but doesn't have capacity management, machine disconnection recovery, or operational administration. As the system scales to multi-machine usage, these operational concerns become critical.
 
-This is a cross-cutting initiative that builds on all the foundational epics and can be developed in parallel with epics 4–7 once the core session model is stable.
+The MVP already handles bridge reconnection with `session.sync` state reconciliation (SMET-I-0039). This initiative extends that to: concurrency limits, capacity visibility, session checkpointing, event buffering during server downtime, and administration tools.
 
-**Pre-requisites**: SMET-I-0038, SMET-I-0039, SMET-I-0040. Can overlap with SMET-I-0041 through SMET-I-0045.
+**Pre-requisites**: SMET-I-0039, SMET-I-0040, SMET-I-0041 (Shepherd MVP complete). Can overlap with SMET-I-0042 through SMET-I-0045.
 
-**Components touched**: Control Service (concurrency tracking, disconnection detection, state recovery, administration API), Machine Runner (heartbeat, capacity reporting, graceful shutdown, reconnection logic), Control Dashboard (multi-session list views, capacity indicators, admin settings views).
+**Components touched**: Server (`server/` — concurrency tracking, disconnection detection, state recovery, administration API), Bridge (`bridge/` — capacity reporting, graceful shutdown, event buffering), Web UI (`web/` — multi-session list views, capacity indicators, admin settings).
 
 ## Goals & Non-Goals
 

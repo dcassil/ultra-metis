@@ -12,6 +12,9 @@ archived: false
 tags:
   - "#initiative"
   - "#phase/discovery"
+  - "#feature-architecture"
+  - "#feature-mcp"
+  - "#category-interface-layers"
 
 
 exit_criteria_met: false

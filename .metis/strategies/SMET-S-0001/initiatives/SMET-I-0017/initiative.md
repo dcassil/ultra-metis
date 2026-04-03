@@ -11,7 +11,9 @@ archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/discovery"
+  - "#feature-planning"
+  - "#category-infrastructure"
 
 
 exit_criteria_met: false
@@ -22,13 +24,13 @@ initiative_id: future-monorepo-root-orchestration
 
 # Future: Monorepo-Root Orchestration and Multi-Architecture Support
 
-> **STATUS: ACTIVE** — Scoped to Phase 1: per-member architecture support. Cross-package coordination, dashboards, and aggregate views deferred to a follow-up initiative.
+> **STATUS: BACKLOG / NON-MVP** — This initiative captures a future direction that should NOT be implemented until the core CADRE system is working. It is included in planning to ensure the MVP architecture does not preclude this future capability.
 
 ## Context
 
-The MVP of Cadre assumes initialization at the level of a single project or package — one repo, one architecture pattern, one set of rules, one planning hierarchy. But many real engineering teams work in monorepos where a single repository root contains multiple packages, apps, services, and libraries, each potentially requiring a different architecture pattern.
+The MVP of CADRE assumes initialization at the level of a single project or package — one repo, one architecture pattern, one set of rules, one planning hierarchy. But many real engineering teams work in monorepos where a single repository root contains multiple packages, apps, services, and libraries, each potentially requiring a different architecture pattern.
 
-When Cadre is initialized at the root of a monorepo, the system should eventually understand that:
+When CADRE is initialized at the root of a monorepo, the system should eventually understand that:
 - There are multiple packages/apps/services within the repo
 - Different packages may need different architecture patterns (e.g., the `web` package uses `javascript/react-app` while the `server` package uses `javascript/server`)
 - Some concerns (product definition, shared design context, shared rules) belong at the root/shared level
@@ -38,7 +40,7 @@ When Cadre is initialized at the root of a monorepo, the system should eventuall
 ## Why It Matters
 
 Without monorepo-root awareness, teams must either:
-- Initialize Cadre separately in each package (losing cross-package coordination)
+- Initialize CADRE separately in each package (losing cross-package coordination)
 - Initialize at the root and pretend the whole monorepo has one architecture (which is wrong)
 
 Neither is satisfactory. The future system should support a hierarchical workspace model that reflects how monorepos actually work.
@@ -56,8 +58,8 @@ This initiative directly serves (in future):
 ## Goals & Non-Goals
 
 **Goals (future):**
-- Detect that Cadre is being initialized at a monorepo root (as opposed to within a single package)
-- Support a two-level workspace model: root-level Cadre + package-level Cadre workspaces
+- Detect that CADRE is being initialized at a monorepo root (as opposed to within a single package)
+- Support a two-level workspace model: root-level CADRE + package-level CADRE workspaces
 - Root level holds: shared product doc, shared design context, shared rules, cross-package coordination
 - Package level holds: package-specific architecture (each package has its own Reference Architecture), package-specific rules, package-specific initiative/task breakdowns
 - Support cross-package feature planning: a feature request at the root can be decomposed into package-level work items in the relevant packages
@@ -67,7 +69,7 @@ This initiative directly serves (in future):
 - Building this in the MVP — this is explicitly post-MVP
 - Supporting arbitrary nesting depth (root → package is sufficient; no root → group → package → subpackage)
 - Distributed monorepo support (multiple repos linked together)
-- Package-level autonomy (all packages share the same Cadre installation, just different workspaces within it)
+- Package-level autonomy (all packages share the same CADRE installation, just different workspaces within it)
 
 ## Detailed Design
 
@@ -79,20 +81,26 @@ This initiative directly serves (in future):
 
 ```
 monorepo-root/
-  .cadre/                              ← root-level workspace
-    product-doc.md                           ← shared product definition
-    design-context/                          ← shared design references
-    rules/                                   ← shared/root-level rules
-    members/
-      apps.dashboard/                  ← member workspace (from apps/dashboard)
-        reference-arch.md                    ← javascript/react-app
-        rules/                               ← member-specific rules (inherits from root)
-      packages.api-core/               ← member workspace (from packages/api-core)
-        reference-arch.md                    ← javascript/server
-        rules/                               ← member-specific rules (inherits from root)
-      packages.shared-ui/              ← member workspace (from packages/shared-ui)
-        reference-arch.md                    ← javascript/component-lib
-        rules/                               ← member-specific rules (inherits from root)
+  .cadre/              ← root-level workspace
+    product-doc.md           ← shared product definition
+    design-context/          ← shared design references
+    rules/                   ← shared/root-level rules
+    initiatives/             ← cross-package coordination initiatives
+  packages/
+    web/
+      .cadre/          ← package-level workspace
+        reference-arch.md    ← javascript/react-app
+        rules/               ← web-specific rules (inherits from root)
+        initiatives/         ← web-specific work
+    server/
+      .cadre/          ← package-level workspace
+        reference-arch.md    ← javascript/server
+        rules/               ← server-specific rules (inherits from root)
+        initiatives/         ← server-specific work
+    shared-ui/
+      .cadre/          ← package-level workspace
+        reference-arch.md    ← javascript/component-lib
+        ...
 ```
 
 ### Key Design Considerations
@@ -119,7 +127,7 @@ monorepo-root/
 
 ## Example Future Workflow
 
-1. User runs `cadre init` at monorepo root
+1. User runs `ultra-metis init` at monorepo root
 2. System detects monorepo structure (Turborepo with `packages/web`, `packages/server`, `packages/shared-ui`)
 3. System creates root-level workspace with shared Product Doc
 4. System offers to initialize package-level workspaces for each detected package
@@ -134,13 +142,13 @@ monorepo-root/
 ## Alternatives Considered
 
 1. **Single flat workspace for entire monorepo**: Rejected because it forces one architecture on diverse packages and loses package-level specificity.
-2. **Completely independent Cadre installations per package**: Rejected because it loses cross-package coordination, shared rules, and unified product context.
+2. **Completely independent CADRE installations per package**: Rejected because it loses cross-package coordination, shared rules, and unified product context.
 3. **Build this in the MVP**: Rejected because the complexity is substantial and the single-project model must work first.
 
 ## Implementation Plan
 
 This is future/backlog work. Implementation should not begin until:
-- Core Cadre is working for single-project repos
+- Core CADRE is working for single-project repos
 - Architecture Catalog (SMET-I-0016) is complete
 - Rules inheritance (SMET-I-0004) is working
 - Orchestrator (SMET-I-0013) is working
@@ -171,7 +179,7 @@ When the time comes, likely phases:
 
 ## Risks / Dependencies
 
-- Depends on all core Cadre initiatives being complete first
+- Depends on all core CADRE initiatives being complete first
 - The workspace data model must be designed carefully to avoid tight coupling between root and packages
 - Cross-package feature decomposition requires sophisticated understanding of package responsibilities
 - Performance: root-level queries that aggregate across many packages must remain fast
